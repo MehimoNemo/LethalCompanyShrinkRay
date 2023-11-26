@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "dgSpecHash": "1ePs2N9T9yNzFiLW/HcmX/NuZ661Os/r+0AgaNMb2pBESvbxIe6OMnvckIBAwQ9y8WatQKRjEajJ7GNQNcgGmA==",
+  "success": false,
+  "projectFilePath": "C:\\Users\\Izek\\source\\repos\\LethalCompanyShrinkRay\\asfdasf\\asfdasf.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Izek\\.nuget\\packages\\bepinex.core\\6.0.0-pre.1\\bepinex.core.6.0.0-pre.1.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\bepinex.netlauncher\\6.0.0-pre.1\\bepinex.netlauncher.6.0.0-pre.1.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\bepinex.plugininfoprops\\1.1.0\\bepinex.plugininfoprops.1.1.0.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\harmonyx\\2.10.0\\harmonyx.2.10.0.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.2\\microsoft.netframework.referenceassemblies.1.0.2.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net452\\1.0.2\\microsoft.netframework.referenceassemblies.net452.1.0.2.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\mono.cecil\\0.11.4\\mono.cecil.0.11.4.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\monomod.runtimedetour\\22.3.23.4\\monomod.runtimedetour.22.3.23.4.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\monomod.utils\\22.5.1.1\\monomod.utils.22.5.1.1.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\semanticversioning\\2.0.2\\semanticversioning.2.0.2.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package BepInEx.NetLauncher.Common. No packages exist with this id in source(s): BepInEx, Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "BepInEx.NetLauncher.Common",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.5.2"
+      ]
+    }
+  ]
+}

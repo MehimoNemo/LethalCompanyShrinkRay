@@ -1,0 +1,8 @@
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LethalCompanyShrinkRay.csproj.AssemblyReference.cache
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\PluginInfo.cs
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LethalCompanyShrinkRay.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LethalCompanyShrinkRay.AssemblyInfoInputs.cache
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LethalCompanyShrinkRay.AssemblyInfo.cs
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LethalCompanyShrinkRay.csproj.CoreCompileInputs.cache
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LethalCompanyTemplate.dll
+C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LethalCompanyTemplate.pdb

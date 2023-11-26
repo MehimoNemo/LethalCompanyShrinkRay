@@ -1,0 +1,693 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETFramework,Version=v4.5.2": {
+      "BepInEx.Core/6.0.0-pre.1": {
+        "type": "package",
+        "dependencies": {
+          "HarmonyX": "2.10.0",
+          "MonoMod.Utils": "22.5.1.1",
+          "SemanticVersioning": "2.0.2"
+        },
+        "compile": {
+          "lib/net35/BepInEx.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net35/_._": {
+            "related": ".xml"
+          }
+        }
+      },
+      "BepInEx.NetLauncher/6.0.0-pre.1": {
+        "type": "package",
+        "dependencies": {
+          "BepInEx.Core": "6.0.0-pre.1",
+          "BepInEx.NetLauncher.Common": "6.0.0-pre.1",
+          "HarmonyX": "2.10.0"
+        },
+        "compile": {
+          "lib/net452/BepInEx.NetLauncher.exe": {}
+        },
+        "runtime": {
+          "lib/net452/_._": {}
+        }
+      },
+      "BepInEx.PluginInfoProps/1.1.0": {
+        "type": "package",
+        "build": {
+          "build/BepInEx.PluginInfoProps.props": {}
+        }
+      },
+      "HarmonyX/2.10.0": {
+        "type": "package",
+        "dependencies": {
+          "MonoMod.RuntimeDetour": "22.3.23.4"
+        },
+        "compile": {
+          "lib/net45/0Harmony.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net45/_._": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.NETFramework.ReferenceAssemblies/1.0.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.NETFramework.ReferenceAssemblies.net452": "1.0.2"
+        }
+      },
+      "Microsoft.NETFramework.ReferenceAssemblies.net452/1.0.2": {
+        "type": "package",
+        "build": {
+          "build/Microsoft.NETFramework.ReferenceAssemblies.net452.targets": {}
+        }
+      },
+      "Mono.Cecil/0.11.4": {
+        "type": "package",
+        "compile": {
+          "lib/net40/Mono.Cecil.Mdb.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.Pdb.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.Rocks.dll": {
+            "related": ".pdb"
+          },
+          "lib/net40/Mono.Cecil.dll": {
+            "related": ".Mdb.pdb;.pdb;.Pdb.pdb;.Rocks.pdb"
+          }
+        },
+        "runtime": {
+          "lib/net40/_._": {
+            "related": ".Mdb.pdb;.pdb;.Pdb.pdb;.Rocks.pdb"
+          }
+        }
+      },
+      "MonoMod.RuntimeDetour/22.3.23.4": {
+        "type": "package",
+        "dependencies": {
+          "Mono.Cecil": "0.11.4",
+          "MonoMod.Utils": "22.3.23.4"
+        },
+        "compile": {
+          "lib/net452/MonoMod.RuntimeDetour.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net452/_._": {
+            "related": ".xml"
+          }
+        }
+      },
+      "MonoMod.Utils/22.5.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Mono.Cecil": "0.11.4"
+        },
+        "compile": {
+          "lib/net452/MonoMod.Utils.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net452/_._": {
+            "related": ".xml"
+          }
+        }
+      },
+      "SemanticVersioning/2.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net45/SemanticVersioning.dll": {}
+        },
+        "runtime": {
+          "lib/net45/_._": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BepInEx.Core/6.0.0-pre.1": {
+      "sha512": "oTLuVxw7C7z6sQRbdDPd0118afGto975zI5NR+kZaccnLfbYnriXYuUorKg9+KAmpbaQmfBLVoWEpLXf9l1lSA==",
+      "type": "package",
+      "path": "bepinex.core/6.0.0-pre.1",
+      "files": [
+        ".nupkg.metadata",
+        "bepinex.core.6.0.0-pre.1.nupkg.sha512",
+        "bepinex.core.nuspec",
+        "lib/net35/BepInEx.Core.dll",
+        "lib/net35/BepInEx.Core.xml",
+        "lib/netstandard2.0/BepInEx.Core.dll",
+        "lib/netstandard2.0/BepInEx.Core.xml",
+        "lib/netstandard2.1/BepInEx.Core.dll",
+        "lib/netstandard2.1/BepInEx.Core.xml",
+        "logo.png"
+      ]
+    },
+    "BepInEx.NetLauncher/6.0.0-pre.1": {
+      "sha512": "TQadv0bw/QCw1jWb5HW3hq2cqYDI6INXDLipCNWY8CLjsfT6l6eFZWp7E96T3pDJZmloCZOEQj+pDoDVfjQgGg==",
+      "type": "package",
+      "path": "bepinex.netlauncher/6.0.0-pre.1",
+      "files": [
+        ".nupkg.metadata",
+        "bepinex.netlauncher.6.0.0-pre.1.nupkg.sha512",
+        "bepinex.netlauncher.nuspec",
+        "lib/net452/BepInEx.NetLauncher.exe",
+        "logo.png"
+      ]
+    },
+    "BepInEx.PluginInfoProps/1.1.0": {
+      "sha512": "RqM3aaGs8Hc2m0D+8aSt9mv09rCMYNIF35NB3D6KA2zSpcXJh/9ZVWrPlIUJfA8KYzodSWcCMUexEW24fjwR3w==",
+      "type": "package",
+      "path": "bepinex.plugininfoprops/1.1.0",
+      "files": [
+        ".nupkg.metadata",
+        "bepinex.plugininfoprops.1.1.0.nupkg.sha512",
+        "bepinex.plugininfoprops.nuspec",
+        "build/BepInEx.PluginInfoProps.props"
+      ]
+    },
+    "HarmonyX/2.10.0": {
+      "sha512": "4ayiy/dlCiW86K2N7Jvbf+VpI5wvP7dncv/6oRmfwRi32UCmCRzCGzsxdMfzJZkp6/26oBW+DrD8vi4UejzVAg==",
+      "type": "package",
+      "path": "harmonyx/2.10.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "harmonyx.2.10.0.nupkg.sha512",
+        "harmonyx.nuspec",
+        "lib/net35/0Harmony.dll",
+        "lib/net35/0Harmony.xml",
+        "lib/net45/0Harmony.dll",
+        "lib/net45/0Harmony.xml",
+        "lib/netstandard2.0/0Harmony.dll",
+        "lib/netstandard2.0/0Harmony.xml",
+        "logo_mini.png"
+      ]
+    },
+    "Microsoft.NETFramework.ReferenceAssemblies/1.0.2": {
+      "sha512": "5/cSEVld+px/CuRrbohO/djfg6++eR6zGpy88MgqloXvkj//WXWpFZyu/OpkXPN0u5m+dN/EVwLNYFUxD4h2+A==",
+      "type": "package",
+      "path": "microsoft.netframework.referenceassemblies/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "microsoft.netframework.referenceassemblies.1.0.2.nupkg.sha512",
+        "microsoft.netframework.referenceassemblies.nuspec"
+      ]
+    },
+    "Microsoft.NETFramework.ReferenceAssemblies.net452/1.0.2": {
+      "sha512": "H67KhF+Lldlvr/N55gbtlZNCLq20mPGKFaPLbUkK19boUq/7DTJEHAsxC6yUADKlH1Li/bcyeowB/A484ECDPA==",
+      "type": "package",
+      "path": "microsoft.netframework.referenceassemblies.net452/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/.NETFramework/v4.5.2/Accessibility.dll",
+        "build/.NETFramework/v4.5.2/Accessibility.xml",
+        "build/.NETFramework/v4.5.2/CustomMarshalers.dll",
+        "build/.NETFramework/v4.5.2/CustomMarshalers.xml",
+        "build/.NETFramework/v4.5.2/Facades/System.Collections.Concurrent.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Collections.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ComponentModel.Annotations.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ComponentModel.EventBasedAsync.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ComponentModel.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Diagnostics.Contracts.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Diagnostics.Debug.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Diagnostics.Tools.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Diagnostics.Tracing.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Dynamic.Runtime.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Globalization.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.IO.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Linq.Expressions.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Linq.Parallel.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Linq.Queryable.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Linq.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Net.NetworkInformation.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Net.Primitives.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Net.Requests.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ObjectModel.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Reflection.Emit.ILGeneration.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Reflection.Emit.Lightweight.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Reflection.Emit.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Reflection.Extensions.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Reflection.Primitives.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Reflection.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Resources.ResourceManager.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.Extensions.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.InteropServices.WindowsRuntime.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.InteropServices.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.Numerics.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.Serialization.Json.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.Serialization.Primitives.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.Serialization.Xml.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Runtime.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Security.Principal.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ServiceModel.Duplex.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ServiceModel.Http.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ServiceModel.NetTcp.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ServiceModel.Primitives.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.ServiceModel.Security.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Text.Encoding.Extensions.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Text.Encoding.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Text.RegularExpressions.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Threading.Tasks.Parallel.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Threading.Tasks.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Threading.Timer.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Threading.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Xml.ReaderWriter.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Xml.XDocument.dll",
+        "build/.NETFramework/v4.5.2/Facades/System.Xml.XmlSerializer.dll",
+        "build/.NETFramework/v4.5.2/ISymWrapper.dll",
+        "build/.NETFramework/v4.5.2/ISymWrapper.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.Activities.Build.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.Activities.Build.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Conversion.v4.0.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Conversion.v4.0.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Engine.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Engine.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Framework.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Framework.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Tasks.v4.0.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Tasks.v4.0.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Utilities.v4.0.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.Utilities.v4.0.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.Build.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.CSharp.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.CSharp.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.JScript.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.JScript.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualBasic.Compatibility.Data.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualBasic.Compatibility.Data.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualBasic.Compatibility.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualBasic.Compatibility.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualBasic.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualBasic.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualC.STLCLR.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualC.STLCLR.xml",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualC.dll",
+        "build/.NETFramework/v4.5.2/Microsoft.VisualC.xml",
+        "build/.NETFramework/v4.5.2/PermissionSets/FullTrust.xml",
+        "build/.NETFramework/v4.5.2/PermissionSets/Internet.xml",
+        "build/.NETFramework/v4.5.2/PermissionSets/LocalIntranet.xml",
+        "build/.NETFramework/v4.5.2/PresentationBuildTasks.dll",
+        "build/.NETFramework/v4.5.2/PresentationBuildTasks.xml",
+        "build/.NETFramework/v4.5.2/PresentationCore.dll",
+        "build/.NETFramework/v4.5.2/PresentationCore.xml",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Aero.dll",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Aero.xml",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Aero2.dll",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Aero2.xml",
+        "build/.NETFramework/v4.5.2/PresentationFramework.AeroLite.dll",
+        "build/.NETFramework/v4.5.2/PresentationFramework.AeroLite.xml",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Classic.dll",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Classic.xml",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Luna.dll",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Luna.xml",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Royale.dll",
+        "build/.NETFramework/v4.5.2/PresentationFramework.Royale.xml",
+        "build/.NETFramework/v4.5.2/PresentationFramework.dll",
+        "build/.NETFramework/v4.5.2/PresentationFramework.xml",
+        "build/.NETFramework/v4.5.2/ReachFramework.dll",
+        "build/.NETFramework/v4.5.2/ReachFramework.xml",
+        "build/.NETFramework/v4.5.2/RedistList/FrameworkList.xml",
+        "build/.NETFramework/v4.5.2/System.Activities.Core.Presentation.dll",
+        "build/.NETFramework/v4.5.2/System.Activities.Core.Presentation.xml",
+        "build/.NETFramework/v4.5.2/System.Activities.DurableInstancing.dll",
+        "build/.NETFramework/v4.5.2/System.Activities.DurableInstancing.xml",
+        "build/.NETFramework/v4.5.2/System.Activities.Presentation.dll",
+        "build/.NETFramework/v4.5.2/System.Activities.Presentation.xml",
+        "build/.NETFramework/v4.5.2/System.Activities.dll",
+        "build/.NETFramework/v4.5.2/System.Activities.xml",
+        "build/.NETFramework/v4.5.2/System.AddIn.Contract.dll",
+        "build/.NETFramework/v4.5.2/System.AddIn.Contract.xml",
+        "build/.NETFramework/v4.5.2/System.AddIn.dll",
+        "build/.NETFramework/v4.5.2/System.AddIn.xml",
+        "build/.NETFramework/v4.5.2/System.ComponentModel.Composition.Registration.dll",
+        "build/.NETFramework/v4.5.2/System.ComponentModel.Composition.Registration.xml",
+        "build/.NETFramework/v4.5.2/System.ComponentModel.Composition.dll",
+        "build/.NETFramework/v4.5.2/System.ComponentModel.Composition.xml",
+        "build/.NETFramework/v4.5.2/System.ComponentModel.DataAnnotations.dll",
+        "build/.NETFramework/v4.5.2/System.ComponentModel.DataAnnotations.xml",
+        "build/.NETFramework/v4.5.2/System.Configuration.Install.dll",
+        "build/.NETFramework/v4.5.2/System.Configuration.Install.xml",
+        "build/.NETFramework/v4.5.2/System.Configuration.dll",
+        "build/.NETFramework/v4.5.2/System.Configuration.xml",
+        "build/.NETFramework/v4.5.2/System.Core.dll",
+        "build/.NETFramework/v4.5.2/System.Core.xml",
+        "build/.NETFramework/v4.5.2/System.Data.DataSetExtensions.dll",
+        "build/.NETFramework/v4.5.2/System.Data.DataSetExtensions.xml",
+        "build/.NETFramework/v4.5.2/System.Data.Entity.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Data.Entity.Design.xml",
+        "build/.NETFramework/v4.5.2/System.Data.Entity.dll",
+        "build/.NETFramework/v4.5.2/System.Data.Entity.xml",
+        "build/.NETFramework/v4.5.2/System.Data.Linq.dll",
+        "build/.NETFramework/v4.5.2/System.Data.Linq.xml",
+        "build/.NETFramework/v4.5.2/System.Data.OracleClient.dll",
+        "build/.NETFramework/v4.5.2/System.Data.OracleClient.xml",
+        "build/.NETFramework/v4.5.2/System.Data.Services.Client.dll",
+        "build/.NETFramework/v4.5.2/System.Data.Services.Client.xml",
+        "build/.NETFramework/v4.5.2/System.Data.Services.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Data.Services.Design.xml",
+        "build/.NETFramework/v4.5.2/System.Data.Services.dll",
+        "build/.NETFramework/v4.5.2/System.Data.Services.xml",
+        "build/.NETFramework/v4.5.2/System.Data.SqlXml.dll",
+        "build/.NETFramework/v4.5.2/System.Data.SqlXml.xml",
+        "build/.NETFramework/v4.5.2/System.Data.dll",
+        "build/.NETFramework/v4.5.2/System.Data.xml",
+        "build/.NETFramework/v4.5.2/System.Deployment.dll",
+        "build/.NETFramework/v4.5.2/System.Deployment.xml",
+        "build/.NETFramework/v4.5.2/System.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Design.xml",
+        "build/.NETFramework/v4.5.2/System.Device.dll",
+        "build/.NETFramework/v4.5.2/System.Device.xml",
+        "build/.NETFramework/v4.5.2/System.DirectoryServices.AccountManagement.dll",
+        "build/.NETFramework/v4.5.2/System.DirectoryServices.AccountManagement.xml",
+        "build/.NETFramework/v4.5.2/System.DirectoryServices.Protocols.dll",
+        "build/.NETFramework/v4.5.2/System.DirectoryServices.Protocols.xml",
+        "build/.NETFramework/v4.5.2/System.DirectoryServices.dll",
+        "build/.NETFramework/v4.5.2/System.DirectoryServices.xml",
+        "build/.NETFramework/v4.5.2/System.Drawing.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Drawing.Design.xml",
+        "build/.NETFramework/v4.5.2/System.Drawing.dll",
+        "build/.NETFramework/v4.5.2/System.Drawing.xml",
+        "build/.NETFramework/v4.5.2/System.EnterpriseServices.Thunk.dll",
+        "build/.NETFramework/v4.5.2/System.EnterpriseServices.Wrapper.dll",
+        "build/.NETFramework/v4.5.2/System.EnterpriseServices.dll",
+        "build/.NETFramework/v4.5.2/System.EnterpriseServices.xml",
+        "build/.NETFramework/v4.5.2/System.IO.Compression.FileSystem.dll",
+        "build/.NETFramework/v4.5.2/System.IO.Compression.FileSystem.xml",
+        "build/.NETFramework/v4.5.2/System.IO.Compression.dll",
+        "build/.NETFramework/v4.5.2/System.IO.Compression.xml",
+        "build/.NETFramework/v4.5.2/System.IO.Log.dll",
+        "build/.NETFramework/v4.5.2/System.IO.Log.xml",
+        "build/.NETFramework/v4.5.2/System.IdentityModel.Selectors.dll",
+        "build/.NETFramework/v4.5.2/System.IdentityModel.Selectors.xml",
+        "build/.NETFramework/v4.5.2/System.IdentityModel.Services.dll",
+        "build/.NETFramework/v4.5.2/System.IdentityModel.Services.xml",
+        "build/.NETFramework/v4.5.2/System.IdentityModel.dll",
+        "build/.NETFramework/v4.5.2/System.IdentityModel.xml",
+        "build/.NETFramework/v4.5.2/System.Management.Instrumentation.dll",
+        "build/.NETFramework/v4.5.2/System.Management.Instrumentation.xml",
+        "build/.NETFramework/v4.5.2/System.Management.dll",
+        "build/.NETFramework/v4.5.2/System.Management.xml",
+        "build/.NETFramework/v4.5.2/System.Messaging.dll",
+        "build/.NETFramework/v4.5.2/System.Messaging.xml",
+        "build/.NETFramework/v4.5.2/System.Net.Http.WebRequest.dll",
+        "build/.NETFramework/v4.5.2/System.Net.Http.WebRequest.xml",
+        "build/.NETFramework/v4.5.2/System.Net.Http.dll",
+        "build/.NETFramework/v4.5.2/System.Net.Http.xml",
+        "build/.NETFramework/v4.5.2/System.Net.dll",
+        "build/.NETFramework/v4.5.2/System.Net.xml",
+        "build/.NETFramework/v4.5.2/System.Numerics.dll",
+        "build/.NETFramework/v4.5.2/System.Numerics.xml",
+        "build/.NETFramework/v4.5.2/System.Printing.dll",
+        "build/.NETFramework/v4.5.2/System.Printing.xml",
+        "build/.NETFramework/v4.5.2/System.Reflection.Context.dll",
+        "build/.NETFramework/v4.5.2/System.Reflection.Context.xml",
+        "build/.NETFramework/v4.5.2/System.Runtime.Caching.dll",
+        "build/.NETFramework/v4.5.2/System.Runtime.Caching.xml",
+        "build/.NETFramework/v4.5.2/System.Runtime.DurableInstancing.dll",
+        "build/.NETFramework/v4.5.2/System.Runtime.DurableInstancing.xml",
+        "build/.NETFramework/v4.5.2/System.Runtime.Remoting.dll",
+        "build/.NETFramework/v4.5.2/System.Runtime.Remoting.xml",
+        "build/.NETFramework/v4.5.2/System.Runtime.Serialization.Formatters.Soap.dll",
+        "build/.NETFramework/v4.5.2/System.Runtime.Serialization.Formatters.Soap.xml",
+        "build/.NETFramework/v4.5.2/System.Runtime.Serialization.dll",
+        "build/.NETFramework/v4.5.2/System.Runtime.Serialization.xml",
+        "build/.NETFramework/v4.5.2/System.Security.dll",
+        "build/.NETFramework/v4.5.2/System.Security.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Activation.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Activation.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Activities.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Activities.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Channels.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Channels.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Discovery.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Discovery.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Routing.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Routing.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Web.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.Web.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceModel.xml",
+        "build/.NETFramework/v4.5.2/System.ServiceProcess.dll",
+        "build/.NETFramework/v4.5.2/System.ServiceProcess.xml",
+        "build/.NETFramework/v4.5.2/System.Speech.dll",
+        "build/.NETFramework/v4.5.2/System.Speech.xml",
+        "build/.NETFramework/v4.5.2/System.Threading.Tasks.Dataflow.xml",
+        "build/.NETFramework/v4.5.2/System.Transactions.dll",
+        "build/.NETFramework/v4.5.2/System.Transactions.xml",
+        "build/.NETFramework/v4.5.2/System.Web.Abstractions.dll",
+        "build/.NETFramework/v4.5.2/System.Web.ApplicationServices.dll",
+        "build/.NETFramework/v4.5.2/System.Web.ApplicationServices.xml",
+        "build/.NETFramework/v4.5.2/System.Web.DataVisualization.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Web.DataVisualization.dll",
+        "build/.NETFramework/v4.5.2/System.Web.DataVisualization.xml",
+        "build/.NETFramework/v4.5.2/System.Web.DynamicData.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Web.DynamicData.Design.xml",
+        "build/.NETFramework/v4.5.2/System.Web.DynamicData.dll",
+        "build/.NETFramework/v4.5.2/System.Web.DynamicData.xml",
+        "build/.NETFramework/v4.5.2/System.Web.Entity.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Web.Entity.Design.xml",
+        "build/.NETFramework/v4.5.2/System.Web.Entity.dll",
+        "build/.NETFramework/v4.5.2/System.Web.Entity.xml",
+        "build/.NETFramework/v4.5.2/System.Web.Extensions.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Web.Extensions.Design.xml",
+        "build/.NETFramework/v4.5.2/System.Web.Extensions.dll",
+        "build/.NETFramework/v4.5.2/System.Web.Extensions.xml",
+        "build/.NETFramework/v4.5.2/System.Web.Mobile.dll",
+        "build/.NETFramework/v4.5.2/System.Web.Mobile.xml",
+        "build/.NETFramework/v4.5.2/System.Web.RegularExpressions.dll",
+        "build/.NETFramework/v4.5.2/System.Web.RegularExpressions.xml",
+        "build/.NETFramework/v4.5.2/System.Web.Routing.dll",
+        "build/.NETFramework/v4.5.2/System.Web.Services.dll",
+        "build/.NETFramework/v4.5.2/System.Web.Services.xml",
+        "build/.NETFramework/v4.5.2/System.Web.dll",
+        "build/.NETFramework/v4.5.2/System.Web.xml",
+        "build/.NETFramework/v4.5.2/System.Windows.Controls.Ribbon.dll",
+        "build/.NETFramework/v4.5.2/System.Windows.Controls.Ribbon.xml",
+        "build/.NETFramework/v4.5.2/System.Windows.Forms.DataVisualization.Design.dll",
+        "build/.NETFramework/v4.5.2/System.Windows.Forms.DataVisualization.dll",
+        "build/.NETFramework/v4.5.2/System.Windows.Forms.DataVisualization.xml",
+        "build/.NETFramework/v4.5.2/System.Windows.Forms.dll",
+        "build/.NETFramework/v4.5.2/System.Windows.Forms.xml",
+        "build/.NETFramework/v4.5.2/System.Windows.Input.Manipulations.dll",
+        "build/.NETFramework/v4.5.2/System.Windows.Input.Manipulations.xml",
+        "build/.NETFramework/v4.5.2/System.Windows.Presentation.dll",
+        "build/.NETFramework/v4.5.2/System.Windows.Presentation.xml",
+        "build/.NETFramework/v4.5.2/System.Windows.dll",
+        "build/.NETFramework/v4.5.2/System.Workflow.Activities.dll",
+        "build/.NETFramework/v4.5.2/System.Workflow.Activities.xml",
+        "build/.NETFramework/v4.5.2/System.Workflow.ComponentModel.dll",
+        "build/.NETFramework/v4.5.2/System.Workflow.ComponentModel.xml",
+        "build/.NETFramework/v4.5.2/System.Workflow.Runtime.dll",
+        "build/.NETFramework/v4.5.2/System.Workflow.Runtime.xml",
+        "build/.NETFramework/v4.5.2/System.WorkflowServices.dll",
+        "build/.NETFramework/v4.5.2/System.WorkflowServices.xml",
+        "build/.NETFramework/v4.5.2/System.Xaml.dll",
+        "build/.NETFramework/v4.5.2/System.Xaml.xml",
+        "build/.NETFramework/v4.5.2/System.Xml.Linq.dll",
+        "build/.NETFramework/v4.5.2/System.Xml.Linq.xml",
+        "build/.NETFramework/v4.5.2/System.Xml.Serialization.dll",
+        "build/.NETFramework/v4.5.2/System.Xml.dll",
+        "build/.NETFramework/v4.5.2/System.Xml.xml",
+        "build/.NETFramework/v4.5.2/System.dll",
+        "build/.NETFramework/v4.5.2/System.xml",
+        "build/.NETFramework/v4.5.2/UIAutomationClient.dll",
+        "build/.NETFramework/v4.5.2/UIAutomationClient.xml",
+        "build/.NETFramework/v4.5.2/UIAutomationClientsideProviders.dll",
+        "build/.NETFramework/v4.5.2/UIAutomationClientsideProviders.xml",
+        "build/.NETFramework/v4.5.2/UIAutomationProvider.dll",
+        "build/.NETFramework/v4.5.2/UIAutomationProvider.xml",
+        "build/.NETFramework/v4.5.2/UIAutomationTypes.dll",
+        "build/.NETFramework/v4.5.2/UIAutomationTypes.xml",
+        "build/.NETFramework/v4.5.2/WindowsBase.dll",
+        "build/.NETFramework/v4.5.2/WindowsBase.xml",
+        "build/.NETFramework/v4.5.2/WindowsFormsIntegration.dll",
+        "build/.NETFramework/v4.5.2/WindowsFormsIntegration.xml",
+        "build/.NETFramework/v4.5.2/XamlBuildTask.dll",
+        "build/.NETFramework/v4.5.2/XamlBuildTask.xml",
+        "build/.NETFramework/v4.5.2/mscorlib.dll",
+        "build/.NETFramework/v4.5.2/mscorlib.xml",
+        "build/.NETFramework/v4.5.2/sysglobl.dll",
+        "build/.NETFramework/v4.5.2/sysglobl.xml",
+        "build/Microsoft.NETFramework.ReferenceAssemblies.net452.targets",
+        "microsoft.netframework.referenceassemblies.net452.1.0.2.nupkg.sha512",
+        "microsoft.netframework.referenceassemblies.net452.nuspec"
+      ]
+    },
+    "Mono.Cecil/0.11.4": {
+      "sha512": "IC1h5g0NeJGHIUgzM1P82ld57knhP0IcQfrYITDPXlNpMYGUrsG5TxuaWTjaeqDNQMBDNZkB8L0rBnwsY6JHuQ==",
+      "type": "package",
+      "path": "mono.cecil/0.11.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net40/Mono.Cecil.Mdb.dll",
+        "lib/net40/Mono.Cecil.Mdb.pdb",
+        "lib/net40/Mono.Cecil.Pdb.dll",
+        "lib/net40/Mono.Cecil.Pdb.pdb",
+        "lib/net40/Mono.Cecil.Rocks.dll",
+        "lib/net40/Mono.Cecil.Rocks.pdb",
+        "lib/net40/Mono.Cecil.dll",
+        "lib/net40/Mono.Cecil.pdb",
+        "lib/netstandard2.0/Mono.Cecil.Mdb.dll",
+        "lib/netstandard2.0/Mono.Cecil.Mdb.pdb",
+        "lib/netstandard2.0/Mono.Cecil.Pdb.dll",
+        "lib/netstandard2.0/Mono.Cecil.Pdb.pdb",
+        "lib/netstandard2.0/Mono.Cecil.Rocks.dll",
+        "lib/netstandard2.0/Mono.Cecil.Rocks.pdb",
+        "lib/netstandard2.0/Mono.Cecil.dll",
+        "lib/netstandard2.0/Mono.Cecil.pdb",
+        "mono.cecil.0.11.4.nupkg.sha512",
+        "mono.cecil.nuspec"
+      ]
+    },
+    "MonoMod.RuntimeDetour/22.3.23.4": {
+      "sha512": "2nwwFfwYDSgUzhi+1MutTg1gyUgXoMS4+E04vHOFp84Vxs0oBkkn4mGAfhkr272y0j3vqIBzo2aT9pXRlCd/ZA==",
+      "type": "package",
+      "path": "monomod.runtimedetour/22.3.23.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net35/MonoMod.RuntimeDetour.dll",
+        "lib/net35/MonoMod.RuntimeDetour.xml",
+        "lib/net452/MonoMod.RuntimeDetour.dll",
+        "lib/net452/MonoMod.RuntimeDetour.xml",
+        "lib/net5.0/MonoMod.RuntimeDetour.dll",
+        "lib/net5.0/MonoMod.RuntimeDetour.xml",
+        "lib/netstandard2.0/MonoMod.RuntimeDetour.dll",
+        "lib/netstandard2.0/MonoMod.RuntimeDetour.xml",
+        "monomod.runtimedetour.22.3.23.4.nupkg.sha512",
+        "monomod.runtimedetour.nuspec"
+      ]
+    },
+    "MonoMod.Utils/22.5.1.1": {
+      "sha512": "vBObO1atXxhi2C4AuC53y87Bqeogi9xIrD1Ym3YWr5uxc8Nrm8SrsFeD1i3x04R999+XQ3FdeHrbXScyWYEHqQ==",
+      "type": "package",
+      "path": "monomod.utils/22.5.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net35/MonoMod.Utils.dll",
+        "lib/net35/MonoMod.Utils.xml",
+        "lib/net452/MonoMod.Utils.dll",
+        "lib/net452/MonoMod.Utils.xml",
+        "lib/net5.0/MonoMod.Utils.dll",
+        "lib/net5.0/MonoMod.Utils.xml",
+        "lib/netstandard2.0/MonoMod.Utils.dll",
+        "lib/netstandard2.0/MonoMod.Utils.xml",
+        "monomod.utils.22.5.1.1.nupkg.sha512",
+        "monomod.utils.nuspec"
+      ]
+    },
+    "SemanticVersioning/2.0.2": {
+      "sha512": "4EQgYdNZ92SyaO7YFk6olVnebF5V+jrHyMUjvPq89tLeMo8NSfgDF+6Zwq/lgh9j/0yfQp9Lkm0ZA0rUATCZFA==",
+      "type": "package",
+      "path": "semanticversioning/2.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net35/SemanticVersioning.dll",
+        "lib/net45/SemanticVersioning.dll",
+        "lib/netstandard1.1/SemanticVersioning.dll",
+        "lib/netstandard2.0/SemanticVersioning.dll",
+        "semanticversioning.2.0.2.nupkg.sha512",
+        "semanticversioning.nuspec"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETFramework,Version=v4.5.2": [
+      "BepInEx.NetLauncher >= 6.0.0-*",
+      "BepInEx.PluginInfoProps >= 1.*",
+      "Microsoft.NETFramework.ReferenceAssemblies >= 1.0.2"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Izek\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Izek\\source\\repos\\LethalCompanyShrinkRay\\asfdasf\\asfdasf.csproj",
+      "projectName": "asfdasf",
+      "projectPath": "C:\\Users\\Izek\\source\\repos\\LethalCompanyShrinkRay\\asfdasf\\asfdasf.csproj",
+      "packagesPath": "C:\\Users\\Izek\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Izek\\source\\repos\\LethalCompanyShrinkRay\\asfdasf\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\Izek\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net452"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {},
+        "https://nuget.bepinex.dev/v3/index.json": {}
+      },
+      "frameworks": {
+        "net452": {
+          "targetAlias": "net452",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      }
+    },
+    "frameworks": {
+      "net452": {
+        "targetAlias": "net452",
+        "dependencies": {
+          "BepInEx.NetLauncher": {
+            "include": "Compile",
+            "target": "Package",
+            "version": "[6.0.0-*, )"
+          },
+          "BepInEx.PluginInfoProps": {
+            "target": "Package",
+            "version": "[1.*, )"
+          },
+          "Microsoft.NETFramework.ReferenceAssemblies": {
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[1.0.2, )"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+      }
+    }
+  },
+  "logs": [
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package BepInEx.NetLauncher.Common. No packages exist with this id in source(s): BepInEx, Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "BepInEx.NetLauncher.Common",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.5.2"
+      ]
+    }
+  ]
+}
