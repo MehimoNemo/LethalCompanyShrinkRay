@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace LCShrinkRay.comp
 {
-    internal class shrinking : MonoBehaviour
+    internal class Shrinking : MonoBehaviour
     {
         GameObject player;
         Transform playerTransform;

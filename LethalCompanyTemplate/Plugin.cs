@@ -40,7 +40,7 @@ namespace LCShrinkRay
         {
             GameObject gameObject = new GameObject("SHRINKING");
             DontDestroyOnLoad(gameObject);
-            gameObject.AddComponent<shrinking>();
+            gameObject.AddComponent<Shrinking>();
             Logger.LogInfo($"SHRINKING Started!");
         }
     }
