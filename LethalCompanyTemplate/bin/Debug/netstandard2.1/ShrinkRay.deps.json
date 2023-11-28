@@ -13,10 +13,21 @@
           "BepInEx.Core": "5.4.21",
           "BepInEx.PluginInfoProps": "1.1.0",
           "UnityEngine.Modules": "2022.3.9",
+          "Assembly-CSharp-firstpass": "0.0.0.0",
           "Assembly-CSharp": "0.0.0.0",
           "ClientNetworkTransform": "0.0.0.0",
+          "DissonanceVoip": "0.0.0.0",
+          "Unity.AI.Navigation": "0.0.0.0",
+          "Unity.Animation.Rigging": "0.0.0.0",
           "Unity.InputSystem": "1.7.0.0",
-          "Unity.Netcode.Runtime": "0.0.0.0"
+          "Unity.Netcode.Runtime": "0.0.0.0",
+          "Unity.RenderPipelines.Core.Runtime": "0.0.0.0",
+          "Unity.RenderPipelines.Core.ShaderLibrary": "0.0.0.0",
+          "Unity.RenderPipelines.HighDefinition.Config.Runtime": "0.0.0.0",
+          "Unity.RenderPipelines.HighDefinition.Runtime": "0.0.0.0",
+          "Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary": "0.0.0.0",
+          "Unity.TextMeshPro": "0.0.0.0",
+          "UnityEngine.UI": "1.0.0.0"
         },
         "runtime": {
           "ShrinkRay.dll": {}
@@ -356,6 +367,14 @@
         }
       },
       "UnityEngine.Modules/2022.3.9": {},
+      "Assembly-CSharp-firstpass/0.0.0.0": {
+        "runtime": {
+          "Assembly-CSharp-firstpass.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
       "Assembly-CSharp/0.0.0.0": {
         "runtime": {
           "Assembly-CSharp.dll": {
@@ -367,6 +386,30 @@
       "ClientNetworkTransform/0.0.0.0": {
         "runtime": {
           "ClientNetworkTransform.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "DissonanceVoip/0.0.0.0": {
+        "runtime": {
+          "DissonanceVoip.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Unity.AI.Navigation/0.0.0.0": {
+        "runtime": {
+          "Unity.AI.Navigation.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Unity.Animation.Rigging/0.0.0.0": {
+        "runtime": {
+          "Unity.Animation.Rigging.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
           }
@@ -388,17 +431,25 @@
           }
         }
       },
-      "Unity.Animation.Rigging/0.0.0.0": {
+      "Unity.RenderPipelines.Core.Runtime/0.0.0.0": {
         "runtime": {
-          "Unity.Animation.Rigging.dll": {
+          "Unity.RenderPipelines.Core.Runtime.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
           }
         }
       },
-      "Unity.TextMeshPro/0.0.0.0": {
+      "Unity.RenderPipelines.Core.ShaderLibrary/0.0.0.0": {
         "runtime": {
-          "Unity.TextMeshPro.dll": {
+          "Unity.RenderPipelines.Core.ShaderLibrary.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Unity.RenderPipelines.HighDefinition.Config.Runtime/0.0.0.0": {
+        "runtime": {
+          "Unity.RenderPipelines.HighDefinition.Config.Runtime.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
           }
@@ -412,6 +463,22 @@
           }
         }
       },
+      "Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary/0.0.0.0": {
+        "runtime": {
+          "Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Unity.TextMeshPro/0.0.0.0": {
+        "runtime": {
+          "Unity.TextMeshPro.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
       "UnityEngine.UI/1.0.0.0": {
         "runtime": {
           "UnityEngine.UI.dll": {
@@ -420,27 +487,11 @@
           }
         }
       },
-      "Unity.RenderPipelines.Core.Runtime/0.0.0.0": {
-        "runtime": {
-          "Unity.RenderPipelines.Core.Runtime.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
-          }
-        }
-      },
       "Facepunch.Steamworks.Win64/1.0.0.0": {
         "runtime": {
           "Facepunch.Steamworks.Win64.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
-          }
-        }
-      },
-      "DissonanceVoip/0.0.0.0": {
-        "runtime": {
-          "DissonanceVoip.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -460,14 +511,6 @@
           }
         }
       },
-      "Unity.AI.Navigation/0.0.0.0": {
-        "runtime": {
-          "Unity.AI.Navigation.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
-          }
-        }
-      },
       "Unity.Collections/0.0.0.0": {
         "runtime": {
           "Unity.Collections.dll": {
@@ -476,9 +519,9 @@
           }
         }
       },
-      "Assembly-CSharp-firstpass/0.0.0.0": {
+      "Unity.Burst/0.0.0.0": {
         "runtime": {
-          "Assembly-CSharp-firstpass.dll": {
+          "Unity.Burst.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
           }
@@ -516,14 +559,6 @@
           }
         }
       },
-      "Unity.Burst/0.0.0.0": {
-        "runtime": {
-          "Unity.Burst.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
-          }
-        }
-      },
       "Unity.Multiplayer.Tools.NetStatsReporting/0.0.0.0": {
         "runtime": {
           "Unity.Multiplayer.Tools.NetStatsReporting.dll": {
@@ -556,18 +591,18 @@
           }
         }
       },
-      "Unity.RenderPipelines.HighDefinition.Config.Runtime/0.0.0.0": {
+      "Unity.Collections.LowLevel.ILSupport/0.0.0.0": {
         "runtime": {
-          "Unity.RenderPipelines.HighDefinition.Config.Runtime.dll": {
+          "Unity.Collections.LowLevel.ILSupport.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
           }
         }
       },
-      "Unity.Collections.LowLevel.ILSupport/0.0.0.0": {
+      "Unity.Burst.Unsafe/4.0.5.0": {
         "runtime": {
-          "Unity.Collections.LowLevel.ILSupport.dll": {
-            "assemblyVersion": "0.0.0.0",
+          "Unity.Burst.Unsafe.dll": {
+            "assemblyVersion": "4.0.5.0",
             "fileVersion": "0.0.0.0"
           }
         }
@@ -584,14 +619,6 @@
         "runtime": {
           "Unity.Services.Relay.dll": {
             "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
-          }
-        }
-      },
-      "Unity.Burst.Unsafe/4.0.5.0": {
-        "runtime": {
-          "Unity.Burst.Unsafe.dll": {
-            "assemblyVersion": "4.0.5.0",
             "fileVersion": "0.0.0.0"
           }
         }
@@ -918,12 +945,32 @@
       "path": "unityengine.modules/2022.3.9",
       "hashPath": "unityengine.modules.2022.3.9.nupkg.sha512"
     },
+    "Assembly-CSharp-firstpass/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
     "Assembly-CSharp/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
     "ClientNetworkTransform/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "DissonanceVoip/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Unity.AI.Navigation/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Unity.Animation.Rigging/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -938,12 +985,17 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.Animation.Rigging/0.0.0.0": {
+    "Unity.RenderPipelines.Core.Runtime/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.TextMeshPro/0.0.0.0": {
+    "Unity.RenderPipelines.Core.ShaderLibrary/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Unity.RenderPipelines.HighDefinition.Config.Runtime/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -953,22 +1005,22 @@
       "serviceable": false,
       "sha512": ""
     },
+    "Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Unity.TextMeshPro/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
     "UnityEngine.UI/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.RenderPipelines.Core.Runtime/0.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
     "Facepunch.Steamworks.Win64/1.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "DissonanceVoip/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -983,17 +1035,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.AI.Navigation/0.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
     "Unity.Collections/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Assembly-CSharp-firstpass/0.0.0.0": {
+    "Unity.Burst/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -1018,11 +1065,6 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.Burst/0.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
     "Unity.Multiplayer.Tools.NetStatsReporting/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
@@ -1043,12 +1085,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.RenderPipelines.HighDefinition.Config.Runtime/0.0.0.0": {
+    "Unity.Collections.LowLevel.ILSupport/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.Collections.LowLevel.ILSupport/0.0.0.0": {
+    "Unity.Burst.Unsafe/4.0.5.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -1059,11 +1101,6 @@
       "sha512": ""
     },
     "Unity.Services.Relay/0.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "Unity.Burst.Unsafe/4.0.5.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

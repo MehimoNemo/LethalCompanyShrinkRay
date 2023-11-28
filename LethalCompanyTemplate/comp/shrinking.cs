@@ -13,11 +13,12 @@ namespace LCShrinkRay.comp
 {
     internal class shrinking : MonoBehaviour
     {
+        GameObject player;
         Transform playerTransform;
         Transform player1Transform;
         Transform helmetHudTransform;
         internal ManualLogSource mls;
-        //GrabbableObject[] grabbables;
+        public static List<GameObject> grabbables = new List<GameObject>();
         public void Awake()
         {
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
@@ -30,11 +31,50 @@ namespace LCShrinkRay.comp
         {
             //If player picks up something and is short, change the grabbleObject.item.positionOffset by -0.2 0.5 -0.5(still need to test with other objects besides apparatus)
             //for each grabbable object, if public PlayerControllerB playerHeldBy does not equal null, find out which player and if they're shrunk. If they are, change the item offset.
-            GameObject.FindAnyObjectByType(typeof(GrabbableObject));
-            //grabbables = (GrabbableObject[])FindObjectsOfType(typeof(GrabbableObject));
-            mls.LogMessage(FindObjectsOfType(typeof(GrabbableObject)));
-            GrabbableObject[] grabbables = (GrabbableObject[])FindObjectsOfType<GrabbableObject>().Where(x => x.playerHeldBy != null);
-            mls.LogMessage(grabbables);
+            grabbables.Clear();
+            GrabbableObject[] array = UnityEngine.Object.FindObjectsOfType<GrabbableObject>();
+            
+            //mls.LogMessage(grabbables);
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                PlayerControllerB holdingPlayer = array[i].playerHeldBy;
+                
+                if (holdingPlayer != null)
+                {
+                    Transform holdingPlayerTransform = holdingPlayer.GetComponent<Transform>();
+                    mls.LogInfo("Found player holding object!");
+                    mls.LogInfo(holdingPlayer);
+                    mls.LogInfo(array[i].itemProperties.positionOffset);
+                    //if player scale is less than 1 and we've not finished scaling the position
+                    if (array[i].itemProperties.positionOffset != new Vector3(-0.2f, 0.5f, -0.5f) && holdingPlayerTransform.localScale.x != 1f)
+                    {
+                        //then scale the offset position appropriately
+                        float scale = holdingPlayerTransform.localScale.x;
+                        float x = -0.25f * scale - 0.25f;
+                        float y = 0.625f * scale - 0.625f;
+                        float z = -0.625f * scale + 0.625f;
+                        //inverted even though my math was perfect but okay
+                        Vector3 posOffsetVect = new Vector3(-x, -y, -z);
+                        array[i].itemProperties.positionOffset = posOffsetVect;
+
+                    }
+                    // else if player scale is normal or bigger and we've not finished resetting the position
+                    else if (array[i].itemProperties.positionOffset != new Vector3(0, 0, 0) && holdingPlayerTransform.localScale.x == 1f)
+                    {
+                        //then reset it
+                        array[i].itemProperties.positionOffset = new Vector3 (0, 0, 0);
+                    }
+                }
+                //This piece of code is to reset objects after they get set down
+                else
+                {
+                    array[i].itemProperties.positionOffset = new Vector3(0, 0, 0);
+                }
+
+
+            }
+
 
 
 
@@ -42,7 +82,8 @@ namespace LCShrinkRay.comp
             {
                 try
                 {
-                    playerTransform = GameObject.Find("Player").GetComponent<Transform>();
+                    player = GameObject.Find("Player");
+                    playerTransform = player.GetComponent<Transform>();
                     helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
                     helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
                     mls.LogInfo("Player transform got!");
@@ -58,19 +99,19 @@ namespace LCShrinkRay.comp
                 if (Keyboard.current.nKey.wasPressedThisFrame)
                 {
                     mls.LogInfo("Shrinking player model");
-                    float scale = 0.2f;
-                    PlayerShrinkAnimation(scale, playerTransform, helmetHudTransform);
+                    float scale = 0.4f;
+                    PlayerShrinkAnimation(scale, player, helmetHudTransform);
                 }
                 if (Keyboard.current.mKey.wasPressedThisFrame)
                 {
                     mls.LogInfo("Growing player model");
                     float scale = 1f;
-                    PlayerShrinkAnimation(scale, playerTransform, helmetHudTransform);
+                    PlayerShrinkAnimation(scale, player, helmetHudTransform);
                 }
                 if (Keyboard.current.jKey.wasPressedThisFrame)
                 {
                     mls.LogInfo("Shrinking player(1) model");
-                    float scale = 0.2f;
+                    float scale = 0.4f;
                     ObjectShrinkAnimation(scale, player1Transform);
                 }
                 if (Keyboard.current.kKey.wasPressedThisFrame)
@@ -117,13 +158,16 @@ namespace LCShrinkRay.comp
 
 
         //Player Shrink animation, shrinks a player over a sinusoidal curve for a duration. Requires the player and mask transforms.
-        public void PlayerShrinkAnimation(float shrinkAmt, Transform playerTransform, Transform maskTransform)
+        public void PlayerShrinkAnimation(float shrinkAmt, GameObject player, Transform maskTransform)
         {
-            StartCoroutine(PlayerShrinkAnimationCoroutine(shrinkAmt, playerTransform, maskTransform));
+            StartCoroutine(PlayerShrinkAnimationCoroutine(shrinkAmt, player, maskTransform));
         }
 
-        private IEnumerator PlayerShrinkAnimationCoroutine(float shrinkAmt, Transform playerTransform, Transform maskTransform)
+        private IEnumerator PlayerShrinkAnimationCoroutine(float shrinkAmt, GameObject player, Transform maskTransform)
         {
+            playerTransform = player.GetComponent<Transform>();
+            mls.LogInfo(playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly"));
+            Transform armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
             float amplitude = 0.5f;
             float duration = 2f;
             float elapsedTime = 0f;
@@ -137,6 +181,7 @@ namespace LCShrinkRay.comp
                 playerTransform.localScale = new Vector3(shrinkage, shrinkage, shrinkage);
                 maskTransform.localScale = CalcMaskScaleVec(shrinkage);
                 maskTransform.localPosition = CalcMaskPosVec(shrinkage);
+                armTransform.localScale = CalcArmScale(shrinkage);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
@@ -146,6 +191,7 @@ namespace LCShrinkRay.comp
             playerTransform.localScale = new Vector3(shrinkAmt, shrinkAmt, shrinkAmt);
             maskTransform.localScale = CalcMaskScaleVec(shrinkAmt);
             maskTransform.localPosition = CalcMaskPosVec(shrinkAmt);
+            armTransform.localScale = CalcArmScale(shrinkAmt);
         }
         public Vector3 CalcMaskPosVec(float shrinkScale)
         {
@@ -163,6 +209,16 @@ namespace LCShrinkRay.comp
             float x = 0.277f * shrinkScale + 0.2546f;
             float y = 0.2645f * shrinkScale + 0.267f;
             float z = 0.177f * shrinkScale + 0.3546f;
+            pos = new Vector3(x, y, z);
+            return pos;
+        }
+
+        public Vector3 CalcArmScale(float shrinkScale)
+        {
+            Vector3 pos;
+            float x = 0.35f * shrinkScale + 0.58f;
+            float y = -0.0625f * shrinkScale + 1.0625f;
+            float z = -0.125f * shrinkScale + 1.15f;
             pos = new Vector3(x, y, z);
             return pos;
         }
