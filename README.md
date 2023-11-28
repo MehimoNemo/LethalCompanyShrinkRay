@@ -1,2 +1,2 @@
-# LethalCompanyTemplate
-A template for a BepInEx 5 Plugin, using the correct .csproj configuration for Lethal Company modding
+# Shrink Ray
+A BepInEx 5 Plugin, Lethal Company mod for a functioning(not shitty) shrink ray!
