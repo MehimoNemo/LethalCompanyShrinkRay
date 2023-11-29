@@ -126,11 +126,11 @@ namespace LCShrinkRay.comp
             GrabbableObject[] array = UnityEngine.Object.FindObjectsOfType<GrabbableObject>();
             
             //mls.LogMessage(grabbables);
-
             for (int i = 0; i < array.Length; i++)
             {
                 PlayerControllerB holdingPlayer = array[i].playerHeldBy;
-                
+                //Vector3 objectOffset = holdingPlayer.currentlyHeldObject.itemProperties.positionOffset;
+
                 if (holdingPlayer != null)
                 {
                     Transform holdingPlayerTransform = holdingPlayer.GetComponent<Transform>();
