@@ -38,6 +38,7 @@ namespace LCShrinkRay
             //Networking.GetString += Shrinking.ShGetString;
         }
 
+
         
         private void OnDestroy()
         {

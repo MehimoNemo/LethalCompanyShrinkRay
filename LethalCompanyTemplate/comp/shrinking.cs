@@ -91,18 +91,36 @@ namespace LCShrinkRay.comp
                         {
                             mls.LogMessage("Looks like it must be player 0");
                             PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                            if(msgShrinkage < 1)
+                            {
+                                // Add the GrabbableObject script to the existing object
+                                GrabbableObject grabbableObject = msgObject.AddComponent<GrabbableObject>();
+                                //grabbableObject.grabbable = true
+                            }
                         }
                         //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
                         else if (objPlayerNum == clientId.ToString())
                         {
                             mls.LogMessage("Looks like it must be us!!!!");
                             PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                            if (msgShrinkage < 1)
+                            {
+                                // Add the GrabbableObject script to the existing object
+                                GrabbableObject grabbableObject = msgObject.AddComponent<GrabbableObject>();
+                                //grabbableObject.grabbable = true
+                            }
                         }
                         //if it's anyone or anything else, we don't care, just use ObjectShrink
                         else
                         {
-                            mls.LogMessage("Looks like it must be some random thing....boring...");
+                            mls.LogMessage("Looks like it must be some random person....boring...");
                             ObjectShrinkAnimation(msgShrinkage, msgObject);
+                            if (msgShrinkage < 1)
+                            {
+                                // Add the GrabbableObject script to the existing object
+                                GrabbableObject grabbableObject = msgObject.AddComponent<GrabbableObject>();
+                                //grabbableObject.grabbable = true
+                            }
                         }
                     }
                     //TODO: ADD NON-PLAYER SHRINKING
