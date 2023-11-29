@@ -24,12 +24,11 @@ namespace LCShrinkRay.comp
         public GameObject player1Object;
         Transform player1Transform;
         Transform helmetHudTransform;
-        internal ManualLogSource mls;
+        private static ManualLogSource mls;
         public static List<GameObject> grabbables = new List<GameObject>();
         ulong clientId = 239;
 
 
-        public static GotStringEventDelegate GetString;
 
         public void Awake()
         {
@@ -38,46 +37,80 @@ namespace LCShrinkRay.comp
             /*playerTransform = GameObject.Find("Player").GetComponent<Transform>();
             helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
             helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);*/
-            GetString += (String data, String signature) =>
+            
+        }
+        internal static void ShGetString(string data, string signature)
+        {
+            if (signature == "Someone...")
             {
+                mls.LogWarning("THREAD NAME");
+                mls.LogWarning(System.Threading.Thread.CurrentThread.Name);
+                var shrinkin = new Shrinking();
+                mls.LogMessage("Recieveing message that an object is shrinking! Object: \"" + data + "\"");
                 mls.LogInfo("DATA");
                 mls.LogInfo(data);
                 mls.LogInfo(signature);
-                String[] splitStr =  data.Split(',');
 
-                GameObject msgObject = GameObject.Find(splitStr[0]);
+                String[] splitStr = data.Split(',');
+                GameObject msgObject;
+                try
+                {
+                    msgObject = GameObject.Find(splitStr[0]);
+                    mls.LogWarning("Found the gosh dang game object: \"" + msgObject + "\"!");
+                }
+                catch (Exception e)
+                {
+                    mls.LogWarning("Could not find the gosh dang game object named \"" + splitStr[0] + "\"");
+                    msgObject = null;
+                }
                 float msgShrinkage = float.Parse(splitStr[1]);
-                String objPlayerNum = splitStr[1].Substring(splitStr[0].IndexOf("("), splitStr[0].IndexOf(")"));
+                mls.LogMessage(splitStr[1]);
+
+                mls.LogMessage("IS THIS WHERE IT'S BREAKING????");
+
+                String objPlayerNum = "0";
+                //This will break if there's more than 10 players!!!!
+                if (splitStr[0].Contains('('))
+                {
+                    objPlayerNum = splitStr[0].Substring(splitStr[0].IndexOf("("), 1);
+                }
+
                 //if object getting shrunk is us, let's shrink using playerShrinkAnimation
                 //else, just use object
                 //actually on second thought, let's just always use playerShrinkAnimation, everything's wrapped in try's anyways
+                mls.LogMessage("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
+                mls.LogMessage("Object tag is "+msgObject.tag);
                 if (msgObject.tag == "Player")
                 {
                     //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
-                    if (!msgObject.name.Contains("(") && clientId == 0)
+                    if (!(msgObject.name.Contains("(")) && shrinkin.clientId == 0)
                     {
 
-                        PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                        shrinkin.PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
                     }
                     //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
-                    else if (objPlayerNum == clientId.ToString())
+                    else if (objPlayerNum == shrinkin.clientId.ToString())
                     {
-                        PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                        shrinkin.PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
                     }
                     //if it's anyone or anything else, we don't care, just use ObjectShrink
                     else
                     {
-                        ObjectShrinkAnimation(msgShrinkage, msgObject);
+                        shrinkin.ObjectShrinkAnimation(msgShrinkage, msgObject);
                     }
                 }
-
-            };
+                //TODO: ADD NON-PLAYER SHRINKING
+            }
         }
         public void Update()
         {
-            if (clientId == 239)
+;
+            
+            if (clientId == 239 && GameNetworkManager.Instance.localPlayerController != null )
             {
+                
                 clientId = GameNetworkManager.Instance.localPlayerController.playerClientId;
+                //mls.LogInfo("Instance: " + GameNetworkManager.Instance);
                 mls.LogInfo("ClientID: " + clientId);
             }
             //If player picks up something and is short, change the grabbleObject.item.positionOffset by -0.2 0.5 -0.5(still need to test with other objects besides apparatus)
@@ -133,56 +166,101 @@ namespace LCShrinkRay.comp
                 try
                 {
                     player = GameObject.Find("Player");
-                    playerTransform = player.GetComponent<Transform>();
-                    helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
-                    helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
-                    mls.LogInfo("Player transform got!");
+                    if (player != null)
+                    {
+                        playerTransform = player.GetComponent<Transform>();
+                    }
+                    if (GameObject.Find("ScavengerHelmet") != null)
+                    {
+                        helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
+                        helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
+                        mls.LogInfo("Player transform got!");
+                    }
                 } catch(Exception e) { }
                 try
                 {
                     player1Object = GameObject.Find("Player (1)");
-                    player1Transform = player1Object.GetComponent<Transform>();
+                    if (player1Object != null)
+                    {
+                        player1Transform = player1Object.GetComponent<Transform>();
+                    }
                 } catch(Exception e) { }
             }
             //mls.LogInfo("\n\n\n\n\n\n HELP \n\n\n\n\n\n");
             try
             {
-                if (Keyboard.current.nKey.wasPressedThisFrame)
+                bool nKeyPressed = false;
+                bool mKeyPressed = false;
+                bool jKeyPressed = false;
+                bool kKeyPressed = false;
+                bool oKeyPressed = false;
+                if (Keyboard.current.oKey.wasPressedThisFrame && !oKeyPressed)
                 {
+                    oKeyPressed = true;
+                    mls.LogInfo("Simulating fake broadcast");
+                    ShGetString("Player,"+(0.4f).ToString(), "Someone...");
+                }
+                else if (!Keyboard.current.oKey.isPressed)
+                {
+                    oKeyPressed = false;
+                }
+                if (Keyboard.current.nKey.wasPressedThisFrame && !nKeyPressed)
+                {
+                    nKeyPressed = true;
                     mls.LogInfo("Shrinking player model");
                     float scale = 0.4f;
                     PlayerShrinkAnimation(scale, player, helmetHudTransform);
                     sendShrinkMessage(player, scale);
                 }
-                if (Keyboard.current.mKey.wasPressedThisFrame)
+                else if (!Keyboard.current.nKey.isPressed)
                 {
+                    nKeyPressed = false;
+                }
+                if (Keyboard.current.mKey.wasPressedThisFrame && !mKeyPressed)
+                {
+                    mKeyPressed = true;
                     mls.LogInfo("Growing player model");
                     float scale = 1f;
                     PlayerShrinkAnimation(scale, player, helmetHudTransform);
                     sendShrinkMessage(player, scale);
                 }
-                if (Keyboard.current.jKey.wasPressedThisFrame)
+                else if (!Keyboard.current.mKey.isPressed)
                 {
+                    mKeyPressed = false;
+                }
+                if (Keyboard.current.jKey.wasPressedThisFrame && !jKeyPressed)
+                {
+                    jKeyPressed = true;
                     mls.LogInfo("Shrinking player(1) model");
                     float scale = 0.4f;
                     ObjectShrinkAnimation(scale, player1Object);
                     sendShrinkMessage(player1Object, scale);
                 }
-                if (Keyboard.current.kKey.wasPressedThisFrame)
+                else if (!Keyboard.current.jKey.isPressed)
                 {
+                    jKeyPressed = false;
+                }
+                if (Keyboard.current.kKey.wasPressedThisFrame && !kKeyPressed)
+                {
+                    kKeyPressed = true;
                     mls.LogInfo("Growing player(1) model");
                     float scale = 1f;
                     ObjectShrinkAnimation(scale, player1Object);
                     sendShrinkMessage(player1Object, scale);
                 }
+                else if (!Keyboard.current.kKey.isPressed)
+                {
+                    kKeyPressed = false;
+                }
             }
             catch(Exception e) { }
         }
+        
         public void sendShrinkMessage(GameObject shrinkObject, float shrinkage)
         {
             //This turns the object into a searchable string
-            String rawStr = player.ToString();
-            String newStr = player.ToString().Substring(0, rawStr.LastIndexOf('(') - 1);
+            String rawStr = shrinkObject.ToString();
+            String newStr = shrinkObject.ToString().Substring(0, rawStr.LastIndexOf('(') - 1);
             mls.LogMessage("Sending message that an object is shrinking! Object: \""+newStr+"\" Shrinkage: "+shrinkage);
             LC_API.ServerAPI.Networking.Broadcast(newStr+','+shrinkage.ToString(), "Someone...");
         }
@@ -190,11 +268,21 @@ namespace LCShrinkRay.comp
         //object shrink animation infrastructure!
         public void ObjectShrinkAnimation(float shrinkAmt, GameObject gObject)
         {
-            StartCoroutine(ObjectShrinkAnimationCoroutine(shrinkAmt, gObject));
+            if (gObject != null)
+            {
+                mls.LogWarning("LOOKS GOOD SENDING IT TO THE COROUTINE!!!!!");
+                StartCoroutine(ObjectShrinkAnimationCoroutine(shrinkAmt, gObject));
+            }
+            else
+            {
+                mls.LogMessage("gObject is null...");
+            }
         }
 
         private IEnumerator ObjectShrinkAnimationCoroutine(float shrinkAmt, GameObject gObject)
         {
+            mls.LogWarning("ENTERING COROUTINE OBJECT SHRINK");
+            mls.LogWarning("gObject: " + gObject);
             Transform objectTransform = gObject.GetComponent<Transform>();
             float duration = 2f;
             float elapsedTime = 0f;
@@ -284,5 +372,6 @@ namespace LCShrinkRay.comp
             pos = new Vector3(x, y, z);
             return pos;
         }
+
     }
 }
