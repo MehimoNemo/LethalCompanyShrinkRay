@@ -8,6 +8,7 @@ using GameNetcodeStuff;
 using System.Collections;
 using Unity.Netcode;
 using System.Linq;
+using LC_API;
 
 namespace LCShrinkRay.comp
 {
@@ -29,6 +30,8 @@ namespace LCShrinkRay.comp
         }
         public void Update()
         {
+        
+
             //If player picks up something and is short, change the grabbleObject.item.positionOffset by -0.2 0.5 -0.5(still need to test with other objects besides apparatus)
             //for each grabbable object, if public PlayerControllerB playerHeldBy does not equal null, find out which player and if they're shrunk. If they are, change the item offset.
             grabbables.Clear();
@@ -123,8 +126,15 @@ namespace LCShrinkRay.comp
             }
             catch(Exception e) { }
         }
-        
 
+        public void sendShrinkMessage(GameObject shrinkObject, float shrinkage)
+        {
+            //This turns the object into a searchable string
+            String rawStr = player.ToString();
+            String newStr = player.ToString().Substring(0, rawStr.LastIndexOf('(') - 1);
+            mls.LogMessage("Sending message that an object is shrinking! Object: \""+newStr+"\" Shrinkage: "+shrinkage);
+            LC_API.ServerAPI.Networking.Broadcast(newStr+','+shrinkage.ToString(), "Someone...");
+        }
 
         //object shrink animation infrastructure!
         public void ObjectShrinkAnimation(float shrinkAmt, Transform objectTransform)

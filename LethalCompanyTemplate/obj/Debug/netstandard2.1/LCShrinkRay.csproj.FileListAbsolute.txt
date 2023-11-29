@@ -48,3 +48,4 @@ C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debu
 C:\Users\Izek\source\repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\ShrinkRay.pdb
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.RenderPipelines.Core.ShaderLibrary.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\LC_API.dll

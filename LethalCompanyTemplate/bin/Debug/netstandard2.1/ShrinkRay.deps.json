@@ -17,6 +17,7 @@
           "Assembly-CSharp": "0.0.0.0",
           "ClientNetworkTransform": "0.0.0.0",
           "DissonanceVoip": "0.0.0.0",
+          "LC_API": "1.0.0.0",
           "Unity.AI.Navigation": "0.0.0.0",
           "Unity.Animation.Rigging": "0.0.0.0",
           "Unity.InputSystem": "1.7.0.0",
@@ -396,6 +397,14 @@
           "DissonanceVoip.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "LC_API/1.0.0.0": {
+        "runtime": {
+          "LC_API.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       },
@@ -961,6 +970,11 @@
       "sha512": ""
     },
     "DissonanceVoip/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LC_API/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
