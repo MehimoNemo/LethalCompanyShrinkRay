@@ -14,6 +14,7 @@ using LC_API;
 
 using static LC_API.ServerAPI.Networking;
 using System.Xml.Linq;
+using LC_API.ServerAPI;
 
 namespace LCShrinkRay.comp
 {
@@ -37,70 +38,76 @@ namespace LCShrinkRay.comp
             /*playerTransform = GameObject.Find("Player").GetComponent<Transform>();
             helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
             helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);*/
-            
-        }
-        internal static void ShGetString(string data, string signature)
-        {
-            if (signature == "Someone...")
+
+
+            Networking.GetString = (GotStringEventDelegate)delegate (string data, string signature)
             {
-                mls.LogWarning("THREAD NAME");
-                mls.LogWarning(System.Threading.Thread.CurrentThread.Name);
-                var shrinkin = new Shrinking();
-                mls.LogMessage("Recieveing message that an object is shrinking! Object: \"" + data + "\"");
-                mls.LogInfo("DATA");
-                mls.LogInfo(data);
-                mls.LogInfo(signature);
-
-                String[] splitStr = data.Split(',');
-                GameObject msgObject;
-                try
+                if (signature == "Someone...")
                 {
-                    msgObject = GameObject.Find(splitStr[0]);
-                    mls.LogWarning("Found the gosh dang game object: \"" + msgObject + "\"!");
-                }
-                catch (Exception e)
-                {
-                    mls.LogWarning("Could not find the gosh dang game object named \"" + splitStr[0] + "\"");
-                    msgObject = null;
-                }
-                float msgShrinkage = float.Parse(splitStr[1]);
-                mls.LogMessage(splitStr[1]);
+                    mls.LogWarning("THREAD NAME");
+                    mls.LogWarning(System.Threading.Thread.CurrentThread.Name);
+                    mls.LogMessage("Recieveing message that an object is shrinking! Object: \"" + data + "\"");
+                    mls.LogInfo("DATA");
+                    mls.LogInfo(data);
+                    mls.LogInfo(signature);
 
-                mls.LogMessage("IS THIS WHERE IT'S BREAKING????");
-
-                String objPlayerNum = "0";
-                //This will break if there's more than 10 players!!!!
-                if (splitStr[0].Contains('('))
-                {
-                    objPlayerNum = splitStr[0].Substring(splitStr[0].IndexOf("("), 1);
-                }
-
-                //if object getting shrunk is us, let's shrink using playerShrinkAnimation
-                //else, just use object
-                //actually on second thought, let's just always use playerShrinkAnimation, everything's wrapped in try's anyways
-                mls.LogMessage("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
-                mls.LogMessage("Object tag is "+msgObject.tag);
-                if (msgObject.tag == "Player")
-                {
-                    //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
-                    if (!(msgObject.name.Contains("(")) && shrinkin.clientId == 0)
+                    String[] splitStr = data.Split(',');
+                    GameObject msgObject;
+                    try
                     {
+                        msgObject = GameObject.Find(splitStr[0]);
+                        mls.LogWarning("Found the gosh dang game object: \"" + msgObject + "\"!");
+                    }
+                    catch (Exception e)
+                    {
+                        mls.LogWarning("Could not find the gosh dang game object named \"" + splitStr[0] + "\"");
+                        msgObject = null;
+                    }
+                    float msgShrinkage = float.Parse(splitStr[1]);
+                    mls.LogMessage(splitStr[1]);
 
-                        shrinkin.PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                    }
-                    //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
-                    else if (objPlayerNum == shrinkin.clientId.ToString())
+                    mls.LogMessage("IS THIS WHERE IT'S BREAKING????");
+
+                    String objPlayerNum = "0";
+                    //This will break if there's more than 10 players!!!!
+                    if (splitStr[0].Contains('('))
                     {
-                        shrinkin.PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                        objPlayerNum = splitStr[0].Substring(splitStr[0].IndexOf("(")+1, splitStr[0].IndexOf(")") - splitStr[0].IndexOf("(")-1);
                     }
-                    //if it's anyone or anything else, we don't care, just use ObjectShrink
-                    else
+                    mls.LogMessage("objPlayerNum: " + objPlayerNum);
+
+                    //if object getting shrunk is us, let's shrink using playerShrinkAnimation
+                    //else, just use object
+                    //actually on second thought, let's just always use playerShrinkAnimation, everything's wrapped in try's anyways
+                    mls.LogMessage("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
+                    mls.LogMessage("Object tag is " + msgObject.tag);
+                    mls.LogMessage("The client Id is: " + clientId.ToString());
+                    mls.LogMessage("The object name is: " + msgObject.name);
+                    if (msgObject.tag == "Player")
                     {
-                        shrinkin.ObjectShrinkAnimation(msgShrinkage, msgObject);
+                        mls.LogMessage("Looks like it must be a player");
+                        //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
+                        if (!(msgObject.name.Contains("(")) && clientId == 0)
+                        {
+                            mls.LogMessage("Looks like it must be player 0");
+                            PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                        }
+                        //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
+                        else if (objPlayerNum == clientId.ToString())
+                        {
+                            mls.LogMessage("Looks like it must be us!!!!");
+                            PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                        }
+                        //if it's anyone or anything else, we don't care, just use ObjectShrink
+                        else
+                        {
+                            mls.LogMessage("Looks like it must be some random thing....boring...");
+                            ObjectShrinkAnimation(msgShrinkage, msgObject);
+                        }
                     }
+                    //TODO: ADD NON-PLAYER SHRINKING
                 }
-                //TODO: ADD NON-PLAYER SHRINKING
-            }
+            };
         }
         public void Update()
         {
@@ -198,7 +205,9 @@ namespace LCShrinkRay.comp
                 {
                     oKeyPressed = true;
                     mls.LogInfo("Simulating fake broadcast");
-                    ShGetString("Player,"+(0.4f).ToString(), "Someone...");
+                    //ShGetString("Player,"+(0.4f).ToString(), "Someone...");
+                    //this is an old debug tool, no longer works, i should probably figure out how to recreate it...
+                    Networking.GetString?.Invoke("Player," + (0.4f).ToString(), "Someone...");
                 }
                 else if (!Keyboard.current.oKey.isPressed)
                 {
