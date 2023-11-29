@@ -10,28 +10,76 @@ using Unity.Netcode;
 using System.Linq;
 using LC_API;
 
+
+
+using static LC_API.ServerAPI.Networking;
+using System.Xml.Linq;
+
 namespace LCShrinkRay.comp
 {
     internal class Shrinking : MonoBehaviour
     {
         GameObject player;
         Transform playerTransform;
+        public GameObject player1Object;
         Transform player1Transform;
         Transform helmetHudTransform;
         internal ManualLogSource mls;
         public static List<GameObject> grabbables = new List<GameObject>();
+        ulong clientId = 239;
+
+
+        public static GotStringEventDelegate GetString;
+
         public void Awake()
         {
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
             mls.LogInfo("PENIS PENIS PENIS");
             /*playerTransform = GameObject.Find("Player").GetComponent<Transform>();
             helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
-            helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);*/ 
+            helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);*/
+            GetString += (String data, String signature) =>
+            {
+                mls.LogInfo("DATA");
+                mls.LogInfo(data);
+                mls.LogInfo(signature);
+                String[] splitStr =  data.Split(',');
+
+                GameObject msgObject = GameObject.Find(splitStr[0]);
+                float msgShrinkage = float.Parse(splitStr[1]);
+                String objPlayerNum = splitStr[1].Substring(splitStr[0].IndexOf("("), splitStr[0].IndexOf(")"));
+                //if object getting shrunk is us, let's shrink using playerShrinkAnimation
+                //else, just use object
+                //actually on second thought, let's just always use playerShrinkAnimation, everything's wrapped in try's anyways
+                if (msgObject.tag == "Player")
+                {
+                    //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
+                    if (!msgObject.name.Contains("(") && clientId == 0)
+                    {
+
+                        PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                    }
+                    //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
+                    else if (objPlayerNum == clientId.ToString())
+                    {
+                        PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                    }
+                    //if it's anyone or anything else, we don't care, just use ObjectShrink
+                    else
+                    {
+                        ObjectShrinkAnimation(msgShrinkage, msgObject);
+                    }
+                }
+
+            };
         }
         public void Update()
         {
-        
-
+            if (clientId == 239)
+            {
+                clientId = GameNetworkManager.Instance.localPlayerController.playerClientId;
+                mls.LogInfo("ClientID: " + clientId);
+            }
             //If player picks up something and is short, change the grabbleObject.item.positionOffset by -0.2 0.5 -0.5(still need to test with other objects besides apparatus)
             //for each grabbable object, if public PlayerControllerB playerHeldBy does not equal null, find out which player and if they're shrunk. If they are, change the item offset.
             grabbables.Clear();
@@ -60,7 +108,6 @@ namespace LCShrinkRay.comp
                         //inverted even though my math was perfect but okay
                         Vector3 posOffsetVect = new Vector3(-x, -y, -z);
                         array[i].itemProperties.positionOffset = posOffsetVect;
-
                     }
                     // else if player scale is normal or bigger and we've not finished resetting the position
                     else if (array[i].itemProperties.positionOffset != new Vector3(0, 0, 0) && holdingPlayerTransform.localScale.x == 1f)
@@ -93,7 +140,8 @@ namespace LCShrinkRay.comp
                 } catch(Exception e) { }
                 try
                 {
-                    player1Transform = GameObject.Find("Player (1)").GetComponent<Transform>();
+                    player1Object = GameObject.Find("Player (1)");
+                    player1Transform = player1Object.GetComponent<Transform>();
                 } catch(Exception e) { }
             }
             //mls.LogInfo("\n\n\n\n\n\n HELP \n\n\n\n\n\n");
@@ -104,29 +152,32 @@ namespace LCShrinkRay.comp
                     mls.LogInfo("Shrinking player model");
                     float scale = 0.4f;
                     PlayerShrinkAnimation(scale, player, helmetHudTransform);
+                    sendShrinkMessage(player, scale);
                 }
                 if (Keyboard.current.mKey.wasPressedThisFrame)
                 {
                     mls.LogInfo("Growing player model");
                     float scale = 1f;
                     PlayerShrinkAnimation(scale, player, helmetHudTransform);
+                    sendShrinkMessage(player, scale);
                 }
                 if (Keyboard.current.jKey.wasPressedThisFrame)
                 {
                     mls.LogInfo("Shrinking player(1) model");
                     float scale = 0.4f;
-                    ObjectShrinkAnimation(scale, player1Transform);
+                    ObjectShrinkAnimation(scale, player1Object);
+                    sendShrinkMessage(player1Object, scale);
                 }
                 if (Keyboard.current.kKey.wasPressedThisFrame)
                 {
                     mls.LogInfo("Growing player(1) model");
                     float scale = 1f;
-                    ObjectShrinkAnimation(scale, player1Transform);
+                    ObjectShrinkAnimation(scale, player1Object);
+                    sendShrinkMessage(player1Object, scale);
                 }
             }
             catch(Exception e) { }
         }
-
         public void sendShrinkMessage(GameObject shrinkObject, float shrinkage)
         {
             //This turns the object into a searchable string
@@ -137,13 +188,14 @@ namespace LCShrinkRay.comp
         }
 
         //object shrink animation infrastructure!
-        public void ObjectShrinkAnimation(float shrinkAmt, Transform objectTransform)
+        public void ObjectShrinkAnimation(float shrinkAmt, GameObject gObject)
         {
-            StartCoroutine(ObjectShrinkAnimationCoroutine(shrinkAmt, objectTransform));
+            StartCoroutine(ObjectShrinkAnimationCoroutine(shrinkAmt, gObject));
         }
 
-        private IEnumerator ObjectShrinkAnimationCoroutine(float shrinkAmt, Transform objectTransform)
+        private IEnumerator ObjectShrinkAnimationCoroutine(float shrinkAmt, GameObject gObject)
         {
+            Transform objectTransform = gObject.GetComponent<Transform>();
             float duration = 2f;
             float elapsedTime = 0f;
             float shrinkage = 1f;
