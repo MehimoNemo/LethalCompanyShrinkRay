@@ -10,6 +10,7 @@ using static UnityEngine.ParticleSystem.PlaybackState;
 using LCShrinkRay.comp;
 using LC_API.ServerAPI;
 using LC_API;
+using LCShrinkRay.patches;
 
 namespace LCShrinkRay
 {
@@ -35,6 +36,8 @@ namespace LCShrinkRay
             mls.LogInfo("The Test Mod Has Awoken");
 
             harmony.PatchAll(typeof(Plugin));
+            //harmony.PatchAll(typeof(SoundManagerPatch));
+            //harmony.PatchAll(typeof(PlayerControllerBPatch));
             //Networking.GetString += Shrinking.ShGetString;
         }
 
