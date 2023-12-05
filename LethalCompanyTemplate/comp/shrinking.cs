@@ -163,28 +163,19 @@ namespace LCShrinkRay.comp
             
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
             mls.LogInfo("SUCCESSFULLY RUNNING PITCH FROM PATCH");
-            
+
             // Check if the player object is valid
             if (playerObject != null)
             {
-                float duration = 3.5f;
-                float elapsedTime = 0f;
+                // Get the player object's scale
+                float scale = playerObject.transform.localScale.x;
 
-                while (elapsedTime < duration)
-                {
-                    
-                    
-                    // Get the player object's scale
-                    float scale = playerObject.transform.localScale.x;
+                //float modifiedPitch = 1.2f;
+                float modifiedPitch = -0.417f * scale + 1.417f;
 
-                    //float modifiedPitch = 1.2f;
-                    float modifiedPitch = -0.417f * scale + 1.417f;
-
-                    // Set the modified pitch using the original method
-                    SoundManager.Instance.SetPlayerPitch(modifiedPitch, playerNum);
-                    elapsedTime += Time.deltaTime;
-                    yield return null; // Wait for the next frame
-                }
+                // Set the modified pitch using the original method
+                SoundManager.Instance.SetPlayerPitch(modifiedPitch, playerNum);
+                yield return null;
             }
             yield return null;
         }

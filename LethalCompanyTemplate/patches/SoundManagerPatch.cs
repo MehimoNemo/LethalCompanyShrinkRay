@@ -17,10 +17,7 @@ namespace LCShrinkRay.patches
         {
             shrinkin.SetPlayerPitch(pitch, playerObjNum);
         }
-        
-
 
     }
-
 
 }
