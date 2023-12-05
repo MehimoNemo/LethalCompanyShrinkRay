@@ -15,6 +15,7 @@ using LC_API;
 using static LC_API.ServerAPI.Networking;
 using System.Xml.Linq;
 using LC_API.ServerAPI;
+using LCShrinkRay.patches;
 
 namespace LCShrinkRay.comp
 {
@@ -49,7 +50,7 @@ namespace LCShrinkRay.comp
                     {
                         mls.LogWarning("THREAD NAME");
                         mls.LogWarning(System.Threading.Thread.CurrentThread.Name);
-                        mls.LogMessage("Recieveing message that an object is shrinking! Object: \"" + data + "\"");
+                        mls.LogMessage("Receiving message that an object is shrinking! Object: \"" + data + "\"");
                         mls.LogInfo("DATA");
                         mls.LogInfo(data);
                         mls.LogInfo(signature);
@@ -133,6 +134,61 @@ namespace LCShrinkRay.comp
         {
             return myScale;
         }
+
+        public void SetPlayerPitch(float pitch, int playerNum)
+        {
+            StartCoroutine(SetPlayerPitchCoroutine(pitch, playerNum));
+        }
+
+        static GameObject GetPlayerObject(int playerObjNum)
+        {
+            // Implement your logic to get the player object
+            // For example, you could use an array or a dictionary to store player objects
+            // and retrieve them based on playerObjNum
+            // GameObject playerObject = ...
+
+            string myPlayerObjectName = "Player";
+            if (playerObjNum != 0)
+            {
+                myPlayerObjectName = "Player (" + playerObjNum.ToString() + ")";
+            }
+            GameObject myPlayerObject = GameObject.Find(myPlayerObjectName);
+            return myPlayerObject;
+        }
+
+        private IEnumerator SetPlayerPitchCoroutine(float pitch, int playerNum)
+        {
+            // Get the player object based on playerObjNum
+               GameObject playerObject = GetPlayerObject(playerNum);
+            
+            mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
+            mls.LogInfo("SUCCESSFULLY RUNNING PITCH FROM PATCH");
+            
+            // Check if the player object is valid
+            if (playerObject != null)
+            {
+                float duration = 3.5f;
+                float elapsedTime = 0f;
+
+                while (elapsedTime < duration)
+                {
+                    
+                    
+                    // Get the player object's scale
+                    float scale = playerObject.transform.localScale.x;
+
+                    //float modifiedPitch = 1.2f;
+                    float modifiedPitch = -0.417f * scale + 1.417f;
+
+                    // Set the modified pitch using the original method
+                    SoundManager.Instance.SetPlayerPitch(modifiedPitch, playerNum);
+                    elapsedTime += Time.deltaTime;
+                    yield return null; // Wait for the next frame
+                }
+            }
+            yield return null;
+        }
+
         public void Update()
         {
             
@@ -244,7 +300,8 @@ namespace LCShrinkRay.comp
                     bool jKeyPressed = false;
                     bool kKeyPressed = false;
                     bool oKeyPressed = false;
-                    if (Keyboard.current.oKey.wasPressedThisFrame && !oKeyPressed)
+                    bool iKeyPressed = false;
+                if (Keyboard.current.oKey.wasPressedThisFrame && !oKeyPressed)
                     {
                         oKeyPressed = true;
                         mls.LogInfo("Simulating fake broadcast");
@@ -294,14 +351,36 @@ namespace LCShrinkRay.comp
                                 mls.LogInfo("Shrinking player(1) model");
                                 ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
                                 sendShrinkMessage(GameObject.Find(pPlayer), scale);
-                            }
+                            float newPitch = -0.417f * scale + 1.417f;
+                            SetPlayerPitch(newPitch, i);
+                        }
                         }
                     }
                     else if (!Keyboard.current.jKey.isPressed)
                     {
                         jKeyPressed = false;
                     }
-                    if (Keyboard.current.kKey.wasPressedThisFrame && !kKeyPressed)
+                if (Keyboard.current.iKey.wasPressedThisFrame && !iKeyPressed)
+                {
+                    iKeyPressed = true;
+                    int i;
+                    SoundManagerPatch.Postfix(1.2f, 0);
+                    for (i = 1; 1 < GameNetworkManager.Instance.connectedPlayers; i++)
+                    {
+                        String pPlayer = "Player (" + i.ToString() + ")";
+                        if (GameObject.Find(pPlayer) != null)
+                        {
+                            mls.LogInfo("Altering player voice pitches");
+                            //StartCoroutine(SoundManagerPatch.Postfix(1.2f, i));
+                            SetPlayerPitch(1.2f, i);
+                        }
+                    }
+                }
+                else if (!Keyboard.current.iKey.isPressed)
+                {
+                    iKeyPressed = false;
+                }
+                if (Keyboard.current.kKey.wasPressedThisFrame && !kKeyPressed)
                     {
                         kKeyPressed = true;
                         mls.LogInfo("Growing player(1) model");
@@ -315,7 +394,8 @@ namespace LCShrinkRay.comp
                                 mls.LogInfo("Shrinking player(1) model");
                                 ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
                                 sendShrinkMessage(GameObject.Find(pPlayer), scale);
-                            }
+                                SetPlayerPitch(1f, i);
+                        }
                         }
                     }
                     else if (!Keyboard.current.kKey.isPressed)

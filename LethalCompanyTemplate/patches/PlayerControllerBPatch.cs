@@ -14,22 +14,11 @@ namespace LCShrinkRay.patches
     [HarmonyPatch(typeof(PlayerControllerB))]
     internal class PlayerControllerBPatch
     {
+        [HarmonyPatch(typeof(PlayerControllerB))]
         [HarmonyPatch("Update")]
-        [HarmonyPostfix]
-        static void voiceShrinker(ref float ___num11)
+        static void PostFix(PlayerControllerB __instance)
         {
-            ulong clientId = GameNetworkManager.Instance.localPlayerController.playerClientId;
-            if (clientId != 239)
-            {
-                string myPlayerObjectName = "Player";
-                if (clientId != 0)
-                {
-                    myPlayerObjectName = "Player (" + clientId.ToString() + ")";
-                }
-                GameObject myPlayerObject = GameObject.Find(myPlayerObjectName);
-                float myScale = myPlayerObject.transform.localScale.x;
-                ___num11 = -0.417f * myScale + 0.417f;
-            }
+            SoundManager.Instance.playerVoicePitchTargets[__instance.playerClientId] = 1.2f;
         }
     }
 }
