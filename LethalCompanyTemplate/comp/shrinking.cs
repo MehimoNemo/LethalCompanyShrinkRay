@@ -16,6 +16,7 @@ using static LC_API.ServerAPI.Networking;
 using System.Xml.Linq;
 using LC_API.ServerAPI;
 using LCShrinkRay.patches;
+using UnityEngine.SceneManagement;
 
 namespace LCShrinkRay.comp
 {
@@ -29,20 +30,54 @@ namespace LCShrinkRay.comp
         Transform helmetHudTransform;
         private static ManualLogSource mls;
         public static List<GameObject> grabbables = new List<GameObject>();
+        public List<GrabbableObject> alteredGrabbedItems = new List<GrabbableObject>();
         ulong clientId = 239;
         float myScale = 1f;
+        
 
-
+        public List<string> ScreenBlockingItems = new List<string>();
+        private GameObject[] players;
 
         public void Awake()
         {
-            
-                mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
-                mls.LogInfo("PENIS PENIS PENIS");
-                /*playerTransform = GameObject.Find("Player").GetComponent<Transform>();
-                helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
-                helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);*/
+            //players = StartOfRound.Instance.allPlayerObjects;
+            //RoundManager.Instance.allEnemyVents;
 
+            // a list of itemnames to change
+            //boombox
+            //ladder
+            //radar booster
+            //v-type engine
+            //large Axle
+            //bottles Done
+            //chemical jug
+            //apparatus(lung)
+            //bee hive
+            //cash register
+            //robot
+            //teapot
+            //lamp
+            //player(soon)
+
+            ScreenBlockingItems.Add("Boombox");
+            ScreenBlockingItems.Add("LungApparatus");
+            ScreenBlockingItems.Add("FancyLamp");
+            ScreenBlockingItems.Add("ChemicalJug");
+            ScreenBlockingItems.Add("ExtensionLadderItem");
+            ScreenBlockingItems.Add("BinFullOfBottles");
+            ScreenBlockingItems.Add("TeaKettle");
+            ScreenBlockingItems.Add("Painting");
+            ScreenBlockingItems.Add("RobotToy");
+            ScreenBlockingItems.Add("EnginePart");
+            ScreenBlockingItems.Add("RadarBoosterDevice");
+            ScreenBlockingItems.Add("RedLocustHive");
+            ScreenBlockingItems.Add("CashRegisterItem");
+            ScreenBlockingItems.Add("Cog");
+            ScreenBlockingItems.Add("Player");
+
+
+            mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
+                mls.LogInfo("PENIS PENIS PENIS");
 
                 Networking.GetString = (GotStringEventDelegate)delegate (string data, string signature)
                 {
@@ -81,7 +116,6 @@ namespace LCShrinkRay.comp
 
                         //if object getting shrunk is us, let's shrink using playerShrinkAnimation
                         //else, just use object
-                        //actually on second thought, let's just always use playerShrinkAnimation, everything's wrapped in try's anyways
                         mls.LogMessage("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
                         mls.LogMessage("Object tag is " + msgObject.tag);
                         mls.LogMessage("The client Id is: " + clientId.ToString());
@@ -92,7 +126,8 @@ namespace LCShrinkRay.comp
                             //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
                             if (!(msgObject.name.Contains("(")) && clientId == 0)
                             {
-                                mls.LogMessage("Looks like it must be player 0");
+                                mls.LogMessage("Looks like it must be player 0(Us)");
+                                //TODO: REPLACE WITH STORED REFERENCE
                                 PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
                                 if (msgShrinkage < 1)
                                 {
@@ -105,10 +140,12 @@ namespace LCShrinkRay.comp
                             else if (objPlayerNum == clientId.ToString())
                             {
                                 mls.LogMessage("Looks like it must be us!!!!");
+                                //TODO: REPLACE WITH STORED REFERENCE
                                 PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
                                 if (msgShrinkage < 1)
                                 {
                                     // Add the GrabbableObject script to the existing object
+                                    //TODO: REPLACE WITH STORED REFERENCE
                                     GrabbableObject grabbableObject = msgObject.GetComponentByName("NetworkObject").gameObject.AddComponent<GrabbableObject>();
                                     grabbableObject.grabbable = true;
                                 }
@@ -120,7 +157,8 @@ namespace LCShrinkRay.comp
                                 ObjectShrinkAnimation(msgShrinkage, msgObject);
                                 if (msgShrinkage < 1)
                                 {
-                                    // Add the GrabbableObject script to the existing object
+                                    // Add the GrabbableObject script to the existing object(this doesn't work grabbable player code
+                                    //TODO: REPLACE WITH STORED REFERENCE
                                     GrabbableObject grabbableObject = msgObject.GetComponentByName("NetworkObject").gameObject.AddComponent<GrabbableObject>();
                                     grabbableObject.grabbable = true;
                                 }
@@ -130,9 +168,17 @@ namespace LCShrinkRay.comp
                     }
                 };
             }
-        public float getPlayerScale()
+        public float GetPlayerScale()
         {
             return myScale;
+        }
+        public bool IsShrunk(GameObject playerObject)
+        {
+            if (playerObject.transform.localScale.x < 1)
+            {
+                return true;
+            }
+            return false;
         }
 
         public void SetPlayerPitch(float pitch, int playerNum)
@@ -152,6 +198,7 @@ namespace LCShrinkRay.comp
             {
                 myPlayerObjectName = "Player (" + playerObjNum.ToString() + ")";
             }
+            //TODO: REPLACE WITH STORED REFERENCE
             GameObject myPlayerObject = GameObject.Find(myPlayerObjectName);
             return myPlayerObject;
         }
@@ -159,7 +206,8 @@ namespace LCShrinkRay.comp
         private IEnumerator SetPlayerPitchCoroutine(float pitch, int playerNum)
         {
             // Get the player object based on playerObjNum
-               GameObject playerObject = GetPlayerObject(playerNum);
+            //TODO: REPLACE WITH STORED REFERENCE
+            GameObject playerObject = GetPlayerObject(playerNum);
             
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
             mls.LogInfo("SUCCESSFULLY RUNNING PITCH FROM PATCH");
@@ -182,9 +230,10 @@ namespace LCShrinkRay.comp
 
         public void Update()
         {
-            
-                //SoundManager.Instance.SetPlayerPitch(1+(-0.417f * myScale + 0.417f), 0);
-                mls.LogMessage(SoundManager.Instance.playerVoicePitchTargets[0]);
+            //TODO: MAKE THIS ONLY RUN WHEN THE SHIP LANDS
+            //players = StartOfRound.Instance.allPlayerObjects;
+            //SoundManager.Instance.SetPlayerPitch(1+(-0.417f * myScale + 0.417f), 0);
+            mls.LogMessage(SoundManager.Instance.playerVoicePitchTargets[0]);
 
 
 
@@ -213,8 +262,46 @@ namespace LCShrinkRay.comp
 
                 GrabbableObject[] array = UnityEngine.Object.FindObjectsOfType<GrabbableObject>();
 
-                //mls.LogMessage(grabbables);
-                for (int i = 0; i < array.Length; i++)
+            //for each player, cycle through and find out if the player is currently holding an item
+            //if yes, change the grabbleObject.item.positionOffset, and add it to a stored array of picked up items
+            //if player is not holding it currently, fix it, and remove it from the array
+
+            foreach ( GameObject player in players){ 
+                //TODO: REPLACE WITH OBJECT REFERENCE
+                PlayerControllerB playerController = player.GetComponent<PlayerControllerB>();
+                if(playerController.isHoldingObject == true)
+                {
+                    GrabbableObject heldObject = playerController.currentlyHeldObject;
+                    //if the held object id matches any of the ones in our array, don't do anything, else, add it to the array and change offset
+                    hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems);
+                    if(!hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems))
+                    {
+                        
+                        alteredGrabbedItems.Add(heldObject);
+                        //TODO: REPLACE WITH OBJECT REFERENCE
+                        float scale = player.GetComponent<Transform>().localScale.x;
+                        float x = -0.25f * scale - 0.25f;
+                        float y = 0.625f * scale - 0.625f;
+                        float z = -0.625f * scale + 0.625f;
+                        //inverted even though my math was perfect but okay
+                        Vector3 posOffsetVect = new Vector3(-x, -y, -z);
+                        heldObject.itemProperties.positionOffset = posOffsetVect;
+                    }
+                }
+            }
+
+            //Remove the item from the list of altered items and reset them if they're not being held
+            foreach (  GrabbableObject obj in alteredGrabbedItems ) {
+                if (!obj.isHeld)
+                {
+                    obj.itemProperties.positionOffset = new Vector3(0, 0, 0);
+                    alteredGrabbedItems.Remove(obj);
+                }
+            }
+
+/*
+            //mls.LogMessage(grabbables);
+            for (int i = 0; i < array.Length; i++)
                 {
                     PlayerControllerB holdingPlayer = array[i].playerHeldBy;
                     //Vector3 objectOffset = holdingPlayer.currentlyHeldObject.itemProperties.positionOffset;
@@ -252,7 +339,7 @@ namespace LCShrinkRay.comp
 
 
                 }
-
+*/
 
 
 
@@ -260,14 +347,17 @@ namespace LCShrinkRay.comp
                 {
                     try
                     {
-                        player = GameObject.Find("Player");
+                    //TODO: REPLACE WITH STORED REFERENCE
+                    player = GameObject.Find("Player");
                         if (player != null)
                         {
                             playerTransform = player.GetComponent<Transform>();
                         }
-                        if (GameObject.Find("ScavengerHelmet") != null)
+                    //TODO: REPLACE WITH STORED REFERENCE
+                    if (GameObject.Find("ScavengerHelmet") != null)
                         {
-                            helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
+                        //TODO: REPLACE WITH STORED REFERENCE
+                        helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
                             helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
                             mls.LogInfo("Player transform got!");
                         }
@@ -383,8 +473,10 @@ namespace LCShrinkRay.comp
                             if (GameObject.Find(pPlayer) != null)
                             {
                                 mls.LogInfo("Shrinking player(1) model");
-                                ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
-                                sendShrinkMessage(GameObject.Find(pPlayer), scale);
+                            //TODO: REPLACE WITH STORED REFERENCE
+                            ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
+                            //TODO: REPLACE WITH STORED REFERENCE
+                            sendShrinkMessage(GameObject.Find(pPlayer), scale);
                                 SetPlayerPitch(1f, i);
                         }
                         }
@@ -396,6 +488,19 @@ namespace LCShrinkRay.comp
                 }
                 catch (Exception e) { }
             }
+
+        private bool hasIDInList(int itemId, List<GrabbableObject> alteredGrabbedItems)
+        {
+            foreach (GrabbableObject item in alteredGrabbedItems)
+            {
+                if (item.itemProperties.itemId == itemId)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void lateUpdate()
         {
                 SoundManager.Instance.playerVoicePitchTargets[0] = 1.5f;
@@ -461,7 +566,9 @@ namespace LCShrinkRay.comp
         private IEnumerator PlayerShrinkAnimationCoroutine(float shrinkAmt, GameObject player, Transform maskTransform)
         {
             playerTransform = player.GetComponent<Transform>();
+            //TODO: REPLACE WITH STORED REFERENCE
             mls.LogInfo(playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly"));
+            //TODO: REPLACE WITH STORED REFERENCE
             Transform armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
             float amplitude = 0.5f;
             float duration = 2f;
