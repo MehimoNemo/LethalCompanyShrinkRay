@@ -46,7 +46,6 @@ namespace LCShrinkRay.comp
             // a list of itemnames to change
             //boombox
             //ladder
-            //radar booster
             //v-type engine
             //large Axle
             //bottles Done
@@ -57,6 +56,7 @@ namespace LCShrinkRay.comp
             //robot
             //teapot
             //lamp
+            //metal sheet     NOT ADDED
             //player(soon)
 
             ScreenBlockingItems.Add("Boombox");
@@ -69,7 +69,6 @@ namespace LCShrinkRay.comp
             ScreenBlockingItems.Add("Painting");
             ScreenBlockingItems.Add("RobotToy");
             ScreenBlockingItems.Add("EnginePart");
-            ScreenBlockingItems.Add("RadarBoosterDevice");
             ScreenBlockingItems.Add("RedLocustHive");
             ScreenBlockingItems.Add("CashRegisterItem");
             ScreenBlockingItems.Add("Cog");
