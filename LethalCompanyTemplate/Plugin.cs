@@ -37,6 +37,7 @@ namespace LCShrinkRay
 
             harmony.PatchAll(typeof(Plugin));
             harmony.PatchAll(typeof(SoundManagerPatch));
+            harmony.PatchAll(typeof(GameNetworkManagerPatch));
             //harmony.PatchAll(typeof(PlayerControllerBPatch));
             //Networking.GetString += Shrinking.ShGetString;
         }

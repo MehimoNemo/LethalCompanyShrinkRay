@@ -2690,11 +2690,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Izek\\source\\repos\\LethalCompanyShrinkRay\\LethalCompanyTemplate\\LCShrinkRay.csproj",
+      "projectUniqueName": "C:\\Users\\Izek\\Source\\Repos\\LethalCompanyShrinkRay\\LethalCompanyTemplate\\LCShrinkRay.csproj",
       "projectName": "ShrinkRay",
-      "projectPath": "C:\\Users\\Izek\\source\\repos\\LethalCompanyShrinkRay\\LethalCompanyTemplate\\LCShrinkRay.csproj",
+      "projectPath": "C:\\Users\\Izek\\Source\\Repos\\LethalCompanyShrinkRay\\LethalCompanyTemplate\\LCShrinkRay.csproj",
       "packagesPath": "C:\\Users\\Izek\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Izek\\source\\repos\\LethalCompanyShrinkRay\\LethalCompanyTemplate\\obj\\",
+      "outputPath": "C:\\Users\\Izek\\Source\\Repos\\LethalCompanyShrinkRay\\LethalCompanyTemplate\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

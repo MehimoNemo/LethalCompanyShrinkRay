@@ -49,3 +49,4 @@ C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debu
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LCShrinkRay.csproj.CopyComplete
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\ShrinkRay.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\ShrinkRay.pdb
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\AmazingAssets.TerrainToMesh.dll
