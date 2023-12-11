@@ -224,7 +224,10 @@ namespace LCShrinkRay.comp
 
         public void Update()
         {
-            if (GameNetworkManagerPatch.isGameInitialized)
+            if (!GameNetworkManagerPatch.isGameInitialized) {
+                players.Clear();
+            }
+            else
             {
                 //if our player count changes and on first run, try to update our list of players
                 //mls.LogMessage("SKRAAAAAA");
@@ -241,7 +244,7 @@ namespace LCShrinkRay.comp
                         try
                         {
                             //mls.LogMessage("Getting player object: " + GetPlayerObject(i));
-                           players.Add(GetPlayerObject(i));
+                            players.Add(GetPlayerObject(i));
                             //players.Add(GameObject.Find("Player"));
                             //mls.LogMessage(GameObject.Find("Player"));
                         }
@@ -277,12 +280,6 @@ namespace LCShrinkRay.comp
                     player.GetComponent<PlayerControllerB>() = -0.417f * myScale + 0.417f;
                     mls.LogMessage(player.GetComponent<PlayerControllerB>().drunkness);
                 }*/
-                //If player picks up something and is short, change the grabbleObject.item.positionOffset by -0.2 0.5 -0.5(still need to test with other objects besides apparatus)
-                //for each grabbable object, if public PlayerControllerB playerHeldBy does not equal null, find out which player and if they're shrunk. If they are, change the item offset.
-                grabbables.Clear();
-
-                GrabbableObject[] array = UnityEngine.Object.FindObjectsOfType<GrabbableObject>();
-
                 //for each player, cycle through and find out if the player is currently holding an item
                 //if yes, change the grabbleObject.item.positionOffset, and add it to a stored array of picked up items
                 //if player is not holding it currently, fix it, and remove it from the array
@@ -294,6 +291,7 @@ namespace LCShrinkRay.comp
                     if (playerController.isHoldingObject == true)
                     {
                         GrabbableObject heldObject = playerController.currentlyHeldObject;
+                        mls.LogInfo(heldObject.name);
                         //if the held object id matches any of the ones in our array, don't do anything, else, add it to the array and change offset
                         hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems);
                         if (!hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems))
