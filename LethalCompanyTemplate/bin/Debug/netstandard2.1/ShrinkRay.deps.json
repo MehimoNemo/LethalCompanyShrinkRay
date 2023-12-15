@@ -20,7 +20,7 @@
           "DissonanceVoip": "0.0.0.0",
           "Facepunch Transport for Netcode for GameObjects": "0.0.0.0",
           "Facepunch.Steamworks.Win64": "1.0.0.0",
-          "LC_API": "1.0.0.0",
+          "LC_API": "2.1.4.0",
           "Unity.AI.Navigation": "0.0.0.0",
           "Unity.Animation.Rigging": "0.0.0.0",
           "Unity.Collections": "0.0.0.0",
@@ -429,11 +429,11 @@
           }
         }
       },
-      "LC_API/1.0.0.0": {
+      "LC_API/2.1.4.0": {
         "runtime": {
           "LC_API.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
+            "assemblyVersion": "2.1.4.0",
+            "fileVersion": "2.1.4.0"
           }
         }
       },
@@ -1002,7 +1002,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "LC_API/1.0.0.0": {
+    "LC_API/2.1.4.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

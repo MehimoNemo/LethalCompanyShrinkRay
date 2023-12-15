@@ -11,13 +11,23 @@ namespace LCShrinkRay.patches
     class SoundManagerPatch
     {
         private static ManualLogSource mls;
-
         static Shrinking shrinkin = new Shrinking();
-        public static void Postfix(float pitch, int playerObjNum)
+
+        public void Awake()
         {
-            shrinkin.SetPlayerPitch(pitch, playerObjNum);
+            shrinkin = new Shrinking();
         }
 
+        public static void Postfix(float pitch, int playerObjNum)
+        {
+            if (shrinkin != null)
+            {
+                shrinkin.SetPlayerPitch(pitch, playerObjNum);
+            }
+            else
+            {
+                mls.LogError("SHRINKIN IS FUCKING NULL WTF");
+            }
+        }
     }
-
 }

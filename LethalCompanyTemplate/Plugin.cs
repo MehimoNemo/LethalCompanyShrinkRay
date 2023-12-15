@@ -36,7 +36,7 @@ namespace LCShrinkRay
             mls.LogInfo("The Test Mod Has Awoken");
 
             harmony.PatchAll(typeof(Plugin));
-            //harmony.PatchAll(typeof(SoundManagerPatch));
+            harmony.PatchAll(typeof(SoundManagerPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
             //harmony.PatchAll(typeof(PlayerControllerBPatch));
             //Networking.GetString += Shrinking.ShGetString;

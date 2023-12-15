@@ -79,7 +79,7 @@ namespace LCShrinkRay.comp
             mls.LogInfo("PENIS PENIS PENIS");
 
             //multiplayer networking
-            Networking.GetString = (GotStringEventDelegate)delegate (string data, string signature)
+            Networking.GetString = (Action<string, string>)Delegate.Combine(Networking.GetString, (Action<string, string>)delegate (string data, string signature)
             {
                 if (signature == "Someone...")
                 {
@@ -122,12 +122,6 @@ namespace LCShrinkRay.comp
                             mls.LogMessage("Looks like it must be player 0(Us)");
                             //TODO: REPLACE WITH STORED REFERENCE
                             PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                            if (msgShrinkage < 1)
-                            {
-                                // Add the GrabbableObject script to the existing object
-                                GrabbableObject grabbableObject = msgObject.GetComponentByName("NetworkObject").gameObject.AddComponent<GrabbableObject>();
-                                grabbableObject.grabbable = true;
-                            }
                         }
                         //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
                         else if (objPlayerNum == clientId.ToString())
@@ -135,31 +129,17 @@ namespace LCShrinkRay.comp
                             mls.LogMessage("Looks like it must be us!!!!");
                             //TODO: REPLACE WITH STORED REFERENCE
                             PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                            if (msgShrinkage < 1)
-                            {
-                                // Add the GrabbableObject script to the existing object
-                                //TODO: REPLACE WITH STORED REFERENCE
-                                GrabbableObject grabbableObject = msgObject.GetComponentByName("NetworkObject").gameObject.AddComponent<GrabbableObject>();
-                                grabbableObject.grabbable = true;
-                            }
                         }
                         //if it's anyone or anything else, we don't care, just use ObjectShrink
                         else
                         {
                             mls.LogMessage("Looks like it must be some random person....boring...");
                             ObjectShrinkAnimation(msgShrinkage, msgObject);
-                            if (msgShrinkage < 1)
-                            {
-                                // Add the GrabbableObject script to the existing object(this doesn't work grabbable player code
-                                //TODO: REPLACE WITH STORED REFERENCE
-                                GrabbableObject grabbableObject = msgObject.GetComponentByName("NetworkObject").gameObject.AddComponent<GrabbableObject>();
-                                grabbableObject.grabbable = true;
-                            }
                         }
                     }
                     //TODO: ADD NON-PLAYER SHRINKING
                 }
-            };
+            });
         }
         public float GetPlayerScale()
         {
@@ -199,8 +179,11 @@ namespace LCShrinkRay.comp
         private IEnumerator SetPlayerPitchCoroutine(float pitch, int playerNum)
         {
             // Get the player object based on playerObjNum
-            //TODO: REPLACE WITH STORED REFERENCE
             GameObject playerObject = GetPlayerObject(playerNum);
+            if (playerObject == null)
+            {
+                mls.LogWarning("PLAYEROBJECT IS NULL");
+            }
 
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
             mls.LogInfo("SUCCESSFULLY RUNNING PITCH FROM PATCH");
@@ -208,17 +191,44 @@ namespace LCShrinkRay.comp
             // Check if the player object is valid
             if (playerObject != null)
             {
-                // Get the player object's scale
-                float scale = playerObject.transform.localScale.x;
+                float duration = 6f;
+                float elapsedTime = 0f;
 
-                //float modifiedPitch = 1.2f;
-                float modifiedPitch = -0.417f * scale + 1.417f;
+                
 
-                // Set the modified pitch using the original method
-                SoundManager.Instance.SetPlayerPitch(modifiedPitch, playerNum);
-                yield return null;
-            }
-            yield return null;
+
+                    // Get the player object's scale
+                    float scale = playerObject.transform.localScale.x;
+                    if(playerObject.transform == null)
+                    {
+                        mls.LogWarning("PLAYEROBJECT.TRANSFORM IS NULL");
+                        yield break;
+                    }
+
+                    //float modifiedPitch = 1.2f;
+                    //float modifiedPitch = -0.417f * scale + 1.417f;
+                    myScale = GetPlayerObject((int)clientId).transform.localScale.x;
+                    float modifiedPitch = -0.2f * (scale - myScale) + 1f;
+                    // Set the modified pitch using the original method
+                    mls.LogMessage("changing pitch of playerNum " + playerNum);
+                    mls.LogMessage("\tpitch: " + modifiedPitch);
+                    if(SoundManager.Instance == null)
+                    {
+                        mls.LogWarning("SOUNDMANAGER IS NULL");
+                        yield break;
+                    }
+                    elapsedTime += Time.deltaTime;
+                    mls.LogMessage("Elapsed time: " + elapsedTime);
+                try
+                {
+                    SoundManager.Instance.SetPlayerPitch(modifiedPitch, playerNum);
+                }
+                catch (NullReferenceException e)
+                {
+                    mls.LogWarning("Hey...there's a null reference exception in pitch setting....not sure why!");
+                }
+                yield return null; // Wait for the next frame
+                }
         }
 
         public void Update()
@@ -453,7 +463,7 @@ namespace LCShrinkRay.comp
                                 ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
                                 sendShrinkMessage(GameObject.Find(pPlayer), scale);
                                 float newPitch = -0.417f * scale + 1.417f;
-                                SetPlayerPitch(newPitch, i);
+                                //(newPitch, i);
                             }
                         }
                     }
@@ -465,15 +475,19 @@ namespace LCShrinkRay.comp
                     {
                         iKeyPressed = true;
                         int i;
-                        SoundManagerPatch.Postfix(1.2f, 0);
-                        for (i = 1; 1 < GameNetworkManager.Instance.connectedPlayers; i++)
+                        //SoundManagerPatch.Postfix(1.2f, 0);
+                        for (i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++)
                         {
-                            String pPlayer = "Player (" + i.ToString() + ")";
-                            if (GameObject.Find(pPlayer) != null)
+                            //String pPlayer = "Player (" + i.ToString() + ")";
+                            if (StartOfRound.Instance.allPlayerScripts[i] != null)
                             {
                                 mls.LogInfo("Altering player voice pitches");
+                                //SoundManager.Instance.SetPlayerVoiceFilters();
                                 //StartCoroutine(SoundManagerPatch.Postfix(1.2f, i));
                                 SetPlayerPitch(1.2f, i);
+                                //PlayerControllerB playerControllerB2 = StartOfRound.Instance.allPlayerScripts[i];
+                                //SoundManager.Instance.playerVoicePitchTargets[playerControllerB2.playerClientId] = 1.2f;
+                                //SoundManager.Instance.diageticMixer.SetFloat($"PlayerPitch{i}", 1.2f);
                             }
                         }
                     }
@@ -497,7 +511,8 @@ namespace LCShrinkRay.comp
                                 ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
                                 //TODO: REPLACE WITH STORED REFERENCE
                                 sendShrinkMessage(GameObject.Find(pPlayer), scale);
-                                SetPlayerPitch(1f, i);
+                                //SetPlayerPitch(1f, i);
+
                             }
                         }
                     }
@@ -522,11 +537,6 @@ namespace LCShrinkRay.comp
                 return false;
             }
 
-            public void lateUpdate()
-            {
-                SoundManager.Instance.playerVoicePitchTargets[0] = 1.5f;
-
-            }
             public void sendShrinkMessage(GameObject shrinkObject, float shrinkage)
             {
                 //This turns the object into a searchable string
