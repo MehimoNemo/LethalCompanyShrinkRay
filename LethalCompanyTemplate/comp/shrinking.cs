@@ -17,6 +17,8 @@ using System.Xml.Linq;
 using LC_API.ServerAPI;
 using LCShrinkRay.patches;
 using UnityEngine.SceneManagement;
+using MonoMod.Utils;
+using UnityEngine.UIElements.Internal;
 
 namespace LCShrinkRay.comp
 {
@@ -205,10 +207,10 @@ namespace LCShrinkRay.comp
                         yield break;
                     }
 
-                    //float modifiedPitch = 1.2f;
+                    //float modifiedPitch = 1f;
                     //float modifiedPitch = -0.417f * scale + 1.417f;
                     myScale = GetPlayerObject((int)clientId).transform.localScale.x;
-                    float modifiedPitch = -0.2f * (scale - myScale) + 1f;
+                    float modifiedPitch = (-0.3f * (scale - myScale) + 1f)*pitch;
                     // Set the modified pitch using the original method
                     mls.LogMessage("changing pitch of playerNum " + playerNum);
                     mls.LogMessage("\tpitch: " + modifiedPitch);
@@ -226,6 +228,9 @@ namespace LCShrinkRay.comp
                 catch (NullReferenceException e)
                 {
                     mls.LogWarning("Hey...there's a null reference exception in pitch setting....not sure why!");
+                    mls.LogWarning(e.ToString());
+                    mls.LogMessage(e.LogDetailed);
+                    mls.LogMessage(e.StackTrace.ToString());
                 }
                 yield return null; // Wait for the next frame
                 }
@@ -252,7 +257,7 @@ namespace LCShrinkRay.comp
                     {
                         try
                         {
-                            //mls.LogMessage("Getting player object: " + GetPlayerObject(i));
+                            mls.LogMessage("Getting player object: " + GetPlayerObject(i));
                             players.Add(GetPlayerObject(i));
                             //players.Add(GameObject.Find("Player"));
                             //mls.LogMessage(GameObject.Find("Player"));
@@ -474,22 +479,7 @@ namespace LCShrinkRay.comp
                     if (Keyboard.current.iKey.wasPressedThisFrame && !iKeyPressed)
                     {
                         iKeyPressed = true;
-                        int i;
-                        //SoundManagerPatch.Postfix(1.2f, 0);
-                        for (i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++)
-                        {
-                            //String pPlayer = "Player (" + i.ToString() + ")";
-                            if (StartOfRound.Instance.allPlayerScripts[i] != null)
-                            {
-                                mls.LogInfo("Altering player voice pitches");
-                                //SoundManager.Instance.SetPlayerVoiceFilters();
-                                //StartCoroutine(SoundManagerPatch.Postfix(1.2f, i));
-                                SetPlayerPitch(1.2f, i);
-                                //PlayerControllerB playerControllerB2 = StartOfRound.Instance.allPlayerScripts[i];
-                                //SoundManager.Instance.playerVoicePitchTargets[playerControllerB2.playerClientId] = 1.2f;
-                                //SoundManager.Instance.diageticMixer.SetFloat($"PlayerPitch{i}", 1.2f);
-                            }
-                        }
+                        updatePitch();
                     }
                     else if (!Keyboard.current.iKey.isPressed)
                     {
@@ -522,6 +512,18 @@ namespace LCShrinkRay.comp
                     }
                 }
                 catch (Exception e) { }
+            }
+        }
+        public void updatePitch()
+        {
+            for (int i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++)
+            {
+                //String pPlayer = "Player (" + i.ToString() + ")";
+                if (StartOfRound.Instance.allPlayerScripts[i] != null)
+                {
+                    mls.LogInfo("Altering player voice pitches");
+                    SetPlayerPitch(1f, i);
+                }
             }
         }
 
@@ -581,8 +583,9 @@ namespace LCShrinkRay.comp
                 }
 
                 // Ensure final scale is set to the desired value
-                objectTransform.localScale = new Vector3(shrinkAmt, shrinkAmt, shrinkAmt); ;
-            }
+                objectTransform.localScale = new Vector3(shrinkAmt, shrinkAmt, shrinkAmt);
+                updatePitch();
+        }
 
 
 
@@ -625,7 +628,8 @@ namespace LCShrinkRay.comp
                 maskTransform.localScale = CalcMaskScaleVec(shrinkAmt);
                 maskTransform.localPosition = CalcMaskPosVec(shrinkAmt);
                 armTransform.localScale = CalcArmScale(shrinkAmt);
-            }
+                updatePitch();
+        }
             public Vector3 CalcMaskPosVec(float shrinkScale)
             {
                 Vector3 pos;
