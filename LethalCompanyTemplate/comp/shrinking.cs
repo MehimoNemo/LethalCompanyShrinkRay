@@ -19,6 +19,9 @@ using LCShrinkRay.patches;
 using UnityEngine.SceneManagement;
 using MonoMod.Utils;
 using UnityEngine.UIElements.Internal;
+using Steamworks.Ugc;
+using UnityEngine.TextCore.Text;
+using Steamworks.ServerList;
 
 namespace LCShrinkRay.comp
 {
@@ -42,7 +45,8 @@ namespace LCShrinkRay.comp
 
         public void Awake()
         {
-            //players = StartOfRound.Instance.allPlayerObjects;
+            mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
+
             //RoundManager.Instance.allEnemyVents;
 
             // a list of itemnames to change
@@ -61,23 +65,28 @@ namespace LCShrinkRay.comp
             //metal sheet     NOT ADDED
             //player(soon)
 
-            ScreenBlockingItems.Add("Boombox");
-            ScreenBlockingItems.Add("LungApparatus");
-            ScreenBlockingItems.Add("FancyLamp");
-            ScreenBlockingItems.Add("ChemicalJug");
-            ScreenBlockingItems.Add("ExtensionLadderItem");
-            ScreenBlockingItems.Add("BinFullOfBottles");
-            ScreenBlockingItems.Add("TeaKettle");
-            ScreenBlockingItems.Add("Painting");
-            ScreenBlockingItems.Add("RobotToy");
-            ScreenBlockingItems.Add("EnginePart");
-            ScreenBlockingItems.Add("RedLocustHive");
-            ScreenBlockingItems.Add("CashRegisterItem");
-            ScreenBlockingItems.Add("Cog");
+            ScreenBlockingItems.Add("Boombox(Clone)");
+            ScreenBlockingItems.Add("LungApparatus(Clone)");
+            ScreenBlockingItems.Add("FancyLamp(Clone)");
+            ScreenBlockingItems.Add("ChemicalJug(Clone)");
+            ScreenBlockingItems.Add("ExtensionLadderItem(Clone)");
+            ScreenBlockingItems.Add("BinFullOfBottles(Clone)");
+            ScreenBlockingItems.Add("TeaKettle(Clone)");
+            ScreenBlockingItems.Add("Painting(Clone)");
+            ScreenBlockingItems.Add("RobotToy(Clone)");
+            ScreenBlockingItems.Add("EnginePart(Clone)");
+            ScreenBlockingItems.Add("RedLocustHive(Clone)");
+            ScreenBlockingItems.Add("CashRegisterItem(Clone)");
+            ScreenBlockingItems.Add("Cog(Clone)");
             ScreenBlockingItems.Add("Player");
+            mls.LogWarning("COUNT OF LIST IS: " + ScreenBlockingItems.Count);
+            foreach(String item in ScreenBlockingItems)
+            {
+                mls.LogMessage('\"' + item + '\"');
+            }
 
 
-            mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
+            
             mls.LogInfo("PENIS PENIS PENIS");
 
             //multiplayer networking
@@ -236,6 +245,30 @@ namespace LCShrinkRay.comp
                 }
         }
 
+        private IEnumerator translateRelativeOffset(Transform referenceTransform, GrabbableObject grabbableToMove, Vector3 relativeOffset)
+        {
+            float delay = grabbableToMove.itemProperties.grabAnimationTime+0.2f;
+            yield return new WaitForSeconds(delay);
+
+            Debug.Log("TADAAAA IT'S TIME TO GET ANGLE!!!");
+
+            // Get the reference rotation
+            Quaternion referenceRotation = referenceTransform.rotation;
+
+            // Calculate the relative rotation
+            Quaternion relativeRotation = Quaternion.Inverse(referenceRotation) * grabbableToMove.gameObject.transform.rotation * Quaternion.Inverse(Quaternion.Euler(grabbableToMove.itemProperties.rotationOffset));
+
+            // Apply the relative rotation to the local offset
+            Vector3 offsetWorld = relativeRotation * relativeOffset;
+
+            // Apply the offset to the current position
+            Vector3 newPosition = grabbableToMove.itemProperties.positionOffset + offsetWorld;
+
+            // Update the object's position offset
+            grabbableToMove.itemProperties.positionOffset = newPosition;
+        }
+
+
         public void Update()
         {
             if (!GameNetworkManagerPatch.isGameInitialized) {
@@ -268,10 +301,67 @@ namespace LCShrinkRay.comp
                         }
                     }
                 }
-                //TODO: MAKE THIS ONLY RUN WHEN THE SHIP LANDS
-                //players = StartOfRound.Instance.allPlayerObjects;
-                //SoundManager.Instance.SetPlayerPitch(1+(-0.417f * myScale + 0.417f), 0);
-                //mls.LogMessage(SoundManager.Instance.playerVoicePitchTargets[0]);
+                foreach (GameObject player in players)
+                {
+                    //TODO: REPLACE WITH OBJECT REFERENCE
+                    PlayerControllerB playerController = player.GetComponent<PlayerControllerB>();
+                    if(playerController == null)
+                    {
+                        mls.LogWarning("playerController is fucking null goddamnit");
+                    }
+                    if (playerController.isHoldingObject == true )
+                    {
+                        mls.LogInfo("PLAYER HOLDING OBJECT");
+                        GrabbableObject heldObject = playerController.currentlyHeldObjectServer;
+                        //mls.LogInfo(heldObject);
+                        mls.LogInfo('\"'+heldObject.name+'\"');
+                        //if the held object id matches any of the ones in our array, don't do anything, else, add it to the array and change offset
+                        //hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems);
+                        mls.LogInfo("Does the item match our list?");
+                       
+                        bool isInList = false;
+                        foreach(String item in ScreenBlockingItems)
+                        {
+                            if (isInList == false)
+                            {
+                                if (item.Equals(heldObject.name))
+                                {
+                                    isInList = true;
+                                }
+                            }
+                        }
+                        mls.LogInfo(isInList);
+                        if (!hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems) && isInList)
+                        {
+                            alteredGrabbedItems.Add(heldObject);
+                            //TODO: REPLACE WITH OBJECT REFERENCE
+                            float scale = player.GetComponent<Transform>().localScale.x;
+                            //float x = -0.25f * scale - 0.25f;
+                            //float y = 0.625f * scale - 0.625f;
+                            float y = 0;
+                            float z = -1.04f * scale + 1.04f;
+                            float x = -0.2f * scale + 0.2f;
+                            //float z = 0;
+                            //inverted even though my math was perfect but okay
+                            Vector3 posOffsetVect = new Vector3(-x, -y, -z);
+                            //heldObject.itemProperties.positionOffset = posOffsetVect;
+                            //find child player eye
+                            //find difference in rotation between player eye and fucking object
+                            
+                            StartCoroutine(translateRelativeOffset(playerController.playerEye, heldObject, posOffsetVect));
+                        }
+                    }
+                }
+                //Remove the item from the list of altered items and reset them if they're not being held
+                foreach (GrabbableObject obj in alteredGrabbedItems)
+                {
+                    if (!obj.isHeld)
+                    {
+                        mls.LogMessage("removing held object!!! from the list!!!!!");
+                        obj.itemProperties.positionOffset = new Vector3(0, 0, 0);
+                        alteredGrabbedItems.Remove(obj);
+                    }
+                }
 
 
 
@@ -298,41 +388,9 @@ namespace LCShrinkRay.comp
                 //if yes, change the grabbleObject.item.positionOffset, and add it to a stored array of picked up items
                 //if player is not holding it currently, fix it, and remove it from the array
 
-                foreach (GameObject player in players)
-                {
-                    //TODO: REPLACE WITH OBJECT REFERENCE
-                    PlayerControllerB playerController = player.GetComponent<PlayerControllerB>();
-                    if (playerController.isHoldingObject == true)
-                    {
-                        GrabbableObject heldObject = playerController.currentlyHeldObject;
-                        mls.LogInfo(heldObject.name);
-                        //if the held object id matches any of the ones in our array, don't do anything, else, add it to the array and change offset
-                        hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems);
-                        if (!hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems))
-                        {
+                
 
-                            alteredGrabbedItems.Add(heldObject);
-                            //TODO: REPLACE WITH OBJECT REFERENCE
-                            float scale = player.GetComponent<Transform>().localScale.x;
-                            float x = -0.25f * scale - 0.25f;
-                            float y = 0.625f * scale - 0.625f;
-                            float z = -0.625f * scale + 0.625f;
-                            //inverted even though my math was perfect but okay
-                            Vector3 posOffsetVect = new Vector3(-x, -y, -z);
-                            heldObject.itemProperties.positionOffset = posOffsetVect;
-                        }
-                    }
-                }
-
-                //Remove the item from the list of altered items and reset them if they're not being held
-                foreach (GrabbableObject obj in alteredGrabbedItems)
-                {
-                    if (!obj.isHeld)
-                    {
-                        obj.itemProperties.positionOffset = new Vector3(0, 0, 0);
-                        alteredGrabbedItems.Remove(obj);
-                    }
-                }
+                
 
                 /*
                             //mls.LogMessage(grabbables);
