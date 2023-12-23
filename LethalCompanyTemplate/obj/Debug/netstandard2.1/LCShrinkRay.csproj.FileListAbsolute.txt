@@ -1,14 +1,19 @@
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\ShrinkRay.deps.json
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\ShrinkRay.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\ShrinkRay.pdb
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\AmazingAssets.TerrainToMesh.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Assembly-CSharp-firstpass.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Assembly-CSharp.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\ClientNetworkTransform.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\DissonanceVoip.dll
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Facepunch Transport for Netcode for GameObjects.dll
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Facepunch.Steamworks.Win64.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\LC_API.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.AI.Navigation.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Animation.Rigging.dll
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Collections.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.InputSystem.dll
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Netcode.Components.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Netcode.Runtime.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.RenderPipelines.Core.Runtime.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.RenderPipelines.Core.ShaderLibrary.dll
@@ -17,20 +22,16 @@ C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debu
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.TextMeshPro.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\UnityEngine.UI.dll
-C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Facepunch.Steamworks.Win64.dll
-C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Facepunch Transport for Netcode for GameObjects.dll
-C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Netcode.Components.dll
-C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Collections.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Burst.dll
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Mathematics.dll
+C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Collections.LowLevel.ILSupport.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Multiplayer.Tools.NetStats.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Multiplayer.Tools.MetricTypes.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Multiplayer.Tools.NetworkSolutionInterface.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Networking.Transport.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Multiplayer.Tools.NetStatsReporting.dll
-C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Mathematics.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.VisualEffectGraph.Runtime.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\UnityEngine.NVIDIAModule.dll
-C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Collections.LowLevel.ILSupport.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Burst.Unsafe.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Multiplayer.Tools.Common.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\Unity.Services.Relay.dll
@@ -49,4 +50,3 @@ C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debu
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\LCShrinkRay.csproj.CopyComplete
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\ShrinkRay.dll
 C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\obj\Debug\netstandard2.1\ShrinkRay.pdb
-C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\bin\Debug\netstandard2.1\AmazingAssets.TerrainToMesh.dll

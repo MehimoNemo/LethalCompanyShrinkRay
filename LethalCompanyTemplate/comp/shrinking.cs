@@ -47,8 +47,6 @@ namespace LCShrinkRay.comp
         {
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
 
-            //RoundManager.Instance.allEnemyVents;
-
             // a list of itemnames to change
             //boombox
             //ladder
@@ -262,45 +260,168 @@ namespace LCShrinkRay.comp
             Vector3 offsetWorld = relativeRotation * relativeOffset;
 
             // Apply the offset to the current position
-            Vector3 newPosition = grabbableToMove.itemProperties.positionOffset + offsetWorld;
+            //Vector3 newPosition = grabbableToMove.itemProperties.positionOffset + offsetWorld;
+            Vector3 newPosition = offsetWorld;
 
             // Update the object's position offset
             grabbableToMove.itemProperties.positionOffset = newPosition;
+            mls.LogInfo("newPosition: " + newPosition);
+        }
+        public void SussifyVents(EnemyVent[] vents)
+        {
+            GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
+
+            for (int i = 0; i < vents.Length; i++)
+            {
+                mls.LogMessage("SUSSIFYING VENT " + i);
+                mls.LogMessage("\tPairing with vent " + (vents.Length - i - 1));
+
+                GameObject vent = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
+                vent.tag = "InteractTrigger";
+                vent.layer = LayerMask.NameToLayer("InteractableObject");
+                var ventTeleport = this.gameObject.AddComponent<VentTeleport>();
+                var trigger = vent.AddComponent<InteractTrigger>();
+                vent.AddComponent<BoxCollider>();
+
+                // Assuming your prefab is of type GameObject
+                //GameObject prefab = Resources.Load<GameObject>("Path/To/Prefab");
+                //GameObject prefab = FindPrefabInScene("PrefabName", targetScene);
+
+                // Instantiate the prefab
+                //GameObject instantiatedObject = Instantiate(prefab);
+
+                // Set parent and position if needed
+                //instantiatedObject.transform.SetParent(vent.transform);
+                //instantiatedObject.transform.position = vent.transform.position;
+
+                trigger.hoverIcon = GameObject.Find("StartGameLever")?.GetComponent<InteractTrigger>()?.hoverIcon;
+                trigger.hoverTip = "Enter : [LMB]";
+                trigger.interactable = true;
+                trigger.oneHandedItemAllowed = true;
+                trigger.twoHandedItemAllowed = true;
+                trigger.holdInteraction = true;
+                trigger.timeToHold = 1.5f;
+                trigger.timeToHoldSpeedMultiplier = 1f;
+
+                // Create new instances of InteractEvent for each trigger
+                trigger.holdingInteractEvent = new InteractEventFloat();
+                trigger.onInteract = new InteractEvent();
+                trigger.onInteractEarly = new InteractEvent();
+                trigger.onStopInteract = new InteractEvent();
+                trigger.onCancelAnimation = new InteractEvent();
+
+                // Only works if even I think
+                //UN-NULL THIS COWARD
+                trigger.onInteract.AddListener((player) => ventTeleport.TeleportPlayer(player, null));
+                trigger.enabled = true;
+                vent.GetComponent<Renderer>().enabled = true;
+                mls.LogMessage("VentCover Object: " + vent.name);
+                mls.LogMessage("VentCover Renderer Enabled: " + vent.GetComponent<Renderer>().enabled);
+                mls.LogMessage("Hover Icon: " + (trigger.hoverIcon != null ? trigger.hoverIcon.name : "null"));
+
+                // Only works if even I think
+                //trigger.onInteract.AddListener((player) => ventTeleport.(vents[vents.Length - 1 - i]));
+            }
         }
 
 
         public void Update()
         {
+            
+            
+
             if (!GameNetworkManagerPatch.isGameInitialized) {
                 players.Clear();
             }
             else
             {
+                //If vents exist
+                if (RoundManager.Instance.allEnemyVents != null && RoundManager.Instance.allEnemyVents.Length != 0 && sussification == false)
+                {
+                    //sussify vents(add interact trigger)
+                    SussifyVents(RoundManager.Instance.allEnemyVents);
+                    sussification = true;
+                }
+                if (sussification == false)
+                {
+                    sussification = true;
+                    
+                    //TEST CODE FOR IN SHIP VENT
+                    GameObject vent = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
+                    MeshRenderer[] renderers = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>();
+                    mls.LogMessage("count of renderers: " + renderers.Length);
+                    MeshRenderer renderer = renderers[0];
+                    vent.tag = "InteractTrigger";
+                    vent.layer = LayerMask.NameToLayer("InteractableObject");
+                    var ventTeleport = this.gameObject.AddComponent<VentTeleport>();
+                    var trigger = vent.AddComponent<InteractTrigger>();
+                    vent.AddComponent<BoxCollider>();
+
+                    trigger.hoverIcon = GameObject.Find("StartGameLever")?.GetComponent<InteractTrigger>()?.hoverIcon;
+                    trigger.hoverTip = "Enter : [LMB]";
+                    trigger.interactable = true;
+                    trigger.oneHandedItemAllowed = true;
+                    trigger.twoHandedItemAllowed = true;
+                    trigger.holdInteraction = true;
+                    trigger.timeToHold = 1.5f;
+                    trigger.timeToHoldSpeedMultiplier = 1f;
+
+                    // Create new instances of InteractEvent for each trigger
+                    trigger.holdingInteractEvent = new InteractEventFloat();
+                    trigger.onInteract = new InteractEvent();
+                    trigger.onInteractEarly = new InteractEvent();
+                    trigger.onStopInteract = new InteractEvent();
+                    trigger.onCancelAnimation = new InteractEvent();
+
+                    // Only works if even I think
+                    trigger.onInteract.AddListener((aplayer) => ventTeleport.TeleportPlayer(aplayer, null));
+                    trigger.enabled = true;
+                    mls.LogMessage("VentCover Object: " + vent.name);
+                    mls.LogMessage("Hover Icon: " + (trigger.hoverIcon != null ? trigger.hoverIcon.name : "null"));
+                    vent.GetComponent<Renderer>().enabled = true;
+                    renderer.enabled = true;
+                    mls.LogMessage("VentCoverRendered?: " + renderer.enabled.ToString());
+                }
+
+                foreach (GrabbableObject obj in alteredGrabbedItems)
+                {
+                    //mls.LogMessage(obj.name);
+                }
+                
+
+
                 //if our player count changes and on first run, try to update our list of players
                 //mls.LogMessage("SKRAAAAAA");
                 //mls.LogMessage("Connected players: " + GameNetworkManager.Instance.connectedPlayers);
-                if (players.Count != GameNetworkManager.Instance.connectedPlayers)
+                if (players.Count != StartOfRound.Instance.ClientPlayerList.Count)
                 {
                     mls.LogWarning(players.Count);
                     mls.LogWarning(GameNetworkManager.Instance.connectedPlayers);
+                    //cigarette
                     mls.LogMessage("\n a,  8a\r\n `8, `8)                            ,adPPRg,\r\n  8)  ]8                        ,ad888888888b\r\n ,8' ,8'                    ,gPPR888888888888\r\n,8' ,8'                 ,ad8\"\"   `Y888888888P\r\n8)  8)              ,ad8\"\"        (8888888\"\"\r\n8,  8,          ,ad8\"\"            d888\"\"\r\n`8, `8,     ,ad8\"\"            ,ad8\"\"\r\n `8, `\" ,ad8\"\"            ,ad8\"\"\r\n    ,gPPR8b           ,ad8\"\"\r\n   dP:::::Yb      ,ad8\"\"\r\n   8):::::(8  ,ad8\"\"\r\n   Yb:;;;:d888\"\"  Yummy\r\n    \"8ggg8P\"      Nummy");
                     mls.LogMessage("Detected miscounted players, trying to update");
                     players.Clear();
-                    for (int i = 0; i < GameNetworkManager.Instance.connectedPlayers; i++)
+
+
+                    try
                     {
-                        try
+                        foreach (PlayerControllerB playerScript in StartOfRound.Instance.allPlayerScripts)
                         {
-                            mls.LogMessage("Getting player object: " + GetPlayerObject(i));
-                            players.Add(GetPlayerObject(i));
-                            //players.Add(GameObject.Find("Player"));
-                            //mls.LogMessage(GameObject.Find("Player"));
-                        }
-                        catch (Exception e)
-                        {
-                            players.Clear();
+                            if (playerScript.isPlayerControlled == true)
+                            {
+                                players.Add(playerScript.gameObject);
+                            }
                         }
                     }
+                    catch (Exception e)
+                    {
+                       players.Clear();
+                    }
+                    MeshRenderer renderer = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>()[0];
+                    renderer.enabled = true;
                 }
+                //mls.LogInfo("SKRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                //mls.LogInfo(players.Count);
                 foreach (GameObject player in players)
                 {
                     //TODO: REPLACE WITH OBJECT REFERENCE
@@ -311,13 +432,22 @@ namespace LCShrinkRay.comp
                     }
                     if (playerController.isHoldingObject == true )
                     {
-                        mls.LogInfo("PLAYER HOLDING OBJECT");
+                        //mls.LogInfo("PLAYER HOLDING OBJECT");
                         GrabbableObject heldObject = playerController.currentlyHeldObjectServer;
+                        if (heldObject == null)
+                        {
+                            mls.LogWarning("HELD OBJECT IS NULL");
+                            heldObject = playerController.currentlyHeldObject;
+                            if(heldObject == null)
+                            {
+                                mls.LogWarning("FUCK WHAT THE HELL");
+                            }
+                        }
                         //mls.LogInfo(heldObject);
-                        mls.LogInfo('\"'+heldObject.name+'\"');
+                        //mls.LogInfo('\"'+heldObject.name+'\"');
                         //if the held object id matches any of the ones in our array, don't do anything, else, add it to the array and change offset
                         //hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems);
-                        mls.LogInfo("Does the item match our list?");
+                        //mls.LogInfo("Does the item match our list?");
                        
                         bool isInList = false;
                         foreach(String item in ScreenBlockingItems)
@@ -330,25 +460,42 @@ namespace LCShrinkRay.comp
                                 }
                             }
                         }
-                        mls.LogInfo(isInList);
+                        //mls.LogInfo(isInList);
                         if (!hasIDInList(heldObject.itemProperties.itemId, alteredGrabbedItems) && isInList)
                         {
                             alteredGrabbedItems.Add(heldObject);
                             //TODO: REPLACE WITH OBJECT REFERENCE
                             float scale = player.GetComponent<Transform>().localScale.x;
-                            //float x = -0.25f * scale - 0.25f;
-                            //float y = 0.625f * scale - 0.625f;
-                            float y = 0;
-                            float z = -1.04f * scale + 1.04f;
-                            float x = -0.2f * scale + 0.2f;
-                            //float z = 0;
+                            float y = 0f;
+                            float z = 0f;
+                            float x = 0f;
+                            if (!player.gameObject.name.Contains(GameNetworkManager.Instance.localPlayerController.gameObject.name))
+                            {
+                                x = testVector.x;
+                                y = testVector.y;
+                                z = testVector.z;
+                                y = -0.42f * scale + 0.42f;
+                                z = 0f;
+                                x = 0.8f * scale - 0.8f;
+                                mls.LogMessage("we is not da client");
+                            }
+                            else
+                            {
+                                y = 0.3f * scale - 0.3f;
+                                z = -1.44f * scale + 1.44f;
+                                x = 0.3f * scale - 0.3f;
+                                mls.LogMessage("we IS da client");
+                            }
+
                             //inverted even though my math was perfect but okay
-                            Vector3 posOffsetVect = new Vector3(-x, -y, -z);
-                            //heldObject.itemProperties.positionOffset = posOffsetVect;
-                            //find child player eye
-                            //find difference in rotation between player eye and fucking object
                             
+                            Vector3 posOffsetVect = new Vector3(-x, -y, -z);
+
                             StartCoroutine(translateRelativeOffset(playerController.playerEye, heldObject, posOffsetVect));
+                            //First person engine offset is -0.5099 0.7197 -0.1828 with these numbas
+
+                            //Third person offset should be 0.2099 0.5197 -0.1828
+                            //at least on the engine it should be...
                         }
                     }
                 }
@@ -537,7 +684,8 @@ namespace LCShrinkRay.comp
                     if (Keyboard.current.iKey.wasPressedThisFrame && !iKeyPressed)
                     {
                         iKeyPressed = true;
-                        updatePitch();
+                        //updatePitch();
+                        //testOffset(new Vector3(0f, 0f, 0f));
                     }
                     else if (!Keyboard.current.iKey.isPressed)
                     {
@@ -572,6 +720,16 @@ namespace LCShrinkRay.comp
                 catch (Exception e) { }
             }
         }
+        public Vector3 testVector = new Vector3();
+        private bool sussification = false;
+
+        public Vector3 getTestVector() { return testVector; }
+        private void testOffset(Vector3 posOffsetVect)
+        {
+            testVector = posOffsetVect;
+            StartCoroutine(translateRelativeOffset(StartOfRound.Instance.allPlayerScripts[0].playerEye, StartOfRound.Instance.allPlayerScripts[0].currentlyHeldObjectServer, posOffsetVect));
+        }
+
         public void updatePitch()
         {
             for (int i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++)
