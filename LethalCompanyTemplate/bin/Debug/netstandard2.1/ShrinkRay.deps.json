@@ -21,6 +21,13 @@
           "Facepunch Transport for Netcode for GameObjects": "0.0.0.0",
           "Facepunch.Steamworks.Win64": "1.0.0.0",
           "LC_API": "2.1.4.0",
+          "LethalLib": "1.0.0.0",
+          "MMHOOK_AmazingAssets.TerrainToMesh": "0.0.0.0",
+          "MMHOOK_Assembly-CSharp": "0.0.0.0",
+          "MMHOOK_ClientNetworkTransform": "0.0.0.0",
+          "MMHOOK_DissonanceVoip": "0.0.0.0",
+          "MMHOOK_Facepunch Transport for Netcode for GameObjects": "0.0.0.0",
+          "MMHOOK_Facepunch.Steamworks.Win64": "0.0.0.0",
           "Unity.AI.Navigation": "0.0.0.0",
           "Unity.Animation.Rigging": "0.0.0.0",
           "Unity.Collections": "0.0.0.0",
@@ -434,6 +441,62 @@
           "LC_API.dll": {
             "assemblyVersion": "2.1.4.0",
             "fileVersion": "2.1.4.0"
+          }
+        }
+      },
+      "LethalLib/1.0.0.0": {
+        "runtime": {
+          "LethalLib.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "MMHOOK_AmazingAssets.TerrainToMesh/0.0.0.0": {
+        "runtime": {
+          "MMHOOK_AmazingAssets.TerrainToMesh.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "MMHOOK_Assembly-CSharp/0.0.0.0": {
+        "runtime": {
+          "MMHOOK_Assembly-CSharp.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "MMHOOK_ClientNetworkTransform/0.0.0.0": {
+        "runtime": {
+          "MMHOOK_ClientNetworkTransform.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "MMHOOK_DissonanceVoip/0.0.0.0": {
+        "runtime": {
+          "MMHOOK_DissonanceVoip.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "MMHOOK_Facepunch Transport for Netcode for GameObjects/0.0.0.0": {
+        "runtime": {
+          "MMHOOK_Facepunch Transport for Netcode for GameObjects.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "MMHOOK_Facepunch.Steamworks.Win64/0.0.0.0": {
+        "runtime": {
+          "MMHOOK_Facepunch.Steamworks.Win64.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -1003,6 +1066,41 @@
       "sha512": ""
     },
     "LC_API/2.1.4.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LethalLib/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MMHOOK_AmazingAssets.TerrainToMesh/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MMHOOK_Assembly-CSharp/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MMHOOK_ClientNetworkTransform/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MMHOOK_DissonanceVoip/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MMHOOK_Facepunch Transport for Netcode for GameObjects/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MMHOOK_Facepunch.Steamworks.Win64/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

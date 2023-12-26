@@ -48,6 +48,27 @@
       <Reference Include="LC_API">
         <HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\LC_API.dll</HintPath>
       </Reference>
+      <Reference Include="LethalLib">
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\Evaisa-LethalLib\LethalLib\LethalLib.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_AmazingAssets.TerrainToMesh">
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\MMHOOK\MMHOOK_AmazingAssets.TerrainToMesh.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_Assembly-CSharp">
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\MMHOOK\MMHOOK_Assembly-CSharp.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_ClientNetworkTransform">
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\MMHOOK\MMHOOK_ClientNetworkTransform.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_DissonanceVoip">
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\MMHOOK\MMHOOK_DissonanceVoip.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_Facepunch Transport for Netcode for GameObjects">
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\MMHOOK\MMHOOK_Facepunch Transport for Netcode for GameObjects.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_Facepunch.Steamworks.Win64">
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\MMHOOK\MMHOOK_Facepunch.Steamworks.Win64.dll</HintPath>
+      </Reference>
       <Reference Include="Unity.AI.Navigation">
         <HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.AI.Navigation.dll</HintPath>
       </Reference>

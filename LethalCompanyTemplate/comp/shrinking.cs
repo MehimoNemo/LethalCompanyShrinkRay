@@ -22,6 +22,9 @@ using UnityEngine.UIElements.Internal;
 using Steamworks.Ugc;
 using UnityEngine.TextCore.Text;
 using Steamworks.ServerList;
+using System.IO;
+using System.Reflection;
+using LethalLib.Modules;
 
 namespace LCShrinkRay.comp
 {
@@ -118,38 +121,76 @@ namespace LCShrinkRay.comp
 
                     //if object getting shrunk is us, let's shrink using playerShrinkAnimation
                     //else, just use object
-                    mls.LogMessage("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
-                    mls.LogMessage("Object tag is " + msgObject.tag);
-                    mls.LogMessage("The client Id is: " + clientId.ToString());
-                    mls.LogMessage("The object name is: " + msgObject.name);
-                    if (msgObject.tag == "Player")
-                    {
-                        mls.LogMessage("Looks like it must be a player");
-                        //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
-                        if (!(msgObject.name.Contains("(")) && clientId == 0)
-                        {
-                            mls.LogMessage("Looks like it must be player 0(Us)");
-                            //TODO: REPLACE WITH STORED REFERENCE
-                            PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                        }
-                        //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
-                        else if (objPlayerNum == clientId.ToString())
-                        {
-                            mls.LogMessage("Looks like it must be us!!!!");
-                            //TODO: REPLACE WITH STORED REFERENCE
-                            PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                        }
-                        //if it's anyone or anything else, we don't care, just use ObjectShrink
-                        else
-                        {
-                            mls.LogMessage("Looks like it must be some random person....boring...");
-                            ObjectShrinkAnimation(msgShrinkage, msgObject);
-                        }
-                    }
-                    //TODO: ADD NON-PLAYER SHRINKING
+                    ShrinkPlayer(msgObject, msgShrinkage, objPlayerNum);
                 }
             });
+            AddShrinkRayToGame();
         }
+        public void AddShrinkRayToGame()
+        {
+            mls.LogMessage("Addin shrink rayyy");
+            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "hookgunitem");
+            mls.LogMessage("0");
+            AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
+            //Lethal Company_Data
+            mls.LogMessage("1");
+            Item nightVisionItem = UpgradeAssets.LoadAsset<Item>("HookGunItem.asset"); ;
+            mls.LogMessage("2");
+            nightVisionItem.creditsWorth = 0;
+            mls.LogMessage("3");
+            nightVisionItem.spawnPrefab.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+            mls.LogMessage("4");
+            ShrinkRay visScript = nightVisionItem.spawnPrefab.AddComponent<ShrinkRay>();
+            mls.LogMessage("5");
+            visScript.itemProperties = nightVisionItem;
+            mls.LogMessage("6");
+            visScript.grabbable = true;
+            visScript.useCooldown = 2f;
+            visScript.grabbableToEnemies = true;
+            mls.LogMessage("7");
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(nightVisionItem.spawnPrefab);
+            mls.LogMessage("8");
+            TerminalNode nightNode = new TerminalNode();
+            mls.LogMessage("9");
+            nightNode.displayText = string.Format("ShrinkRay", "uh", "huh", "buh???", "Guh???");
+            mls.LogMessage("10");
+            Items.RegisterShopItem(nightVisionItem, null, null, nightNode, nightVisionItem.creditsWorth);
+            mls.LogMessage("11");
+        }
+
+        public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, String objPlayerNum) {
+            //Todo Make this NOT awful and terrible
+            mls.LogMessage("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
+            mls.LogMessage("Object tag is " + msgObject.tag);
+            mls.LogMessage("The client Id is: " + clientId.ToString());
+            mls.LogMessage("The object name is: " + msgObject.name);
+            if (msgObject.tag == "Player")
+            {
+                mls.LogMessage("Looks like it must be a player");
+                //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
+                if (!(msgObject.name.Contains("(")) && clientId == 0)
+                {
+                    mls.LogMessage("Looks like it must be player 0(Us)");
+                    //TODO: REPLACE WITH STORED REFERENCE
+                    PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                }
+                //if the name isn't player, find out what player it is, extract the number, and then compare it with our client id to see if we're being shrunk
+                else if (objPlayerNum == clientId.ToString())
+                {
+                    mls.LogMessage("Looks like it must be us!!!!");
+                    //TODO: REPLACE WITH STORED REFERENCE
+                    PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                }
+                //if it's anyone or anything else, we don't care, just use ObjectShrink
+                else
+                {
+                    mls.LogMessage("Looks like it must be some random person....boring...");
+                    ObjectShrinkAnimation(msgShrinkage, msgObject);
+                }
+            }
+            //TODO: ADD NON-PLAYER SHRINKING
+        }
+
         public float GetPlayerScale()
         {
             return myScale;
@@ -270,29 +311,18 @@ namespace LCShrinkRay.comp
         public void SussifyVents(EnemyVent[] vents)
         {
             GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
-
+            MeshRenderer[] renderers = new MeshRenderer[vents.Length];
             for (int i = 0; i < vents.Length; i++)
             {
                 mls.LogMessage("SUSSIFYING VENT " + i);
-                mls.LogMessage("\tPairing with vent " + (vents.Length - i - 1));
-
-                GameObject vent = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
+                
+                GameObject vent = vents[i].gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
+                renderers[i] = vent.GetComponent<MeshRenderer>();
                 vent.tag = "InteractTrigger";
                 vent.layer = LayerMask.NameToLayer("InteractableObject");
                 var ventTeleport = this.gameObject.AddComponent<VentTeleport>();
                 var trigger = vent.AddComponent<InteractTrigger>();
                 vent.AddComponent<BoxCollider>();
-
-                // Assuming your prefab is of type GameObject
-                //GameObject prefab = Resources.Load<GameObject>("Path/To/Prefab");
-                //GameObject prefab = FindPrefabInScene("PrefabName", targetScene);
-
-                // Instantiate the prefab
-                //GameObject instantiatedObject = Instantiate(prefab);
-
-                // Set parent and position if needed
-                //instantiatedObject.transform.SetParent(vent.transform);
-                //instantiatedObject.transform.position = vent.transform.position;
 
                 trigger.hoverIcon = GameObject.Find("StartGameLever")?.GetComponent<InteractTrigger>()?.hoverIcon;
                 trigger.hoverTip = "Enter : [LMB]";
@@ -310,25 +340,42 @@ namespace LCShrinkRay.comp
                 trigger.onStopInteract = new InteractEvent();
                 trigger.onCancelAnimation = new InteractEvent();
 
-                // Only works if even I think
-                //UN-NULL THIS COWARD
-                trigger.onInteract.AddListener((player) => ventTeleport.TeleportPlayer(player, null));
+                EnemyVent siblingVent;
+                //checks that we don't set a vent to have itself as a sibling if their is an odd number
+                int siblingIndex = vents.Length - i - 1;
+                if (siblingIndex == i) {
+                    System.Random rnd = new System.Random();
+                    siblingIndex = rnd.Next(0, vents.Length);
+                }
+                siblingVent = vents[siblingIndex];
+                mls.LogMessage("\tPairing with vent " + siblingIndex);
+
+                trigger.onInteract.AddListener((player) => ventTeleport.TeleportPlayer(player, siblingVent));
                 trigger.enabled = true;
                 vent.GetComponent<Renderer>().enabled = true;
                 mls.LogMessage("VentCover Object: " + vent.name);
                 mls.LogMessage("VentCover Renderer Enabled: " + vent.GetComponent<Renderer>().enabled);
                 mls.LogMessage("Hover Icon: " + (trigger.hoverIcon != null ? trigger.hoverIcon.name : "null"));
-
-                // Only works if even I think
-                //trigger.onInteract.AddListener((player) => ventTeleport.(vents[vents.Length - 1 - i]));
             }
+            StartCoroutine(RenderVents(renderers));
         }
 
 
+        private IEnumerator  RenderVents(MeshRenderer[] renderers)
+        {
+            float delay = 1f;
+            yield return new WaitForSeconds(delay);
+            foreach (MeshRenderer renderer in renderers)
+            {
+                renderer.enabled = true;
+            }
+
+        }
+
         public void Update()
         {
-            
-            
+
+                        
 
             if (!GameNetworkManagerPatch.isGameInitialized) {
                 players.Clear();
@@ -342,7 +389,7 @@ namespace LCShrinkRay.comp
                     SussifyVents(RoundManager.Instance.allEnemyVents);
                     sussification = true;
                 }
-                if (sussification == false)
+                /*if (sussification == false)
                 {
                     sussification = true;
                     
@@ -381,7 +428,7 @@ namespace LCShrinkRay.comp
                     vent.GetComponent<Renderer>().enabled = true;
                     renderer.enabled = true;
                     mls.LogMessage("VentCoverRendered?: " + renderer.enabled.ToString());
-                }
+                }*/
 
                 foreach (GrabbableObject obj in alteredGrabbedItems)
                 {
@@ -616,105 +663,109 @@ namespace LCShrinkRay.comp
                 //mls.LogInfo("\n\n\n\n\n\n HELP \n\n\n\n\n\n");
                 try
                 {
-                    bool nKeyPressed = false;
-                    bool mKeyPressed = false;
-                    bool jKeyPressed = false;
-                    bool kKeyPressed = false;
-                    bool oKeyPressed = false;
-                    bool iKeyPressed = false;
-                    if (Keyboard.current.oKey.wasPressedThisFrame && !oKeyPressed)
+                    bool useDebugKeys = false;    
+                    if (useDebugKeys)
                     {
-                        oKeyPressed = true;
-                        mls.LogInfo("Simulating fake broadcast");
-                        //ShGetString("Player,"+(0.4f).ToString(), "Someone...");
-                        //this is an old debug tool, no longer works, i should probably figure out how to recreate it...
-                        Networking.GetString?.Invoke("Player," + (0.4f).ToString(), "Someone...");
-                    }
-                    else if (!Keyboard.current.oKey.isPressed)
-                    {
-                        oKeyPressed = false;
-                    }
-                    if (Keyboard.current.nKey.wasPressedThisFrame && !nKeyPressed)
-                    {
-                        nKeyPressed = true;
-                        mls.LogInfo("Shrinking player model");
-                        float scale = 0.4f;
-                        PlayerShrinkAnimation(scale, player, helmetHudTransform);
-                        sendShrinkMessage(player, scale);
-                    }
-                    else if (!Keyboard.current.nKey.isPressed)
-                    {
-                        nKeyPressed = false;
-                    }
-                    if (Keyboard.current.mKey.wasPressedThisFrame && !mKeyPressed)
-                    {
-                        mKeyPressed = true;
-                        mls.LogInfo("Growing player model");
-                        float scale = 1f;
-                        PlayerShrinkAnimation(scale, player, helmetHudTransform);
-                        sendShrinkMessage(player, scale);
-                    }
-                    else if (!Keyboard.current.mKey.isPressed)
-                    {
-                        mKeyPressed = false;
-                    }
-                    if (Keyboard.current.jKey.wasPressedThisFrame && !jKeyPressed)
-                    {
-                        jKeyPressed = true;
-
-                        float scale = 0.4f;
-                        int i;
-                        for (i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
+                        bool nKeyPressed = false;
+                        bool mKeyPressed = false;
+                        bool jKeyPressed = false;
+                        bool kKeyPressed = false;
+                        bool oKeyPressed = false;
+                        bool iKeyPressed = false;
+                        if (Keyboard.current.oKey.wasPressedThisFrame && !oKeyPressed)
                         {
-                            String pPlayer = "Player (" + i.ToString() + ")";
-                            if (GameObject.Find(pPlayer) != null)
+                            oKeyPressed = true;
+                            mls.LogInfo("Simulating fake broadcast");
+                            //ShGetString("Player,"+(0.4f).ToString(), "Someone...");
+                            //this is an old debug tool, no longer works, i should probably figure out how to recreate it...
+                            Networking.GetString?.Invoke("Player," + (0.4f).ToString(), "Someone...");
+                        }
+                        else if (!Keyboard.current.oKey.isPressed)
+                        {
+                            oKeyPressed = false;
+                        }
+                        if (Keyboard.current.nKey.wasPressedThisFrame && !nKeyPressed)
+                        {
+                            nKeyPressed = true;
+                            mls.LogInfo("Shrinking player model");
+                            float scale = 0.4f;
+                            PlayerShrinkAnimation(scale, player, helmetHudTransform);
+                            sendShrinkMessage(player, scale);
+                        }
+                        else if (!Keyboard.current.nKey.isPressed)
+                        {
+                            nKeyPressed = false;
+                        }
+                        if (Keyboard.current.mKey.wasPressedThisFrame && !mKeyPressed)
+                        {
+                            mKeyPressed = true;
+                            mls.LogInfo("Growing player model");
+                            float scale = 1f;
+                            PlayerShrinkAnimation(scale, player, helmetHudTransform);
+                            sendShrinkMessage(player, scale);
+                        }
+                        else if (!Keyboard.current.mKey.isPressed)
+                        {
+                            mKeyPressed = false;
+                        }
+                        if (Keyboard.current.jKey.wasPressedThisFrame && !jKeyPressed)
+                        {
+                            jKeyPressed = true;
+
+                            float scale = 0.4f;
+                            int i;
+                            for (i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
                             {
-                                mls.LogInfo("Shrinking player(1) model");
-                                ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
-                                sendShrinkMessage(GameObject.Find(pPlayer), scale);
-                                float newPitch = -0.417f * scale + 1.417f;
-                                //(newPitch, i);
+                                String pPlayer = "Player (" + i.ToString() + ")";
+                                if (GameObject.Find(pPlayer) != null)
+                                {
+                                    mls.LogInfo("Shrinking player(1) model");
+                                    ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
+                                    sendShrinkMessage(GameObject.Find(pPlayer), scale);
+                                    float newPitch = -0.417f * scale + 1.417f;
+                                    //(newPitch, i);
+                                }
                             }
                         }
-                    }
-                    else if (!Keyboard.current.jKey.isPressed)
-                    {
-                        jKeyPressed = false;
-                    }
-                    if (Keyboard.current.iKey.wasPressedThisFrame && !iKeyPressed)
-                    {
-                        iKeyPressed = true;
-                        //updatePitch();
-                        //testOffset(new Vector3(0f, 0f, 0f));
-                    }
-                    else if (!Keyboard.current.iKey.isPressed)
-                    {
-                        iKeyPressed = false;
-                    }
-                    if (Keyboard.current.kKey.wasPressedThisFrame && !kKeyPressed)
-                    {
-                        kKeyPressed = true;
-                        mls.LogInfo("Growing player(1) model");
-                        float scale = 1f;
-                        int i;
-                        for (i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
+                        else if (!Keyboard.current.jKey.isPressed)
                         {
-                            String pPlayer = "Player (" + i.ToString() + ")";
-                            if (GameObject.Find(pPlayer) != null)
+                            jKeyPressed = false;
+                        }
+                        if (Keyboard.current.iKey.wasPressedThisFrame && !iKeyPressed)
+                        {
+                            iKeyPressed = true;
+                            //updatePitch();
+                            //testOffset(new Vector3(0f, 0f, 0f));
+                        }
+                        else if (!Keyboard.current.iKey.isPressed)
+                        {
+                            iKeyPressed = false;
+                        }
+                        if (Keyboard.current.kKey.wasPressedThisFrame && !kKeyPressed)
+                        {
+                            kKeyPressed = true;
+                            mls.LogInfo("Growing player(1) model");
+                            float scale = 1f;
+                            int i;
+                            for (i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
                             {
-                                mls.LogInfo("Shrinking player(1) model");
-                                //TODO: REPLACE WITH STORED REFERENCE
-                                ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
-                                //TODO: REPLACE WITH STORED REFERENCE
-                                sendShrinkMessage(GameObject.Find(pPlayer), scale);
-                                //SetPlayerPitch(1f, i);
+                                String pPlayer = "Player (" + i.ToString() + ")";
+                                if (GameObject.Find(pPlayer) != null)
+                                {
+                                    mls.LogInfo("Shrinking player(1) model");
+                                    //TODO: REPLACE WITH STORED REFERENCE
+                                    ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
+                                    //TODO: REPLACE WITH STORED REFERENCE
+                                    sendShrinkMessage(GameObject.Find(pPlayer), scale);
+                                    //SetPlayerPitch(1f, i);
 
+                                }
                             }
                         }
-                    }
-                    else if (!Keyboard.current.kKey.isPressed)
-                    {
-                        kKeyPressed = false;
+                        else if (!Keyboard.current.kKey.isPressed)
+                        {
+                            kKeyPressed = false;
+                        }
                     }
                 }
                 catch (Exception e) { }
