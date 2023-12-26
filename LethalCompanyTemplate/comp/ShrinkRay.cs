@@ -83,14 +83,14 @@ namespace LCShrinkRay.comp
             base.Update();
 
             if (shrinking == null)
-            {;
+            {
                 shrinking = new Shrinking();
             }
 
                 //if beam exists
                 try
                 {
-                if (beamObject != null && lineRenderer != null)
+                if (beamObject != null && lineRenderer != null && this.playerHeldBy != null && this.playerHeldBy.gameplayCamera != null)
                 {
                     Transform transform = this.playerHeldBy.gameplayCamera.transform;
                     Vector3 beamStartPos;
@@ -122,10 +122,12 @@ namespace LCShrinkRay.comp
                     Color lerpedColor2 = Color.Lerp(startColor, endColor, t2);
 
                     // Apply the color to the material or any other component that has color
-                    lineRenderer.endColor = lerpedColor;
-                    lineRenderer.startColor = lerpedColor2;
-/*
-                    Ray ray = new Ray(beamStartPos, forward);
+                    {
+                        lineRenderer.endColor = lerpedColor;
+                        lineRenderer.startColor = lerpedColor2;
+                    }
+
+                    /*Ray ray = new Ray(beamStartPos, forward);
                     RaycastHit hit;
                     float maxRayDistance = beamLength; // Adjust as needed
                     bool hitSomething = Physics.Raycast(ray, out hit, maxRayDistance, StartOfRound.Instance.walkableSurfacesMask);

@@ -25,6 +25,7 @@ using Steamworks.ServerList;
 using System.IO;
 using System.Reflection;
 using LethalLib.Modules;
+using UnityEngine.UIElements.Experimental;
 
 namespace LCShrinkRay.comp
 {
@@ -93,6 +94,7 @@ namespace LCShrinkRay.comp
             //multiplayer networking
             Networking.GetString = (Action<string, string>)Delegate.Combine(Networking.GetString, (Action<string, string>)delegate (string data, string signature)
             {
+                mls.LogWarning("[Message from]: " + signature);
                 if (signature == "Someone...")
                 {
                     String[] splitStr = data.Split(',');
@@ -122,6 +124,13 @@ namespace LCShrinkRay.comp
                     //if object getting shrunk is us, let's shrink using playerShrinkAnimation
                     //else, just use object
                     ShrinkPlayer(msgObject, msgShrinkage, objPlayerNum);
+                }
+                else if(signature == "Goomba")
+                {
+                    mls.LogMessage("A goomba......");
+                    mls.LogMessage("\t"+data);
+                    StartCoroutine(GoombaStomp( GetPlayerObject(int.Parse(data))));
+
                 }
             });
             AddShrinkRayToGame();
@@ -157,8 +166,55 @@ namespace LCShrinkRay.comp
             Items.RegisterShopItem(nightVisionItem, null, null, nightNode, nightVisionItem.creditsWorth);
             mls.LogMessage("11");
         }
+        private void CheckIfPlayerAbove()
+        {
+            // Cast a ray upwards to check for the player above
+            RaycastHit hit;
+            if (Physics.Raycast(StartOfRound.Instance.localPlayerController.gameplayCamera.transform.position, StartOfRound.Instance.localPlayerController.gameObject.transform.up, out hit, 1f, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
+            {
+                Transform hitObject = hit.collider.gameObject.GetComponent<PlayerControllerB>().transform;
+                if (1f == hitObject.localScale.x)
+                {
+                    Debug.Log("WE GETTING GOOMBAD");
+                    Broadcast(StartOfRound.Instance.localPlayerController.playerClientId.ToString(), "Goomba");
+                    StartCoroutine(GoombaStomp(StartOfRound.Instance.localPlayerController.gameObject));
+                }
+            }
+        }
+        private IEnumerator GoombaStomp(GameObject goomba)
+        {
+            AnimationCurve scaleCurve = new AnimationCurve(
+                new Keyframe(0, 0.4f),
+                new Keyframe(0.05f, 0.05f),
+                new Keyframe(0.85f, 0.1f),
+                new Keyframe(1f, 0.4f)
+            );
+            scaleCurve.preWrapMode = WrapMode.PingPong;
+            scaleCurve.postWrapMode = WrapMode.PingPong;
 
-        public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, String objPlayerNum) {
+            AnimationCurve stretchCurve = new AnimationCurve(
+                new Keyframe(0, 0.4f),
+                new Keyframe(0.5f, 0.6f),
+                new Keyframe(1f, 0.4f)
+            );
+
+            float duration = 5f;
+            float elapsedTime = 0f;
+
+            while (elapsedTime < duration)
+            {
+                float scaleValue = scaleCurve.Evaluate(elapsedTime / duration);
+                float stretchValue = stretchCurve.Evaluate(elapsedTime / duration);
+
+                goomba.transform.localScale = new Vector3(stretchValue, scaleValue, stretchValue );
+
+                mls.LogMessage(goomba.transform.localScale.ToString());
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+            public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, String objPlayerNum) {
             //Todo Make this NOT awful and terrible
             mls.LogMessage("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
             mls.LogMessage("Object tag is " + msgObject.tag);
@@ -389,46 +445,7 @@ namespace LCShrinkRay.comp
                     SussifyVents(RoundManager.Instance.allEnemyVents);
                     sussification = true;
                 }
-                /*if (sussification == false)
-                {
-                    sussification = true;
-                    
-                    //TEST CODE FOR IN SHIP VENT
-                    GameObject vent = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
-                    MeshRenderer[] renderers = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>();
-                    mls.LogMessage("count of renderers: " + renderers.Length);
-                    MeshRenderer renderer = renderers[0];
-                    vent.tag = "InteractTrigger";
-                    vent.layer = LayerMask.NameToLayer("InteractableObject");
-                    var ventTeleport = this.gameObject.AddComponent<VentTeleport>();
-                    var trigger = vent.AddComponent<InteractTrigger>();
-                    vent.AddComponent<BoxCollider>();
-
-                    trigger.hoverIcon = GameObject.Find("StartGameLever")?.GetComponent<InteractTrigger>()?.hoverIcon;
-                    trigger.hoverTip = "Enter : [LMB]";
-                    trigger.interactable = true;
-                    trigger.oneHandedItemAllowed = true;
-                    trigger.twoHandedItemAllowed = true;
-                    trigger.holdInteraction = true;
-                    trigger.timeToHold = 1.5f;
-                    trigger.timeToHoldSpeedMultiplier = 1f;
-
-                    // Create new instances of InteractEvent for each trigger
-                    trigger.holdingInteractEvent = new InteractEventFloat();
-                    trigger.onInteract = new InteractEvent();
-                    trigger.onInteractEarly = new InteractEvent();
-                    trigger.onStopInteract = new InteractEvent();
-                    trigger.onCancelAnimation = new InteractEvent();
-
-                    // Only works if even I think
-                    trigger.onInteract.AddListener((aplayer) => ventTeleport.TeleportPlayer(aplayer, null));
-                    trigger.enabled = true;
-                    mls.LogMessage("VentCover Object: " + vent.name);
-                    mls.LogMessage("Hover Icon: " + (trigger.hoverIcon != null ? trigger.hoverIcon.name : "null"));
-                    vent.GetComponent<Renderer>().enabled = true;
-                    renderer.enabled = true;
-                    mls.LogMessage("VentCoverRendered?: " + renderer.enabled.ToString());
-                }*/
+                
 
                 foreach (GrabbableObject obj in alteredGrabbedItems)
                 {
@@ -469,6 +486,12 @@ namespace LCShrinkRay.comp
                 }
                 //mls.LogInfo("SKRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
                 //mls.LogInfo(players.Count);
+
+                if(StartOfRound.Instance.localPlayerController.gameObject.transform.localScale.x != 1f)
+                {
+                    CheckIfPlayerAbove();
+                }
+
                 foreach (GameObject player in players)
                 {
                     //TODO: REPLACE WITH OBJECT REFERENCE
