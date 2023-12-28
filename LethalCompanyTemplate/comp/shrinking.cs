@@ -143,11 +143,11 @@ namespace LCShrinkRay.comp
             AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
             //Lethal Company_Data
             mls.LogMessage("1");
-            Item nightVisionItem = UpgradeAssets.LoadAsset<Item>("HookGunItem.asset"); ;
+            Item nightVisionItem = UpgradeAssets.LoadAsset<Item>("HookGunItem.asset");
             mls.LogMessage("2");
             nightVisionItem.creditsWorth = 0;
             mls.LogMessage("3");
-            nightVisionItem.spawnPrefab.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+            nightVisionItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
             mls.LogMessage("4");
             ShrinkRay visScript = nightVisionItem.spawnPrefab.AddComponent<ShrinkRay>();
             mls.LogMessage("5");
@@ -193,7 +193,7 @@ namespace LCShrinkRay.comp
             scaleCurve.postWrapMode = WrapMode.PingPong;
 
             AnimationCurve stretchCurve = new AnimationCurve(
-                new Keyframe(0, 0.4f),
+                new Keyframe(0, 0.7f),
                 new Keyframe(0.5f, 0.6f),
                 new Keyframe(1f, 0.4f)
             );

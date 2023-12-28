@@ -1,3 +1,5 @@
 is_global = true
 build_property.RootNamespace = LCShrinkRay
 build_property.ProjectDir = C:\Users\Izek\Source\Repos\LethalCompanyShrinkRay\LethalCompanyTemplate\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
