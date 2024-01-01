@@ -1,7 +1,7 @@
 # Shrink Ray
 A BepInEx 5 Plugin, Lethal Company mod for a functioning(not shitty) shrink ray!
 
-##Special thanks to
+##Special Thanks To
 Niro for development help
 [Peppermint for the shrink ray model!] (https://twitter.com/ItsJOEYthe) (@peppermint_2859 on discord)
 
