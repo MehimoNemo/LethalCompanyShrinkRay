@@ -11,6 +11,8 @@ using LCShrinkRay.comp;
 using LC_API.ServerAPI;
 using LC_API;
 using LCShrinkRay.patches;
+using LCShrinkRay.Config;
+using System;
 
 namespace LCShrinkRay
 {
@@ -22,16 +24,25 @@ namespace LCShrinkRay
         internal ManualLogSource mls;
         private GameObject playerObject;
 
+        public static ConfigFile bepInExConfig() { return Instance.Config; }
+
         private void Awake()
         {
             // Plugin startup logic
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             if (Instance == null)
-            {
                 Instance = this;
-            }
 
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
+
+            try
+            {
+                ModConfig.Instance.load();
+            }
+            catch(Exception ex)
+            {
+                mls.LogError(ex.Message);
+            }
 
             mls.LogInfo("The Test Mod Has Awoken");
 

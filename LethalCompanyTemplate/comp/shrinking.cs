@@ -26,6 +26,7 @@ using System.IO;
 using System.Reflection;
 using LethalLib.Modules;
 using UnityEngine.UIElements.Experimental;
+using LCShrinkRay.Config;
 
 namespace LCShrinkRay.comp
 {
@@ -168,6 +169,8 @@ namespace LCShrinkRay.comp
         }
         private void CheckIfPlayerAbove()
         {
+            
+
             // Cast a ray upwards to check for the player above
             RaycastHit hit;
             if (Physics.Raycast(StartOfRound.Instance.localPlayerController.gameplayCamera.transform.position, StartOfRound.Instance.localPlayerController.gameObject.transform.up, out hit, 1f, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
@@ -175,9 +178,12 @@ namespace LCShrinkRay.comp
                 Transform hitObject = hit.collider.gameObject.GetComponent<PlayerControllerB>().transform;
                 if (1f == hitObject.localScale.x)
                 {
-                    Debug.Log("WE GETTING GOOMBAD");
-                    Broadcast(StartOfRound.Instance.localPlayerController.playerClientId.ToString(), "Goomba");
-                    StartCoroutine(GoombaStomp(StartOfRound.Instance.localPlayerController.gameObject));
+                    if (ModConfig.Instance.jumpOnShrunkenPlayers.Value)
+                    {
+                        Debug.Log("WE GETTING GOOMBAD");
+                        Broadcast(StartOfRound.Instance.localPlayerController.playerClientId.ToString(), "Goomba");
+                        StartCoroutine(GoombaStomp(StartOfRound.Instance.localPlayerController.gameObject));
+                    }
                 }
             }
         }
@@ -300,31 +306,31 @@ namespace LCShrinkRay.comp
                 float duration = 6f;
                 float elapsedTime = 0f;
 
-                
+                // Get the player object's scale
+                float scale = playerObject.transform.localScale.x;
+                if (playerObject.transform == null)
+                {
+                    mls.LogWarning("PLAYEROBJECT.TRANSFORM IS NULL");
+                    yield break;
+                }
 
+                //float modifiedPitch = 1f;
+                //float modifiedPitch = -0.417f * scale + 1.417f;
+                myScale = GetPlayerObject((int)clientId).transform.localScale.x;
 
-                    // Get the player object's scale
-                    float scale = playerObject.transform.localScale.x;
-                    if(playerObject.transform == null)
-                    {
-                        mls.LogWarning("PLAYEROBJECT.TRANSFORM IS NULL");
-                        yield break;
-                    }
+                float intensity = -1f * (float)ModConfig.Instance.pitchDistortionIntensity.Value;
+                float modifiedPitch = (intensity * (scale - myScale) + 1f) * pitch;
 
-                    //float modifiedPitch = 1f;
-                    //float modifiedPitch = -0.417f * scale + 1.417f;
-                    myScale = GetPlayerObject((int)clientId).transform.localScale.x;
-                    float modifiedPitch = (-0.3f * (scale - myScale) + 1f)*pitch;
-                    // Set the modified pitch using the original method
-                    mls.LogMessage("changing pitch of playerNum " + playerNum);
-                    mls.LogMessage("\tpitch: " + modifiedPitch);
-                    if(SoundManager.Instance == null)
-                    {
-                        mls.LogWarning("SOUNDMANAGER IS NULL");
-                        yield break;
-                    }
-                    elapsedTime += Time.deltaTime;
-                    mls.LogMessage("Elapsed time: " + elapsedTime);
+                // Set the modified pitch using the original method
+                mls.LogMessage("changing pitch of playerNum " + playerNum);
+                mls.LogMessage("\tpitch: " + modifiedPitch);
+                if (SoundManager.Instance == null)
+                {
+                    mls.LogWarning("SOUNDMANAGER IS NULL");
+                    yield break;
+                }
+                elapsedTime += Time.deltaTime;
+                mls.LogMessage("Elapsed time: " + elapsedTime);
                 try
                 {
                     SoundManager.Instance.SetPlayerPitch(modifiedPitch, playerNum);
@@ -337,7 +343,7 @@ namespace LCShrinkRay.comp
                     mls.LogMessage(e.StackTrace.ToString());
                 }
                 yield return null; // Wait for the next frame
-                }
+            }
         }
 
         private IEnumerator translateRelativeOffset(Transform referenceTransform, GrabbableObject grabbableToMove, Vector3 relativeOffset)
@@ -366,6 +372,9 @@ namespace LCShrinkRay.comp
         }
         public void SussifyVents(EnemyVent[] vents)
         {
+            if (!ModConfig.Instance.canUseVents.Value)
+                return;
+
             GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
             MeshRenderer[] renderers = new MeshRenderer[vents.Length];
             for (int i = 0; i < vents.Length; i++)
