@@ -8,7 +8,7 @@ Niro for development help
 
 
 ## And the testers too(sorry for making you join and leave the lobby a billion times)!
-StrawberriStorm
+[StrawberriStorm](https://twitter.com/strawberristorm)
 
 Tcorn
 
