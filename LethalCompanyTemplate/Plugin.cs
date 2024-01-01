@@ -21,7 +21,7 @@ namespace LCShrinkRay
     {
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
         private static Plugin Instance;
-        internal ManualLogSource mls;
+        private static ManualLogSource mls;
         private GameObject playerObject;
 
         public static ConfigFile bepInExConfig() { return Instance.Config; }
@@ -50,9 +50,26 @@ namespace LCShrinkRay
             //harmony.PatchAll(typeof(SoundManagerPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
             //harmony.PatchAll(typeof(PlayerControllerBPatch));
+            harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             //Networking.GetString += Shrinking.ShGetString;
         }
 
+        public enum LogType
+        {
+            Info,
+            Warning,
+            Error
+        }
+
+        public static void log(string message, LogType type = LogType.Info)
+        {
+            switch(type)
+            {
+                case LogType.Info: mls.LogInfo(message); break;
+                case LogType.Warning: mls.LogWarning(message); break;
+                case LogType.Error: mls.LogError(message); break;
+            }
+        }
 
         
         private void OnDestroy()
