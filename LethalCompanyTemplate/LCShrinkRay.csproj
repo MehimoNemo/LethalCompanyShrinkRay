@@ -14,6 +14,7 @@
         <PackageReference Include="BepInEx.Core" Version="5.*" />
         <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
         <PackageReference Include="UnityEngine.Modules" Version="2022.3.9" IncludeAssets="compile" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -46,7 +47,7 @@
         <HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Facepunch.Steamworks.Win64.dll</HintPath>
       </Reference>
       <Reference Include="LC_API">
-        <HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\LC_API.dll</HintPath>
+        <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\2018-LC_API\LC_API.dll</HintPath>
       </Reference>
       <Reference Include="LethalLib">
         <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\LethalCompany\profiles\ShrinkyDink\BepInEx\plugins\Evaisa-LethalLib\LethalLib\LethalLib.dll</HintPath>

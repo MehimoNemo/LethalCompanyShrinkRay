@@ -7,13 +7,10 @@ namespace LCShrinkRay.comp
 {
     internal class ShrinkRay : GrabbableObject
     {
-        private ManualLogSource mls;
         private PlayerControllerB previousPlayerHeldBy;
         private RaycastHit[] enemyColliders;
-        Shrinking shrinking;
         GameObject beamObject;
         LineRenderer lineRenderer;
-
 
         public Material beamMaterial;
         public float beamWidth = 0.1f;
@@ -22,18 +19,13 @@ namespace LCShrinkRay.comp
         //private Color beamColor = Color.blue;
 
 
-
-
         public override void Start()
         {
             base.Start();
             this.itemProperties.requiresBattery = false;
             this.useCooldown = 0.5f;
             enemyColliders = new RaycastHit[10];
-            mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
-            mls.LogMessage("STARTING SHRINKRAY");
-
-            shrinking = new Shrinking();
+            Plugin.log("STARTING SHRINKRAY");
 
             beamMaterial = new Material(Shader.Find("HDRP/Unlit"));
             /*// Set the emission color
@@ -45,31 +37,26 @@ namespace LCShrinkRay.comp
             blueTexture.Apply();
             if (beamMaterial == null)
             {
-                mls.LogError("FUCKER DAMNIT SHIT ASS");
+                Plugin.log("FUCKER DAMNIT SHIT ASS", Plugin.LogType.Error);
             }
             //beamMaterial.mainTexture = blueTexture;
             //beamMaterial.color = beamColor;
         }
 
-
-
         public override void ItemActivate(bool used, bool buttonDown = true)
         {
             try
             {
-                if (shrinking == null)
-                {
-                    mls.LogMessage("shrinking is null...");
-                    shrinking = new Shrinking();
-                }
-                mls.LogMessage("triggering SHRINKRAY");
+                Plugin.log("triggering SHRINKRAY");
                 base.ItemActivate(used, buttonDown);
                 if (beamObject == null || beamObject.gameObject == null)
                 {
                     ShootRayAndSync();
                 }
             }
-            catch (Exception e) { }
+            catch (Exception e) {
+                Plugin.log("Error while shooting ray: " + e.Message);
+            }
         }
 
         public float duration = 0.6f;
@@ -79,24 +66,18 @@ namespace LCShrinkRay.comp
         public Color startColor = Color.blue;
         public Color endColor = Color.cyan;
 
-        public override void Update() {
+        public override void Update()
+        {
             base.Update();
 
-            if (shrinking == null)
+            //if beam exists
+            try
             {
-                shrinking = new Shrinking();
-            }
-
-                //if beam exists
-                try
-                {
                 if (beamObject != null && lineRenderer != null && this.playerHeldBy != null && this.playerHeldBy.gameplayCamera != null)
                 {
                     Transform transform = this.playerHeldBy.gameplayCamera.transform;
                     Vector3 beamStartPos;
                     Vector3 forward;
-
-                    
 
                     beamStartPos = transform.position - transform.up * 0.1f;
                     forward = transform.forward;
@@ -109,7 +90,7 @@ namespace LCShrinkRay.comp
                     //offset the beam a lil bit forwards
                     beamStartPos += transform.forward * 1.3f;
                     forward += transform.forward * 1.3f;
-                    
+
 
                     // Increment the elapsed time based on the frame time
                     elapsedTime += Time.deltaTime;
@@ -136,14 +117,13 @@ namespace LCShrinkRay.comp
                         forward -= (hit.distance+1) * transform.forward;
                     }*/
 
-
                     lineRenderer.SetPosition(0, beamStartPos);
                     lineRenderer.SetPosition(1, forward);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                mls.LogMessage(e);
+                Plugin.log("Error in ShrinkRay.Update(): " + e.Message);
             }
         }
 
@@ -153,8 +133,6 @@ namespace LCShrinkRay.comp
             
             Vector3 beamStartPos;
             Vector3 forward;
-
-
 
             beamStartPos = transform.position - transform.up * 0.1f;
             forward = transform.forward;
@@ -169,22 +147,18 @@ namespace LCShrinkRay.comp
             forward += transform.forward * 1.3f;
 
 
-            mls.LogMessage(beamStartPos);
-            mls.LogMessage(beamStartPos + forward * beamLength);
+            Plugin.log(beamStartPos.ToString());
+            Plugin.log((beamStartPos + forward * beamLength).ToString());
 
-
-
-            Debug.Log("Calling shoot gun....");
+            Plugin.log("Calling shoot gun....");
             ShootRay(beamStartPos, forward);
-            Debug.Log("Calling shoot gun and sync");
+            Plugin.log("Calling shoot gun and sync");
         }
 
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(Vector3 beamStartPos, Vector3 forward)
         {
-
-            mls.LogMessage("shootingggggg");
-
+            Plugin.log("shootingggggg");
 
             if (enemyColliders == null)
             {
@@ -194,33 +168,33 @@ namespace LCShrinkRay.comp
             Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
             RenderCoolBeam(beamStartPos, beamStartPos + forward * beamLength);
             int hitEnemiesCount = Physics.SphereCastNonAlloc(ray, 5f, enemyColliders, beamLength, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Collide);
-            mls.LogMessage("Casted Ray");
-            mls.LogMessage("hitEnemiesCount: " + hitEnemiesCount);
+            Plugin.log("Casted Ray");
+            Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
             for (int i = 0; i < hitEnemiesCount; i++) {
-                mls.LogMessage("enemycolliderpint: " + enemyColliders[i].point);
+                Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
                 if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
                 {
                     Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
                     Debug.DrawLine(beamStartPos, enemyColliders[i].point, Color.cyan, 15f);
-                    mls.LogMessage("Raycast hit wall");
+                    Plugin.log("Raycast hit wall");
                 }
                 else
                 {
                     PlayerControllerB component;
                     if (enemyColliders[i].transform.TryGetComponent<PlayerControllerB>(out component))
                     {
-                        Debug.Log($"Hit enemy,");
-                        int targetPlayerID = (int)component.playerClientId;
+                        Plugin.log($"Hit enemy,");
+                        ulong targetPlayerID = component.playerClientId;
                         if (component.transform.localScale.x == 1f && component.playerClientId != this.playerHeldBy.playerClientId) {
                             //shrink the target player and also broadcast to other clients
-                            shrinking.sendShrinkMessage(component.gameObject, 0.4f);
-                            shrinking.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID.ToString());
+                            Shrinking.Instance.sendShrinkMessage(component.gameObject, 0.4f);
+                            Shrinking.Instance.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID);
                         }
                     }
                     else
                     {
-                        Debug.Log("Could not get hittable script from collider, transform: " + enemyColliders[i].transform.name);
-                        Debug.Log("collider: " + enemyColliders[i].collider.name);
+                        Plugin.log("Could not get hittable script from collider, transform: " + enemyColliders[i].transform.name);
+                        Plugin.log("collider: " + enemyColliders[i].collider.name);
                     }
                 }
             }
@@ -228,17 +202,17 @@ namespace LCShrinkRay.comp
         }
         public void RenderCoolBeam(Vector3 beamStartPos, Vector3 forward)
         {
-            mls.LogMessage("trying to render cool beam");
-            mls.LogMessage("parent is: " + parentObject.gameObject.name);
+            Plugin.log("trying to render cool beam");
+            Plugin.log("parent is: " + parentObject.gameObject.name);
             
             
             if (parentObject.transform.Find("Beam") == null && beamMaterial != null)
             {
-                mls.LogMessage("trying to create beam object");
+                Plugin.log("trying to create beam object");
                 beamObject = new GameObject("Beam");
-                mls.LogMessage("Before creating LineRenderer");
+                Plugin.log("Before creating LineRenderer");
                 lineRenderer = beamObject.AddComponent<LineRenderer>();
-                mls.LogMessage("After creating LineRenderer");
+                Plugin.log("After creating LineRenderer");
                 //beamObject.transform.parent = transform;
                 lineRenderer.material = beamMaterial;
                 lineRenderer.startWidth = beamWidth;
@@ -247,7 +221,7 @@ namespace LCShrinkRay.comp
                 //lineRenderer.material.color = new Color(0f, 0f, 1f, 1f); // Adjust alpha as needed
                 lineRenderer.material.renderQueue = 2500; // Adjust as needed
 
-                mls.LogMessage("Adding line renderer");
+                Plugin.log("Adding line renderer");
 
                 //Vector3 beamEndPosition = beamStartPos + forward * beamLength;
                 lineRenderer.SetPosition(0, beamStartPos);
@@ -283,7 +257,7 @@ namespace LCShrinkRay.comp
 
         public override void DiscardItem()
         {
-            mls.LogMessage("Discarding");
+            Plugin.log("Discarding");
             base.DiscardItem();
         }
     }

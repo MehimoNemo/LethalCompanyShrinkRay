@@ -11,14 +11,15 @@ using UnityEngine.Yoga;
 
 namespace LCShrinkRay.patches
 {
-    [HarmonyPatch(typeof(PlayerControllerB))]
+    [HarmonyPatch]
     internal class PlayerControllerBPatch
     {
-        [HarmonyPatch(typeof(PlayerControllerB))]
-        [HarmonyPatch("Update")]
-        static void PostFix(PlayerControllerB __instance)
+        [HarmonyPatch(typeof(PlayerControllerB), "Update")]
+        [HarmonyPostfix]
+        static void OnUpdate(PlayerControllerB __instance)
         {
-            SoundManager.Instance.playerVoicePitchTargets[__instance.playerClientId] = 1.2f;
+            //SoundManager.Instance.playerVoicePitchTargets[__instance.playerClientId] = 1.2f;
+            Shrinking.Instance.Update();
         }
     }
 }

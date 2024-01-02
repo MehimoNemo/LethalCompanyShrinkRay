@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "2Ycmg8PcASv20eoIxdsM9Ko8JLySrP1z7RD4aLI99R7JCRvNgl6F91sugw3vU9eBbBZ91+yTpRKvNQANwKX5Rg==",
+  "dgSpecHash": "BB+WrgBp2QZOHQJXcouyS6Cw5DiIkoYh54eGWey5FO8Cf3rpvLKehg2gRUs2qzV2qlnlX0AALHF0a9SaTADEXw==",
   "success": true,
   "projectFilePath": "C:\\Users\\Izek\\Source\\Repos\\LethalCompanyShrinkRay\\LethalCompanyTemplate\\LCShrinkRay.csproj",
   "expectedPackageFiles": [
@@ -14,6 +14,7 @@
     "C:\\Users\\Izek\\.nuget\\packages\\mono.cecil\\0.11.4\\mono.cecil.0.11.4.nupkg.sha512",
     "C:\\Users\\Izek\\.nuget\\packages\\monomod.runtimedetour\\21.12.13.1\\monomod.runtimedetour.21.12.13.1.nupkg.sha512",
     "C:\\Users\\Izek\\.nuget\\packages\\monomod.utils\\21.12.13.1\\monomod.utils.21.12.13.1.nupkg.sha512",
+    "C:\\Users\\Izek\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\Izek\\.nuget\\packages\\system.collections\\4.3.0\\system.collections.4.3.0.nupkg.sha512",
     "C:\\Users\\Izek\\.nuget\\packages\\system.collections.nongeneric\\4.3.0\\system.collections.nongeneric.4.3.0.nupkg.sha512",
     "C:\\Users\\Izek\\.nuget\\packages\\system.collections.specialized\\4.3.0\\system.collections.specialized.4.3.0.nupkg.sha512",
