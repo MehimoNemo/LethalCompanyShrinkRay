@@ -135,7 +135,7 @@ namespace LCShrinkRay.comp
         public static void OnGoomba(ulong sender, string playerID)
         {
             Plugin.log("A goomba...... stompin' on player " + playerID);
-            Instance.StartCoroutine(GoombaStompCoroutine(GetPlayerObject(ulong.Parse(playerID)))); // todo: maybe playerID already as ulong in method? works?
+            coroutines.GoombaStomp.StartRoutine(GetPlayerObject(ulong.Parse(playerID)));
         }
 
         private static void CheckIfPlayerAbove()
@@ -151,41 +151,9 @@ namespace LCShrinkRay.comp
                     {
                         Plugin.log("WE GETTING GOOMBAD");
                         Network.Broadcast("OnGoomba", StartOfRound.Instance.localPlayerController.playerClientId.ToString());
-                        Instance.StartCoroutine(GoombaStompCoroutine(StartOfRound.Instance.localPlayerController.gameObject));
+                        coroutines.GoombaStomp.StartRoutine(StartOfRound.Instance.localPlayerController.gameObject);
                     }
                 }
-            }
-        }
-        private static IEnumerator GoombaStompCoroutine(GameObject goomba)
-        {
-            AnimationCurve scaleCurve = new AnimationCurve(
-                new Keyframe(0, 0.4f),
-                new Keyframe(0.05f, 0.05f),
-                new Keyframe(0.85f, 0.1f),
-                new Keyframe(1f, 0.4f)
-            );
-            scaleCurve.preWrapMode = WrapMode.PingPong;
-            scaleCurve.postWrapMode = WrapMode.PingPong;
-
-            AnimationCurve stretchCurve = new AnimationCurve(
-                new Keyframe(0, 0.7f),
-                new Keyframe(0.5f, 0.6f),
-                new Keyframe(1f, 0.4f)
-            );
-
-            float duration = 5f;
-            float elapsedTime = 0f;
-
-            while (elapsedTime < duration)
-            {
-                float scaleValue = scaleCurve.Evaluate(elapsedTime / duration);
-                float stretchValue = stretchCurve.Evaluate(elapsedTime / duration);
-
-                goomba.transform.localScale = new Vector3(stretchValue, scaleValue, stretchValue);
-
-                Plugin.log(goomba.transform.localScale.ToString());
-                elapsedTime += Time.deltaTime;
-                yield return null;
             }
         }
 
@@ -267,62 +235,7 @@ namespace LCShrinkRay.comp
 
         public void SetPlayerPitch(float pitch, ulong playerID)
         {
-            StartCoroutine(SetPlayerPitchCoroutine(pitch, playerID));
-        }
-
-        private IEnumerator SetPlayerPitchCoroutine(float pitch, ulong playerID)
-        {
-            // Get the player object based on playerObjNum
-            GameObject playerObject = Shrinking.GetPlayerObject(playerID);
-            if (playerObject == null)
-            {
-                Plugin.log("PLAYEROBJECT IS NULL", Plugin.LogType.Warning);
-            }
-
-            Plugin.log("SUCCESSFULLY RUNNING PITCH FROM PATCH");
-
-            // Check if the player object is valid
-            if (playerObject != null)
-            {
-                float elapsedTime = 0f;
-
-                // Get the player object's scale
-                float scale = playerObject.transform.localScale.x;
-                if (playerObject.transform == null)
-                {
-                    Plugin.log("PLAYEROBJECT.TRANSFORM IS NULL", Plugin.LogType.Warning);
-                    yield break;
-                }
-
-                //float modifiedPitch = 1f;
-                //float modifiedPitch = -0.417f * scale + 1.417f;
-                myScale = GetPlayerObject(clientId).transform.localScale.x;
-
-                float intensity = -1f * (float)ModConfig.Instance.values.pitchDistortionIntensity;
-                float modifiedPitch = (intensity * (scale - myScale) + 1f) * pitch;
-
-                // Set the modified pitch using the original method
-                Plugin.log("changing pitch of playerID " + playerID);
-                Plugin.log("\tpitch: " + modifiedPitch);
-                if (SoundManager.Instance == null)
-                {
-                    Plugin.log("SOUNDMANAGER IS NULL", Plugin.LogType.Warning);
-                    yield break;
-                }
-                elapsedTime += Time.deltaTime;
-                Plugin.log("Elapsed time: " + elapsedTime);
-                try
-                {
-                    SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)playerID); // todo: remove (int)... my VS did weird things with precompiled files...
-                }
-                catch (NullReferenceException e)
-                {
-                    Plugin.log("Hey...there's a null reference exception in pitch setting....not sure why!", Plugin.LogType.Warning);
-                    Plugin.log(e.ToString(), Plugin.LogType.Warning);
-                    Plugin.log(e.StackTrace.ToString(), Plugin.LogType.Warning);
-                }
-                yield return null; // Wait for the next frame
-            }
+            coroutines.SetPlayerPitch.StartRoutine(playerID, pitch);
         }
 
         public static GameObject GetPlayerObject(ulong playerID)
@@ -342,30 +255,6 @@ namespace LCShrinkRay.comp
             return myPlayerObject;
         }
 
-        private IEnumerator translateRelativeOffset(Transform referenceTransform, GrabbableObject grabbableToMove, Vector3 relativeOffset)
-        {
-            float delay = grabbableToMove.itemProperties.grabAnimationTime + 0.2f;
-            yield return new WaitForSeconds(delay);
-
-            Debug.Log("TADAAAA IT'S TIME TO GET ANGLE!!!");
-
-            // Get the reference rotation
-            Quaternion referenceRotation = referenceTransform.rotation;
-
-            // Calculate the relative rotation
-            Quaternion relativeRotation = Quaternion.Inverse(referenceRotation) * grabbableToMove.gameObject.transform.rotation * Quaternion.Inverse(Quaternion.Euler(grabbableToMove.itemProperties.rotationOffset));
-
-            // Apply the relative rotation to the local offset
-            Vector3 offsetWorld = relativeRotation * relativeOffset;
-
-            // Apply the offset to the current position
-            //Vector3 newPosition = grabbableToMove.itemProperties.positionOffset + offsetWorld;
-            Vector3 newPosition = offsetWorld;
-
-            // Update the object's position offset
-            grabbableToMove.itemProperties.positionOffset = newPosition;
-            Plugin.log("newPosition: " + newPosition);
-        }
         public void SussifyVents(EnemyVent[] vents)
         {
             if (!ModConfig.Instance.values.canUseVents)
@@ -381,7 +270,7 @@ namespace LCShrinkRay.comp
                 renderers[i] = vent.GetComponent<MeshRenderer>();
                 vent.tag = "InteractTrigger";
                 vent.layer = LayerMask.NameToLayer("InteractableObject");
-                var ventTeleport = this.gameObject.AddComponent<VentTeleport>();
+                var ventTeleport = vents[i].gameObject.AddComponent<VentTeleport>(); // pr-todo: changed this.gameObject to vents[i].gameObject. Will it work?
                 var trigger = vent.AddComponent<InteractTrigger>();
                 vent.AddComponent<BoxCollider>();
 
@@ -419,19 +308,7 @@ namespace LCShrinkRay.comp
                 Plugin.log("VentCover Renderer Enabled: " + vent.GetComponent<Renderer>().enabled);
                 Plugin.log("Hover Icon: " + (trigger.hoverIcon != null ? trigger.hoverIcon.name : "null"));
             }
-            StartCoroutine(RenderVents(renderers));
-        }
-
-
-        private IEnumerator RenderVents(MeshRenderer[] renderers)
-        {
-            float delay = 1f;
-            yield return new WaitForSeconds(delay);
-            foreach (MeshRenderer renderer in renderers)
-            {
-                renderer.enabled = true;
-            }
-
+            coroutines.RenderVents.StartRoutine(dungeonEntrance, renderers); // pr-todo: will dungeonEntrance really work here?
         }
 
         public void Update()
@@ -560,7 +437,8 @@ namespace LCShrinkRay.comp
 
                         Vector3 posOffsetVect = new Vector3(-x, -y, -z);
 
-                        StartCoroutine(translateRelativeOffset(playerController.playerEye, heldObject, posOffsetVect));
+
+                        coroutines.TranslateRelativeOffset.StartRoutine(playerController.playerEye, heldObject, posOffsetVect);
                         //First person engine offset is -0.5099 0.7197 -0.1828 with these numbas
 
                         //Third person offset should be 0.2099 0.5197 -0.1828
@@ -790,7 +668,7 @@ namespace LCShrinkRay.comp
         private void testOffset(Vector3 posOffsetVect)
         {
             testVector = posOffsetVect;
-            StartCoroutine(translateRelativeOffset(StartOfRound.Instance.allPlayerScripts[0].playerEye, StartOfRound.Instance.allPlayerScripts[0].currentlyHeldObjectServer, posOffsetVect));
+            coroutines.TranslateRelativeOffset.StartRoutine(StartOfRound.Instance.allPlayerScripts[0].playerEye, StartOfRound.Instance.allPlayerScripts[0].currentlyHeldObjectServer, posOffsetVect);
         }
 
         public void updatePitch()
@@ -832,104 +710,13 @@ namespace LCShrinkRay.comp
         public void ObjectShrinkAnimation(float shrinkAmt, GameObject playerObj)
         {
             Plugin.log("LOOKS GOOD SENDING IT TO THE COROUTINE!!!!!", Plugin.LogType.Warning);
-            //StartCoroutine(ObjectShrinkAnimationCoroutine(shrinkAmt, playerObj));
-
-
             coroutines.ObjectShrinkAnimation.StartRoutine(playerObj, shrinkAmt);
         }
 
-        private IEnumerator ObjectShrinkAnimationCoroutine(float shrinkAmt, GameObject playerObj)
-        {
-            Plugin.log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
-            Plugin.log("gObject: " + playerObj, Plugin.LogType.Warning);
-            Transform objectTransform = playerObj.GetComponent<Transform>();
-            float duration = 2f;
-            float elapsedTime = 0f;
-            float shrinkage = 1f;
-
-            while (elapsedTime < duration && shrinkage > shrinkAmt)
-            {
-                //shrinkage = -(Mathf.Pow(elapsedTime / duration, 3) - (elapsedTime / duration) * amplitude * Mathf.Sin((elapsedTime / duration) * Mathf.PI)) + 1f;
-                shrinkage = (float)(0.58 * Math.Sin((4 * elapsedTime / duration) + 0.81) + 0.58);
-                //mls.LogFatal(shrinkage);
-                objectTransform.localScale = new Vector3(shrinkage, shrinkage, shrinkage);
-
-                elapsedTime += Time.deltaTime;
-                yield return null; // Wait for the next frame
-            }
-
-            // Ensure final scale is set to the desired value
-            objectTransform.localScale = new Vector3(shrinkAmt, shrinkAmt, shrinkAmt);
-            updatePitch();
-        }
-
         //Player Shrink animation, shrinks a player over a sinusoidal curve for a duration. Requires the player and mask transforms.
-        public void PlayerShrinkAnimation(float shrinkAmt, GameObject player, Transform maskTransform)
+        public void PlayerShrinkAnimation(float shrinkAmt, GameObject playerObj, Transform maskTransform)
         {
-            StartCoroutine(PlayerShrinkAnimationCoroutine(shrinkAmt, player, maskTransform));
+            coroutines.PlayerShrinkAnimation.StartRoutine(playerObj, shrinkAmt, maskTransform);
         }
-
-        private IEnumerator PlayerShrinkAnimationCoroutine(float shrinkAmt, GameObject playerObj, Transform maskTransform)
-        {
-            playerTransform = playerObj.GetComponent<Transform>();
-            //TODO: REPLACE WITH STORED REFERENCE
-            Plugin.log(playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly").ToString());
-            //TODO: REPLACE WITH STORED REFERENCE
-            Transform armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
-            float duration = 2f;
-            float elapsedTime = 0f;
-            float shrinkage = 1f;
-
-            while (elapsedTime < duration && shrinkage > shrinkAmt)
-            {
-                //shrinkage = -(Mathf.Pow(elapsedTime / duration, 3) - (elapsedTime / duration) * amplitude * Mathf.Sin((elapsedTime / duration) * Mathf.PI)) + 1f;
-                shrinkage = (float)(0.58 * Math.Sin((4 * elapsedTime / duration) + 0.81) + 0.58);
-                //mls.LogFatal(shrinkage);
-                playerTransform.localScale = new Vector3(shrinkage, shrinkage, shrinkage);
-                maskTransform.localScale = CalcMaskScaleVec(shrinkage);
-                maskTransform.localPosition = CalcMaskPosVec(shrinkage);
-                armTransform.localScale = CalcArmScale(shrinkage);
-
-                elapsedTime += Time.deltaTime;
-                yield return null; // Wait for the next frame
-            }
-
-            // Ensure final scale is set to the desired value
-            playerTransform.localScale = new Vector3(shrinkAmt, shrinkAmt, shrinkAmt);
-            maskTransform.localScale = CalcMaskScaleVec(shrinkAmt);
-            maskTransform.localPosition = CalcMaskPosVec(shrinkAmt);
-            armTransform.localScale = CalcArmScale(shrinkAmt);
-            updatePitch();
-        }
-        public Vector3 CalcMaskPosVec(float shrinkScale)
-        {
-            Vector3 pos;
-            float x = 0;
-            float y = 0.00375f * shrinkScale + 0.05425f;
-            float z = 0.005f * shrinkScale - 0.279f;
-            pos = new Vector3(x, y, z);
-            return pos;
-        }
-
-        public Vector3 CalcMaskScaleVec(float shrinkScale)
-        {
-            Vector3 pos;
-            float x = 0.277f * shrinkScale + 0.2546f;
-            float y = 0.2645f * shrinkScale + 0.267f;
-            float z = 0.177f * shrinkScale + 0.3546f;
-            pos = new Vector3(x, y, z);
-            return pos;
-        }
-
-        public Vector3 CalcArmScale(float shrinkScale)
-        {
-            Vector3 pos;
-            float x = 0.35f * shrinkScale + 0.58f;
-            float y = -0.0625f * shrinkScale + 1.0625f;
-            float z = -0.125f * shrinkScale + 1.15f;
-            pos = new Vector3(x, y, z);
-            return pos;
-        }
-
     }
 }
