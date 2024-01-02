@@ -10,6 +10,8 @@ Niro for development help
 ## And the testers too(sorry for making you join and leave the lobby a billion times)!
 [StrawberriStorm](https://twitter.com/strawberristorm)
 
-Tcorn
+[Tcorn](https://twitter.com/TcorntheLazy)
 
-Sirdog
+[Sirdog](https://youtu.be/6ItPIiegBms?si=zH-Cf467VIOtVTMt)
+
+[IceSigil](https://twitter.com/IceSigil)
