@@ -2,14 +2,8 @@
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
-using GameNetcodeStuff;
 using BepInEx.Configuration;
-using DunGen;
-using UnityEngine.InputSystem;
-using static UnityEngine.ParticleSystem.PlaybackState;
 using LCShrinkRay.comp;
-using LC_API.ServerAPI;
-using LC_API;
 using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System;
@@ -23,7 +17,6 @@ namespace LCShrinkRay
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
         private static Plugin Instance;
         private static ManualLogSource mls;
-        private GameObject playerObject;
 
         public static ConfigFile bepInExConfig() { return Instance.Config; }
 
@@ -38,7 +31,8 @@ namespace LCShrinkRay
 
             try
             {
-                ModConfig.Instance.load();
+                ModConfig.Instance.setup();
+                Shrinking.Instance.setup(); // todo: split shrinking.cs further into smaller classes, so that this line can get removed
             }
             catch(Exception ex)
             {
@@ -50,14 +44,9 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(Plugin));
             //harmony.PatchAll(typeof(SoundManagerPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
-            //harmony.PatchAll(typeof(PlayerControllerBPatch));
+            harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             //Networking.GetString += Shrinking.ShGetString;
-
-            GameObject gameObject = new GameObject("SHRINKING");
-            DontDestroyOnLoad(gameObject);
-            gameObject.AddComponent<Shrinking>();
-            Logger.LogInfo($"SHRINKING Started!");
 
             try
             {
@@ -86,15 +75,6 @@ namespace LCShrinkRay
                 case LogType.Error: mls.LogError(message); break;
                 case LogType.Fatal: mls.LogFatal(message); break;
             }
-        }
-
-        
-        private void OnDestroy()
-        {
-            /*GameObject gameObject = new GameObject("SHRINKING");
-            DontDestroyOnLoad(gameObject);
-            gameObject.AddComponent<Shrinking>();
-            Logger.LogInfo($"SHRINKING Started!");*/
         }
     }
 }

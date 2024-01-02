@@ -1,10 +1,8 @@
-﻿using BepInEx.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using GameNetcodeStuff;
-using System.Collections;
 
 using LCShrinkRay.patches;
 using System.IO;
@@ -12,12 +10,10 @@ using System.Reflection;
 using LethalLib.Modules;
 using LCShrinkRay.Config;
 using LC_API.Networking;
-using UnityEngine.UIElements;
-using LCShrinkRay.coroutines;
 
 namespace LCShrinkRay.comp
 {
-    internal class Shrinking : MonoBehaviour
+    internal class Shrinking
     {
         private static Shrinking instance = null;
         private static readonly object padlock = new object();
@@ -52,7 +48,7 @@ namespace LCShrinkRay.comp
         public List<string> ScreenBlockingItems = new List<string>();
         private List<GameObject> players = new List<GameObject>();
 
-        public void Awake()
+        public void setup()
         {
             // a list of itemnames to change
             //boombox
@@ -157,32 +153,30 @@ namespace LCShrinkRay.comp
             }
         }
 
-        public static void AddShrinkRayToGame()
+        public static void AddShrinkRayToGame() // todo: Move to shrinkRay.cs
         {
             Plugin.log("Addin shrink rayyy");
             string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "hookgunitem");
-            Plugin.log("0");
             AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
+
             //Lethal Company_Data
-            Plugin.log("1");
             Item nightVisionItem = UpgradeAssets.LoadAsset<Item>("HookGunItem.asset");
-            Plugin.log("2");
             nightVisionItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
             nightVisionItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
             ShrinkRay visScript = nightVisionItem.spawnPrefab.AddComponent<ShrinkRay>();
-            Plugin.log("3");
             visScript.itemProperties = nightVisionItem;
             visScript.grabbable = true;
             visScript.useCooldown = 2f;
             visScript.grabbableToEnemies = true;
-            Plugin.log("4");
+
+            Plugin.log("1");
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(nightVisionItem.spawnPrefab);
-            Plugin.log("5");
+            Plugin.log("2");
             TerminalNode nightNode = new TerminalNode();
             nightNode.displayText = string.Format("ShrinkRay", "uh", "huh", "buh???", "Guh???");
-            Plugin.log("6");
+            Plugin.log("3");
             Items.RegisterShopItem(nightVisionItem, null, null, nightNode, nightVisionItem.creditsWorth);
-            Plugin.log("7");
+            Plugin.log("4");
         }
 
         public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
@@ -258,7 +252,12 @@ namespace LCShrinkRay.comp
         public void SussifyVents(EnemyVent[] vents)
         {
             if (!ModConfig.Instance.values.canUseVents)
+            {
+                Plugin.log("Sussification of vents disabled.");
                 return;
+            }
+
+            Plugin.log("SUSSIFYING VENTS");
 
             GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
             MeshRenderer[] renderers = new MeshRenderer[vents.Length];

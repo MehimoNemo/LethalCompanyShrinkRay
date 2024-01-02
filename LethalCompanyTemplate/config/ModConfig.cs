@@ -70,7 +70,7 @@ namespace LCShrinkRay.Config
             }
         }
 
-        public void load()
+        public void setup()
         {
             values.shrinkRayCost            = Plugin.bepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
             //sizeDecrease                  = Plugin.bepInExConfig().Bind("General", "SizeDecrease", SizeDecrease.Half, "Defines how tiny shrunken players will become.\"").Value;
