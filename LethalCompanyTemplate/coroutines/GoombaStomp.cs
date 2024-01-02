@@ -49,6 +49,7 @@ namespace LCShrinkRay.coroutines
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
+            Shrinking.Instance.OnGoombaCoroutineComplete();
         }
     }
 }

@@ -127,11 +127,24 @@ namespace LCShrinkRay.comp
             Instance.ShrinkPlayer(msgObject, data.shrinkage, playerID);
         }
 
+        private static bool isGoombaCoroutineRunning = false;
+
         [NetworkMessage("OnGoomba")]
         public static void OnGoomba(ulong sender, string playerID)
         {
             Plugin.log("A goomba...... stompin' on player " + playerID);
-            coroutines.GoombaStomp.StartRoutine(GetPlayerObject(ulong.Parse(playerID)));
+
+            // Check if the goomba coroutine is already running
+            if (!isGoombaCoroutineRunning)
+            {
+                coroutines.GoombaStomp.StartRoutine(GetPlayerObject(ulong.Parse(playerID)));
+                isGoombaCoroutineRunning = true;
+            }
+        }
+
+        public void OnGoombaCoroutineComplete()
+        {
+            isGoombaCoroutineRunning = false;
         }
 
         private static void CheckIfPlayerAbove()
