@@ -2,17 +2,12 @@
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
-using GameNetcodeStuff;
 using BepInEx.Configuration;
-using DunGen;
-using UnityEngine.InputSystem;
-using static UnityEngine.ParticleSystem.PlaybackState;
 using LCShrinkRay.comp;
-using LC_API.ServerAPI;
-using LC_API;
 using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System;
+using LC_API.Networking;
 
 namespace LCShrinkRay
 {
@@ -22,7 +17,6 @@ namespace LCShrinkRay
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
         private static Plugin Instance;
         private static ManualLogSource mls;
-        private GameObject playerObject;
 
         public static ConfigFile bepInExConfig() { return Instance.Config; }
 
@@ -37,47 +31,50 @@ namespace LCShrinkRay
 
             try
             {
-                ModConfig.Instance.load();
+                ModConfig.Instance.setup();
+                Shrinking.Instance.setup(); // todo: split shrinking.cs further into smaller classes, so that this line can get removed
             }
             catch(Exception ex)
             {
                 mls.LogError(ex.Message);
             }
 
-            mls.LogInfo("The Test Mod Has Awoken");
+            mls.LogInfo(PluginInfo.PLUGIN_NAME + " mod has awoken!");
 
             harmony.PatchAll(typeof(Plugin));
             //harmony.PatchAll(typeof(SoundManagerPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
-            //harmony.PatchAll(typeof(PlayerControllerBPatch));
+            harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             //Networking.GetString += Shrinking.ShGetString;
+
+            try
+            {
+                Network.RegisterAll(typeof(Shrinking)); // LC_API Network Setup
+            }
+            catch (Exception e)
+            {
+                mls.LogError(e.Message);
+            }
         }
 
         public enum LogType
         {
-            Info,
+            Message,
             Warning,
-            Error
+            Error,
+            Fatal
         }
 
-        public static void log(string message, LogType type = LogType.Info)
+        public static void log(string message, LogType type = LogType.Message)
         {
             switch(type)
             {
-                case LogType.Info: mls.LogInfo(message); break;
+                case LogType.Message: mls.LogMessage(message); break;
                 case LogType.Warning: mls.LogWarning(message); break;
                 case LogType.Error: mls.LogError(message); break;
+                case LogType.Fatal: mls.LogFatal(message); break;
             }
-        }
-
-        
-        private void OnDestroy()
-        {
-            GameObject gameObject = new GameObject("SHRINKING");
-            DontDestroyOnLoad(gameObject);
-            gameObject.AddComponent<Shrinking>();
-            Logger.LogInfo($"SHRINKING Started!");
         }
     }
 }

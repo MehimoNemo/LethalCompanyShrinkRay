@@ -70,9 +70,9 @@ namespace LCShrinkRay.Config
             }
         }
 
-        public void load()
+        public void setup()
         {
-            values.shrinkRayCost            = Plugin.bepInExConfig().Bind("General", "ShrinkRayCost", 200, "Store cost of the shrink ray").Value;
+            values.shrinkRayCost            = Plugin.bepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
             //sizeDecrease                  = Plugin.bepInExConfig().Bind("General", "SizeDecrease", SizeDecrease.Half, "Defines how tiny shrunken players will become.\"").Value;
             values.multipleShrinking        = Plugin.bepInExConfig().Bind("General", "MultipleShrinking", true, "If true, a player can shrink multiple times.. unfortunatly.\"").Value;
 
@@ -121,7 +121,7 @@ namespace LCShrinkRay.Config
                     NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_HostConfigRequested", 0uL, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
                 }
                 else
-                    Plugin.log("Config request not required. No other player available.", Plugin.LogType.Info); // Shouldn't happen, but who knows..
+                    Plugin.log("Config request not required. No other player available."); // Shouldn't happen, but who knows..
             }
 
             public static void HostConfigRequested(ulong clientId, FastBufferReader reader)
