@@ -13,6 +13,7 @@ using LC_API;
 using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System;
+using LC_API.Networking;
 
 namespace LCShrinkRay
 {
@@ -44,7 +45,7 @@ namespace LCShrinkRay
                 mls.LogError(ex.Message);
             }
 
-            mls.LogInfo("The Test Mod Has Awoken");
+            mls.LogInfo(PluginInfo.PLUGIN_NAME + " mod has awoken!");
 
             harmony.PatchAll(typeof(Plugin));
             //harmony.PatchAll(typeof(SoundManagerPatch));
@@ -52,32 +53,48 @@ namespace LCShrinkRay
             //harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             //Networking.GetString += Shrinking.ShGetString;
+
+            GameObject gameObject = new GameObject("SHRINKING");
+            DontDestroyOnLoad(gameObject);
+            gameObject.AddComponent<Shrinking>();
+            Logger.LogInfo($"SHRINKING Started!");
+
+            try
+            {
+                Network.RegisterAll(typeof(Shrinking)); // LC_API Network Setup
+            }
+            catch (Exception e)
+            {
+                mls.LogError(e.Message);
+            }
         }
 
         public enum LogType
         {
-            Info,
+            Message,
             Warning,
-            Error
+            Error,
+            Fatal
         }
 
-        public static void log(string message, LogType type = LogType.Info)
+        public static void log(string message, LogType type = LogType.Message)
         {
             switch(type)
             {
-                case LogType.Info: mls.LogInfo(message); break;
+                case LogType.Message: mls.LogMessage(message); break;
                 case LogType.Warning: mls.LogWarning(message); break;
                 case LogType.Error: mls.LogError(message); break;
+                case LogType.Fatal: mls.LogFatal(message); break;
             }
         }
 
         
         private void OnDestroy()
         {
-            GameObject gameObject = new GameObject("SHRINKING");
+            /*GameObject gameObject = new GameObject("SHRINKING");
             DontDestroyOnLoad(gameObject);
             gameObject.AddComponent<Shrinking>();
-            Logger.LogInfo($"SHRINKING Started!");
+            Logger.LogInfo($"SHRINKING Started!");*/
         }
     }
 }

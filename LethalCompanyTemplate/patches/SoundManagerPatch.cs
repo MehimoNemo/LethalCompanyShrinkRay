@@ -10,7 +10,6 @@ namespace LCShrinkRay.patches
     [HarmonyPatch("SetPlayerPitch")]
     class SoundManagerPatch
     {
-        private static ManualLogSource mls;
         static Shrinking shrinkin = new Shrinking();
 
         public void Awake()
@@ -18,15 +17,15 @@ namespace LCShrinkRay.patches
             shrinkin = new Shrinking();
         }
 
-        public static void Postfix(float pitch, int playerObjNum)
+        public static void Postfix(float pitch, ulong playerID)
         {
             if (shrinkin != null)
             {
-                shrinkin.SetPlayerPitch(pitch, playerObjNum);
+                shrinkin.SetPlayerPitch(pitch, playerID);
             }
             else
             {
-                mls.LogError("SHRINKIN IS FUCKING NULL WTF");
+                Plugin.log("SHRINKIN IS FUCKING NULL WTF", Plugin.LogType.Error);
             }
         }
     }
