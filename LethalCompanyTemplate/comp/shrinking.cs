@@ -178,7 +178,7 @@ namespace LCShrinkRay.comp
                 Transform hitObject = hit.collider.gameObject.GetComponent<PlayerControllerB>().transform;
                 if (1f == hitObject.localScale.x)
                 {
-                    if (ModConfig.Instance.jumpOnShrunkenPlayers.Value)
+                    if (ModConfig.Instance.values.jumpOnShrunkenPlayers)
                     {
                         Debug.Log("WE GETTING GOOMBAD");
                         Broadcast(StartOfRound.Instance.localPlayerController.playerClientId.ToString(), "Goomba");
@@ -318,7 +318,7 @@ namespace LCShrinkRay.comp
                 //float modifiedPitch = -0.417f * scale + 1.417f;
                 myScale = GetPlayerObject((int)clientId).transform.localScale.x;
 
-                float intensity = -1f * (float)ModConfig.Instance.pitchDistortionIntensity.Value;
+                float intensity = -1f * (float)ModConfig.Instance.values.pitchDistortionIntensity;
                 float modifiedPitch = (intensity * (scale - myScale) + 1f) * pitch;
 
                 // Set the modified pitch using the original method
@@ -372,7 +372,7 @@ namespace LCShrinkRay.comp
         }
         public void SussifyVents(EnemyVent[] vents)
         {
-            if (!ModConfig.Instance.canUseVents.Value)
+            if (!ModConfig.Instance.values.canUseVents)
                 return;
 
             GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");

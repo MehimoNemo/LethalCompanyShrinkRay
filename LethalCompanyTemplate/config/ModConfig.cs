@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -8,6 +8,7 @@ using static Unity.Netcode.CustomMessagingManager;
 using Unity.Collections;
 using Unity.Netcode;
 using GameNetcodeStuff;
+using static UnityEngine.InputSystem.InputRemoting;
 
 namespace LCShrinkRay.Config
 {
@@ -21,41 +22,35 @@ namespace LCShrinkRay.Config
     public struct ConfigValues
     {
         // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
-        public int shrinkRayCost { get; internal set; }
+        public int shrinkRayCost { get; set; }
 
-        public float movementSpeedMultiplier { get; internal set; }
+        public float movementSpeedMultiplier { get; set; }
 
-        public float jumpHeightMultiplier { get; internal set; }
-
-        [JsonIgnore]
-        public float pitchDistortionIntensity { get; internal set; }
+        public float jumpHeightMultiplier { get; set; }
 
         [JsonIgnore]
-        public bool canUseVents { get; internal set; }
+        public float pitchDistortionIntensity { get; set; }
 
-        public bool jumpOnShrunkenPlayers { get; internal set; }
+        [JsonIgnore]
+        public bool canUseVents { get; set; }
 
-        public bool hoardingBugSteal { get; internal set; }
+        public bool jumpOnShrunkenPlayers { get; set; }
 
-        public bool throwablePlayers { get; internal set; }
+        public bool hoardingBugSteal { get; set; }
 
-        public bool multipleShrinking { get; internal set; }
+        public bool throwablePlayers { get; set; }
 
-        public ThumperBehaviour thumperBehaviour { get; internal set; }
+        public bool multipleShrinking { get; set; }
+
+        public ThumperBehaviour thumperBehaviour { get; set; }
     }
 
     public sealed class ModConfig
     {
         private static ModConfig instance = null;
         private static readonly object padlock = new object();
-        private bool loaded = false;
 
-        private ConfigValues values = new ConfigValues();
-        public void setConfigValues(ConfigValues newValues)
-        {
-            values = newValues;
-            updated();
-        }
+        public ConfigValues values = new ConfigValues();
 
         ModConfig()
         {
@@ -134,26 +129,23 @@ namespace LCShrinkRay.Config
                 if (!NetworkManager.Singleton.IsServer) // Current player is not the host and therefor not the one who should react
                     return;
 
-                string json = JsonSerializer.Serialize(ModConfig.Instance.values);
+                string json = JsonConvert.SerializeObject(ModConfig.Instance.values);
                 Plugin.log("Client [" + clientId + "] requested host config. Sending own config: " + json);
 
-                using FastBufferWriter writer = new FastBufferWriter(json.Length, Allocator.Temp);
+                int writeSize = FastBufferWriter.GetWriteSize(json);
+                using FastBufferWriter writer = new FastBufferWriter(writeSize, Allocator.Temp);
                 writer.WriteValueSafe(json);
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_HostConfigReceived", clientId, writer, NetworkDelivery.ReliableSequenced);
             }
 
             public static void HostConfigReceived(ulong clientId, FastBufferReader reader)
             {
-                if (!reader.TryBeginRead(4))
-                {
-                    Plugin.log("Error while trying to receive host config", Plugin.LogType.Error);
-                    return;
-                }
-
                 reader.ReadValueSafe(out string json);
                 Plugin.log("Received host config: " + json);
-                ConfigValues hostValues = JsonSerializer.Deserialize<ConfigValues>(json);
-                ModConfig.Instance.setConfigValues(hostValues);
+                ConfigValues hostValues = JsonConvert.DeserializeObject<ConfigValues>(json);
+
+                ModConfig.Instance.values = hostValues;
+                ModConfig.Instance.updated();
             }
         }
     }
