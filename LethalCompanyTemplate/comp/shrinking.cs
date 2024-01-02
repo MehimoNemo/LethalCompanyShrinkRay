@@ -135,6 +135,8 @@ namespace LCShrinkRay.comp
             });
             AddShrinkRayToGame();
         }
+
+        
         public void AddShrinkRayToGame()
         {
             mls.LogMessage("Addin shrink rayyy");
@@ -166,6 +168,42 @@ namespace LCShrinkRay.comp
             Items.RegisterShopItem(nightVisionItem, null, null, nightNode, nightVisionItem.creditsWorth);
             mls.LogMessage("11");
         }
+        public List<GameObject> playerGrabs = new List<GameObject>();
+        private void AddPlayerGrab()
+        {
+            GameObject capsulePrefab = GameObject.Find("Capsule");
+            if (capsulePrefab == null)
+            {
+                capsulePrefab = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(capsulePrefab);
+            }
+            foreach(GameObject playerGrab in playerGrabs)
+            {
+                Destroy(playerGrab);
+            }
+            playerGrabs.Clear();
+
+            foreach (GameObject player in players)
+            {
+                // Create an Item instance for each player
+                Item playerGrab = new Item();
+                playerGrab.spawnPrefab = capsulePrefab;
+
+                // Instantiate the capsule for the current player
+                GameObject capsule = GameObject.Instantiate(capsulePrefab);
+                capsule.name = "PlayerCapsule";
+
+                // Add the GrabbablePlayerObject component to the instantiated capsule
+                GrabbablePlayerObject gpo = capsule.AddComponent<GrabbablePlayerObject>();
+                gpo.itemProperties = playerGrab;
+                gpo.Initialize(player.gameObject.GetComponent<PlayerControllerB>());
+
+                // Add the Item to the list
+                playerGrabs.Add(capsule);
+            }
+
+        }
+
         private void CheckIfPlayerAbove()
         {
             // Cast a ray upwards to check for the player above
@@ -483,11 +521,15 @@ namespace LCShrinkRay.comp
                     }
                     MeshRenderer renderer = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>()[0];
                     renderer.enabled = true;
+                    AddPlayerGrab();
                 }
                 //mls.LogInfo("SKRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
                 //mls.LogInfo(players.Count);
 
-                if(StartOfRound.Instance.localPlayerController.gameObject.transform.localScale.x != 1f)
+
+                
+
+                if (StartOfRound.Instance.localPlayerController.gameObject.transform.localScale.x != 1f)
                 {
                     CheckIfPlayerAbove();
                 }
