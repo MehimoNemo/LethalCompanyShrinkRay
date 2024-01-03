@@ -41,6 +41,7 @@ namespace LCShrinkRay.comp
             }
             //beamMaterial.mainTexture = blueTexture;
             //beamMaterial.color = beamColor;
+            
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)

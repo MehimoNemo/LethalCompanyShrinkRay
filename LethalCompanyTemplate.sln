@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LCShrinkRay", "LethalCompan
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{81BA1B60-4259-40E1-A96E-F68C49E7D5A6}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\..\Downloads\LethalCompanyUnityTemplate\AssetBundles\Shrinkray\shrinkasset = ..\..\..\Downloads\LethalCompanyUnityTemplate\AssetBundles\Shrinkray\shrinkasset
 		LethalCompanyTemplate\bin\Debug\netstandard2.1\ShrinkRay.dll = LethalCompanyTemplate\bin\Debug\netstandard2.1\ShrinkRay.dll
 	EndProjectSection
 EndProject
