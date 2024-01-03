@@ -18,7 +18,7 @@ namespace LCShrinkRay.comp
 
         //Null player container and null itemProperties
 
-        public void Start()
+        public override void Start()
         {
             GameObject itemPrefabInstance = Instantiate(itemProperties.spawnPrefab, transform.position, Quaternion.identity);
             itemPrefabInstance.transform.parent = transform;

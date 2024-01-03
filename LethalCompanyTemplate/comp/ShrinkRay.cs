@@ -237,7 +237,10 @@ namespace LCShrinkRay.comp
                     pl.startColor = new Color(0, 0, 0, 0);
                     pl.endColor = new Color(0, 0, 0, 0);
                 }
-                catch (Exception e) { }
+                catch (Exception e)
+                {
+                    Plugin.log("Error in RenderCoolBeam: " + e);
+                }
 
                 //beam does not get deleted no more :)
                 Destroy(beamObject, beamDuration);
