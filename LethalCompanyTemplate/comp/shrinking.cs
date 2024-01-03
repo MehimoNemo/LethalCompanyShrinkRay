@@ -169,27 +169,43 @@ namespace LCShrinkRay.comp
         public static void AddShrinkRayToGame() // todo: Move to shrinkRay.cs
         {
             Plugin.log("Addin shrink rayyy");
-            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "hookgunitem");
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `1");
+            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `2");
             AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
 
             //Lethal Company_Data
-            Item nightVisionItem = UpgradeAssets.LoadAsset<Item>("HookGunItem.asset");
-            nightVisionItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
-            nightVisionItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
-            ShrinkRay visScript = nightVisionItem.spawnPrefab.AddComponent<ShrinkRay>();
-            visScript.itemProperties = nightVisionItem;
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `3");
+            Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `4");
+            //shrinkRayItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
+            shrinkRayItem.creditsWorth = 0;
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `5");
+            shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `6");
+            ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
+            Component.Destroy(shrinkRayItem.spawnPrefab.GetComponentByName("PhysicsProp"));
+            
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `7");
+            visScript.itemProperties = shrinkRayItem;
+            //Plugin.log("TRYING TO ADD ASSET TO THING: `8");
+            //-0.115 0.56 0.02
+            visScript.itemProperties.itemName = "Shrink ray";
+            visScript.itemProperties.name = "Shrink ray";
+            visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
+            visScript.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
             visScript.grabbable = true;
             visScript.useCooldown = 2f;
             visScript.grabbableToEnemies = true;
 
-            Plugin.log("1");
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(nightVisionItem.spawnPrefab);
-            Plugin.log("2");
+            //Plugin.log("TRYING TO ADD ASSET TO THING: 1");
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
+            //Plugin.log("TRYING TO ADD ASSET TO THING: 2");
             TerminalNode nightNode = new TerminalNode();
-            nightNode.displayText = string.Format("ShrinkRay", "uh", "huh", "buh???", "Guh???");
-            Plugin.log("3");
-            Items.RegisterShopItem(nightVisionItem, null, null, nightNode, nightVisionItem.creditsWorth);
-            Plugin.log("4");
+            nightNode.displayText = "Shrink ray \nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
+            //Plugin.log("TRYING TO ADD ASSET TO THING: 3");
+            Items.RegisterShopItem(shrinkRayItem, null, null, nightNode, shrinkRayItem.creditsWorth);
+            //Plugin.log("TRYING TO ADD ASSET TO THING: 4");
         }
 
         public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
