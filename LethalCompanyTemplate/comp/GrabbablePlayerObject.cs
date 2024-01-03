@@ -15,6 +15,7 @@ namespace LCShrinkRay.comp
         private ManualLogSource mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
         public PlayerControllerB grabbedPlayer;
         GameObject playerContainer;
+        int grabbedPlayerNum;
 
         //Null player container and null itemProperties
 
@@ -63,7 +64,7 @@ namespace LCShrinkRay.comp
             }
             else
             {
-                mls.LogError("GRABBED PLAYER IS NULL IN UPDATE");
+                //mls.LogError("GRABBED PLAYER IS NULL IN UPDATE");
             }
                 //base.Update();
         }

@@ -10,6 +10,7 @@ using System.Reflection;
 using LethalLib.Modules;
 using LCShrinkRay.Config;
 using LC_API.Networking;
+using Unity.Netcode;
 
 namespace LCShrinkRay.comp
 {
@@ -165,7 +166,7 @@ namespace LCShrinkRay.comp
                 }
             }
         }
-
+        public static GameObject grabbablePlayerPrefab;
         public static void AddShrinkRayToGame() // todo: Move to shrinkRay.cs
         {
             Plugin.log("Addin shrink rayyy");
@@ -175,20 +176,23 @@ namespace LCShrinkRay.comp
             AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
 
             //Lethal Company_Data
-            //Plugin.log("TRYING TO ADD ASSET TO THING: `3");
+            Plugin.log("TRYING TO ADD ASSET TO THING: `3");
             Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
-            //Plugin.log("TRYING TO ADD ASSET TO THING: `4");
+            Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("GrabbablePlayerItem.asset");
+            Plugin.log("TRYING TO ADD ASSET TO THING: `4");
             //shrinkRayItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
             shrinkRayItem.creditsWorth = 0;
-            //Plugin.log("TRYING TO ADD ASSET TO THING: `5");
+            Plugin.log("TRYING TO ADD ASSET TO THING: `5");
             shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
-            //Plugin.log("TRYING TO ADD ASSET TO THING: `6");
+            Plugin.log("TRYING TO ADD ASSET TO THING: `6");
             ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
+            //GrabbablePlayerObject grabbyScript = shrinkRayItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
             Component.Destroy(shrinkRayItem.spawnPrefab.GetComponentByName("PhysicsProp"));
-            
-            //Plugin.log("TRYING TO ADD ASSET TO THING: `7");
+            Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponentByName("PhysicsProp"));
+
+            Plugin.log("TRYING TO ADD ASSET TO THING: `7");
             visScript.itemProperties = shrinkRayItem;
-            //Plugin.log("TRYING TO ADD ASSET TO THING: `8");
+            Plugin.log("TRYING TO ADD ASSET TO THING: `8");
             //-0.115 0.56 0.02
             visScript.itemProperties.itemName = "Shrink ray";
             visScript.itemProperties.name = "Shrink ray";
@@ -198,14 +202,27 @@ namespace LCShrinkRay.comp
             visScript.useCooldown = 2f;
             visScript.grabbableToEnemies = true;
 
-            //Plugin.log("TRYING TO ADD ASSET TO THING: 1");
+            Plugin.log("TRYING TO ADD ASSET TO THING: 1");
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
-            //Plugin.log("TRYING TO ADD ASSET TO THING: 2");
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(grabbablePlayerItem.spawnPrefab);
+            grabbablePlayerPrefab = grabbablePlayerItem.spawnPrefab;
+            Plugin.log("TRYING TO ADD ASSET TO THING: 2");
             TerminalNode nightNode = new TerminalNode();
             nightNode.displayText = "Shrink ray \nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
-            //Plugin.log("TRYING TO ADD ASSET TO THING: 3");
+            Plugin.log("TRYING TO ADD ASSET TO THING: 3");
             Items.RegisterShopItem(shrinkRayItem, null, null, nightNode, shrinkRayItem.creditsWorth);
-            //Plugin.log("TRYING TO ADD ASSET TO THING: 4");
+            
+            Plugin.log("TRYING TO ADD ASSET TO THING: 4");
+        }
+        public void AddGrabbablePlayerItem()
+        {
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            {
+                GameObject newObject = GameObject.Instantiate(grabbablePlayerPrefab);
+                newObject.GetComponent<NetworkObject>().Spawn();
+                GrabbablePlayerObject gpo = newObject.AddComponent<GrabbablePlayerObject>();
+                gpo.Initialize(StartOfRound.Instance.localPlayerController);
+            }
         }
 
         public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
@@ -360,7 +377,11 @@ namespace LCShrinkRay.comp
             {
                 //Plugin.log(obj.name);
             }
-
+            if (!isGrabbableAdded && StartOfRound.Instance.localPlayerController != null)
+            {
+                isGrabbableAdded = true;
+                //AddGrabbablePlayerItem();
+            }
 
 
             //if our player count changes and on first run, try to update our list of players
@@ -504,48 +525,6 @@ namespace LCShrinkRay.comp
                 myScale = myPlayerObject.transform.localScale.x;
                 player.GetComponent<PlayerControllerB>() = -0.417f * myScale + 0.417f;
                 Plugin.log(player.GetComponent<PlayerControllerB>().drunkness);
-            }
-
-            //for each player, cycle through and find out if the player is currently holding an item
-            //if yes, change the grabbleObject.item.positionOffset, and add it to a stored array of picked up items
-            //if player is not holding it currently, fix it, and remove it from the array
-
-            //Plugin.log(grabbables);
-            for (int i = 0; i < array.Length; i++)
-            {
-                PlayerControllerB holdingPlayer = array[i].playerHeldBy;
-                //Vector3 objectOffset = holdingPlayer.currentlyHeldObject.itemProperties.positionOffset;
-
-                if (holdingPlayer != null)
-                {
-                    Transform holdingPlayerTransform = holdingPlayer.GetComponent<Transform>();
-                    Plugin.log("Found player holding object!");
-                    Plugin.log(holdingPlayer.ToString());
-                    Plugin.log(array[i].itemProperties.positionOffset.ToString());
-                    //if player scale is less than 1 and we've not finished scaling the position
-                    if (array[i].itemProperties.positionOffset != new Vector3(-0.2f, 0.5f, -0.5f) && holdingPlayerTransform.localScale.x != 1f)
-                    {
-                        //then scale the offset position appropriately
-                        float scale = holdingPlayerTransform.localScale.x;
-                        float x = -0.25f * scale - 0.25f;
-                        float y = 0.625f * scale - 0.625f;
-                        float z = -0.625f * scale + 0.625f;
-                        //inverted even though my math was perfect but okay
-                        Vector3 posOffsetVect = new Vector3(-x, -y, -z);
-                        array[i].itemProperties.positionOffset = posOffsetVect;
-                    }
-                    // else if player scale is normal or bigger and we've not finished resetting the position
-                    else if (array[i].itemProperties.positionOffset != new Vector3(0, 0, 0) && holdingPlayerTransform.localScale.x == 1f)
-                    {
-                        //then reset it
-                        array[i].itemProperties.positionOffset = new Vector3(0, 0, 0);
-                    }
-                }
-                //This piece of code is to reset objects after they get set down
-                else
-                {
-                    array[i].itemProperties.positionOffset = new Vector3(0, 0, 0);
-                }
             }*/
 
             if (playerTransform == null)
@@ -691,6 +670,7 @@ namespace LCShrinkRay.comp
         }
         public Vector3 testVector = new Vector3();
         private bool sussification = false;
+        private bool isGrabbableAdded = false;
 
         public Vector3 getTestVector() { return testVector; }
         private void testOffset(Vector3 posOffsetVect)
