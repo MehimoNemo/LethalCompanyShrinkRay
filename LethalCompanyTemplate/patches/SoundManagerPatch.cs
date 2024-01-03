@@ -1,32 +1,16 @@
-﻿using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 using LCShrinkRay.comp;
-using System.Collections;
-using UnityEngine;
 
 namespace LCShrinkRay.patches
 {
-    [HarmonyPatch(typeof(SoundManager))]
-    [HarmonyPatch("SetPlayerPitch")]
+    [HarmonyPatch]
     class SoundManagerPatch
     {
-        static Shrinking shrinkin = new Shrinking();
-
-        public void Awake()
+        [HarmonyPatch(typeof(SoundManager), "SetPlayerPitch")]
+        [HarmonyPostfix]
+        public static void Postfix(float pitch, int playerObjNum)
         {
-            shrinkin = new Shrinking();
-        }
-
-        public static void Postfix(float pitch, ulong playerID)
-        {
-            if (shrinkin != null)
-            {
-                shrinkin.SetPlayerPitch(pitch, playerID);
-            }
-            else
-            {
-                Plugin.log("SHRINKIN IS FUCKING NULL WTF", Plugin.LogType.Error);
-            }
+            Shrinking.Instance.SetPlayerPitch(pitch, (ulong)playerObjNum);
         }
     }
 }
