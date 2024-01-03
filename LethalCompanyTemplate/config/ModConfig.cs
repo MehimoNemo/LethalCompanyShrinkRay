@@ -16,7 +16,7 @@ namespace LCShrinkRay.Config
     {
         Default,
         OneShot,
-        Bounce
+        Bumper
     }
 
     public struct ConfigValues
@@ -85,7 +85,10 @@ namespace LCShrinkRay.Config
             values.throwablePlayers         = Plugin.bepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
                                                           
             values.hoardingBugSteal         = Plugin.bepInExConfig().Bind("Enemies", "HoardingBugSteal", true, "If true, hoarding/loot bugs can treat a shrunken player like an item.").Value;
-            values.thumperBehaviour         = Plugin.bepInExConfig().Bind("Enemies", "ThumperOneShot", ThumperBehaviour.Default, "If true, getting hit by a thumper will one-shot shrunken players.").Value;
+            values.thumperBehaviour         = Plugin.bepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Default, "If true, getting hit by a thumper will one-shot shrunken players.").Value;
+
+            string json = JsonConvert.SerializeObject(ModConfig.Instance.values);
+            Plugin.log("Using config:" + json);
         }
 
         public void updated()

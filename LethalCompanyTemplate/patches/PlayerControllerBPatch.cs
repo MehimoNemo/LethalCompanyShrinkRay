@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LCShrinkRay.comp;
-using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEngine.Yoga;
 
 namespace LCShrinkRay.patches
 {
@@ -16,12 +9,14 @@ namespace LCShrinkRay.patches
     {
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
-        static void OnUpdate(PlayerControllerB __instance)
+        public static void OnUpdate(PlayerControllerB __instance)
         {
             //SoundManager.Instance.playerVoicePitchTargets[__instance.playerClientId] = 1.2f;
             Shrinking.Instance.Update();
         }
     }
 }
+
+
 
 

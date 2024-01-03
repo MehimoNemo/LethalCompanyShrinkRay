@@ -46,7 +46,12 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
             harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
-            //Networking.GetString += Shrinking.ShGetString;
+            harmony.PatchAll(typeof(ThumperAIPatch));
+
+            // Debug
+            bool useDebugCode = true;
+            if(useDebugCode)
+                harmony.PatchAll(typeof(DebugPatches));
 
             try
             {
@@ -66,7 +71,7 @@ namespace LCShrinkRay
             Fatal
         }
 
-        public static void log(string message, LogType type = LogType.Message)
+        internal static void log(string message, LogType type = LogType.Message)
         {
             switch(type)
             {

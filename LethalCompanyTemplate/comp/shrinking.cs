@@ -264,13 +264,17 @@ namespace LCShrinkRay.comp
         {
             return myScale;
         }
-        public bool IsShrunk(GameObject playerObject)
+
+        public static bool isCurrentPlayerShrunk()
         {
-            if (playerObject.transform.localScale.x < 1)
-            {
-                return true;
-            }
-            return false;
+            if (!StartOfRound.Instance.localPlayerController)
+                return false;
+
+            return isShrunk(StartOfRound.Instance.localPlayerController.gameObject);
+        }
+        public static bool isShrunk(GameObject playerObject)
+        {
+            return playerObject.transform.localScale.x < 1f;
         }
 
         public void SetPlayerPitch(float pitch, ulong playerID)
@@ -358,7 +362,7 @@ namespace LCShrinkRay.comp
 
         public void Update()
         {
-            if (!GameNetworkManagerPatch.isGameInitialized)
+            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController)
             {
                 players.Clear();
                 return;
@@ -396,7 +400,6 @@ namespace LCShrinkRay.comp
                 Plugin.log("Detected miscounted players, trying to update");
                 players.Clear();
 
-
                 try
                 {
                     foreach (PlayerControllerB playerScript in StartOfRound.Instance.allPlayerScripts)
@@ -415,13 +418,9 @@ namespace LCShrinkRay.comp
                 MeshRenderer renderer = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>()[0];
                 renderer.enabled = true;
             }
-            //mls.LogInfo("SKRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-            //mls.LogInfo(players.Count);
 
-            if (StartOfRound.Instance.localPlayerController.gameObject.transform.localScale.x != 1f)
-            {
+            if (isCurrentPlayerShrunk())
                 CheckIfPlayerAbove();
-            }
 
             foreach (GameObject player in players)
             {
@@ -558,115 +557,7 @@ namespace LCShrinkRay.comp
             }
 
             //mls.LogInfo("\n\n\n\n\n\n HELP \n\n\n\n\n\n");
-            try
-            {
-                bool useDebugKeys = true;
-                if (useDebugKeys)
-                {
-                    bool nKeyPressed = false;
-                    bool mKeyPressed = false;
-                    bool jKeyPressed = false;
-                    bool kKeyPressed = false;
-                    bool oKeyPressed = false;
-                    bool iKeyPressed = false;
-                    if (Keyboard.current.oKey.wasPressedThisFrame && !oKeyPressed)
-                    {
-                        oKeyPressed = true;
-                        Plugin.log("Simulating fake broadcast");
-                        Network.Broadcast("OnShrinking", new ShrinkData() { playerObjName = "Player", shrinkage = 0.4f });
-                    }
-                    else if (!Keyboard.current.oKey.isPressed)
-                    {
-                        oKeyPressed = false;
-                    }
-                    if (Keyboard.current.nKey.wasPressedThisFrame && !nKeyPressed)
-                    {
-                        nKeyPressed = true;
-                        Plugin.log("Shrinking player model");
-                        float scale = 0.4f;
-                        PlayerShrinkAnimation(scale, player, helmetHudTransform);
-                        sendShrinkMessage(player, scale);
-                    }
-                    else if (!Keyboard.current.nKey.isPressed)
-                    {
-                        nKeyPressed = false;
-                    }
-                    if (Keyboard.current.mKey.wasPressedThisFrame && !mKeyPressed)
-                    {
-                        mKeyPressed = true;
-                        Plugin.log("Growing player model");
-                        float scale = 1f;
-                        PlayerShrinkAnimation(scale, player, helmetHudTransform);
-                        sendShrinkMessage(player, scale);
-                    }
-                    else if (!Keyboard.current.mKey.isPressed)
-                    {
-                        mKeyPressed = false;
-                    }
-                    if (Keyboard.current.jKey.wasPressedThisFrame && !jKeyPressed)
-                    {
-                        jKeyPressed = true;
-
-                        float scale = 0.4f;
-                        int i;
-                        for (i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
-                        {
-                            String pPlayer = "Player (" + i.ToString() + ")";
-                            if (GameObject.Find(pPlayer) != null)
-                            {
-                                Plugin.log("Shrinking player(1) model");
-                                ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
-                                sendShrinkMessage(GameObject.Find(pPlayer), scale);
-                                float newPitch = -0.417f * scale + 1.417f;
-                                //(newPitch, i);
-                            }
-                        }
-                    }
-                    else if (!Keyboard.current.jKey.isPressed)
-                    {
-                        jKeyPressed = false;
-                    }
-                    if (Keyboard.current.iKey.wasPressedThisFrame && !iKeyPressed)
-                    {
-                        iKeyPressed = true;
-                        //updatePitch();
-                        //testOffset(new Vector3(0f, 0f, 0f));
-                    }
-                    else if (!Keyboard.current.iKey.isPressed)
-                    {
-                        iKeyPressed = false;
-                    }
-                    if (Keyboard.current.kKey.wasPressedThisFrame && !kKeyPressed)
-                    {
-                        kKeyPressed = true;
-                        Plugin.log("Growing player(1) model");
-                        float scale = 1f;
-                        int i;
-                        for (i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
-                        {
-                            String pPlayer = "Player (" + i.ToString() + ")";
-                            if (GameObject.Find(pPlayer) != null)
-                            {
-                                Plugin.log("Shrinking player(1) model");
-                                //TODO: REPLACE WITH STORED REFERENCE
-                                ObjectShrinkAnimation(scale, GameObject.Find(pPlayer));
-                                //TODO: REPLACE WITH STORED REFERENCE
-                                sendShrinkMessage(GameObject.Find(pPlayer), scale);
-                                //SetPlayerPitch(1f, i);
-
-                            }
-                        }
-                    }
-                    else if (!Keyboard.current.kKey.isPressed)
-                    {
-                        kKeyPressed = false;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Plugin.log("Error in Update() [DebugKeys]: " + e.Message);
-            }
+            
         }
         public Vector3 testVector = new Vector3();
         private bool sussification = false;
