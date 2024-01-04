@@ -11,6 +11,9 @@ using LethalLib.Modules;
 using LCShrinkRay.Config;
 using LC_API.Networking;
 using Unity.Netcode;
+using LC_API.ServerAPI;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace LCShrinkRay.comp
 {
@@ -143,6 +146,36 @@ namespace LCShrinkRay.comp
             }
         }
 
+        [NetworkMessage("OnListTransmit")]
+        public static void OnListTransmit(ulong sender, string data)
+        {
+            Plugin.log("Oh hey!! There's that list I needed!!!!", Plugin.LogType.Error);
+            Plugin.log("\t" +data);
+            List<(ulong, ulong)> tuple = StringToTupleList(data);
+            Plugin.log("\t{" + tuple[0].Item1+", " + tuple[0].Item2 + "}, {" + tuple[1].Item1 + ", " + tuple[1].Item2 + "}");
+            Shrinking.Instance.UpdateGrabbablePlayerObjectsClient(tuple);
+        }
+
+        [NetworkMessage("OnListRequest")]
+        public static void OnListRequest(ulong sender)
+        {
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            {
+                Plugin.log("List Requested!", Plugin.LogType.Error);
+                Shrinking.Instance.BroadcastGrabbedPlayerObjectsList();
+            }
+        }
+
+        static string TupleListToString(List<(ulong, ulong)> tupleList)
+        {
+            return JsonConvert.SerializeObject(tupleList);
+        }
+
+        static List<(ulong, ulong)> StringToTupleList(string jsonString)
+        {
+            return JsonConvert.DeserializeObject<List<(ulong, ulong)>>(jsonString);
+        }
+
         public void OnGoombaCoroutineComplete()
         {
             isGoombaCoroutineRunning = false;
@@ -178,7 +211,12 @@ namespace LCShrinkRay.comp
             //Lethal Company_Data
             Plugin.log("TRYING TO ADD ASSET TO THING: `3");
             Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
-            Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("GrabbablePlayerItem.asset");
+            //I SWEAR TO GO IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
+            Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("grabbablePlayerItem.asset");
+            if(grabbablePlayerItem == null)
+            {
+                Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
+            }
             Plugin.log("TRYING TO ADD ASSET TO THING: `4");
             //shrinkRayItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
             shrinkRayItem.creditsWorth = 0;
@@ -186,13 +224,21 @@ namespace LCShrinkRay.comp
             shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
             Plugin.log("TRYING TO ADD ASSET TO THING: `6");
             ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
-            //GrabbablePlayerObject grabbyScript = shrinkRayItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
-            Component.Destroy(shrinkRayItem.spawnPrefab.GetComponentByName("PhysicsProp"));
-            Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponentByName("PhysicsProp"));
+            GrabbablePlayerObject grabbyScript = grabbablePlayerItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
+            PhysicsProp grabbyPhysProp = shrinkRayItem.spawnPrefab.GetComponent<PhysicsProp>();
+            grabbyScript.itemProperties = grabbyPhysProp.itemProperties;
+            
 
             Plugin.log("TRYING TO ADD ASSET TO THING: `7");
             visScript.itemProperties = shrinkRayItem;
+            grabbyScript.itemProperties = grabbablePlayerItem;
+            if (grabbyScript.itemProperties == null)
+            {
+                Plugin.log("\n\nSHIT HOW IS IT NULL???\n\n");
+            }
             Plugin.log("TRYING TO ADD ASSET TO THING: `8");
+            PhysicsProp.Destroy(grabbyPhysProp);
+            Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponentByName("PhysicsProp"));
             //-0.115 0.56 0.02
             visScript.itemProperties.itemName = "Shrink ray";
             visScript.itemProperties.name = "Shrink ray";
@@ -214,15 +260,91 @@ namespace LCShrinkRay.comp
             
             Plugin.log("TRYING TO ADD ASSET TO THING: 4");
         }
+
+        List<GameObject> grabbablePlayerObjects = new List<GameObject>();
+        
+        //broadcasts the clientID associated with each GrabblablePlayerObject
+        public void BroadcastGrabbedPlayerObjectsList()
+        {
+            List<(ulong networkId, ulong clientId)> networkClientMap = new List<(ulong networkId, ulong client)>();
+            if (grabbablePlayerObjects!.Count > 0)
+            {
+                foreach(GameObject obj in grabbablePlayerObjects)
+                {
+                    ulong networkId = obj.GetComponent<NetworkObject>().NetworkObjectId;
+                    ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
+                    networkClientMap.Add((networkId, clientId));
+                }
+                string strMap = TupleListToString(networkClientMap);
+                Network.Broadcast("OnListTransmit", strMap);
+            }
+        }
+        //Initializes uninitialized GrabbablePlayerObjects for clients
+        public void UpdateGrabbablePlayerObjectsClient(List<(ulong networkId, ulong clientId)> tuple)
+        {
+            //where T1 is the network id
+            //and T2 is the client id
+            GrabbablePlayerObject[] grabbableObjects = GameObject.FindObjectsOfType<GrabbablePlayerObject>();
+
+            // Filter based on the name
+            List<GameObject> filteredObjects = new List<GameObject>();
+
+            foreach (GrabbablePlayerObject grabbableObject in grabbableObjects)
+            {
+                    filteredObjects.Add(grabbableObject.gameObject);
+            }
+
+            if(filteredObjects.Count == 0)
+            {
+                Plugin.log("ZERO?????", Plugin.LogType.Error);
+            }
+            foreach (GameObject gpo in filteredObjects)
+            {
+                ulong gpoNetworkObjId = gpo.GetComponent<NetworkObject>().NetworkObjectId;
+                foreach((ulong networkId, ulong clientId) item in tuple){
+                    if(item.networkId == gpoNetworkObjId)
+                    {
+                        Plugin.log("\t"+ item.networkId + ", "+ item.clientId);
+                        PlayerControllerB pcb = GetPlayerObject(item.clientId).GetComponent<PlayerControllerB>();
+                        gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb);
+                    }
+                }
+            }
+        }
+        //Runs whenever player count changes,
+        //if you're the host, then delete all grabbablePlayerObjects and make new ones(should maybe just delete the one that leaves or make the one that joins)
+        //if you're a client, then delete all grabbablePlayerObjects and make new ones, then ask the host to help it initialize properly
         public void AddGrabbablePlayerItem()
         {
+            //grabbablePlayerObjects = new List<GameObject>(newGrabbablePlayerObjects);
+            //newGrabbablePlayerObjects.Clear();
+            foreach (GameObject obj in grabbablePlayerObjects)
+            {
+                obj.GetComponent<NetworkObject>().Despawn();
+                //GameObject.Destroy(obj);
+            }
+            grabbablePlayerObjects.Clear();
+            //for each player, make a new GrabbablePlayerObject
+           
             if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
             {
-                GameObject newObject = GameObject.Instantiate(grabbablePlayerPrefab);
-                newObject.GetComponent<NetworkObject>().Spawn();
-                GrabbablePlayerObject gpo = newObject.AddComponent<GrabbablePlayerObject>();
-                gpo.Initialize(StartOfRound.Instance.localPlayerController);
+                //for each player, create and initialize a grabbable player object, these will be networked, and should spawn for other players
+                foreach (GameObject player in players)
+                {
+                    var newObject = UnityEngine.Object.Instantiate(grabbablePlayerPrefab);
+                    newObject.GetComponent<NetworkObject>().Spawn();
+                    GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
+                    gpo.Initialize(player.GetComponent<PlayerControllerB>());
+                    grabbablePlayerObjects.Add(newObject);
+                }
             }
+            else if(NetworkManager.Singleton.IsClient){
+                //otherwise, if we're a client that has connected, then we will have all the objects already, but they won't be initialized, so we'll just need to do that
+                //beg the server for a list of objects, hopefully they respond??
+                Network.Broadcast("OnListRequest");
+                //then on receive, we'll run UpdateGrabbablePlayers
+            }
+
         }
 
         public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
@@ -376,16 +498,11 @@ namespace LCShrinkRay.comp
                 sussification = true;
             }
 
-
             foreach (GrabbableObject obj in alteredGrabbedItems)
             {
                 //Plugin.log(obj.name);
             }
-            if (!isGrabbableAdded && StartOfRound.Instance.localPlayerController != null)
-            {
-                isGrabbableAdded = true;
-                //AddGrabbablePlayerItem();
-            }
+            
 
 
             //if our player count changes and on first run, try to update our list of players
@@ -415,8 +532,13 @@ namespace LCShrinkRay.comp
                     Plugin.log("Error while adding player. Message: " + e.Message, Plugin.LogType.Error);
                     players.Clear();
                 }
+   //Place things that should run after a player joins or leaves here vVVVVvvVVVVv
+                //re-enable renderers for all vent covers
                 MeshRenderer renderer = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>()[0];
                 renderer.enabled = true;
+
+                //Self explains, plus I put a million comments around this function
+                AddGrabbablePlayerItem();
             }
 
             if (isCurrentPlayerShrunk())

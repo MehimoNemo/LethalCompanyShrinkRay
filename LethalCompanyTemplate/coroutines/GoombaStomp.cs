@@ -13,9 +13,12 @@ namespace LCShrinkRay.coroutines
 
         public static void StartRoutine(GameObject playerObj)
         {
-            var routine = playerObj.AddComponent<GoombaStomp>();
-            routine.playerObj = playerObj;
-            routine.StartCoroutine(routine.run());
+            if (playerObj.transform.localScale.x < 0.5)
+            {
+                var routine = playerObj.AddComponent<GoombaStomp>();
+                routine.playerObj = playerObj;
+                routine.StartCoroutine(routine.run());
+            }
         }
 
         private IEnumerator run()
