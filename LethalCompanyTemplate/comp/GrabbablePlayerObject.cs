@@ -43,9 +43,9 @@ namespace LCShrinkRay.comp
             
         }
 
-        public override void Update()
+        public override void LateUpdate()
         {
-            base.Update();
+            base.LateUpdate();
             if (grabbedPlayer != null)
             {
                 
@@ -61,8 +61,13 @@ namespace LCShrinkRay.comp
                 {
                     //this looks like trash unfortunately
                     grabbedPlayer.transform.position = this.transform.position;
+                    //change this
+                    Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
+                    Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
+                    Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
+                    //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
+                    grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
-
                 }
                 else
                 {
