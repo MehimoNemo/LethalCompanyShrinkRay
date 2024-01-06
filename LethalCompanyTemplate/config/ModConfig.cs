@@ -21,7 +21,10 @@ namespace LCShrinkRay.Config
 
     public struct ConfigValues
     {
+
         // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
+        public bool friendlyFlight { get; set; }
+
         public int shrinkRayCost { get; set; }
 
         public float movementSpeedMultiplier { get; set; }
@@ -83,7 +86,8 @@ namespace LCShrinkRay.Config
 
             values.jumpOnShrunkenPlayers    = Plugin.bepInExConfig().Bind("Interactions", "JumpOnShrunkenPlayers", true, "If true, normal-sized players can harm shrunken players by jumping on them.").Value;
             values.throwablePlayers         = Plugin.bepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
-                                                          
+            values.friendlyFlight           = Plugin.bepInExConfig().Bind("Interactions", "FriendlyFlight", false, "If true, held players can grab other players, causing comedic, but game breaking effects.").Value;
+
             values.hoardingBugSteal         = Plugin.bepInExConfig().Bind("Enemies", "HoardingBugSteal", true, "If true, hoarding/loot bugs can treat a shrunken player like an item.").Value;
             values.thumperBehaviour         = Plugin.bepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Default, "If true, getting hit by a thumper will one-shot shrunken players.").Value;
 

@@ -1,6 +1,7 @@
 ﻿using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
+using LCShrinkRay.Config;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -17,10 +18,10 @@ namespace LCShrinkRay.comp
         private ManualLogSource mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
         
         public PlayerControllerB grabbedPlayer;
-        GameObject playerContainer;
         int grabbedPlayerNum;
 
         //Null player container and null itemProperties
+        //okay gonna do stuff good :)
 
         public override void Start()
         {
@@ -32,7 +33,7 @@ namespace LCShrinkRay.comp
             //this.gameObject.layer = 6;
             this.itemProperties.canBeGrabbedBeforeGameStart = true;
             this.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
-            this.grabbable = true;
+            this.grabbable = false;
             //get our collider and save it for later use
 
             /*Rigidbody rb = GetComponent<Rigidbody>();
@@ -46,6 +47,8 @@ namespace LCShrinkRay.comp
         public override void LateUpdate()
         {
             base.LateUpdate();
+
+
             if (grabbedPlayer != null)
             {
                 
@@ -90,10 +93,23 @@ namespace LCShrinkRay.comp
 
         public override void GrabItem()
         {
-            if (grabbedPlayer != playerHeldBy)
+            if (grabbedPlayer != playerHeldBy && (grabbedPlayer.currentlyHeldObject.GetType() != typeof(GrabbablePlayerObject) || ModConfig.Instance.values.friendlyFlight))
             {
                 base.GrabItem();
                 grabbedPlayer.playerCollider.enabled = false;
+                this.propColliders[0].enabled = false;
+                grabbedPlayer.playerRigidbody.detectCollisions = false;
+            }
+            foreach(PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            {
+                if(grabbedPlayer != player)
+                {
+                    Collider thisPlayerCollider = grabbedPlayer.playerCollider;
+                    Collider thisCollider = this.propColliders[0];
+                    Collider thatCollider = player.playerCollider;
+                    Physics.IgnoreCollision(thisPlayerCollider, thatCollider);
+                    Physics.IgnoreCollision(thisCollider, thatCollider);
+                }
             }
         }
 
@@ -106,6 +122,19 @@ namespace LCShrinkRay.comp
         {
             base.DiscardItem();
             grabbedPlayer.playerCollider.enabled = true;
+            this.propColliders[0].enabled = true;
+            grabbedPlayer.playerRigidbody.detectCollisions = false;
+            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            {
+                if (grabbedPlayer != player)
+                {
+                    Collider thisPlayerCollider = grabbedPlayer.playerCollider;
+                    Collider thisCollider = this.propColliders[0];
+                    Collider thatCollider = player.playerCollider;
+                    Physics.IgnoreCollision(thisPlayerCollider, thatCollider, false);
+                    Physics.IgnoreCollision(thisCollider, thatCollider, false);
+                }
+            }
         }
 
         public void Initialize(PlayerControllerB pcb)
