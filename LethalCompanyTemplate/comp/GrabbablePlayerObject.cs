@@ -17,10 +17,10 @@ namespace LCShrinkRay.comp
         private ManualLogSource mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
         
         public PlayerControllerB grabbedPlayer;
-        GameObject playerContainer;
         int grabbedPlayerNum;
 
         //Null player container and null itemProperties
+        //okay gonna do stuff good :)
 
         public override void Start()
         {
