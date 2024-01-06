@@ -47,6 +47,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             harmony.PatchAll(typeof(ThumperAIPatch));
+            harmony.PatchAll(typeof(HoarderBugAIPatch));
 
             // Debug
             bool useDebugCode = true;
@@ -55,7 +56,9 @@ namespace LCShrinkRay
 
             try
             {
-                Network.RegisterAll(typeof(Shrinking)); // LC_API Network Setup
+                // LC_API Network Setup
+                Network.RegisterAll(typeof(Shrinking));
+                Network.RegisterAll(typeof(GrabbablePlayerObject));
             }
             catch (Exception e)
             {
