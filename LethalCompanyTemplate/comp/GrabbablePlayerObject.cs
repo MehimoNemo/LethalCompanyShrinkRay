@@ -129,28 +129,36 @@ namespace LCShrinkRay.comp
             this.DiscardItem();
         }
 
-        public bool hasGrabbedAnotherPlayer()
+        public bool hasGrabbedHolder()
         {
-            if (StartOfRound.Instance.localPlayerController == null || StartOfRound.Instance.localPlayerController.currentlyHeldObject == null)
-                return false;
+            Plugin.log("hasGrabbedHolder");
+            Plugin.log("currentPlayer: " + StartOfRound.Instance.localPlayerController + " / playerHeldBy: " + playerHeldBy + " / grabbedPlayer: " + grabbedPlayer);
 
-            return grabbedPlayer.currentlyHeldObject.GetType() == typeof(GrabbablePlayerObject);
+            if (grabbedPlayer.currentlyHeldObject && grabbedPlayer.currentlyHeldObject.GetType() == typeof(GrabbablePlayerObject))
+            {
+                Plugin.log("grabbedPlayer.grabbedPlayer" + (grabbedPlayer.currentlyHeldObject as GrabbablePlayerObject).grabbedPlayer);
+                // Return true, if i'm getting grabbed by the person i'm grabbing
+                if ((grabbedPlayer.currentlyHeldObject as GrabbablePlayerObject).grabbedPlayer.playerClientId == StartOfRound.Instance.localPlayerController.playerClientId)
+                    return true;
+            }
+
+            return false;
         }
 
         public override void GrabItem()
         {
-            if (grabbedPlayer != playerHeldBy &&
-                ModConfig.Instance.values.friendlyFlight || !hasGrabbedAnotherPlayer())
+            if (!ModConfig.Instance.values.friendlyFlight && hasGrabbedHolder())
             {
-                base.GrabItem();
-                hasGrabbedAnotherPlayer();
-                grabbedPlayer.playerCollider.enabled = false;
-                this.propColliders[0].enabled = false;
-                grabbedPlayer.playerRigidbody.detectCollisions = false;
-
-                setIsGrabbableToEnemies(false);
-                setControlTipText();
+                Plugin.log("Attempted friendlyFlight, but it was disabled! Oh nononono..");
+                return;
             }
+
+            base.GrabItem();
+
+            grabbedPlayer.playerCollider.enabled = false;
+            this.propColliders[0].enabled = false;
+            grabbedPlayer.playerRigidbody.detectCollisions = false;
+
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if(grabbedPlayer != player)
@@ -203,10 +211,8 @@ namespace LCShrinkRay.comp
                 customGrabTextIndex = HUDManager.Instance.controlTipLines.Length - 1;
             }
 
-            if (hasGrabbedAnotherPlayer())
-                HUDManager.Instance.ChangeControlTip(customGrabTextIndex, "Yeet player: LMB");
-            else
-                HUDManager.Instance.ChangeControlTip(customGrabTextIndex, "Ungrab: JUMP");
+            var isHolder = StartOfRound.Instance.localPlayerController.playerClientId == playerHeldBy.playerClientId;
+            HUDManager.Instance.ChangeControlTip(customGrabTextIndex, isHolder ? "Yeet player: LMB" : "Ungrab: JUMP" );
         }
 
         public override void OnPlaceObject()
