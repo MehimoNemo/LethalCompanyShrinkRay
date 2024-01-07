@@ -39,7 +39,7 @@ namespace LCShrinkRay.comp
 
         GameObject player;
         public GameObject player1Object;
-        Transform helmetHudTransform;
+        public Transform helmetHudTransform;
         public static List<GameObject> grabbables = new List<GameObject>();
         public static List<GrabbableObject> alteredGrabbedItems = new List<GrabbableObject>();
 

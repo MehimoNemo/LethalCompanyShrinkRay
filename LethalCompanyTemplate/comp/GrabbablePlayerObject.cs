@@ -19,6 +19,7 @@ namespace LCShrinkRay.comp
         
         public PlayerControllerB grabbedPlayer;
         int grabbedPlayerNum;
+        MeshRenderer helmet;
 
         //Null player container and null itemProperties
         //okay gonna do stuff good :)
@@ -93,12 +94,22 @@ namespace LCShrinkRay.comp
 
         public override void GrabItem()
         {
-            if (grabbedPlayer != playerHeldBy && (grabbedPlayer.currentlyHeldObject.GetType() != typeof(GrabbablePlayerObject) || ModConfig.Instance.values.friendlyFlight))
+            bool isNotHoldingPlayer = true;
+            if (grabbedPlayer.isHoldingObject && grabbedPlayer.currentlyHeldObject != null)
+            {
+                Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
+                isNotHoldingPlayer = grabbedPlayer.currentlyHeldObject is not GrabbablePlayerObject;
+            }
+            if (grabbedPlayer != playerHeldBy && (isNotHoldingPlayer || ModConfig.Instance.values.friendlyFlight))
             {
                 base.GrabItem();
                 grabbedPlayer.playerCollider.enabled = false;
                 this.propColliders[0].enabled = false;
                 grabbedPlayer.playerRigidbody.detectCollisions = false;
+                if (helmet != null)
+                {
+                    helmet.enabled = false;
+                }
             }
             foreach(PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
@@ -124,6 +135,10 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerCollider.enabled = true;
             this.propColliders[0].enabled = true;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
+            if (helmet != null)
+            {
+                helmet.enabled = true;
+            }
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if (grabbedPlayer != player)
@@ -139,6 +154,22 @@ namespace LCShrinkRay.comp
 
         public void Initialize(PlayerControllerB pcb)
         {
+            if (pcb == StartOfRound.Instance.localPlayerController)
+            {
+                Plugin.log("Finding helmet!");
+                try
+                {
+                    helmet = Shrinking.Instance.helmetHudTransform.gameObject.GetComponent<MeshRenderer>();
+                } catch { }
+                if(helmet == null)
+                {
+                    Plugin.log("uhhh helmet is null...");
+                }
+                if (helmet != null)
+                {
+                    Plugin.log("Found helmet");
+                }
+            }
             this.grabbedPlayer = pcb;
             this.tag = "PhysicsProp";
             if (grabbedPlayer.name != null)
@@ -152,6 +183,7 @@ namespace LCShrinkRay.comp
                 mls.LogError("grabbedPlayer has no name!");
             }
             
+
         }
 
     }
