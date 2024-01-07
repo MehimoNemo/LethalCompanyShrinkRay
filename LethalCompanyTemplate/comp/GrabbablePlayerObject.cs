@@ -129,36 +129,25 @@ namespace LCShrinkRay.comp
             this.DiscardItem();
         }
 
-        public bool hasGrabbedHolder()
-        {
-            Plugin.log("hasGrabbedHolder");
-            Plugin.log("currentPlayer: " + StartOfRound.Instance.localPlayerController + " / playerHeldBy: " + playerHeldBy + " / grabbedPlayer: " + grabbedPlayer);
-
-            if (grabbedPlayer.currentlyHeldObject && grabbedPlayer.currentlyHeldObject.GetType() == typeof(GrabbablePlayerObject))
-            {
-                Plugin.log("grabbedPlayer.grabbedPlayer" + (grabbedPlayer.currentlyHeldObject as GrabbablePlayerObject).grabbedPlayer);
-                // Return true, if i'm getting grabbed by the person i'm grabbing
-                if ((grabbedPlayer.currentlyHeldObject as GrabbablePlayerObject).grabbedPlayer.playerClientId == StartOfRound.Instance.localPlayerController.playerClientId)
-                    return true;
-            }
-
-            return false;
-        }
-
         public override void GrabItem()
         {
-            if (!ModConfig.Instance.values.friendlyFlight && hasGrabbedHolder())
+            bool isNotHoldingPlayer = true;
+            if (grabbedPlayer.isHoldingObject && grabbedPlayer.currentlyHeldObject != null)
             {
-                Plugin.log("Attempted friendlyFlight, but it was disabled! Oh nononono..");
-                return;
+                Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
+                isNotHoldingPlayer = grabbedPlayer.currentlyHeldObject is not GrabbablePlayerObject;
             }
+            if (grabbedPlayer != playerHeldBy && (isNotHoldingPlayer || ModConfig.Instance.values.friendlyFlight))
+            {
+                base.GrabItem();
 
-            base.GrabItem();
+                grabbedPlayer.playerCollider.enabled = false;
+                this.propColliders[0].enabled = false;
+                grabbedPlayer.playerRigidbody.detectCollisions = false;
 
-            grabbedPlayer.playerCollider.enabled = false;
-            this.propColliders[0].enabled = false;
-            grabbedPlayer.playerRigidbody.detectCollisions = false;
-
+                setIsGrabbableToEnemies(false);
+                setControlTipText();
+            }
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if(grabbedPlayer != player)
@@ -171,8 +160,6 @@ namespace LCShrinkRay.comp
                 }
             }
 
-            setIsGrabbableToEnemies(false);
-            setControlTipText();
         }
 
         public void removeControlTipText()
