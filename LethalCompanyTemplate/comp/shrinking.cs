@@ -129,9 +129,6 @@ namespace LCShrinkRay.comp
             //if object getting shrunk is us, let's shrink using playerShrinkAnimation
             //else, just use object
             Instance.ShrinkPlayer(msgObject, data.shrinkage, playerID);
-
-            if (NetworkManager.Singleton.IsServer)
-                Shrinking.Instance.setPlayerGrabbable(msgObject);
         }
 
         private static bool isGoombaCoroutineRunning = false;
@@ -156,6 +153,23 @@ namespace LCShrinkRay.comp
             Plugin.log("\t" + data);
             List<(ulong, ulong)> tuple = StringToTupleList(data);
             Shrinking.Instance.UpdateGrabbablePlayerObjectsClient(tuple);
+        }
+
+        [NetworkMessage("AddGrabbablePlayer")]
+        public static void AddGrabbablePlayer(ulong sender, string playerID)
+        {
+            Plugin.log("AddGrabbablePlayer -> sender: " + sender.ToString() + " / playerID: " + playerID);
+            if (!NetworkManager.Singleton.IsServer)
+                return;
+
+            var playerObj = GetPlayerObject(ulong.Parse(playerID));
+            if (playerObj == null)
+            {
+                Plugin.log("Unable to add grabbable player. Player with ID " + playerID + " not found!", Plugin.LogType.Error);
+                return;
+            }
+
+            setPlayerGrabbable(playerObj);
         }
 
         static string TupleListToString(List<(ulong, ulong)> tupleList)
@@ -334,7 +348,7 @@ namespace LCShrinkRay.comp
 
         }
 
-        public void setPlayerGrabbable(GameObject playerObject)
+        public static void setPlayerGrabbable(GameObject playerObject)
         {
             Plugin.log("Adding grabbable player: " + playerObject.ToString());
             var newObject = UnityEngine.Object.Instantiate(grabbablePlayerPrefab);
@@ -342,7 +356,7 @@ namespace LCShrinkRay.comp
             GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
             var pcb = playerObject.GetComponent<PlayerControllerB>();
             gpo.Initialize(pcb);
-            grabbablePlayerObjects.Add(newObject);
+            Shrinking.Instance.grabbablePlayerObjects.Add(newObject);
 
 			// Let everyone know
             Shrinking.Instance.BroadcastGrabbedPlayerObjectsList();
