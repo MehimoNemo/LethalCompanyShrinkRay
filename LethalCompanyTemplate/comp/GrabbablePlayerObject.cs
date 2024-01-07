@@ -14,7 +14,7 @@ namespace LCShrinkRay.comp
     {
         private int customGrabTextIndex = -1;
 
-        public PlayerControllerB grabbedPlayer;
+        public PlayerControllerB grabbedPlayer { get; set; }
 
         //Null player container and null itemProperties
         //okay gonna do stuff good :)
@@ -60,6 +60,9 @@ namespace LCShrinkRay.comp
 
         private void setIsGrabbableToEnemies(bool isGrabbable = true)
         {
+            if (!Shrinking.isCurrentPlayerShrunk())
+                isGrabbable = false;
+
             this.grabbableToEnemies = isGrabbable;
 
             Plugin.log("GrabbablePlayer - Allow enemy grab: " + isGrabbable);
@@ -76,17 +79,6 @@ namespace LCShrinkRay.comp
                     if (HoarderBugAI.grabbableObjectsInMap != null && HoarderBugAI.grabbableObjectsInMap.Contains(base.gameObject))
                         HoarderBugAI.grabbableObjectsInMap.Remove(base.gameObject);
                 }
-            }
-        }
-
-        [NetworkMessage("DemandDropFromPlayer")]
-        public static void DemandDropFromPlayer(ulong sender, string playerID)
-        {
-            Plugin.log("A player demands to be dropped from player " + playerID);
-            if (StartOfRound.Instance.localPlayerController.playerClientId == ulong.Parse(playerID)) // I have to drop him...
-            {
-                Plugin.log("I have to drop them... sadly!", Plugin.LogType.Warning);
-                StartOfRound.Instance.localPlayerController.DiscardHeldObject();
             }
         }
 
@@ -115,7 +107,7 @@ namespace LCShrinkRay.comp
                     if (Keyboard.current.spaceKey.wasPressedThisFrame && playerHeldBy != null)
                     {
                         Plugin.log("Player demands to be dropped!");
-                        Network.Broadcast("DemandDropFromPlayer", playerHeldBy.playerClientId.ToString());
+                        Network.Broadcast("DemandDropFromPlayer", playerHeldBy.playerClientId.ToString()); // PlayerControllerBPatch
                     }
                 }
                 else
@@ -137,15 +129,27 @@ namespace LCShrinkRay.comp
             this.DiscardItem();
         }
 
+        public bool hasGrabbedAnotherPlayer()
+        {
+            if (StartOfRound.Instance.localPlayerController == null || StartOfRound.Instance.localPlayerController.currentlyHeldObject == null)
+                return false;
+
+            return grabbedPlayer.currentlyHeldObject.GetType() == typeof(GrabbablePlayerObject);
+        }
+
         public override void GrabItem()
         {
             if (grabbedPlayer != playerHeldBy &&
-                ModConfig.Instance.values.friendlyFlight || (grabbedPlayer.currentlyHeldObject != null && grabbedPlayer.currentlyHeldObject.GetType() != typeof(GrabbablePlayerObject)))
+                ModConfig.Instance.values.friendlyFlight || !hasGrabbedAnotherPlayer())
             {
                 base.GrabItem();
+                hasGrabbedAnotherPlayer();
                 grabbedPlayer.playerCollider.enabled = false;
                 this.propColliders[0].enabled = false;
                 grabbedPlayer.playerRigidbody.detectCollisions = false;
+
+                setIsGrabbableToEnemies(false);
+                setControlTipText();
             }
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
@@ -199,10 +203,10 @@ namespace LCShrinkRay.comp
                 customGrabTextIndex = HUDManager.Instance.controlTipLines.Length - 1;
             }
 
-            if(base.isHeld)
-                HUDManager.Instance.ChangeControlTip(customGrabTextIndex, "Ungrab: JUMP");
-            else
+            if (hasGrabbedAnotherPlayer())
                 HUDManager.Instance.ChangeControlTip(customGrabTextIndex, "Yeet player: LMB");
+            else
+                HUDManager.Instance.ChangeControlTip(customGrabTextIndex, "Ungrab: JUMP");
         }
 
         public override void OnPlaceObject()
