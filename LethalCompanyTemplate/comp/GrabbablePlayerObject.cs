@@ -129,25 +129,35 @@ namespace LCShrinkRay.comp
             this.DiscardItem();
         }
 
-        public override void GrabItem()
+        private bool isHoldingPlayer()
         {
-            bool isNotHoldingPlayer = true;
-            if (grabbedPlayer.isHoldingObject && grabbedPlayer.currentlyHeldObject != null)
+            if (grabbedPlayer.isHoldingObject && grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot] != null)
             {
                 Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
-                isNotHoldingPlayer = grabbedPlayer.currentlyHeldObject is not GrabbablePlayerObject;
+                return grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot] is GrabbablePlayerObject;
             }
-            if (grabbedPlayer != playerHeldBy && (isNotHoldingPlayer || ModConfig.Instance.values.friendlyFlight))
+
+            return false;
+        }
+
+        public override void GrabItem()
+        {
+            if (grabbedPlayer == playerHeldBy || (!ModConfig.Instance.values.friendlyFlight && isHoldingPlayer()))
             {
-                base.GrabItem();
-
-                grabbedPlayer.playerCollider.enabled = false;
-                this.propColliders[0].enabled = false;
-                grabbedPlayer.playerRigidbody.detectCollisions = false;
-
-                setIsGrabbableToEnemies(false);
-                setControlTipText();
+                Plugin.log("Unable to grab player " + grabbedPlayer.ToString());
+                return;
             }
+
+            Plugin.log("Okay, let's grab!");
+            base.GrabItem();
+
+            grabbedPlayer.playerCollider.enabled = false;
+            this.propColliders[0].enabled = false;
+            grabbedPlayer.playerRigidbody.detectCollisions = false;
+
+            setIsGrabbableToEnemies(false);
+            setControlTipText();
+
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if(grabbedPlayer != player)
