@@ -13,6 +13,7 @@ namespace LCShrinkRay.comp
     internal class GrabbablePlayerObject : GrabbableObject
     {
         public PlayerControllerB grabbedPlayer { get; set; }
+        MeshRenderer helmet;
 
         //Null player container and null itemProperties
         //okay gonna do stuff good :)
@@ -153,7 +154,9 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerCollider.enabled = false;
             this.propColliders[0].enabled = false;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
-
+            if (helmet != null)
+                helmet.enabled = false;
+            
             setIsGrabbableToEnemies(false);
             setControlTips();
 
@@ -268,6 +271,10 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerCollider.enabled = true;
             this.propColliders[0].enabled = true;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
+            if (helmet != null)
+            {
+                helmet.enabled = true;
+            }
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if (grabbedPlayer != player)
@@ -286,6 +293,22 @@ namespace LCShrinkRay.comp
 
         public void Initialize(PlayerControllerB pcb)
         {
+            if (pcb == StartOfRound.Instance.localPlayerController)
+            {
+                Plugin.log("Finding helmet!");
+                try
+                {
+                    helmet = Shrinking.Instance.helmetHudTransform.gameObject.GetComponent<MeshRenderer>();
+                } catch { }
+                if(helmet == null)
+                {
+                    Plugin.log("uhhh helmet is null...");
+                }
+                if (helmet != null)
+                {
+                    Plugin.log("Found helmet");
+                }
+            }
             this.grabbedPlayer = pcb;
             this.tag = "PhysicsProp";
             if (grabbedPlayer.name != null)
@@ -299,6 +322,5 @@ namespace LCShrinkRay.comp
                 Plugin.log("grabbedPlayer has no name!", Plugin.LogType.Error);
             }
         }
-
     }
 }
