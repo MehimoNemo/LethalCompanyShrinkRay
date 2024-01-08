@@ -4,55 +4,50 @@ using LC_API.Networking;
 using LCShrinkRay.comp;
 using UnityEngine.InputSystem;
 using UnityEngine;
+using LCShrinkRay.Config;
 
 namespace LCShrinkRay.patches
 {
     [HarmonyPatch]
     internal class PlayerControllerBPatch
     {
+        public struct DefaultPlayerValues
+        {
+            public float jumpForce { get; set; }
+            public float sprintMultiplier { get; set; }
+            public float currentAnimationSpeed { get; set; }
+        }
+        public static DefaultPlayerValues defaultPlayerValues;
+        public static bool defaultsInitialized = false;
+
         //static bool logShowed = false, log2Showed = false;
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
-        public static void OnUpdate(PlayerControllerB __instance)
+        public static void OnUpdate(PlayerControllerB __instance, ref float ___sprintMultiplier, ref float ___currentAnimationSpeed, ref float ___jumpForce)
         {
-            //SoundManager.Instance.playerVoicePitchTargets[__instance.playerClientId] = 1.2f;
-            Shrinking.Instance.Update();
+            Shrinking.Instance.Update(); // maybe put that in shrinking?
 
-            if (__instance.currentlyHeldObject != null && __instance.currentlyHeldObject.GetType() == typeof(GrabbablePlayerObject))
+            if (!defaultsInitialized)
             {
-                /*if(!logShowed)
+                defaultPlayerValues = new DefaultPlayerValues();
+                defaultPlayerValues.jumpForce = ___jumpForce;
+                defaultPlayerValues.sprintMultiplier = ___sprintMultiplier;
+                defaultPlayerValues.currentAnimationSpeed = ___currentAnimationSpeed;
+                defaultsInitialized = true;
+            }
+
+            // Speed & Jump Multiplier for shrunken players
+            if (Shrinking.isCurrentPlayerShrunk())
+            {
+                ___jumpForce = defaultPlayerValues.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
+
+                ___sprintMultiplier = defaultPlayerValues.sprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
+                ___currentAnimationSpeed = defaultPlayerValues.currentAnimationSpeed * (ModConfig.Instance.values.movementSpeedMultiplier * 2f);
+                if (__instance.isSprinting)
                 {
-                    Plugin.log("PlayerControllerB.Update on grabbing Player...");
-                    Plugin.log("player: " + (__instance).ToString());
-                    Plugin.log("playerHeldBy.currentlyHeldObject: " + __instance.currentlyHeldObject);
-                    logShowed = true;
+                    ___sprintMultiplier *= 2.25f;
+                    ___currentAnimationSpeed *= 2.25f;
                 }
-                
-                var grabbedPlayer = __instance.currentlyHeldObject as GrabbablePlayerObject;
-                if(grabbedPlayer != null)
-                {
-                    if (!log2Showed)
-                    {
-                        Plugin.log("PlayerControllerB.Update on grabbing Player (Pt 2)...");
-                        Plugin.log("grabbedPlayer: " + (grabbedPlayer).ToString());
-                        Plugin.log("playerHeldBy: " + (grabbedPlayer.playerHeldBy).ToString());
-                        Plugin.log("isHeld: " + grabbedPlayer.isHeld.ToString());
-                        log2Showed = true;
-                    }
-                    //this looks like trash unfortunately
-                    grabbedPlayer.transform.position = __instance.transform.position;
-                    //change this
-                    Vector3 targetPosition = __instance.localItemHolder.transform.position;
-                    Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
-                    Quaternion targetRotation = Quaternion.FromToRotation(__instance.transform.up, targetUp) * grabbedPlayer.transform.rotation;
-                    //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
-                    grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
-                    if (grabbedPlayer.playerHeldBy != null)
-                        grabbedPlayer.playerHeldBy.playerCollider.enabled = false;
-                    else
-                        Plugin.log("playerHeldBy is null.. this ain't normal..", Plugin.LogType.Warning);
-                }
-                */
             }
         }
     }
