@@ -2,6 +2,8 @@
 using GameNetcodeStuff;
 using System;
 using UnityEngine;
+using Unity.Netcode;
+using LC_API.Networking;
 
 namespace LCShrinkRay.comp
 {
@@ -190,6 +192,11 @@ namespace LCShrinkRay.comp
                             //shrink the target player and also broadcast to other clients
                             Shrinking.Instance.sendShrinkMessage(component.gameObject, 0.4f);
                             Shrinking.Instance.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID);
+
+                            if (NetworkManager.Singleton.IsServer)
+                                Shrinking.setPlayerGrabbable(component.gameObject);
+                            else
+                                Network.Broadcast("AddGrabbablePlayer", component.playerClientId.ToString());
                         }
                     }
                     else

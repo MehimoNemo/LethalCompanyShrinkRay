@@ -1,24 +1,18 @@
-﻿using BepInEx.Logging;
-using GameNetcodeStuff;
-using HarmonyLib;
+﻿using GameNetcodeStuff;
 using LCShrinkRay.Config;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Unity.Netcode;
+using LC_API.Networking;
+using System.Linq;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.InputSystem;
 
 namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {
-
-        private ManualLogSource mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
-        
-        public PlayerControllerB grabbedPlayer;
-        int grabbedPlayerNum;
+        public PlayerControllerB grabbedPlayer { get; set; }
         MeshRenderer helmet;
 
         //Null player container and null itemProperties
@@ -35,6 +29,11 @@ namespace LCShrinkRay.comp
             this.itemProperties.canBeGrabbedBeforeGameStart = true;
             this.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
             this.grabbable = false;
+
+            calculateScrapValue();
+
+            setIsGrabbableToEnemies(true);
+
             //get our collider and save it for later use
 
             /*Rigidbody rb = GetComponent<Rigidbody>();
@@ -42,25 +41,53 @@ namespace LCShrinkRay.comp
             {
                 rb.isKinematic = true;
             }*/
-            
+
+        }
+
+        private void calculateScrapValue()
+        {
+            int value = 5; // todo: find where that's set in code for deadBody
+
+            if (grabbedPlayer != null && grabbedPlayer.ItemSlots != null)
+            {
+                foreach (var item in grabbedPlayer.ItemSlots)
+                    if (item != null)
+                        value += item.scrapValue;
+            }
+            SetScrapValue(value);
+        }
+
+        private void setIsGrabbableToEnemies(bool isGrabbable = true)
+        {
+            if (!Shrinking.isCurrentPlayerShrunk())
+                isGrabbable = false;
+
+            this.grabbableToEnemies = isGrabbable;
+
+            Plugin.log("GrabbablePlayer - Allow enemy grab: " + isGrabbable);
+
+            if (ModConfig.Instance.values.hoardingBugSteal)
+            {
+                if(isGrabbable)
+                {
+                    if (HoarderBugAI.grabbableObjectsInMap != null && !HoarderBugAI.grabbableObjectsInMap.Contains(base.gameObject))
+                        HoarderBugAI.grabbableObjectsInMap.Add(base.gameObject);
+                }
+                else
+                {
+                    if (HoarderBugAI.grabbableObjectsInMap != null && HoarderBugAI.grabbableObjectsInMap.Contains(base.gameObject))
+                        HoarderBugAI.grabbableObjectsInMap.Remove(base.gameObject);
+                }
+            }
         }
 
         public override void LateUpdate()
         {
             base.LateUpdate();
-
-
             if (grabbedPlayer != null)
             {
-                
-                if(grabbedPlayer.gameObject.transform.localScale.x < 0.5)
-                {
-                    this.grabbable = true;
-                }
-                else
-                {
-                    this.grabbable = false;
-                }
+                this.grabbable = Shrinking.isShrunk(grabbedPlayer.gameObject);
+
                 if (this.isHeld)
                 {
                     //this looks like trash unfortunately
@@ -72,6 +99,12 @@ namespace LCShrinkRay.comp
                     //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
                     grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
+
+                    if (Keyboard.current.spaceKey.wasPressedThisFrame && playerHeldBy != null)
+                    {
+                        Plugin.log("Player demands to be dropped!");
+                        Network.Broadcast("DemandDropFromPlayer", playerHeldBy.playerClientId.ToString()); // PlayerControllerBPatch
+                    }
                 }
                 else
                 {
@@ -92,26 +125,42 @@ namespace LCShrinkRay.comp
             this.DiscardItem();
         }
 
+        private GrabbableObject grabbedPlayerCurrentItem()
+        {
+            if (grabbedPlayer.isHoldingObject && grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot] != null)
+                return grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot];
+
+            return null;
+        }
+
+        private bool isHoldingPlayer()
+        {
+            Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
+            var item = grabbedPlayerCurrentItem();
+            return item != null && item is GrabbablePlayerObject;
+        }
+
         public override void GrabItem()
         {
-            bool isNotHoldingPlayer = true;
-            if (grabbedPlayer.isHoldingObject && grabbedPlayer.currentlyHeldObject != null)
+            if (grabbedPlayer == playerHeldBy || (!ModConfig.Instance.values.friendlyFlight && isHoldingPlayer()))
             {
-                Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
-                isNotHoldingPlayer = grabbedPlayer.currentlyHeldObject is not GrabbablePlayerObject;
+                Plugin.log("Unable to grab player " + grabbedPlayer.ToString());
+                return;
             }
-            if (grabbedPlayer != playerHeldBy && (isNotHoldingPlayer || ModConfig.Instance.values.friendlyFlight))
-            {
-                base.GrabItem();
-                grabbedPlayer.playerCollider.enabled = false;
-                this.propColliders[0].enabled = false;
-                grabbedPlayer.playerRigidbody.detectCollisions = false;
-                if (helmet != null)
-                {
-                    helmet.enabled = false;
-                }
-            }
-            foreach(PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+
+            Plugin.log("Okay, let's grab!");
+            base.GrabItem();
+
+            grabbedPlayer.playerCollider.enabled = false;
+            this.propColliders[0].enabled = false;
+            grabbedPlayer.playerRigidbody.detectCollisions = false;
+            if (helmet != null)
+                helmet.enabled = false;
+            
+            setIsGrabbableToEnemies(false);
+            setControlTips();
+
+            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if(grabbedPlayer != player)
                 {
@@ -124,9 +173,96 @@ namespace LCShrinkRay.comp
             }
         }
 
+        private void setControlTips()
+        {
+            HUDManager.Instance.ClearControlTips();
+
+            Plugin.log("setControlTips");
+            if (base.IsOwner)
+            {
+                Plugin.log("IsOwner");
+                string[] toolTips = { "Throw player: LMB" };
+                HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, itemProperties);
+            }
+            else
+            {
+                var grabbedPlayerItem = grabbedPlayerCurrentItem();
+                if (grabbedPlayerItem != null) // only case that's not working so far!
+                {
+                    string[] toolTips = grabbedPlayerItem.itemProperties.toolTips;
+                    /*string test = "toolTips: ";
+                    for (int i = 0; i < toolTips.Length; i++)
+                        test += "\n" + toolTips[i];
+                    Plugin.log(test);*/
+
+                    toolTips.Append("Ungrab: JUMP");
+                    HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
+                }
+                else
+                {
+                    string[] toolTips = { "Ungrab: JUMP" };
+                    HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: false, itemProperties);
+                }
+            }
+        }
+
+        private void resetControlTips()
+        {
+            if (base.IsOwner)
+            {
+                Plugin.log("IsOwner");
+                return; // happens automatically
+            }
+
+            HUDManager.Instance.ClearControlTips();
+
+            Plugin.log("resetControlTips");
+
+            var grabbedPlayerItem = grabbedPlayerCurrentItem();
+            if (grabbedPlayerItem != null)
+            {
+                string[] toolTips = grabbedPlayerItem.itemProperties.toolTips;
+                Plugin.log("tooltips: " + toolTips.ToString());
+                HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
+            }
+        }
+
         public override void OnPlaceObject()
         {
-            //base.OnPlaceObject();
+            base.OnPlaceObject();
+
+            resetControlTips();
+        }
+
+        private Vector3 throwDestination()
+        {
+            Vector3 position = transform.position;
+            var playerThrowRay = new Ray(playerHeldBy.gameplayCamera.transform.position, playerHeldBy.gameplayCamera.transform.forward);
+            RaycastHit playerHit = default(RaycastHit);
+            position = ((!Physics.Raycast(playerThrowRay, out playerHit, 12f, StartOfRound.Instance.collidersAndRoomMaskAndDefault)) ? playerThrowRay.GetPoint(10f) : playerThrowRay.GetPoint(playerHit.distance - 0.05f));
+            playerThrowRay = new Ray(position, Vector3.down);
+            if (Physics.Raycast(playerThrowRay, out playerHit, 30f, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
+            {
+                return playerHit.point + Vector3.up * 0.05f;
+            }
+            return playerThrowRay.GetPoint(30f);
+        }
+
+        public override void ItemActivate(bool used, bool buttonDown = true)
+        {
+            try
+            {
+                Plugin.log("Player yeet");
+                base.ItemActivate(used, buttonDown);
+
+                playerHeldBy.DiscardHeldObject(placeObject: true, null, throwDestination());
+                grabbedPlayer.playerCollider.enabled = true;
+                setIsGrabbableToEnemies(true);
+            }
+            catch (Exception e)
+            {
+                Plugin.log("Error while yeeting player: " + e.Message);
+            }
         }
 
         public override void DiscardItem()
@@ -150,6 +286,9 @@ namespace LCShrinkRay.comp
                     Physics.IgnoreCollision(thisCollider, thatCollider, false);
                 }
             }
+
+            setIsGrabbableToEnemies(true);
+            resetControlTips();
         }
 
         public void Initialize(PlayerControllerB pcb)
@@ -175,16 +314,13 @@ namespace LCShrinkRay.comp
             if (grabbedPlayer.name != null)
             {
                 this.name = "grabbable_" + grabbedPlayer.name;
-                mls.LogMessage("parenting grabbable object to player number :[" + grabbedPlayer.playerClientId + "]");
+                Plugin.log("parenting grabbable object to player number :[" + grabbedPlayer.playerClientId + "]");
                 this.grabbable = true;
             }
             else
             {
-                mls.LogError("grabbedPlayer has no name!");
+                Plugin.log("grabbedPlayer has no name!", Plugin.LogType.Error);
             }
-            
-
         }
-
     }
 }

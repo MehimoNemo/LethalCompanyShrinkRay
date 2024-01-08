@@ -150,20 +150,26 @@ namespace LCShrinkRay.comp
         public static void OnListTransmit(ulong sender, string data)
         {
             Plugin.log("Oh hey!! There's that list I needed!!!!", Plugin.LogType.Error);
-            Plugin.log("\t" +data);
+            Plugin.log("\t" + data);
             List<(ulong, ulong)> tuple = StringToTupleList(data);
-            Plugin.log("\t{" + tuple[0].Item1+", " + tuple[0].Item2 + "}, {" + tuple[1].Item1 + ", " + tuple[1].Item2 + "}");
             Shrinking.Instance.UpdateGrabbablePlayerObjectsClient(tuple);
         }
 
-        [NetworkMessage("OnListRequest")]
-        public static void OnListRequest(ulong sender)
+        [NetworkMessage("AddGrabbablePlayer")]
+        public static void AddGrabbablePlayer(ulong sender, string playerID)
         {
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            Plugin.log("AddGrabbablePlayer -> sender: " + sender.ToString() + " / playerID: " + playerID);
+            if (!NetworkManager.Singleton.IsServer)
+                return;
+
+            var playerObj = GetPlayerObject(ulong.Parse(playerID));
+            if (playerObj == null)
             {
-                Plugin.log("List Requested!", Plugin.LogType.Error);
-                Shrinking.Instance.BroadcastGrabbedPlayerObjectsList();
+                Plugin.log("Unable to add grabbable player. Player with ID " + playerID + " not found!", Plugin.LogType.Error);
+                return;
             }
+
+            setPlayerGrabbable(playerObj);
         }
 
         static string TupleListToString(List<(ulong, ulong)> tupleList)
@@ -187,6 +193,7 @@ namespace LCShrinkRay.comp
             RaycastHit hit;
             if (Physics.Raycast(StartOfRound.Instance.localPlayerController.gameplayCamera.transform.position, StartOfRound.Instance.localPlayerController.gameObject.transform.up, out hit, 1f, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
             {
+                // todo: check if getting held by that player to avoid eternal stomping
                 Transform hitObject = hit.collider.gameObject.GetComponent<PlayerControllerB>().transform;
                 if (1f == hitObject.localScale.x)
                 {
@@ -238,7 +245,7 @@ namespace LCShrinkRay.comp
             }
             Plugin.log("TRYING TO ADD ASSET TO THING: `8");
             PhysicsProp.Destroy(grabbyPhysProp);
-            Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponentByName("PhysicsProp"));
+            UnityEngine.Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponent<PhysicsProp>());
             //-0.115 0.56 0.02
             visScript.itemProperties.itemName = "Shrink ray";
             visScript.itemProperties.name = "Shrink ray";
@@ -331,20 +338,28 @@ namespace LCShrinkRay.comp
                 //for each player, create and initialize a grabbable player object, these will be networked, and should spawn for other players
                 foreach (GameObject player in players)
                 {
-                    var newObject = UnityEngine.Object.Instantiate(grabbablePlayerPrefab);
-                    newObject.GetComponent<NetworkObject>().Spawn();
-                    GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
-                    gpo.Initialize(player.GetComponent<PlayerControllerB>());
-                    grabbablePlayerObjects.Add(newObject);
+                    if(isShrunk(player))
+                        setPlayerGrabbable(player);
                 }
             }
-            else if(NetworkManager.Singleton.IsClient){
-                //otherwise, if we're a client that has connected, then we will have all the objects already, but they won't be initialized, so we'll just need to do that
-                //beg the server for a list of objects, hopefully they respond??
-                Network.Broadcast("OnListRequest");
-                //then on receive, we'll run UpdateGrabbablePlayers
-            }
 
+            // Already done through automated Broadcast in setPlayerGrabbable
+            // Network.Broadcast("OnListRequest");
+
+        }
+
+        public static void setPlayerGrabbable(GameObject playerObject)
+        {
+            Plugin.log("Adding grabbable player: " + playerObject.ToString());
+            var newObject = UnityEngine.Object.Instantiate(grabbablePlayerPrefab);
+            newObject.GetComponent<NetworkObject>().Spawn();
+            GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
+            var pcb = playerObject.GetComponent<PlayerControllerB>();
+            gpo.Initialize(pcb);
+            Shrinking.Instance.grabbablePlayerObjects.Add(newObject);
+
+			// Let everyone know
+            Shrinking.Instance.BroadcastGrabbedPlayerObjectsList();
         }
 
         public void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
