@@ -12,8 +12,6 @@ namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {
-        private int customGrabTextIndex = -1;
-
         public PlayerControllerB grabbedPlayer { get; set; }
 
         //Null player container and null itemProperties
@@ -91,9 +89,6 @@ namespace LCShrinkRay.comp
 
                 if (this.isHeld)
                 {
-                    if(customGrabTextIndex == -1)
-                        setControlTipText();
-
                     //this looks like trash unfortunately
                     grabbedPlayer.transform.position = this.transform.position;
                     //change this
@@ -129,15 +124,19 @@ namespace LCShrinkRay.comp
             this.DiscardItem();
         }
 
-        private bool isHoldingPlayer()
+        private GrabbableObject grabbedPlayerCurrentItem()
         {
             if (grabbedPlayer.isHoldingObject && grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot] != null)
-            {
-                Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
-                return grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot] is GrabbablePlayerObject;
-            }
+                return grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot];
 
-            return false;
+            return null;
+        }
+
+        private bool isHoldingPlayer()
+        {
+            Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
+            var item = grabbedPlayerCurrentItem();
+            return item != null && item is GrabbablePlayerObject;
         }
 
         public override void GrabItem()
@@ -156,7 +155,7 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerRigidbody.detectCollisions = false;
 
             setIsGrabbableToEnemies(false);
-            setControlTipText();
+            setControlTips();
 
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
@@ -169,52 +168,67 @@ namespace LCShrinkRay.comp
                     Physics.IgnoreCollision(thisCollider, thatCollider);
                 }
             }
-
         }
 
-        public void removeControlTipText()
+        private void setControlTips()
         {
-            if (HUDManager.Instance == null || HUDManager.Instance.controlTipLines == null)
+            HUDManager.Instance.ClearControlTips();
+
+            Plugin.log("setControlTips");
+            if (base.IsOwner)
             {
-                Plugin.log("Unable to set control tooltip for ungrabbing. No HUDManager instance", Plugin.LogType.Error);
-                return;
+                Plugin.log("IsOwner");
+                string[] toolTips = { "Throw player: LMB" };
+                HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, itemProperties);
             }
+            else
+            {
+                var grabbedPlayerItem = grabbedPlayerCurrentItem();
+                if (grabbedPlayerItem != null) // only case that's not working so far!
+                {
+                    string[] toolTips = grabbedPlayerItem.itemProperties.toolTips;
+                    /*string test = "toolTips: ";
+                    for (int i = 0; i < toolTips.Length; i++)
+                        test += "\n" + toolTips[i];
+                    Plugin.log(test);*/
 
-            if (customGrabTextIndex == -1)
-                return; // Nothing to remove
-
-            HUDManager.Instance.ChangeControlTip(customGrabTextIndex, "");
-
-            // remove at index
-            var tmpList = new List<TextMeshProUGUI>(HUDManager.Instance.controlTipLines);
-            tmpList.RemoveAt(customGrabTextIndex);
-            HUDManager.Instance.controlTipLines = tmpList.ToArray();
-
-            customGrabTextIndex = -1;
+                    toolTips.Append("Ungrab: JUMP");
+                    HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
+                }
+                else
+                {
+                    string[] toolTips = { "Ungrab: JUMP" };
+                    HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: false, itemProperties);
+                }
+            }
         }
 
-        public void setControlTipText()
+        private void resetControlTips()
         {
-            if (HUDManager.Instance == null || HUDManager.Instance.controlTipLines == null)
+            if (base.IsOwner)
             {
-                Plugin.log("Unable to set control tooltip for ungrabbing. No HUDManager instance", Plugin.LogType.Error);
-                return;
+                Plugin.log("IsOwner");
+                return; // happens automatically
             }
 
-            if (customGrabTextIndex == -1) // No text yet
-            {
-                var ungrabTextElement = new TextMeshProUGUI();
-                HUDManager.Instance.controlTipLines.Append(ungrabTextElement);
-                customGrabTextIndex = HUDManager.Instance.controlTipLines.Length - 1;
-            }
+            HUDManager.Instance.ClearControlTips();
 
-            var isHolder = StartOfRound.Instance.localPlayerController.playerClientId == playerHeldBy.playerClientId;
-            HUDManager.Instance.ChangeControlTip(customGrabTextIndex, isHolder ? "Yeet player: LMB" : "Ungrab: JUMP" );
+            Plugin.log("resetControlTips");
+
+            var grabbedPlayerItem = grabbedPlayerCurrentItem();
+            if (grabbedPlayerItem != null)
+            {
+                string[] toolTips = grabbedPlayerItem.itemProperties.toolTips;
+                Plugin.log("tooltips: " + toolTips.ToString());
+                HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
+            }
         }
 
         public override void OnPlaceObject()
         {
             base.OnPlaceObject();
+
+            resetControlTips();
         }
 
         private Vector3 throwDestination()
@@ -241,7 +255,6 @@ namespace LCShrinkRay.comp
                 playerHeldBy.DiscardHeldObject(placeObject: true, null, throwDestination());
                 grabbedPlayer.playerCollider.enabled = true;
                 setIsGrabbableToEnemies(true);
-                removeControlTipText();
             }
             catch (Exception e)
             {
@@ -268,7 +281,7 @@ namespace LCShrinkRay.comp
             }
 
             setIsGrabbableToEnemies(true);
-            removeControlTipText();
+            resetControlTips();
         }
 
         public void Initialize(PlayerControllerB pcb)
