@@ -52,6 +52,7 @@ namespace LCShrinkRay.Config
     {
         private static ModConfig instance = null;
         private static readonly object padlock = new object();
+        public static bool debugMode { get; set; }
 
         public ConfigValues values = new ConfigValues();
 

@@ -10,6 +10,8 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem;
 using UnityEngine;
 using GameNetcodeStuff;
+using LCShrinkRay.coroutines;
+using UnityEngine.InputSystem.Utilities;
 
 namespace LCShrinkRay.patches
 {
@@ -17,9 +19,13 @@ namespace LCShrinkRay.patches
     internal class DebugPatches
     {
         private static int waitFrames = 0;
+        public static bool throwRoutineRunning = false;
+
+        public static void unsetThrowRoutine() { throwRoutineRunning = false; }
+
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
-        public static async void OnUpdate(PlayerControllerB __instance)
+        public static void OnUpdate(PlayerControllerB __instance)
         {
             if (waitFrames > 0) // Don't execute it multiple times
             {
@@ -29,13 +35,13 @@ namespace LCShrinkRay.patches
 
             try
             {
-                if (Keyboard.current.oKey.wasPressedThisFrame)
+                if (Keyboard.current.f1Key.wasPressedThisFrame)
                 {
                     Plugin.log("Simulating fake broadcast");
                     Network.Broadcast("OnShrinking", new ShrinkData() { playerObjName = "Player", shrinkage = 0.4f });
                 }
 
-                else if (Keyboard.current.nKey.wasPressedThisFrame)
+                else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
                     Plugin.log("Shrinking player model");
                     var playerObj = Shrinking.GetPlayerObject(Shrinking.Instance.clientId);
@@ -43,7 +49,7 @@ namespace LCShrinkRay.patches
                     Shrinking.Instance.sendShrinkMessage(playerObj, 0.4f);
                 }
 
-                else if (Keyboard.current.mKey.wasPressedThisFrame)
+                else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
                     Plugin.log("Growing player model");
                     var playerObj = Shrinking.GetPlayerObject(Shrinking.Instance.clientId);
@@ -51,7 +57,7 @@ namespace LCShrinkRay.patches
                     Shrinking.Instance.sendShrinkMessage(playerObj, 1f);
                 }
 
-                else if (Keyboard.current.jKey.wasPressedThisFrame)
+                else if (Keyboard.current.f4Key.wasPressedThisFrame)
                 {
                     for (int i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
                     {
@@ -66,7 +72,7 @@ namespace LCShrinkRay.patches
                     }
                 }
 
-                else if (Keyboard.current.kKey.wasPressedThisFrame)
+                else if (Keyboard.current.f5Key.wasPressedThisFrame)
                 {
                     for (int i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
                     {
@@ -81,13 +87,13 @@ namespace LCShrinkRay.patches
                     }
                 }
 
-                else if (Keyboard.current.lKey.wasPressedThisFrame)
+                else if (Keyboard.current.f6Key.wasPressedThisFrame)
                 {
                     string enemyTypes = "";
                     RoundManager.Instance.currentLevel.Enemies.ForEach(enemyType => { enemyTypes += " " + enemyType.enemyType.name; });
-                    Plugin.log("EnemyTypes:" + enemyTypes);
+                    Plugin.log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
 
-                    int enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == "Crawler");
+                    int enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == "HoarderBug");
                     if (enemyIndex != -1)
                     {
                         var location = __instance.transform.position + __instance.transform.forward * 3;
@@ -103,33 +109,13 @@ namespace LCShrinkRay.patches
                     }
                 }
 
-                else if (Keyboard.current.f9Key.wasPressedThisFrame) // still getting called 4 times... whatever
-                {
-                    Plugin.log("AddForceAtPosition1");
-                    var rb = __instance.gameObject.GetComponent<Rigidbody>();
-                    rb.isKinematic = false;
-                    rb.freezeRotation = true;
-                    rb.AddForceAtPosition(new UnityEngine.Vector3(20, 40, 0), __instance.transform.position + __instance.transform.forward * 2f, ForceMode.Impulse);
-                    await resetToKinetic(rb);
-                }
-                else
-                    return;
-
-                waitFrames = 5;
+                //waitFrames = 5;
 
             }
             catch (Exception e)
             {
                 Plugin.log("Error in Update() [DebugKeys]: " + e.Message);
             }
-        }
-
-        public static async Task resetToKinetic(Rigidbody rb)
-        {
-            Plugin.log("resetToKinetic");
-            await Task.Delay(500);
-            rb.isKinematic = true;
-            rb.freezeRotation = false;
         }
     }
 }
