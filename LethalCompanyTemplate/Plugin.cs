@@ -50,8 +50,8 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(HoarderBugAIPatch));
 
             // Debug
-            bool useDebugCode = true;
-            if(useDebugCode)
+            ModConfig.debugMode = false;
+            if(ModConfig.debugMode)
                 harmony.PatchAll(typeof(DebugPatches));
 
             try
@@ -72,17 +72,21 @@ namespace LCShrinkRay
             Message,
             Warning,
             Error,
-            Fatal
+            Fatal,
+            Debug
         }
 
-        internal static void log(string message, LogType type = LogType.Message)
+        internal static void log(string message, LogType type = LogType.Debug)
         {
+            if (type == LogType.Debug && !ModConfig.debugMode)
+                return;
+
             switch(type)
             {
-                case LogType.Message: mls.LogMessage(message); break;
                 case LogType.Warning: mls.LogWarning(message); break;
                 case LogType.Error: mls.LogError(message); break;
                 case LogType.Fatal: mls.LogFatal(message); break;
+                default: mls.LogMessage(message); break;
             }
         }
     }
