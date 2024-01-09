@@ -1,5 +1,6 @@
 ﻿using LCShrinkRay.comp;
 using LCShrinkRay.Config;
+using LCShrinkRay.helper;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace LCShrinkRay.coroutines
 
         public static void StartRoutine(ulong playerID, float pitch)
         {
-            var playerObj = Shrinking.GetPlayerObject(playerID);
+            var playerObj = PlayerHelper.GetPlayerObject(playerID);
             var routine = playerObj.AddComponent<SetPlayerPitch>();
             routine.playerObj = playerObj;
             routine.StartCoroutine(routine.run(pitch, playerID));
@@ -42,12 +43,8 @@ namespace LCShrinkRay.coroutines
                 yield break;
             }
 
-            //float modifiedPitch = 1f;
-            //float modifiedPitch = -0.417f * scale + 1.417f;
-            Shrinking.Instance.myScale = Shrinking.GetPlayerObject(Shrinking.Instance.clientId).transform.localScale.x;
-
             float intensity = -1f * (float)ModConfig.Instance.values.pitchDistortionIntensity;
-            float modifiedPitch = (intensity * (scale - Shrinking.Instance.myScale) + 1f) * pitch;
+            float modifiedPitch = (intensity * (scale - PlayerHelper.currentPlayerScale()) + 1f) * pitch;
 
             // Set the modified pitch using the original method
             Plugin.log("changing pitch of playerID " + playerObj.name);

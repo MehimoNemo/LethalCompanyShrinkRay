@@ -7,6 +7,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using LCShrinkRay.helper;
 
 namespace LCShrinkRay.comp
 {
@@ -59,7 +60,7 @@ namespace LCShrinkRay.comp
 
         private void setIsGrabbableToEnemies(bool isGrabbable = true)
         {
-            if (!Shrinking.isCurrentPlayerShrunk())
+            if (!PlayerHelper.isCurrentPlayerShrunk())
                 isGrabbable = false;
 
             this.grabbableToEnemies = isGrabbable;
@@ -81,12 +82,23 @@ namespace LCShrinkRay.comp
             }
         }
 
+        [NetworkMessage("DemandDropFromPlayer")]
+        public static void DemandDropFromPlayer(ulong sender, string playerID)
+        {
+            Plugin.log("A player demands to be dropped from player " + playerID);
+            if (StartOfRound.Instance.localPlayerController.playerClientId == ulong.Parse(playerID)) // I have to drop him...
+            {
+                Plugin.log("I have to drop them... sadly!", Plugin.LogType.Warning);
+                StartOfRound.Instance.localPlayerController.DiscardHeldObject();
+            }
+        }
+
         public override void LateUpdate()
         {
             base.LateUpdate();
             if (grabbedPlayer != null)
             {
-                this.grabbable = Shrinking.isShrunk(grabbedPlayer.gameObject);
+                this.grabbable = PlayerHelper.isShrunk(grabbedPlayer.gameObject);
 
                 if (this.isHeld)
                 {

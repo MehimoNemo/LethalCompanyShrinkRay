@@ -55,17 +55,6 @@ namespace LCShrinkRay.patches
                 */
             }
         }
-
-        [NetworkMessage("DemandDropFromPlayer")]
-        public static void DemandDropFromPlayer(ulong sender, string playerID)
-        {
-            Plugin.log("A player demands to be dropped from player " + playerID);
-            if (StartOfRound.Instance.localPlayerController.playerClientId == ulong.Parse(playerID)) // I have to drop him...
-            {
-                Plugin.log("I have to drop them... sadly!", Plugin.LogType.Warning);
-                StartOfRound.Instance.localPlayerController.DiscardHeldObject();
-            }
-        }
     }
 
     // todo: itemActive maybe here?
