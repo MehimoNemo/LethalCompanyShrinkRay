@@ -32,6 +32,7 @@ namespace LCShrinkRay.comp
             this.grabbable = false;
 
             calculateScrapValue();
+            calculateWeight();
 
             setIsGrabbableToEnemies(true);
 
@@ -45,8 +46,9 @@ namespace LCShrinkRay.comp
 
         }
 
-        private void calculateScrapValue()
+        public void calculateScrapValue()
         {
+            // todo: change scrap value when grabbed player grabs something
             int value = 5; // todo: find where that's set in code for deadBody
 
             if (grabbedPlayer != null && grabbedPlayer.ItemSlots != null)
@@ -56,6 +58,22 @@ namespace LCShrinkRay.comp
                         value += item.scrapValue;
             }
             SetScrapValue(value);
+            Plugin.log("Scrap value: " + value);
+        }
+
+        public void calculateWeight()
+        {
+            // todo: change weight when grabbed player grabs something
+            float weight = 4f; // lb
+
+            if (grabbedPlayer != null && grabbedPlayer.ItemSlots != null)
+            {
+                foreach (var item in grabbedPlayer.ItemSlots)
+                    if (item != null)
+                        weight += item.itemProperties.weight;
+            }
+            itemProperties.weight = weight;
+            Plugin.log("Weight: " + weight);
         }
 
         private void setIsGrabbableToEnemies(bool isGrabbable = true)
