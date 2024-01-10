@@ -44,17 +44,17 @@ namespace LCShrinkRay.comp
         }
 
         // ---- Helper ----
-        static string TupleListToString(List<(ulong, ulong)> tupleList)
+        private static string TupleListToString(List<(ulong, ulong)> tupleList)
         {
             return JsonConvert.SerializeObject(tupleList);
         }
 
-        static List<(ulong, ulong)> StringToTupleList(string jsonString)
+        private static List<(ulong, ulong)> StringToTupleList(string jsonString)
         {
             return JsonConvert.DeserializeObject<List<(ulong, ulong)>>(jsonString);
         }
 
-        static GrabbablePlayerObject findGrabbableObjectForPlayer(ulong playerID) // untested!
+        public static GrabbablePlayerObject findGrabbableObjectForPlayer(ulong playerID) // untested!
         {
             return GameObject.FindObjectsOfType<GrabbablePlayerObject>().FirstOrDefault(gpo => gpo.grabbedPlayer.playerClientId == playerID);
         }

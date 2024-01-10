@@ -141,24 +141,44 @@ namespace LCShrinkRay.comp
             isGoombaCoroutineRunning = false;
         }
 
-        private static void CheckIfPlayerAbove()
+        private static PlayerControllerB GetPlayerAbove()
         {
             // Cast a ray upwards to check for the player above
             RaycastHit hit;
             if (Physics.Raycast(StartOfRound.Instance.localPlayerController.gameplayCamera.transform.position, StartOfRound.Instance.localPlayerController.gameObject.transform.up, out hit, 1f, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
             {
                 // todo: check if getting held by that player to avoid eternal stomping
-                Transform hitObject = hit.collider.gameObject.GetComponent<PlayerControllerB>().transform;
-                if (1f == hitObject.localScale.x)
-                {
-                    if (ModConfig.Instance.values.jumpOnShrunkenPlayers)
-                    {
-                        Plugin.log("WE GETTING GOOMBAD");
-                        Network.Broadcast("OnGoomba", StartOfRound.Instance.localPlayerController.playerClientId.ToString());
-                        coroutines.GoombaStomp.StartRoutine(StartOfRound.Instance.localPlayerController.gameObject);
-                    }
-                }
+                return hit.collider.gameObject.GetComponent<PlayerControllerB>();
             }
+
+            return null;
+        }
+
+        private static void CheckForGoomba()
+        {
+            if (!ModConfig.Instance.values.jumpOnShrunkenPlayers || !PlayerHelper.isCurrentPlayerShrunk())
+                return;
+
+            var playerAbove = GetPlayerAbove();
+            if (playerAbove == null)
+                return;
+
+            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(PlayerHelper.currentPlayer().playerClientId);
+            if (gpo != null && gpo.playerHeldBy != null)
+            {
+                //Plugin.log("Apes together strong! Goomba impossible.");
+                return;
+            }
+
+            if(PlayerHelper.isShrunk(playerAbove.gameObject))
+            {
+                //Plugin.log("2 Weak 2 Goomba c:");
+                return;
+            }
+
+            Plugin.log("WE GETTING GOOMBAD");
+            Network.Broadcast("OnGoomba", StartOfRound.Instance.localPlayerController.playerClientId.ToString());
+            coroutines.GoombaStomp.StartRoutine(StartOfRound.Instance.localPlayerController.gameObject);
         }
 
         public static void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
@@ -201,8 +221,7 @@ namespace LCShrinkRay.comp
             if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController || PlayerCountChangeDetection.currentPlayerList == null)
                 return;
 
-            if (PlayerHelper.isCurrentPlayerShrunk())
-                CheckIfPlayerAbove();
+            CheckForGoomba();
 
             foreach (GameObject player in PlayerCountChangeDetection.currentPlayerList)
             {
