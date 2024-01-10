@@ -32,6 +32,7 @@ namespace LCShrinkRay.comp
             this.grabbable = false;
 
             calculateScrapValue();
+            //itemProperties.weight = PlayerHelper.calculatePlayerWeightFor(grabbedPlayer);
 
             setIsGrabbableToEnemies(true);
 
@@ -45,8 +46,14 @@ namespace LCShrinkRay.comp
 
         }
 
+        public void AddNode()
+        {
+            /*Plugin.log("adding scannode");
+        }
+
         private void calculateScrapValue()
         {
+            // todo: change scrap value when grabbed player grabs something
             int value = 5; // todo: find where that's set in code for deadBody
 
             if (grabbedPlayer != null && grabbedPlayer.ItemSlots != null)
@@ -55,7 +62,13 @@ namespace LCShrinkRay.comp
                     if (item != null)
                         value += item.scrapValue;
             }
+
+            var scanNode = base.gameObject.GetComponentInChildren<ScanNodeProperties>();
+            if (scanNode == null)
+                AddNode();
+
             SetScrapValue(value);
+            Plugin.log("Scrap value: " + value);
         }
 
         private void setIsGrabbableToEnemies(bool isGrabbable = true)
@@ -154,9 +167,12 @@ namespace LCShrinkRay.comp
 
         public override void GrabItem()
         {
-            if (grabbedPlayer == playerHeldBy || (!ModConfig.Instance.values.friendlyFlight && isHoldingPlayer()))
+            var holdingPlayer = isHoldingPlayer();
+            if (grabbedPlayer == playerHeldBy || (!ModConfig.Instance.values.friendlyFlight && holdingPlayer))
             {
                 Plugin.log("Unable to grab player " + grabbedPlayer.ToString());
+                playerHeldBy.DiscardHeldObject();
+                DiscardItem();
                 return;
             }
 
@@ -183,6 +199,17 @@ namespace LCShrinkRay.comp
                     Physics.IgnoreCollision(thisCollider, thatCollider);
                 }
             }
+
+            /*
+            if(grabbedPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId)
+                calculateWeight();
+            
+            if(!holdingPlayer && playerHeldBy != null)
+            {
+                var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(playerHeldBy);
+                if(gpo != null)
+                    gpo.calculateWeight();
+            }*/
         }
 
         private void setControlTips()
@@ -335,6 +362,9 @@ namespace LCShrinkRay.comp
             {
                 Plugin.log("grabbedPlayer has no name!", Plugin.LogType.Error);
             }
+
+            calculateScrapValue();
+            setIsGrabbableToEnemies(true);
         }
     }
 }

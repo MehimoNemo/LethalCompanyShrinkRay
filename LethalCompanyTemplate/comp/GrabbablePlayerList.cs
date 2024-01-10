@@ -54,7 +54,12 @@ namespace LCShrinkRay.comp
             return JsonConvert.DeserializeObject<List<(ulong, ulong)>>(jsonString);
         }
 
-        public static GrabbablePlayerObject findGrabbableObjectForPlayer(ulong playerID) // untested!
+        public static GrabbablePlayerObject findGrabbableObjectForPlayer(PlayerControllerB pcb)
+        {
+            return findGrabbableObjectForPlayer(pcb.playerClientId);
+        }
+
+        public static GrabbablePlayerObject findGrabbableObjectForPlayer(ulong playerID)
         {
             return GameObject.FindObjectsOfType<GrabbablePlayerObject>().FirstOrDefault(gpo => gpo.grabbedPlayer.playerClientId == playerID);
         }
