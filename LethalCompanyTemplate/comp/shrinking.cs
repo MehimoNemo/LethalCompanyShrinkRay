@@ -159,16 +159,15 @@ namespace LCShrinkRay.comp
             if (!ModConfig.Instance.values.jumpOnShrunkenPlayers || !PlayerHelper.isCurrentPlayerShrunk())
                 return;
 
-            var playerAbove = GetPlayerAbove();
-            if (playerAbove == null)
-                return;
-
-            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(PlayerHelper.currentPlayer().playerClientId);
-            if (gpo != null && gpo.playerHeldBy != null)
+            if(PlayerHelper.IsCurrentPlayerGrabbed())
             {
                 //Plugin.log("Apes together strong! Goomba impossible.");
                 return;
             }
+
+            var playerAbove = GetPlayerAbove();
+            if (playerAbove == null)
+                return;
 
             if(PlayerHelper.isShrunk(playerAbove.gameObject))
             {

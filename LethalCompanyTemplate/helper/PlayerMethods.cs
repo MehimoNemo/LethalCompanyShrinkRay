@@ -1,4 +1,5 @@
 ﻿using GameNetcodeStuff;
+using LCShrinkRay.comp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,12 @@ namespace LCShrinkRay.helper
         public static bool isHost()
         {
             return NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+        }
+
+        public static bool IsCurrentPlayerGrabbed()
+        {
+            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(PlayerHelper.currentPlayer().playerClientId);
+            return gpo != null && gpo.playerHeldBy != null;
         }
 
         public static List<GameObject> getAllPlayers()
