@@ -15,7 +15,7 @@ namespace LCShrinkRay.patches
         
 
         private static List<GrabbablePlayerObject> doomedPlayers = new List<GrabbablePlayerObject>();
-        //public static bool isPlayerSelling;
+        public static bool isPlayerSelling;
         private static PlayerControllerB playerWhoTriggered;
         private static GrabbableObject placedItem;
 
@@ -24,9 +24,9 @@ namespace LCShrinkRay.patches
         public static void Start()
         {
             
-            Plugin.log("STARTING PLAYER SELLING PATCH", Plugin.LogType.Error);    
+            Plugin.log("STARTING PLAYER SELLING PATCH", Plugin.LogType.Error);
             //isPlayerSelling = Config.ModConfig.Instance.values.sellablePlayers;
-            //Plugin.log("isPlayerSelling: " + isPlayerSelling.ToString(), Plugin.LogType.Error);
+            Plugin.log("isPlayerSelling: " + isPlayerSelling.ToString(), Plugin.LogType.Error);
         }
 
         [HarmonyPatch(typeof(DepositItemsDesk), "PlaceItemOnCounter")]
