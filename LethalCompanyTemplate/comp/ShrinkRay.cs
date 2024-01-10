@@ -7,6 +7,7 @@ using LC_API.Networking;
 using LethalLib.Modules;
 using System.IO;
 using System.Reflection;
+using LCShrinkRay.Config;
 
 namespace LCShrinkRay.comp
 {
@@ -61,7 +62,7 @@ namespace LCShrinkRay.comp
 
             //Lethal Company_Data
             Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
-            //I SWEAR TO GO IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
+            //I SWEAR TO GOD IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
             Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("grabbablePlayerItem.asset");
             if (grabbablePlayerItem == null)
             {
@@ -69,6 +70,9 @@ namespace LCShrinkRay.comp
             }
 
             shrinkRayItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
+            shrinkRayItem.weight = 1.05f;
+            shrinkRayItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
+
             shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
             ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
             GrabbablePlayerObject grabbyScript = grabbablePlayerItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();

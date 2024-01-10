@@ -5,6 +5,7 @@ using LCShrinkRay.comp;
 using UnityEngine.InputSystem;
 using UnityEngine;
 using LCShrinkRay.Config;
+using LCShrinkRay.helper;
 
 namespace LCShrinkRay.patches
 {
@@ -37,7 +38,7 @@ namespace LCShrinkRay.patches
             }
 
             // Speed & Jump Multiplier for shrunken players
-            if (Shrinking.isCurrentPlayerShrunk())
+            if (PlayerHelper.isCurrentPlayerShrunk())
             {
                 ___jumpForce = defaultPlayerValues.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
 
@@ -48,6 +49,8 @@ namespace LCShrinkRay.patches
                     ___sprintMultiplier *= 2.25f;
                     ___currentAnimationSpeed *= 2.25f;
                 }
+
+                __instance.carryWeight = PlayerHelper.calculatePlayerWeightFor(__instance);
             }
         }
     }
