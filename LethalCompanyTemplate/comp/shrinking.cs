@@ -173,7 +173,6 @@ namespace LCShrinkRay.comp
             if (msgObject.tag == "Player")
             {
                 Plugin.log("Looks like it must be a player");
-                //if the name is just player with not parenthesis, and we're player 0, use playerShrinkAnimation
                 if (playerID == clientID || (!(msgObject.name.Contains("(")) && clientID == 0))
                 {
                     Plugin.log("Looks like it must be us!)");
@@ -182,8 +181,7 @@ namespace LCShrinkRay.comp
 
                     Vents.SussifyAll();
                 }
-                //if it's anyone or anything else, we don't care, just use ObjectShrink
-                else
+                else //if it's anyone or anything else, we don't care, just use ObjectShrink
                 {
                     Plugin.log("Looks like it must be some random person....boring...");
                     ObjectShrinkAnimation(msgShrinkage, msgObject);

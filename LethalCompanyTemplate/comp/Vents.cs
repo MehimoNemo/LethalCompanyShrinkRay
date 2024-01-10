@@ -34,8 +34,8 @@ namespace LCShrinkRay.comp
 
             Plugin.log("SUSSIFYING VENTS");
 
-            var vents = RoundManager.Instance.allEnemyVents;
-            if (vents == null)
+            var vents = PlayerHelper.isHost() ? UnityEngine.Object.FindObjectsOfType<EnemyVent>() : RoundManager.Instance.allEnemyVents;
+            if (vents == null || vents.Length == 0)
             {
                 Plugin.log("No vents to sussify.");
                 return;

@@ -115,7 +115,7 @@ namespace LCShrinkRay.comp
         {
             clearGrabbablePlayerObjects();
 
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            if (PlayerHelper.isHost())
             {
                 //for each shrunken player, create and initialize a GrabbablePlayerObject, these will be networked, and should spawn for other players
                 foreach (GameObject player in PlayerHelper.getAllPlayers())

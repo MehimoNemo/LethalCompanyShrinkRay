@@ -3,12 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace LCShrinkRay.helper
 {
     internal class PlayerHelper // maybe find better name
     {
+        public static bool isHost()
+        {
+            return NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+        }
+
         public static List<GameObject> getAllPlayers()
         {
             return StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled).Select(pcb => pcb.gameObject).ToList();
