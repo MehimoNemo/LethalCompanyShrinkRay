@@ -507,7 +507,7 @@ namespace LCShrinkRay.comp
             //if vents don't exist yet
             if(sussification == false || allVents == null || allVents.Length == 0)
             {
-                allVents = UnityEngine.Object.FindObjectsOfType<EnemyVent>();
+                allVents = StartOfRound.Instance.localPlayerController.IsHost ? RoundManager.Instance.allEnemyVents : UnityEngine.Object.FindObjectsOfType<EnemyVent>();
             }
             //If vents exist
             if (allVents != null && allVents.Length > 0 && sussification == false)
