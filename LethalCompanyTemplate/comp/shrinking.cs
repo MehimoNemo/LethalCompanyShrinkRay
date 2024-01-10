@@ -295,7 +295,6 @@ namespace LCShrinkRay.comp
                 }
             }
         }
-        private bool isGrabbableAdded = false;
 
         public void updatePitch()
         {
