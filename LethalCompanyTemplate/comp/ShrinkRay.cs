@@ -4,11 +4,16 @@ using System;
 using UnityEngine;
 using Unity.Netcode;
 using LC_API.Networking;
+using LethalLib.Modules;
+using System.IO;
+using System.Reflection;
 
 namespace LCShrinkRay.comp
 {
     internal class ShrinkRay : GrabbableObject
     {
+        public const string itemname = "Shrink Ray";
+
         private PlayerControllerB previousPlayerHeldBy;
         private RaycastHit[] enemyColliders;
         GameObject beamObject;
@@ -19,6 +24,8 @@ namespace LCShrinkRay.comp
         public float beamLength = 10f;
         public float beamDuration = 2f;
         //private Color beamColor = Color.blue;
+
+        public static GameObject grabbablePlayerPrefab;
 
 
         public override void Start()
@@ -46,11 +53,59 @@ namespace LCShrinkRay.comp
             
         }
 
+        public static void AddToGame()
+        {
+            Plugin.log("Addin " + itemname);
+            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
+            AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
+
+            //Lethal Company_Data
+            Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
+            //I SWEAR TO GO IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
+            Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("grabbablePlayerItem.asset");
+            if (grabbablePlayerItem == null)
+            {
+                Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
+            }
+
+            shrinkRayItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
+            shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
+            ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
+            GrabbablePlayerObject grabbyScript = grabbablePlayerItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
+            PhysicsProp grabbyPhysProp = shrinkRayItem.spawnPrefab.GetComponent<PhysicsProp>();
+            grabbyScript.itemProperties = grabbyPhysProp.itemProperties;
+
+
+            visScript.itemProperties = shrinkRayItem;
+            grabbyScript.itemProperties = grabbablePlayerItem;
+            if (grabbyScript.itemProperties == null)
+            {
+                Plugin.log("\n\nSHIT HOW IS IT NULL???\n\n");
+            }
+            PhysicsProp.Destroy(grabbyPhysProp);
+            UnityEngine.Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponent<PhysicsProp>());
+            //-0.115 0.56 0.02
+            visScript.itemProperties.itemName = itemname;
+            visScript.itemProperties.name = itemname;
+            visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
+            visScript.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
+            visScript.grabbable = true;
+            visScript.useCooldown = 2f;
+            visScript.grabbableToEnemies = true;
+
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(grabbablePlayerItem.spawnPrefab);
+            grabbablePlayerPrefab = grabbablePlayerItem.spawnPrefab;
+            TerminalNode nightNode = new TerminalNode();
+            nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
+            Items.RegisterShopItem(shrinkRayItem, null, null, nightNode, shrinkRayItem.creditsWorth);
+        }
+
         public override void ItemActivate(bool used, bool buttonDown = true)
         {
             try
             {
-                Plugin.log("triggering SHRINKRAY");
+                Plugin.log("Triggering " + itemname);
                 base.ItemActivate(used, buttonDown);
                 if (beamObject == null || beamObject.gameObject == null)
                 {
@@ -190,11 +245,11 @@ namespace LCShrinkRay.comp
                         ulong targetPlayerID = component.playerClientId;
                         if (component.transform.localScale.x == 1f && component.playerClientId != this.playerHeldBy.playerClientId) {
                             //shrink the target player and also broadcast to other clients
-                            Shrinking.Instance.sendShrinkMessage(component.gameObject, 0.4f);
-                            Shrinking.Instance.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID);
+                            Shrinking.sendShrinkMessage(component.gameObject, 0.4f);
+                            Shrinking.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID);
 
                             if (NetworkManager.Singleton.IsServer)
-                                Shrinking.setPlayerGrabbable(component.gameObject);
+                                GrabbablePlayerList.setPlayerGrabbable(component.gameObject);
                             else
                                 Network.Broadcast("AddGrabbablePlayer", component.playerClientId.ToString());
                         }

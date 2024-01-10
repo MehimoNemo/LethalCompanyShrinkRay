@@ -12,6 +12,7 @@ using UnityEngine;
 using GameNetcodeStuff;
 using LCShrinkRay.coroutines;
 using UnityEngine.InputSystem.Utilities;
+using LCShrinkRay.helper;
 
 namespace LCShrinkRay.patches
 {
@@ -44,17 +45,17 @@ namespace LCShrinkRay.patches
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
                     Plugin.log("Shrinking player model");
-                    var playerObj = Shrinking.GetPlayerObject(Shrinking.Instance.clientId);
-                    Shrinking.Instance.ShrinkPlayer(playerObj, 0.4f, Shrinking.Instance.clientId);
-                    Shrinking.Instance.sendShrinkMessage(playerObj, 0.4f);
+                    var playerObj = PlayerHelper.GetPlayerObject(PlayerHelper.currentPlayer().playerClientId);
+                    ShrinkPlayer(playerObj, 0.4f, PlayerHelper.currentPlayer().playerClientId);
+                    sendShrinkMessage(playerObj, 0.4f);
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
                     Plugin.log("Growing player model");
-                    var playerObj = Shrinking.GetPlayerObject(Shrinking.Instance.clientId);
-                    Shrinking.Instance.ShrinkPlayer(playerObj, 1f, Shrinking.Instance.clientId);
-                    Shrinking.Instance.sendShrinkMessage(playerObj, 1f);
+                    var playerObj = PlayerHelper.GetPlayerObject(PlayerHelper.currentPlayer().playerClientId);
+                    ShrinkPlayer(playerObj, 1f, PlayerHelper.currentPlayer().playerClientId);
+                    sendShrinkMessage(playerObj, 1f);
                 }
 
                 else if (Keyboard.current.f4Key.wasPressedThisFrame)
@@ -66,8 +67,8 @@ namespace LCShrinkRay.patches
                         if (playerObj != null)
                         {
                             Plugin.log("Shrinking " + playerName + " model");
-                            Shrinking.Instance.ShrinkPlayer(playerObj, 0.4f, (ulong)i);
-                            Shrinking.Instance.sendShrinkMessage(playerObj, 0.4f);
+                            ShrinkPlayer(playerObj, 0.4f, (ulong)i);
+                            sendShrinkMessage(playerObj, 0.4f);
                         }
                     }
                 }
@@ -81,8 +82,8 @@ namespace LCShrinkRay.patches
                         if (playerObj != null)
                         {
                             Plugin.log("Growing " + playerName + " model");
-                            Shrinking.Instance.ShrinkPlayer(playerObj, 1f, (ulong)i);
-                            Shrinking.Instance.sendShrinkMessage(playerObj, 1f);
+                            ShrinkPlayer(playerObj, 1f, (ulong)i);
+                            sendShrinkMessage(playerObj, 1f);
                         }
                     }
                 }

@@ -48,6 +48,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             harmony.PatchAll(typeof(ThumperAIPatch));
             harmony.PatchAll(typeof(HoarderBugAIPatch));
+            harmony.PatchAll(typeof(PlayerCountChangeDetection));
 
             // Debug
             ModConfig.debugMode = true;
@@ -59,12 +60,14 @@ namespace LCShrinkRay
                 // LC_API Network Setup
                 Network.RegisterAll(typeof(Shrinking));
                 Network.RegisterAll(typeof(GrabbablePlayerObject));
-                Network.RegisterAll(typeof(PlayerControllerBPatch));
+                Network.RegisterAll(typeof(GrabbablePlayerList));
             }
             catch (Exception e)
             {
                 mls.LogError(e.Message);
             }
+
+            ShrinkRay.AddToGame();
         }
 
         public enum LogType
