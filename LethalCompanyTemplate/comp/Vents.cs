@@ -9,12 +9,14 @@ using System.Linq;
 using System.Text;
 using Unity.Netcode;
 using UnityEngine;
+using static LCShrinkRay.comp.Vents;
 
 namespace LCShrinkRay.comp
 {
     internal class Vents
     {
         private static bool sussification = false;
+
         public static void SussifyAll()
         {
             if(sussification) // Already sussified
@@ -34,7 +36,7 @@ namespace LCShrinkRay.comp
 
             Plugin.log("SUSSIFYING VENTS");
 
-            var vents = PlayerHelper.isHost() ? UnityEngine.Object.FindObjectsOfType<EnemyVent>() : RoundManager.Instance.allEnemyVents;
+            var vents = UnityEngine.Object.FindObjectsOfType<EnemyVent>();
             if (vents == null || vents.Length == 0)
             {
                 Plugin.log("No vents to sussify.");
@@ -42,7 +44,6 @@ namespace LCShrinkRay.comp
             }
 
             GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
-            MeshRenderer[] renderers = new MeshRenderer[vents.Length];
             for (int i = 0; i < vents.Length; i++)
             {
                 Plugin.log("SUSSIFYING VENT " + i);
@@ -56,17 +57,17 @@ namespace LCShrinkRay.comp
 
                 Plugin.log("\tPairing with vent " + siblingIndex);
 
-                renderers.Append(sussify(vents[i], vents[siblingIndex]));
+                sussify(vents[i], vents[siblingIndex]);
             }
 
             sussification = true;
-            coroutines.RenderVents.StartRoutine(dungeonEntrance, renderers);
+            coroutines.RenderVents.StartRoutine(dungeonEntrance);
         }
 
-        public static MeshRenderer sussify(EnemyVent enemyVent, EnemyVent siblingVent)
+        public static void sussify(EnemyVent enemyVent, EnemyVent siblingVent)
         {
             GameObject vent = enemyVent.gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
-            var meshRenderer = vent.GetComponent<MeshRenderer>();
+            vent.GetComponent<MeshRenderer>();
             vent.tag = "InteractTrigger";
             vent.layer = LayerMask.NameToLayer("InteractableObject");
             var sussifiedVent = enemyVent.gameObject.AddComponent<SussifiedVent>();
@@ -99,8 +100,6 @@ namespace LCShrinkRay.comp
             Plugin.log("VentCover Object: " + vent.name);
             Plugin.log("VentCover Renderer Enabled: " + vent.GetComponent<Renderer>().enabled);
             Plugin.log("Hover Icon: " + (trigger.hoverIcon != null ? trigger.hoverIcon.name : "null"));
-
-            return meshRenderer;
         }
 
         // when unshrinking will be a thing
