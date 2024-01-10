@@ -125,7 +125,7 @@ namespace LCShrinkRay.comp
                     grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
 
-                    if (Keyboard.current.spaceKey.wasPressedThisFrame && playerHeldBy != null)
+                    if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     {
                         Plugin.log("Player demands to be dropped!");
                         Network.Broadcast("DemandDropFromPlayer", playerHeldBy.playerClientId.ToString()); // PlayerControllerBPatch
@@ -223,6 +223,8 @@ namespace LCShrinkRay.comp
                 string[] toolTips = { "Throw player: LMB" };
                 HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, itemProperties);
             }
+            else if (!ModConfig.Instance.values.CanEscapeGrab)
+                return;
             else
             {
                 var grabbedPlayerItem = grabbedPlayerCurrentItem();
