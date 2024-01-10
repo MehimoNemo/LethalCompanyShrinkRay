@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.comp;
+using LCShrinkRay.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace LCShrinkRay.helper
             }
 
             if(PlayerHelper.isShrunk(player.gameObject))
-                weight *= 1.5f;
+                weight *= ModConfig.Instance.values.weightMultiplier;
 
             return baseValue + weight;
         }
