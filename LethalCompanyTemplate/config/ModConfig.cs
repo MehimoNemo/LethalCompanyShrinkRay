@@ -34,7 +34,6 @@ namespace LCShrinkRay.Config
         [JsonIgnore]
         public float pitchDistortionIntensity { get; set; }
 
-        [JsonIgnore]
         public bool canUseVents { get; set; }
 
         public bool jumpOnShrunkenPlayers { get; set; }

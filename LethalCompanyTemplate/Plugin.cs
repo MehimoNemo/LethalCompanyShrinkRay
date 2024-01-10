@@ -50,7 +50,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(HoarderBugAIPatch));
 
             // Debug
-            ModConfig.debugMode = false;
+            ModConfig.debugMode = true;
             if(ModConfig.debugMode)
                 harmony.PatchAll(typeof(DebugPatches));
 

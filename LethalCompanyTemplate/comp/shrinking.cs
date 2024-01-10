@@ -504,12 +504,16 @@ namespace LCShrinkRay.comp
                 players.Clear();
                 return;
             }
-
+            //if vents don't exist yet
+            if(sussification == false || allVents == null || allVents.Length == 0)
+            {
+                allVents = UnityEngine.Object.FindObjectsOfType<EnemyVent>();
+            }
             //If vents exist
-            if (RoundManager.Instance.allEnemyVents != null && RoundManager.Instance.allEnemyVents.Length != 0 && sussification == false)
+            if (allVents != null && allVents.Length > 0 && sussification == false)
             {
                 //sussify vents(add interact trigger)
-                SussifyVents(RoundManager.Instance.allEnemyVents);
+                SussifyVents(allVents);
                 sussification = true;
             }
 
@@ -699,6 +703,7 @@ namespace LCShrinkRay.comp
         public Vector3 testVector = new Vector3();
         private bool sussification = false;
         private bool isGrabbableAdded = false;
+        private EnemyVent[] allVents;
 
         public Vector3 getTestVector() { return testVector; }
         private void testOffset(Vector3 posOffsetVect)
