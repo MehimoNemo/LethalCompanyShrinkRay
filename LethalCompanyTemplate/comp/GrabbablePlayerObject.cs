@@ -48,7 +48,7 @@ namespace LCShrinkRay.comp
 
         public void AddNode()
         {
-            /*Plugin.log("adding scannode");
+            //Plugin.log("adding scannode");
         }
 
         private void calculateScrapValue()
