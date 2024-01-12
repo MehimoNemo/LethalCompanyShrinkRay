@@ -8,6 +8,7 @@ using LethalLib.Modules;
 using System.IO;
 using System.Reflection;
 using LCShrinkRay.Config;
+using LCShrinkRay.helper;
 
 namespace LCShrinkRay.comp
 {
@@ -96,7 +97,7 @@ namespace LCShrinkRay.comp
             visScript.grabbable = true;
             visScript.useCooldown = 2f;
             visScript.grabbableToEnemies = true;
-            visScript.itemProperties.syncUseFunction = true;
+            //visScript.itemProperties.syncUseFunction = true;
 
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(grabbablePlayerItem.spawnPrefab);
@@ -222,51 +223,61 @@ namespace LCShrinkRay.comp
         private void ShootRay(Vector3 beamStartPos, Vector3 forward)
         {
             Plugin.log("shootingggggg");
-
-            if (enemyColliders == null)
+            try
             {
-                enemyColliders = new RaycastHit[10];
+                RenderCoolBeam(beamStartPos, beamStartPos + forward * beamLength);
             }
-
-            Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
-            RenderCoolBeam(beamStartPos, beamStartPos + forward * beamLength);
-            int hitEnemiesCount = Physics.SphereCastNonAlloc(ray, 5f, enemyColliders, beamLength, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Collide);
-            Plugin.log("Casted Ray");
-            Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
-            for (int i = 0; i < hitEnemiesCount; i++) {
-                Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
-                if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
+            catch (Exception e) {
+                Plugin.log(e.ToString());
+            }
+            if (PlayerHelper.currentPlayer().playerClientId == playerHeldBy.playerClientId)
+            {
+                if (enemyColliders == null)
                 {
-                    Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
-                    Debug.DrawLine(beamStartPos, enemyColliders[i].point, Color.cyan, 15f);
-                    Plugin.log("Raycast hit wall");
+                    enemyColliders = new RaycastHit[10];
                 }
-                else
-                {
-                    PlayerControllerB component;
-                    if (enemyColliders[i].transform.TryGetComponent<PlayerControllerB>(out component))
-                    {
-                        Plugin.log($"Hit enemy,");
-                        ulong targetPlayerID = component.playerClientId;
-                        if (component.transform.localScale.x == 1f && component.playerClientId != this.playerHeldBy.playerClientId) {
-                            //shrink the target player and also broadcast to other clients
-                            Shrinking.sendShrinkMessage(component.gameObject, 0.4f);
-                            Shrinking.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID);
 
-                            if (NetworkManager.Singleton.IsServer)
-                                GrabbablePlayerList.setPlayerGrabbable(component.gameObject);
-                            else
-                                Network.Broadcast("AddGrabbablePlayer", component.playerClientId.ToString());
-                        }
+                Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
+
+                int hitEnemiesCount = Physics.SphereCastNonAlloc(ray, 5f, enemyColliders, beamLength, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Collide);
+                Plugin.log("Casted Ray");
+                Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
+                for (int i = 0; i < hitEnemiesCount; i++)
+                {
+                    Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
+                    if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
+                    {
+                        Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
+                        Debug.DrawLine(beamStartPos, enemyColliders[i].point, Color.cyan, 15f);
+                        Plugin.log("Raycast hit wall");
                     }
                     else
                     {
-                        Plugin.log("Could not get hittable script from collider, transform: " + enemyColliders[i].transform.name);
-                        Plugin.log("collider: " + enemyColliders[i].collider.name);
+                        PlayerControllerB component;
+                        if (enemyColliders[i].transform.TryGetComponent<PlayerControllerB>(out component))
+                        {
+                            Plugin.log($"Hit enemy,");
+                            ulong targetPlayerID = component.playerClientId;
+                            if (component.transform.localScale.x == 1f && component.playerClientId != this.playerHeldBy.playerClientId)
+                            {
+                                //shrink the target player and also broadcast to other clients
+                                Shrinking.sendShrinkMessage(component.gameObject, 0.4f);
+                                Shrinking.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID);
+
+                                if (NetworkManager.Singleton.IsServer)
+                                    GrabbablePlayerList.setPlayerGrabbable(component.gameObject);
+                                else
+                                    Network.Broadcast("AddGrabbablePlayer", component.playerClientId.ToString());
+                            }
+                        }
+                        else
+                        {
+                            Plugin.log("Could not get hittable script from collider, transform: " + enemyColliders[i].transform.name);
+                            Plugin.log("collider: " + enemyColliders[i].collider.name);
+                        }
                     }
                 }
             }
-
         }
         public void RenderCoolBeam(Vector3 beamStartPos, Vector3 forward)
         {
@@ -298,7 +309,7 @@ namespace LCShrinkRay.comp
                 lineRenderer.numCapVertices = 6;
                 lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lineRenderer.receiveShadows = false;
-
+/*
                 try
                 {
                     LineRenderer pl = parentObject.GetComponent<LineRenderer>();
@@ -308,7 +319,7 @@ namespace LCShrinkRay.comp
                 catch (Exception e)
                 {
                     Plugin.log("Error in RenderCoolBeam: " + e);
-                }
+                }*/
 
                 //beam does not get deleted no more :)
                 Destroy(beamObject, beamDuration);

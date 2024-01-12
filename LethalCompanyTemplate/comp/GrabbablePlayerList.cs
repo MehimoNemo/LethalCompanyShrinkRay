@@ -133,11 +133,12 @@ namespace LCShrinkRay.comp
 
         public static void setPlayerGrabbable(GameObject playerObject)
         {
+            var pcb = playerObject.GetComponent<PlayerControllerB>();
             Plugin.log("Adding grabbable player: " + playerObject.ToString());
             var newObject = UnityEngine.Object.Instantiate(ShrinkRay.grabbablePlayerPrefab);
             newObject.GetComponent<NetworkObject>().Spawn();
             GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
-            var pcb = playerObject.GetComponent<PlayerControllerB>();
+            
             gpo.Initialize(pcb);
             grabbablePlayerObjects.Add(newObject);
 

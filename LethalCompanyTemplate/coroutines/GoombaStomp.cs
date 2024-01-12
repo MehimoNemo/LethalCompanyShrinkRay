@@ -13,7 +13,7 @@ namespace LCShrinkRay.coroutines
 
         public static void StartRoutine(GameObject playerObj)
         {
-            if (playerObj.transform.localScale.x < 0.5)
+            if (playerObj.transform.localScale.x < 1)
             {
                 var routine = playerObj.AddComponent<GoombaStomp>();
                 routine.playerObj = playerObj;
@@ -48,7 +48,7 @@ namespace LCShrinkRay.coroutines
 
                 playerObj.transform.localScale = new Vector3(stretchValue, scaleValue, stretchValue);
 
-                Plugin.log(playerObj.transform.localScale.ToString());
+                //Plugin.log(playerObj.transform.localScale.ToString());
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
