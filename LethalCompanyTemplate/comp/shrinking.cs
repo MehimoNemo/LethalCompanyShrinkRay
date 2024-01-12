@@ -127,13 +127,7 @@ namespace LCShrinkRay.comp
         public static void OnGoomba(ulong sender, string playerID)
         {
             Plugin.log("A goomba...... stompin' on player " + playerID);
-
-            // Check if the goomba coroutine is already running
-            if (!isGoombaCoroutineRunning)
-            {
-                coroutines.GoombaStomp.StartRoutine(PlayerHelper.GetPlayerObject(ulong.Parse(playerID)));
-                isGoombaCoroutineRunning = true;
-            }
+            coroutines.GoombaStomp.StartRoutine(PlayerHelper.GetPlayerObject(ulong.Parse(playerID)));
         }
 
         public void OnGoombaCoroutineComplete()
@@ -159,6 +153,9 @@ namespace LCShrinkRay.comp
             if (!ModConfig.Instance.values.jumpOnShrunkenPlayers || !PlayerHelper.isCurrentPlayerShrunk())
                 return;
 
+            if (isGoombaCoroutineRunning)
+                return;
+
             if(PlayerHelper.IsCurrentPlayerGrabbed())
             {
                 //Plugin.log("Apes together strong! Goomba impossible.");
@@ -178,6 +175,7 @@ namespace LCShrinkRay.comp
             Plugin.log("WE GETTING GOOMBAD");
             Network.Broadcast("OnGoomba", StartOfRound.Instance.localPlayerController.playerClientId.ToString());
             coroutines.GoombaStomp.StartRoutine(StartOfRound.Instance.localPlayerController.gameObject);
+            isGoombaCoroutineRunning = true;
         }
 
         public static void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
