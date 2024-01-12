@@ -25,7 +25,7 @@ namespace LCShrinkRay.patches
         {
             
             Plugin.log("STARTING PLAYER SELLING PATCH", Plugin.LogType.Error);
-            //isPlayerSelling = Config.ModConfig.Instance.values.sellablePlayers;
+            isPlayerSelling = Config.ModConfig.Instance.values.sellablePlayers;
             Plugin.log("isPlayerSelling: " + isPlayerSelling.ToString(), Plugin.LogType.Error);
         }
 
