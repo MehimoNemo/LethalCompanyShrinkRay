@@ -36,11 +36,15 @@ namespace LCShrinkRay.comp
 
             Plugin.log("SUSSIFYING VENTS");
 
-            var vents = UnityEngine.Object.FindObjectsOfType<EnemyVent>();
+            var vents = RoundManager.Instance.allEnemyVents;
             if (vents == null || vents.Length == 0)
             {
-                Plugin.log("No vents to sussify.");
-                return;
+                vents = UnityEngine.Object.FindObjectsOfType<EnemyVent>();
+                if (vents == null || vents.Length == 0)
+                {
+                    Plugin.log("No vents to sussify.");
+                    return;
+                }
             }
 
             GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
