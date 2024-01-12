@@ -158,7 +158,7 @@ namespace LCShrinkRay.comp
             return null;
         }
 
-        private bool isHoldingPlayer()
+        private bool GrabbedPlayerIsHoldingAnotherPlayer()
         {
             Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
             var item = grabbedPlayerCurrentItem();
@@ -167,8 +167,8 @@ namespace LCShrinkRay.comp
 
         public override void GrabItem()
         {
-            var holdingPlayer = isHoldingPlayer();
-            if (grabbedPlayer == playerHeldBy || (!ModConfig.Instance.values.friendlyFlight && holdingPlayer))
+            var isHoldingPlayer = GrabbedPlayerIsHoldingAnotherPlayer();
+            if (grabbedPlayer == playerHeldBy || (!ModConfig.Instance.values.friendlyFlight && isHoldingPlayer))
             {
                 Plugin.log("Unable to grab player " + grabbedPlayer.ToString());
                 playerHeldBy.DiscardHeldObject();
@@ -216,12 +216,13 @@ namespace LCShrinkRay.comp
         {
             HUDManager.Instance.ClearControlTips();
 
+            if (playerHeldBy == null)
+                return;
+
             Plugin.log("setControlTips");
             if (base.IsOwner)
             {
-                Plugin.log("IsOwner");
-                string[] toolTips = { "Throw player: LMB" };
-                HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, itemProperties);
+                HUDManager.Instance.ChangeControlTipMultiple(["Throw player: LMB"], holdingItem: true, itemProperties);
             }
             else if (!ModConfig.Instance.values.CanEscapeGrab)
                 return;
@@ -230,20 +231,12 @@ namespace LCShrinkRay.comp
                 var grabbedPlayerItem = grabbedPlayerCurrentItem();
                 if (grabbedPlayerItem != null) // only case that's not working so far!
                 {
-                    string[] toolTips = grabbedPlayerItem.itemProperties.toolTips;
-                    /*string test = "toolTips: ";
-                    for (int i = 0; i < toolTips.Length; i++)
-                        test += "\n" + toolTips[i];
-                    Plugin.log(test);*/
-
-                    toolTips.Append("Ungrab: JUMP");
-                    HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
+                    var toolTips = grabbedPlayerItem.itemProperties.toolTips.ToList();
+                    toolTips.Add("Ungrab : JUMP");
+                    HUDManager.Instance.ChangeControlTipMultiple(toolTips.ToArray(), holdingItem: true, grabbedPlayerItem.itemProperties);
                 }
                 else
-                {
-                    string[] toolTips = { "Ungrab: JUMP" };
-                    HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: false, itemProperties);
-                }
+                    HUDManager.Instance.ChangeControlTipMultiple(["Ungrab: JUMP"], holdingItem: false, itemProperties);
             }
         }
 
@@ -261,11 +254,7 @@ namespace LCShrinkRay.comp
 
             var grabbedPlayerItem = grabbedPlayerCurrentItem();
             if (grabbedPlayerItem != null)
-            {
-                string[] toolTips = grabbedPlayerItem.itemProperties.toolTips;
-                Plugin.log("tooltips: " + toolTips.ToString());
-                HUDManager.Instance.ChangeControlTipMultiple(toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
-            }
+                HUDManager.Instance.ChangeControlTipMultiple(grabbedPlayerItem.itemProperties.toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
         }
 
         public override void OnPlaceObject()
