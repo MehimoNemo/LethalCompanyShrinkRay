@@ -90,6 +90,7 @@ namespace LCShrinkRay.comp
             PhysicsProp.Destroy(grabbyPhysProp);
             UnityEngine.Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponent<PhysicsProp>());
             //-0.115 0.56 0.02
+            grabbyScript.itemProperties.isConductiveMetal = false;
             visScript.itemProperties.itemName = itemname;
             visScript.itemProperties.name = itemname;
             visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
