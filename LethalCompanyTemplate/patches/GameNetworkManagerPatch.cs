@@ -1,11 +1,13 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LC_API.Networking;
 using LCShrinkRay.comp;
 using LCShrinkRay.helper;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using static LCShrinkRay.comp.ShrinkRay;
 
 namespace LCShrinkRay.patches
 {
@@ -34,12 +36,18 @@ namespace LCShrinkRay.patches
             if (true)
             {
                 Plugin.log("EndOfGame host");
-                //reset players size, speed, pitch(if it doesn't reset naturally)
-                foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+                foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
                 {
-                    Shrinking.ShrinkPlayer(player.gameObject, 1, player.playerClientId);
-                    PlayerControllerBPatch.defaultsInitialized = false;
+                    if(PlayerHelper.isShrunk(player.gameObject))
+                    {
+                        OnRayHitPlayer(PlayerHelper.currentPlayer());
+                        Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Normalizing });
+                    }
                 }
+
+                //reset speed, pitch(if it doesn't reset naturally)
+                PlayerControllerBPatch.defaultsInitialized = false;
+                Vents.unsussifyAll();
             }
         }
     }

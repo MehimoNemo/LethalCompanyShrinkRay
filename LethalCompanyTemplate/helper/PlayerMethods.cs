@@ -46,6 +46,16 @@ namespace LCShrinkRay.helper
             return StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled).Select(pcb => pcb.gameObject).ToList();
         }
 
+        public static PlayerControllerB GetPlayerController(ulong playerID)
+        {
+            foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
+            {
+                if (pcb.playerClientId == playerID)
+                    return pcb;
+            }
+            return null;
+        }
+
         public static GameObject GetPlayerObject(ulong playerID)
         {
             string myPlayerObjectName = "Player";
@@ -53,6 +63,17 @@ namespace LCShrinkRay.helper
                 myPlayerObjectName = "Player (" + playerID.ToString() + ")";
 
             return GameObject.Find(myPlayerObjectName);
+        }
+
+        public static ulong? GetPlayerID(GameObject gameObject)
+        {
+            if (gameObject.name.Contains('('))
+            {
+                int startIndex = gameObject.name.IndexOf("(");
+                int endIndex = gameObject.name.IndexOf(")");
+                return ulong.Parse(gameObject.name.Substring(startIndex + 1, endIndex - startIndex - 1));
+            }
+            return null;
         }
 
         public static PlayerControllerB currentPlayer()

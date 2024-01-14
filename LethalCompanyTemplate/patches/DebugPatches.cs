@@ -1,18 +1,10 @@
 ﻿using HarmonyLib;
 using LC_API.Networking;
-using LCShrinkRay.comp;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using static LCShrinkRay.comp.Shrinking;
-using System.Threading.Tasks;
-using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem;
-using UnityEngine;
 using GameNetcodeStuff;
-using LCShrinkRay.coroutines;
-using UnityEngine.InputSystem.Utilities;
 using LCShrinkRay.helper;
+using static LCShrinkRay.comp.ShrinkRay;
 
 namespace LCShrinkRay.patches
 {
@@ -38,58 +30,6 @@ namespace LCShrinkRay.patches
             {
                 if (Keyboard.current.f1Key.wasPressedThisFrame)
                 {
-                    Plugin.log("Simulating fake broadcast");
-                    Network.Broadcast("OnShrinking", new ShrinkData() { playerObjName = "Player", shrinkage = 0.4f });
-                }
-
-                else if (Keyboard.current.f2Key.wasPressedThisFrame)
-                {
-                    Plugin.log("Shrinking player model");
-                    var playerObj = PlayerHelper.GetPlayerObject(PlayerHelper.currentPlayer().playerClientId);
-                    ShrinkPlayer(playerObj, 0.4f, PlayerHelper.currentPlayer().playerClientId);
-                    sendShrinkMessage(playerObj, 0.4f);
-                }
-
-                else if (Keyboard.current.f3Key.wasPressedThisFrame)
-                {
-                    Plugin.log("Growing player model");
-                    var playerObj = PlayerHelper.GetPlayerObject(PlayerHelper.currentPlayer().playerClientId);
-                    ShrinkPlayer(playerObj, 1f, PlayerHelper.currentPlayer().playerClientId);
-                    sendShrinkMessage(playerObj, 1f);
-                }
-
-                else if (Keyboard.current.f4Key.wasPressedThisFrame)
-                {
-                    for (int i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
-                    {
-                        string playerName = "Player (" + i.ToString() + ")";
-                        var playerObj = GameObject.Find(playerName);
-                        if (playerObj != null)
-                        {
-                            Plugin.log("Shrinking " + playerName + " model");
-                            ShrinkPlayer(playerObj, 0.4f, (ulong)i);
-                            sendShrinkMessage(playerObj, 0.4f);
-                        }
-                    }
-                }
-
-                else if (Keyboard.current.f5Key.wasPressedThisFrame)
-                {
-                    for (int i = 1; i < GameNetworkManager.Instance.connectedPlayers; i++)
-                    {
-                        string playerName = "Player (" + i.ToString() + ")";
-                        var playerObj = GameObject.Find(playerName);
-                        if (playerObj != null)
-                        {
-                            Plugin.log("Growing " + playerName + " model");
-                            ShrinkPlayer(playerObj, 1f, (ulong)i);
-                            sendShrinkMessage(playerObj, 1f);
-                        }
-                    }
-                }
-
-                else if (Keyboard.current.f6Key.wasPressedThisFrame)
-                {
                     string enemyTypes = "";
                     RoundManager.Instance.currentLevel.Enemies.ForEach(enemyType => { enemyTypes += " " + enemyType.enemyType.name; });
                     Plugin.log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
@@ -100,13 +40,41 @@ namespace LCShrinkRay.patches
                         var location = __instance.transform.position + __instance.transform.forward * 3;
                         RoundManager.Instance.SpawnEnemyOnServer(location, 0f, enemyIndex);
 
-                        /* I tried so hard and got so far, but in the end... there's still an errooooorrrrr
+                        // I tried so hard and got so far, but in the end... there's still an errooooorrrrr
+                    }
+                }
+                
+                else if (Keyboard.current.f2Key.wasPressedThisFrame)
+                {
+                    Plugin.log("Shrinking player model");
+                    OnRayHitPlayer(PlayerHelper.currentPlayer());
+                    Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Shrinking });
+                }
 
-                        var currentLevel = RoundManager.Instance.currentLevel;
-                        var enemyList = outsideEnemy ? currentLevel.OutsideEnemies : currentLevel.Enemies;
-                        var enemy = Instantiate(enemyList[enemyIndex].enemyType.enemyPrefab, pos, Quaternion.Euler(Vector3.zero));
-                        enemy.GetComponentInChildren<NetworkObject>().Spawn(true);*/
+                else if (Keyboard.current.f3Key.wasPressedThisFrame)
+                {
+                    Plugin.log("Growing player model");
+                    OnRayHitPlayer(PlayerHelper.currentPlayer());
+                    Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Growing });
+                }
 
+                else if (Keyboard.current.f4Key.wasPressedThisFrame)
+                {
+                    foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
+                    {
+                        Plugin.log("Shrinking Player (" + pcb.playerClientId + ")");
+                        OnRayHitPlayer(pcb);
+                        Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = pcb.playerClientId, modificationType = ModificationType.Shrinking });
+                    }
+                }
+
+                else if (Keyboard.current.f4Key.wasPressedThisFrame)
+                {
+                    foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
+                    {
+                        Plugin.log("Growing Player (" + pcb.playerClientId + ")");
+                        OnRayHitPlayer(pcb);
+                        Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = pcb.playerClientId, modificationType = ModificationType.Growing });
                     }
                 }
 

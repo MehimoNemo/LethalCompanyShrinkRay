@@ -85,41 +85,8 @@ namespace LCShrinkRay.comp
 
 
         // Multiplayer Networking
-        internal class ShrinkData
-        {
-            public string playerObjName { get; set; }
-            public float shrinkage { get; set; }
-        }
 
-        [NetworkMessage("OnShrinking")]
-        public static void OnShrinking(ulong sender, ShrinkData data)
-        {
-            GameObject msgObject;
-            try
-            {
-                msgObject = GameObject.Find(data.playerObjName);
-                Plugin.log("Found the gosh dang game object: \"" + msgObject + "\"!", Plugin.LogType.Warning);
-            }
-            catch (Exception e)
-            {
-                Plugin.log("Could not find the gosh dang game object named \"" + data.playerObjName + "\". Reason: " + e.Message, Plugin.LogType.Warning);
-                msgObject = null;
-            }
-            Plugin.log("Shrinkage: " + data.shrinkage);
-
-            ulong playerID = 0ul;
-            if (data.playerObjName.Contains('('))
-            {
-                int startIndex = data.playerObjName.IndexOf("(");
-                int endIndex = data.playerObjName.IndexOf(")");
-                playerID = ulong.Parse(data.playerObjName.Substring(startIndex + 1, endIndex - startIndex - 1));
-            }
-            Plugin.log("objPlayerNum: " + playerID.ToString());
-
-            //if object getting shrunk is us, let's shrink using playerShrinkAnimation
-            //else, just use object
-            ShrinkPlayer(msgObject, data.shrinkage, playerID);
-        }
+        
 
         private static bool isGoombaCoroutineRunning = false;
 
@@ -178,36 +145,6 @@ namespace LCShrinkRay.comp
             isGoombaCoroutineRunning = true;
         }
 
-        public static void ShrinkPlayer(GameObject msgObject, float msgShrinkage, ulong playerID)
-        {
-            //Todo Make this NOT awful and terrible
-            var clientID = GameNetworkManager.Instance.localPlayerController.playerClientId;
-            Plugin.log("OKAY HERE IS THE OBJECT TAG BELOW THIS LINE!!!!");
-            Plugin.log("Object tag is " + msgObject.tag);
-            Plugin.log("The client Id is: " + GameNetworkManager.Instance.localPlayerController.ToString());
-            Plugin.log("The object name is: " + msgObject.name);
-
-            if (msgObject.tag == "Player")
-            {
-                Plugin.log("Looks like it must be a player");
-                if (playerID == clientID || (!(msgObject.name.Contains("(")) && clientID == 0))
-                {
-                    Plugin.log("Looks like it must be us!)");
-                    //TODO: REPLACE WITH STORED REFERENCE
-                    PlayerShrinkAnimation(msgShrinkage, msgObject, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-
-                    Vents.SussifyAll();
-                }
-                else //if it's anyone or anything else, we don't care, just use ObjectShrink
-                {
-                    Plugin.log("Looks like it must be some random person....boring...");
-                    ObjectShrinkAnimation(msgShrinkage, msgObject);
-                }
-            }
-
-            //TODO: ADD NON-PLAYER SHRINKING
-        }
-
         public void SetPlayerPitch(float pitch, ulong playerID)
         {
             coroutines.SetPlayerPitch.StartRoutine(playerID, pitch);
@@ -215,12 +152,13 @@ namespace LCShrinkRay.comp
 
         public void Update()
         {
-            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController || PlayerCountChangeDetection.currentPlayerList == null)
+            var players = PlayerHelper.getAllPlayers();
+            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController || players == null)
                 return;
 
             CheckForGoomba();
 
-            foreach (GameObject player in PlayerCountChangeDetection.currentPlayerList)
+            foreach (GameObject player in players)
             {
                 //TODO: REPLACE WITH OBJECT REFERENCE
                 PlayerControllerB playerController = player.GetComponent<PlayerControllerB>();
@@ -326,27 +264,6 @@ namespace LCShrinkRay.comp
             return alteredGrabbedItems.Where(item => item.itemProperties.itemId == itemId).Any();
         }
 
-        public static void sendShrinkMessage(GameObject shrinkObject, float shrinkage)
-        {
-            //This turns the object into a searchable string
-            int endIndex = shrinkObject.ToString().LastIndexOf('(') - 1;
-            string playerObjName = shrinkObject.ToString().Substring(0, endIndex);
-            Plugin.log("Sending message that an object is shrinking! Object: \"" + playerObjName + "\" Shrinkage: " + shrinkage);
-
-            Network.Broadcast("OnShrinking", new ShrinkData() { playerObjName = playerObjName, shrinkage = shrinkage });
-        }
-
-        //object shrink animation infrastructure!
-        public static void ObjectShrinkAnimation(float shrinkAmt, GameObject playerObj)
-        {
-            Plugin.log("LOOKS GOOD SENDING IT TO THE COROUTINE!!!!!", Plugin.LogType.Warning);
-            coroutines.ObjectShrinkAnimation.StartRoutine(playerObj, shrinkAmt);
-        }
-
-        //Player Shrink animation, shrinks a player over a sinusoidal curve for a duration. Requires the player and mask transforms.
-        public static void PlayerShrinkAnimation(float shrinkAmt, GameObject playerObj, Transform maskTransform)
-        {
-            coroutines.PlayerShrinkAnimation.StartRoutine(playerObj, shrinkAmt, maskTransform);
-        }
+        
     }
 }

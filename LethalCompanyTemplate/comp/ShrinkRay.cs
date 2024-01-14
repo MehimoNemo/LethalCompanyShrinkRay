@@ -9,6 +9,10 @@ using System.IO;
 using System.Reflection;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
+using static LCShrinkRay.comp.Shrinking;
+using System.Runtime.InteropServices;
+using System.ComponentModel;
+using static LCShrinkRay.comp.ShrinkRay;
 
 namespace LCShrinkRay.comp
 {
@@ -17,7 +21,6 @@ namespace LCShrinkRay.comp
         public const string itemname = "Shrink Ray";
 
         private PlayerControllerB previousPlayerHeldBy;
-        private RaycastHit[] enemyColliders;
         GameObject beamObject;
         LineRenderer lineRenderer;
 
@@ -28,6 +31,11 @@ namespace LCShrinkRay.comp
         //private Color beamColor = Color.blue;
 
         public static GameObject grabbablePlayerPrefab;
+        internal class HitObjectData
+        {
+            public string objectName { get; set; }
+            public float newSize { get; set; }
+        }
 
 
         public override void Start()
@@ -35,7 +43,6 @@ namespace LCShrinkRay.comp
             base.Start();
             this.itemProperties.requiresBattery = false;
             this.useCooldown = 0.5f;
-            enemyColliders = new RaycastHit[10];
             Plugin.log("STARTING SHRINKRAY");
 
             beamMaterial = new Material(Shader.Find("HDRP/Unlit"));
@@ -114,10 +121,9 @@ namespace LCShrinkRay.comp
             {
                 Plugin.log("Triggering " + itemname);
                 base.ItemActivate(used, buttonDown);
+
                 if (beamObject == null || beamObject.gameObject == null)
-                {
                     ShootRayAndSync();
-                }
             }
             catch (Exception e) {
                 Plugin.log("Error while shooting ray: " + e.Message);
@@ -125,7 +131,6 @@ namespace LCShrinkRay.comp
         }
 
         public float duration = 0.6f;
-
         private float elapsedTime = 0f;
 
         public Color startColor = Color.blue;
@@ -137,7 +142,7 @@ namespace LCShrinkRay.comp
 
             //if beam exists
             try
-            {
+            { // todo: move to coroutine
                 if (beamObject != null && lineRenderer != null && this.playerHeldBy != null && this.playerHeldBy.gameplayCamera != null)
                 {
                     Transform transform = this.playerHeldBy.gameplayCamera.transform;
@@ -194,13 +199,10 @@ namespace LCShrinkRay.comp
 
         public void ShootRayAndSync()
         {
-            Transform transform = this.playerHeldBy.gameplayCamera.transform;
+            var transform = playerHeldBy.gameplayCamera.transform;
             
-            Vector3 beamStartPos;
-            Vector3 forward;
-
-            beamStartPos = transform.position - transform.up * 0.1f;
-            forward = transform.forward;
+            var beamStartPos = transform.position - transform.up * 0.1f;
+            var forward = transform.forward;
             forward = forward * beamLength + beamStartPos;
 
             //offset the ding dang beam a lil to the right 
@@ -211,32 +213,19 @@ namespace LCShrinkRay.comp
             beamStartPos += transform.forward * 1.3f;
             forward += transform.forward * 1.3f;
 
-
-            Plugin.log(beamStartPos.ToString());
-            Plugin.log((beamStartPos + forward * beamLength).ToString());
-
             Plugin.log("Calling shoot gun....");
             ShootRay(beamStartPos, forward);
-            Plugin.log("Calling shoot gun and sync");
         }
 
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(Vector3 beamStartPos, Vector3 forward)
         {
             Plugin.log("shootingggggg");
-            try
-            {
-                RenderCoolBeam(beamStartPos, beamStartPos + forward * beamLength);
-            }
-            catch (Exception e) {
-                Plugin.log(e.ToString());
-            }
+            RenderCoolBeam(beamStartPos, beamStartPos + forward * beamLength);
+
             if (PlayerHelper.currentPlayer().playerClientId == playerHeldBy.playerClientId)
             {
-                if (enemyColliders == null)
-                {
-                    enemyColliders = new RaycastHit[10];
-                }
+                var enemyColliders = new RaycastHit[10];
 
                 Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
 
@@ -250,80 +239,142 @@ namespace LCShrinkRay.comp
                     {
                         Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
                         Debug.DrawLine(beamStartPos, enemyColliders[i].point, Color.cyan, 15f);
-                        Plugin.log("Raycast hit wall");
+                        Plugin.log("Raycast hit wall :c");
                     }
                     else
-                    {
-                        PlayerControllerB component;
-                        if (enemyColliders[i].transform.TryGetComponent<PlayerControllerB>(out component))
-                        {
-                            Plugin.log($"Hit enemy,");
-                            ulong targetPlayerID = component.playerClientId;
-                            if (component.transform.localScale.x == 1f && component.playerClientId != this.playerHeldBy.playerClientId)
-                            {
-                                //shrink the target player and also broadcast to other clients
-                                Shrinking.sendShrinkMessage(component.gameObject, 0.4f);
-                                Shrinking.ShrinkPlayer(component.gameObject, 0.4f, targetPlayerID);
-
-                                if (NetworkManager.Singleton.IsServer)
-                                    GrabbablePlayerList.setPlayerGrabbable(component.gameObject);
-                                else
-                                    Network.Broadcast("AddGrabbablePlayer", component.playerClientId.ToString());
-                            }
-                        }
-                        else
-                        {
-                            Plugin.log("Could not get hittable script from collider, transform: " + enemyColliders[i].transform.name);
-                            Plugin.log("collider: " + enemyColliders[i].collider.name);
-                        }
-                    }
+                        OnRayHit(enemyColliders[i]);
                 }
             }
         }
+
+        private void OnRayHit(RaycastHit hit)
+        {
+            if (hit.transform.TryGetComponent<PlayerControllerB>(out PlayerControllerB component))
+            {
+                Plugin.log($"Ray has hit player " + component.playerClientId);
+                if (component.transform.localScale.x == 1f && component.playerClientId != this.playerHeldBy.playerClientId)
+                {
+                    OnRayHitPlayer(component);
+                    Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = component.playerClientId, modificationType = ModificationType.Shrinking });
+                }
+            }
+            else
+            {
+                Plugin.log("Could not get hittable script from collider, transform: " + hit.transform.name);
+                Plugin.log("collider: " + hit.collider.name);
+            }
+        }
+        internal enum ModificationType
+        {
+            Normalizing,
+            Shrinking,
+            Growing
+        }
+
+        // ------ Ray hitting Player ------
+        public static float NextShrunkenSizeOf(GameObject targetObject)
+        {
+            return 0.4f;
+        }
+
+        public static float NextIncreasedSizeOf(GameObject targetObject)
+        {
+            return 1f; // wip
+        }
+
+        internal class PlayerHitData
+        {
+            public ulong playerID { get; set; }
+            public ModificationType modificationType { get; set; }
+        }
+
+        [NetworkMessage("OnRayHitPlayerSync")]
+        public static void OnRayHitPlayerSync(ulong sender, PlayerHitData targetPlayerData)
+        {
+            var targetPlayer = PlayerHelper.GetPlayerController(targetPlayerData.playerID);
+            if (targetPlayer == null)
+                return;
+
+            OnRayHitPlayer(targetPlayer, targetPlayerData.modificationType);
+        }
+
+        public static void OnRayHitPlayer(PlayerControllerB targetPlayer, ModificationType modificationType = ModificationType.Shrinking)
+        {
+            var targetingUs = targetPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId;
+            Plugin.log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
+
+            switch (modificationType)
+            {
+                case ModificationType.Normalizing: case ModificationType.Shrinking: case ModificationType.Growing: // todo: seperate ModificationType.Normalizing
+                    {
+                    var newSize = modificationType == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer.gameObject) : NextIncreasedSizeOf(targetPlayer.gameObject);
+                    if (newSize == targetPlayer.gameObject.transform.localScale.x)
+                            return; // Well, nothing changed..
+
+                    if (targetingUs)
+                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                    else
+                        coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
+
+                    if (NetworkManager.Singleton.IsServer)
+                    {
+                        if(modificationType == ModificationType.Shrinking) // todo: make this if() safer for future cases
+                            GrabbablePlayerList.setPlayerGrabbable(targetPlayer.gameObject);
+                        // todo: remove grabbable if >= 1f
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        //Player Shrink animation, shrinks a player over a sinusoidal curve for a duration. Requires the player and mask transforms.
+        public static void changeCurrentPlayerSize(float shrinkAmt, GameObject playerObj, Transform maskTransform)
+        {
+        }
+
+        // ------ Ray hitting Object ------
+        public static void OnRayHitObject(GameObject targetObject)
+        {
+            // wip
+        }
+
         public void RenderCoolBeam(Vector3 beamStartPos, Vector3 forward)
         {
             Plugin.log("trying to render cool beam");
             Plugin.log("parent is: " + parentObject.gameObject.name);
-            
-            
-            if (parentObject.transform.Find("Beam") == null && beamMaterial != null)
+
+            try
             {
-                Plugin.log("trying to create beam object");
-                beamObject = new GameObject("Beam");
-                Plugin.log("Before creating LineRenderer");
-                lineRenderer = beamObject.AddComponent<LineRenderer>();
-                Plugin.log("After creating LineRenderer");
-                //beamObject.transform.parent = transform;
-                lineRenderer.material = beamMaterial;
-                lineRenderer.startWidth = beamWidth;
-                lineRenderer.endWidth = beamWidth*16;
-                lineRenderer.endColor = new Color(0, 0.5f, 0.5f, 0.5f);
-                //lineRenderer.material.color = new Color(0f, 0f, 1f, 1f); // Adjust alpha as needed
-                lineRenderer.material.renderQueue = 2500; // Adjust as needed
-
-                Plugin.log("Adding line renderer");
-
-                //Vector3 beamEndPosition = beamStartPos + forward * beamLength;
-                lineRenderer.SetPosition(0, beamStartPos);
-                lineRenderer.SetPosition(1, forward);
-                lineRenderer.enabled = true;
-                lineRenderer.numCapVertices = 6;
-                lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                lineRenderer.receiveShadows = false;
-/*
-                try
+                if (parentObject.transform.Find("Beam") == null && beamMaterial != null)
                 {
-                    LineRenderer pl = parentObject.GetComponent<LineRenderer>();
-                    pl.startColor = new Color(0, 0, 0, 0);
-                    pl.endColor = new Color(0, 0, 0, 0);
+                    Plugin.log("trying to create beam object");
+                    beamObject = new GameObject("Beam");
+                    Plugin.log("Before creating LineRenderer");
+                    lineRenderer = beamObject.AddComponent<LineRenderer>();
+                    Plugin.log("After creating LineRenderer");
+                    lineRenderer.material = beamMaterial;
+                    lineRenderer.startWidth = beamWidth;
+                    lineRenderer.endWidth = beamWidth * 16;
+                    lineRenderer.endColor = new Color(0, 0.5f, 0.5f, 0.5f);
+                    lineRenderer.material.renderQueue = 2500; // Adjust as needed
+
+                    Plugin.log("Adding line renderer");
+                    lineRenderer.SetPosition(0, beamStartPos);
+                    lineRenderer.SetPosition(1, forward);
+                    lineRenderer.enabled = true;
+                    lineRenderer.numCapVertices = 6;
+                    lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    lineRenderer.receiveShadows = false;
+
+                    Destroy(beamObject, beamDuration);
                 }
-                catch (Exception e)
-                {
-                    Plugin.log("Error in RenderCoolBeam: " + e);
-                }*/
-
-                //beam does not get deleted no more :)
-                Destroy(beamObject, beamDuration);
+            }
+            catch(Exception e)
+            {
+                Plugin.log("Rendern't.. maybe it was " + e.Message);
             }
         }
 
