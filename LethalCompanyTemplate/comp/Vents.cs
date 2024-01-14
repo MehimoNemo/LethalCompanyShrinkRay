@@ -122,6 +122,7 @@ namespace LCShrinkRay.comp
         // when unshrinking will be a thing
         public static void unsussifyAll()
         {
+            return;
             foreach (var vent in getAllVents())
                 unsussify(vent);
 

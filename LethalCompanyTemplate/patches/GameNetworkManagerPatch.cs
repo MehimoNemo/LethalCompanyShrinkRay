@@ -40,8 +40,8 @@ namespace LCShrinkRay.patches
                 {
                     if(PlayerHelper.isShrunk(player.gameObject))
                     {
-                        OnRayHitPlayer(PlayerHelper.currentPlayer());
-                        Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Normalizing });
+                        OnPlayerModification(PlayerHelper.currentPlayer(), ModificationType.Normalizing);
+                        Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Normalizing });
                     }
                 }
 

@@ -11,14 +11,14 @@ namespace LCShrinkRay.coroutines
     {
         public GameObject playerObj { get; private set; }
 
-        public static void StartRoutine(GameObject playerObj, float shrinkAmt, Transform maskTransform)
+        public static void StartRoutine(GameObject playerObj, float newSize, Transform maskTransform)
         {
             var routine = playerObj.AddComponent<PlayerShrinkAnimation>();
             routine.playerObj = playerObj;
-            routine.StartCoroutine(routine.run(shrinkAmt, maskTransform));
+            routine.StartCoroutine(routine.run(newSize, maskTransform));
         }
 
-        private IEnumerator run(float shrinkAmt, Transform maskTransform)
+        private IEnumerator run(float newSize, Transform maskTransform)
         {
             Shrinking.Instance.playerTransform = playerObj.GetComponent<Transform>();
             //TODO: REPLACE WITH STORED REFERENCE
@@ -27,55 +27,57 @@ namespace LCShrinkRay.coroutines
             Transform armTransform = Shrinking.Instance.playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
             float duration = 2f;
             float elapsedTime = 0f;
-            float shrinkage = 1f;
+            float currentSize = playerObj.transform.localScale.x;
 
-            while (elapsedTime < duration && shrinkage > shrinkAmt)
+            var modificationType = newSize < currentSize ? ShrinkRay.ModificationType.Shrinking : ShrinkRay.ModificationType.Enlarging;
+
+            while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
             {
                 //shrinkage = -(Mathf.Pow(elapsedTime / duration, 3) - (elapsedTime / duration) * amplitude * Mathf.Sin((elapsedTime / duration) * Mathf.PI)) + 1f;
-                shrinkage = (float)(0.58 * Math.Sin((4 * elapsedTime / duration) + 0.81) + 0.58);
+                currentSize = (float)(0.58 * Math.Sin((4 * elapsedTime / duration) + 0.81) + 0.58);
                 //mls.LogFatal(shrinkage);
-                Shrinking.Instance.playerTransform.localScale = new Vector3(shrinkage, shrinkage, shrinkage);
-                maskTransform.localScale = CalcMaskScaleVec(shrinkage);
-                maskTransform.localPosition = CalcMaskPosVec(shrinkage);
-                armTransform.localScale = CalcArmScale(shrinkage);
+                Shrinking.Instance.playerTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
+                maskTransform.localScale = CalcMaskScaleVec(currentSize);
+                maskTransform.localPosition = CalcMaskPosVec(currentSize);
+                armTransform.localScale = CalcArmScale(currentSize);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
             }
 
             // Ensure final scale is set to the desired value
-            Shrinking.Instance.playerTransform.localScale = new Vector3(shrinkAmt, shrinkAmt, shrinkAmt);
-            maskTransform.localScale = CalcMaskScaleVec(shrinkAmt);
-            maskTransform.localPosition = CalcMaskPosVec(shrinkAmt);
-            armTransform.localScale = CalcArmScale(shrinkAmt);
+            Shrinking.Instance.playerTransform.localScale = new Vector3(newSize, newSize, newSize);
+            maskTransform.localScale = CalcMaskScaleVec(newSize);
+            maskTransform.localPosition = CalcMaskPosVec(newSize);
+            armTransform.localScale = CalcArmScale(newSize);
             Shrinking.Instance.updatePitch();
         }
-        private Vector3 CalcMaskPosVec(float shrinkScale)
+        private Vector3 CalcMaskPosVec(float scale)
         {
             Vector3 pos;
             float x = 0;
-            float y = 0.00375f * shrinkScale + 0.05425f;
-            float z = 0.005f * shrinkScale - 0.279f;
+            float y = 0.00375f * scale + 0.05425f;
+            float z = 0.005f * scale - 0.279f;
             pos = new Vector3(x, y, z);
             return pos;
         }
 
-        private Vector3 CalcMaskScaleVec(float shrinkScale)
+        private Vector3 CalcMaskScaleVec(float scale)
         {
             Vector3 pos;
-            float x = 0.277f * shrinkScale + 0.2546f;
-            float y = 0.2645f * shrinkScale + 0.267f;
-            float z = 0.177f * shrinkScale + 0.3546f;
+            float x = 0.277f * scale + 0.2546f;
+            float y = 0.2645f * scale + 0.267f;
+            float z = 0.177f * scale + 0.3546f;
             pos = new Vector3(x, y, z);
             return pos;
         }
 
-        private Vector3 CalcArmScale(float shrinkScale)
+        private Vector3 CalcArmScale(float scale)
         {
             Vector3 pos;
-            float x = 0.35f * shrinkScale + 0.58f;
-            float y = -0.0625f * shrinkScale + 1.0625f;
-            float z = -0.125f * shrinkScale + 1.15f;
+            float x = 0.35f * scale  + 0.58f;
+            float y = -0.0625f * scale + 1.0625f;
+            float z = -0.125f * scale + 1.15f;
             pos = new Vector3(x, y, z);
             return pos;
         }

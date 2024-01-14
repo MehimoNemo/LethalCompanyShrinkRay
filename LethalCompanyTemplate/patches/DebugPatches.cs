@@ -47,15 +47,15 @@ namespace LCShrinkRay.patches
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
                     Plugin.log("Shrinking player model");
-                    OnRayHitPlayer(PlayerHelper.currentPlayer());
-                    Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Shrinking });
+                    OnPlayerModification(PlayerHelper.currentPlayer(), ModificationType.Shrinking);
+                    Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Shrinking });
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
                     Plugin.log("Growing player model");
-                    OnRayHitPlayer(PlayerHelper.currentPlayer());
-                    Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Growing });
+                    OnPlayerModification(PlayerHelper.currentPlayer(), ModificationType.Enlarging);
+                    Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Enlarging });
                 }
 
                 else if (Keyboard.current.f4Key.wasPressedThisFrame)
@@ -63,8 +63,8 @@ namespace LCShrinkRay.patches
                     foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
                     {
                         Plugin.log("Shrinking Player (" + pcb.playerClientId + ")");
-                        OnRayHitPlayer(pcb);
-                        Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = pcb.playerClientId, modificationType = ModificationType.Shrinking });
+                        OnPlayerModification(pcb, ModificationType.Shrinking);
+                        Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = pcb.playerClientId, modificationType = ModificationType.Shrinking });
                     }
                 }
 
@@ -73,8 +73,8 @@ namespace LCShrinkRay.patches
                     foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
                     {
                         Plugin.log("Growing Player (" + pcb.playerClientId + ")");
-                        OnRayHitPlayer(pcb);
-                        Network.Broadcast("OnRayHitPlayerSync", new PlayerHitData() { playerID = pcb.playerClientId, modificationType = ModificationType.Growing });
+                        OnPlayerModification(pcb, ModificationType.Enlarging);
+                        Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = pcb.playerClientId, modificationType = ModificationType.Enlarging });
                     }
                 }
 
