@@ -31,7 +31,7 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            SetPlayerGrabbable(pcb);
+            SetPlayerGrabbableServer(pcb);
         }
 
         // ---- Helper ----
@@ -45,14 +45,9 @@ namespace LCShrinkRay.comp
             return JsonConvert.DeserializeObject<List<(ulong, ulong)>>(jsonString);
         }
 
-        public static GrabbablePlayerObject findGrabbableObjectForPlayer(PlayerControllerB pcb)
-        {
-            return findGrabbableObjectForPlayer(pcb.playerClientId);
-        }
-
         public static GrabbablePlayerObject findGrabbableObjectForPlayer(ulong playerID)
         {
-            foreach(var gpo in GameObject.FindObjectsOfType<GrabbablePlayerObject>())
+            foreach (var gpo in GameObject.FindObjectsOfType<GrabbablePlayerObject>())
             {
                 if (gpo == null || gpo.grabbedPlayer == null)
                     continue;
@@ -63,7 +58,25 @@ namespace LCShrinkRay.comp
             return null;
         }
 
-		// Networking
+        private static GrabbablePlayerObject findGrabbableObjectWithNetworkID(ulong networkID)
+        {
+            Plugin.log("we're looking for network id: " + networkID);
+            foreach (var gpo in GameObject.FindObjectsOfType<GrabbablePlayerObject>())
+            {
+                Plugin.log("found one grabbable object..");
+                if (gpo == null)
+                    continue;
+
+                ulong id = gpo.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+                Plugin.log("has network id: " + id);
+
+                if (id == networkID)
+                    return gpo;
+            }
+            return null;
+        }
+
+        // Networking
 
         internal class GrabbablePlayerListSyncData
         {
@@ -115,30 +128,32 @@ namespace LCShrinkRay.comp
         }
 
         // Added grabbable player
-        public static void BroadcastGrabbedPlayerObjectAdded(GameObject bindingObject, ulong? singleReceiver = null) // todo: no broadcast if only one receiver
+
+        internal class NetworkObjectPlayerConnection
+        {
+            public ulong networkObjectID { get; set; }
+            public ulong playerID { get; set; }
+        }
+
+        public static void BroadcastGrabbedPlayerObjectAdded(ulong networkObjectID, ulong playerID) // todo: no broadcast if only one receiver
         {
             Plugin.log("BroadcastGrabbedPlayerObjectAdded");
-            ulong clientId = bindingObject.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
-            ulong networkId = bindingObject.GetComponent<NetworkObject>().NetworkObjectId;
 
-            Network.Broadcast("AddedGrabbablePlayerSync", clientId.ToString());
+            Network.Broadcast("AddedGrabbablePlayerSync", new NetworkObjectPlayerConnection() { networkObjectID = networkObjectID, playerID = playerID });
         }
 
         [NetworkMessage("AddedGrabbablePlayerSync")]
-        public static void AddedGrabbablePlayerSync(ulong sender, string playerID)
+        public static void AddedGrabbablePlayerSync(ulong sender, NetworkObjectPlayerConnection data)
         {
             Plugin.log("AddedGrabbablePlayerSync");
-            SetPlayerGrabbable(PlayerHelper.GetPlayerController(ulong.Parse(playerID)));
+            SetPlayerGrabbableClient(data.playerID, data.networkObjectID);
         }
 
         // Removed grabbable player
-        public static void BroadcastGrabbedPlayerObjectRemoved(GameObject bindingObject, ulong? singleReceiver = null) // todo: no broadcast if only one receiver
+        public static void BroadcastGrabbedPlayerObjectRemoved(ulong playerID) // todo: no broadcast if only one receiver
         {
             Plugin.log("BroadcastGrabbedPlayerObjectRemoved");
-            ulong clientId = bindingObject.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
-            ulong networkId = bindingObject.GetComponent<NetworkObject>().NetworkObjectId;
-
-            Network.Broadcast("RemovedGrabbablePlayerSync", clientId.ToString());
+            Network.Broadcast("RemovedGrabbablePlayerSync", playerID.ToString());
         }
 
         [NetworkMessage("RemovedGrabbablePlayerSync")]
@@ -157,21 +172,38 @@ namespace LCShrinkRay.comp
             grabbablePlayerObjects.Clear();
         }
 
-        public static void SetPlayerGrabbable(PlayerControllerB pcb, bool onlyLocal = false)
+        public static void SetPlayerGrabbableServer(PlayerControllerB pcb, bool onlyLocal = false)
         {
-            if (!PlayerHelper.isHost())
-                return;
-
             Plugin.log("Adding grabbable player: " + pcb.gameObject.ToString());
             var newObject = UnityEngine.Object.Instantiate(ShrinkRay.grabbablePlayerPrefab);
-            newObject.GetComponent<NetworkObject>().Spawn();
+            var networkObj = newObject.GetComponent<NetworkObject>();
+            networkObj.Spawn();
             GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
-            
+
             gpo.Initialize(pcb);
             grabbablePlayerObjects.Add(newObject);
 
             if (!onlyLocal) // Let everyone know
-                BroadcastGrabbedPlayerObjectAdded(newObject);
+                BroadcastGrabbedPlayerObjectAdded(networkObj.NetworkObjectId, pcb.playerClientId);
+        }
+
+        public static void SetPlayerGrabbableClient(ulong playerID, ulong networkObjectID)
+        {
+            var pcb = PlayerHelper.GetPlayerController(playerID);
+            if(pcb == null)
+            {
+                Plugin.log("Unable to find Player (" + playerID + ")");
+                return;
+            }
+
+            var gpo = findGrabbableObjectWithNetworkID(networkObjectID);
+            if (gpo == null)
+            {
+                Plugin.log("Unable to find grabbablePlayerObject for Player (" + pcb.playerClientId + ")");
+                return;
+            }
+
+            gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb);
         }
 
         public static void RemoveAllPlayerGrabbables(bool onlyLocal = false)
@@ -209,12 +241,17 @@ namespace LCShrinkRay.comp
             if(bindingObject == null) return;
 
             Plugin.log("RemovePlayerGrabbable");
-            if (!onlyLocal) // Let everyone know
-                BroadcastGrabbedPlayerObjectRemoved(bindingObject);
 
-            var gpo = bindingObject.GetComponent<GrabbablePlayerObject>();
-            if (gpo != null)
-                UnityEngine.Object.Destroy(gpo);
+            if (!bindingObject.TryGetComponent(out GrabbablePlayerObject gpo))
+            {
+                Plugin.log("Unable to get GrabbablePlayerObject component.");
+                return;
+            }
+
+            if (!onlyLocal && gpo.grabbedPlayer != null) // Let everyone know
+                BroadcastGrabbedPlayerObjectRemoved(gpo.grabbedPlayer.playerClientId);
+
+            UnityEngine.Object.Destroy(gpo);
 
             if (bindingObject != null)
                 UnityEngine.Object.Destroy(bindingObject);

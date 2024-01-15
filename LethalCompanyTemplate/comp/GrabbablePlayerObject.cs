@@ -152,6 +152,12 @@ namespace LCShrinkRay.comp
 
         private GrabbableObject grabbedPlayerCurrentItem()
         {
+            if (grabbedPlayer == null)
+            {
+                Plugin.log("GrabbedPlayer is null?!", Plugin.LogType.Error);
+                return null;
+            }
+
             if (grabbedPlayer.isHoldingObject && grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot] != null)
                 return grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot];
 
