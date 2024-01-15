@@ -368,6 +368,12 @@ namespace LCShrinkRay.comp
 
         public static void OnPlayerModification(PlayerControllerB targetPlayer, ModificationType type)
         {
+            if (targetPlayer == null || targetPlayer.gameObject == null || targetPlayer.gameObject.transform == null)
+            {
+                Plugin.log("Ay.. that's not a valid player somehow..");
+                return;
+            }
+
             var targetingUs = targetPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId;
             Plugin.log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
 
@@ -400,7 +406,7 @@ namespace LCShrinkRay.comp
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
-                        if (newSize <= 0 && targetPlayer.AllowPlayerDeath())
+                        if (newSize <= 0 && !targetPlayer.AllowPlayerDeath())
                             return; // Can't shrink players to death in ship phase
 
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
