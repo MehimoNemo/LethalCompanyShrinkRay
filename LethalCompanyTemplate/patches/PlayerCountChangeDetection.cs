@@ -49,7 +49,7 @@ namespace LCShrinkRay.patches
         public static void OnDisconnect()
         {
             Plugin.log("We disconnected!");
-            GrabbablePlayerList.RemoveAllPlayerGrabbables();
+            GrabbablePlayerList.RemoveAllPlayerGrabbables(onlyLocal: true); // a clean up of all player grabbables that somehow survived
             return;
         }
 

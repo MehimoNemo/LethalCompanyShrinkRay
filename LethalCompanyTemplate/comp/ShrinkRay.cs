@@ -263,9 +263,7 @@ namespace LCShrinkRay.comp
 
         private void RenderRayBeam(Vector3 beamStartPos, Vector3 forward, ModificationType type)
         {
-            Plugin.log("trying to render cool beam");
-            Plugin.log("parent is: " + parentObject.gameObject.name);
-
+            Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
             try
             {
                 if (parentObject.transform.Find("Beam") != null || beamMaterial == null)
@@ -281,8 +279,6 @@ namespace LCShrinkRay.comp
                 lineRenderer.endWidth = beamWidth * 16;
                 lineRenderer.endColor = new Color(0, 0.5f, 0.5f, 0.5f);
                 lineRenderer.material.renderQueue = 2500; // Adjust as needed
-
-                Plugin.log("Adding line renderer");
                 lineRenderer.SetPosition(0, beamStartPos);
                 lineRenderer.SetPosition(1, forward);
                 lineRenderer.enabled = true;
@@ -378,25 +374,29 @@ namespace LCShrinkRay.comp
             switch (type)
             {
                 case ModificationType.Normalizing:
-                {
-                    var newSize = 1f;
-                    if (newSize != targetPlayer.gameObject.transform.localScale.x)
                     {
-                        Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
-                        if (targetingUs)
-                            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                        else
-                            coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
-                    }
+                        Plugin.log("Normalizing..");
+                        var newSize = 1f;
+                        if (newSize != targetPlayer.gameObject.transform.localScale.x)
+                        {
+                            Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
+                            if (targetingUs)
+                                coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                            else
+                                coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
+                        }
 
-                    if(targetingUs)
-                        Vents.unsussifyAll();
-                    break;
-                }
+                        GrabbablePlayerList.RemovePlayerGrabbableIfExists(targetPlayer);
+
+                        if (targetingUs)
+                            Vents.unsussifyAll();
+                        break;
+                    }
 
                 case ModificationType.Shrinking:
                     {
                         var newSize = NextShrunkenSizeOf(targetPlayer.gameObject);
+                        Plugin.log("Shrinking to size " + newSize);
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
@@ -407,23 +407,25 @@ namespace LCShrinkRay.comp
                         if (targetingUs)
                             coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>(), () =>
                             {
-                                if(newSize <= 0f)
+                                if (newSize <= 0f)
                                     targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
                             });
                         else
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
-                        if (NetworkManager.Singleton.IsServer) // todo: create a mechanism that only allows larger players to grab small ones
+                        if (PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
                             GrabbablePlayerList.SetPlayerGrabbable(targetPlayer);
 
                         if (targetingUs)
                             Vents.SussifyAll();
+
                         break;
                     }
 
                 case ModificationType.Enlarging:
                     {
                         var newSize = NextIncreasedSizeOf(targetPlayer.gameObject);
+                        Plugin.log("Enlarging to size " + newSize);
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
@@ -433,11 +435,12 @@ namespace LCShrinkRay.comp
                         else
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
-                        /*if (NetworkManager.Singleton.IsServer) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.setPlayerUngrabbable(targetPlayer.gameObject);*/
+                        if (newSize >= 1f) // todo: create a mechanism that only allows larger players to grab small ones
+                            GrabbablePlayerList.RemovePlayerGrabbableIfExists(targetPlayer);
 
                         if (targetingUs)
                             Vents.unsussifyAll();
+
                         break;
                     }
                 default:

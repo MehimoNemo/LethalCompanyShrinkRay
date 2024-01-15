@@ -83,13 +83,14 @@ namespace LCShrinkRay.helper
 
         public static float currentPlayerScale()
         {
-            if (!currentPlayer() || !currentPlayer().gameObject)
+            var player = currentPlayer();
+            if (!player || !player.gameObject)
             {
                 Plugin.log("unable to retrieve currentPlayerScale!");
                 return 1f;
             }
 
-            return currentPlayer().gameObject.transform.localScale.x;
+            return player.gameObject.transform.localScale.x;
         }
 
         public static bool isShrunk(GameObject playerObject)
@@ -100,6 +101,6 @@ namespace LCShrinkRay.helper
             return isShrunk(playerObject.transform.localScale.x);
         }
         public static bool isCurrentPlayerShrunk() { return isShrunk(currentPlayerScale()); }
-        public static bool isShrunk(float size) { return size < 1f; }
+        public static bool isShrunk(float size) { return size < 0.9f; } // used 1f here, which lead to weird behaviour. added 0.1f tolerance
     }
 }

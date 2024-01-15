@@ -9,6 +9,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using GameNetcodeStuff;
 using static UnityEngine.InputSystem.InputRemoting;
+using LCShrinkRay.helper;
 
 namespace LCShrinkRay.Config
 {
@@ -116,7 +117,7 @@ namespace LCShrinkRay.Config
             [HarmonyPostfix]
             public static void Initialize()
             {
-                if (NetworkManager.Singleton.IsServer)
+                if (PlayerHelper.isHost())
                 {
                     Plugin.log("Current player is the host.");
                     NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_HostConfigRequested", new HandleNamedMessageDelegate(HostConfigRequested));
@@ -142,7 +143,7 @@ namespace LCShrinkRay.Config
 
             public static void HostConfigRequested(ulong clientId, FastBufferReader reader)
             {
-                if (!NetworkManager.Singleton.IsServer) // Current player is not the host and therefor not the one who should react
+                if (!PlayerHelper.isHost()) // Current player is not the host and therefor not the one who should react
                     return;
 
                 string json = JsonConvert.SerializeObject(ModConfig.Instance.values);
