@@ -142,6 +142,9 @@ namespace LCShrinkRay.comp
         {
             base.Update();
 
+            if (isPocketed)
+                return;
+
             //if beam exists
             try
             { // todo: move to coroutine
@@ -300,7 +303,7 @@ namespace LCShrinkRay.comp
             if (hit.transform.TryGetComponent<PlayerControllerB>(out PlayerControllerB component))
             {
                 Plugin.log($"Ray has hit player " + component.playerClientId);
-                if (component.transform.localScale.x == 1f && component.playerClientId != this.playerHeldBy.playerClientId)
+                if (component.playerClientId != this.playerHeldBy.playerClientId)
                 {
                     OnPlayerModification(component, type);
                     Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = component.playerClientId, modificationType = type });
@@ -339,6 +342,7 @@ namespace LCShrinkRay.comp
         [NetworkMessage("OnPlayerModificationSync")]
         public static void OnPlayerModificationSync(ulong sender, PlayerModificationData modificationData)
         {
+            Plugin.log("Player (" + sender + ") modified Player(" + modificationData.playerID + "): " + modificationData.modificationType.ToString());
             var targetPlayer = PlayerHelper.GetPlayerController(modificationData.playerID);
             if (targetPlayer == null)
                 return;
@@ -414,11 +418,6 @@ namespace LCShrinkRay.comp
             }
         }
 
-        //Player Shrink animation, shrinks a player over a sinusoidal curve for a duration. Requires the player and mask transforms.
-        public static void changeCurrentPlayerSize(float shrinkAmt, GameObject playerObj, Transform maskTransform)
-        {
-        }
-
         // ------ Ray hitting Object ------
         public static void OnObjectModification(GameObject targetObject)
         {
@@ -427,12 +426,14 @@ namespace LCShrinkRay.comp
 
         public override void EquipItem()
         {
+            // idea: play a fading-in sound, like energy of gun is loading
             base.EquipItem();
             previousPlayerHeldBy = playerHeldBy;
             previousPlayerHeldBy.equippedUsableItemQE = true;
         }
         public override void PocketItem()
         {
+            // idea: play a fading-out sound
             base.PocketItem();
         }
 

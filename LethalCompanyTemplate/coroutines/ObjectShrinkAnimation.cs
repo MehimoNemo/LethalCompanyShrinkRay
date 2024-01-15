@@ -28,12 +28,21 @@ namespace LCShrinkRay.coroutines
                 yield break;
 
             var modificationType = newSize < currentSize ? ShrinkRay.ModificationType.Shrinking : ShrinkRay.ModificationType.Enlarging;
+            float directionalForce, offset;
+            if (modificationType == ShrinkRay.ModificationType.Shrinking)
+            {
+                directionalForce = 0.58f;
+                offset = currentSize - 0.42f;
+            }
+            else
+            {
+                directionalForce = -0.58f;
+                offset = currentSize + 0.42f;
+            }
 
             while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
             {
-                //shrinkage = -(Mathf.Pow(elapsedTime / duration, 3) - (elapsedTime / duration) * amplitude * Mathf.Sin((elapsedTime / duration) * Mathf.PI)) + 1f;
-                currentSize = (float)(0.58 * Math.Sin((4 * elapsedTime / duration) + 0.81) + 0.58);
-                //mls.LogFatal(shrinkage);
+                currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
                 objectTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
 
                 elapsedTime += Time.deltaTime;
