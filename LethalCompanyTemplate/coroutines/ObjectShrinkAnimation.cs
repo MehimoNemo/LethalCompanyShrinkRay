@@ -9,14 +9,14 @@ namespace LCShrinkRay.coroutines
     {
         public GameObject playerObj { get; private set; }
 
-        public static void StartRoutine(GameObject playerObj, float newSize)
+        public static void StartRoutine(GameObject playerObj, float newSize, Action onComplete = null)
         {
             var routine = playerObj.AddComponent<ObjectShrinkAnimation>();
             routine.playerObj = playerObj;
-            routine.StartCoroutine(routine.run(newSize));
+            routine.StartCoroutine(routine.run(newSize, onComplete));
         }
 
-        private IEnumerator run(float newSize)
+        private IEnumerator run(float newSize, Action onComplete)
         {
             Plugin.log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
             Plugin.log("gObject: " + playerObj, Plugin.LogType.Warning);
@@ -52,6 +52,9 @@ namespace LCShrinkRay.coroutines
             // Ensure final scale is set to the desired value
             objectTransform.localScale = new Vector3(newSize, newSize, newSize);
             Shrinking.Instance.updatePitch();
+
+            if (onComplete != null)
+                onComplete();
         }
     }
 }

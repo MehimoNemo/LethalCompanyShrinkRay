@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.ComponentModel;
 using static LCShrinkRay.comp.ShrinkRay;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 namespace LCShrinkRay.comp
 {
@@ -322,15 +323,34 @@ namespace LCShrinkRay.comp
             Enlarging
         }
 
+        internal static readonly List<float> possiblePlayerSizes = [0f, 0.4f, 1f, 1.3f, 1.6f];
+
         // ------ Ray hitting Player ------
+
         public static float NextShrunkenSizeOf(GameObject targetObject)
         {
-            return 0.4f;
+            if (!ModConfig.Instance.values.multipleShrinking)
+                return possiblePlayerSizes[1];
+
+            var currentPlayerSize = targetObject.transform.localScale.x;
+            var currentSizeIndex = possiblePlayerSizes.IndexOf(currentPlayerSize);
+            if (currentSizeIndex <= 0)
+                return currentPlayerSize;
+
+            return possiblePlayerSizes[currentSizeIndex-1];
         }
 
         public static float NextIncreasedSizeOf(GameObject targetObject)
         {
-            return 1f; // wip
+            var currentPlayerSize = targetObject.transform.localScale.x;
+            var currentSizeIndex = possiblePlayerSizes.IndexOf(currentPlayerSize);
+            if (currentSizeIndex == -1 || currentPlayerSize == possiblePlayerSizes.Count - 1)
+                return currentPlayerSize;
+
+            if(currentSizeIndex > 2) // remove this if() once we think about growing
+                return possiblePlayerSizes[2];
+
+            return possiblePlayerSizes[currentSizeIndex + 1];
         }
 
         internal class PlayerModificationData
@@ -380,9 +400,16 @@ namespace LCShrinkRay.comp
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
+                        if (newSize <= 0 && targetPlayer.AllowPlayerDeath())
+                            return; // Can't shrink players to death in ship phase
+
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
                         if (targetingUs)
-                            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>(), () =>
+                            {
+                                if(newSize <= 0f)
+                                    targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
+                            });
                         else
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 

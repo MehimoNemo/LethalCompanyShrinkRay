@@ -11,14 +11,14 @@ namespace LCShrinkRay.coroutines
     {
         public GameObject playerObj { get; private set; }
 
-        public static void StartRoutine(GameObject playerObj, float newSize, Transform maskTransform)
+        public static void StartRoutine(GameObject playerObj, float newSize, Transform maskTransform, Action onComplete = null)
         {
             var routine = playerObj.AddComponent<PlayerShrinkAnimation>();
             routine.playerObj = playerObj;
-            routine.StartCoroutine(routine.run(newSize, maskTransform));
+            routine.StartCoroutine(routine.run(newSize, maskTransform, onComplete));
         }
 
-        private IEnumerator run(float newSize, Transform maskTransform)
+        private IEnumerator run(float newSize, Transform maskTransform, Action onComplete)
         {
             Shrinking.Instance.playerTransform = playerObj.GetComponent<Transform>();
             //TODO: REPLACE WITH STORED REFERENCE
@@ -62,6 +62,9 @@ namespace LCShrinkRay.coroutines
             maskTransform.localPosition = CalcMaskPosVec(newSize);
             armTransform.localScale = CalcArmScale(newSize);
             Shrinking.Instance.updatePitch();
+
+            if(onComplete != null)
+                onComplete();
         }
         private Vector3 CalcMaskPosVec(float scale)
         {
