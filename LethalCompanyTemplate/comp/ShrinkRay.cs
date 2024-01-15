@@ -414,7 +414,7 @@ namespace LCShrinkRay.comp
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
                         if (NetworkManager.Singleton.IsServer) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.setPlayerGrabbable(targetPlayer.gameObject);
+                            GrabbablePlayerList.SetPlayerGrabbable(targetPlayer);
 
                         if (targetingUs)
                             Vents.SussifyAll();

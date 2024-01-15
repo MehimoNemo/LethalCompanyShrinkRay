@@ -24,23 +24,31 @@ namespace LCShrinkRay.comp
             if (!NetworkManager.Singleton.IsServer)
                 return;
 
-            var playerObj = PlayerHelper.GetPlayerObject(ulong.Parse(playerID));
-            if (playerObj == null)
+            var pcb = PlayerHelper.GetPlayerController(sender);
+            if (pcb == null)
             {
                 Plugin.log("Unable to add grabbable player. Player with ID " + playerID + " not found!", Plugin.LogType.Error);
                 return;
             }
 
-            setPlayerGrabbable(playerObj);
+            SetPlayerGrabbable(pcb);
         }
 
-        [NetworkMessage("OnListTransmit")]
-        public static void OnListTransmit(ulong sender, string data)
+        internal class GrabbablePlayerListSyncData
         {
+            public List<(ulong, ulong)> grabbablePlayerIDS {  get; set; }
+            public ulong? singleReceiver { get; set; } = null;
+        }
+
+        [NetworkMessage("GrabbablePlayerListSync")]
+        public static void GrabbablePlayerListSync(ulong sender, GrabbablePlayerListSyncData data)
+        {
+            if (data.singleReceiver != null && PlayerHelper.currentPlayer().playerClientId != data.singleReceiver)
+                return; // not meant for us
+
             Plugin.log("Oh hey!! There's that list I needed!!!!", Plugin.LogType.Error);
-            Plugin.log("\t" + data);
-            List<(ulong, ulong)> tuple = StringToTupleList(data);
-            GrabbablePlayerList.UpdateGrabbablePlayerObjectsClient(tuple);
+            Plugin.log("\t" + TupleListToString(data.grabbablePlayerIDS));
+            GrabbablePlayerList.UpdateGrabbablePlayerObjectsClient(data.grabbablePlayerIDS);
         }
 
         // ---- Helper ----
@@ -67,7 +75,7 @@ namespace LCShrinkRay.comp
         // ---- Methods ----
 
         //broadcasts the clientID associated with each GrabblablePlayerObject
-        public static void BroadcastGrabbedPlayerObjectsList()
+        public static void BroadcastGrabbedPlayerObjectsList(ulong? singleReceiver = null) // todo: no broadcast if only one receiver
         {
             var networkClientMap = new List<(ulong networkId, ulong client)>();
             if (grabbablePlayerObjects!.Count > 0)
@@ -78,8 +86,7 @@ namespace LCShrinkRay.comp
                     ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
                     networkClientMap.Add((networkId, clientId));
                 }
-                string strMap = TupleListToString(networkClientMap);
-                Network.Broadcast("OnListTransmit", strMap);
+                Network.Broadcast("GrabbablePlayerListSync", new GrabbablePlayerListSyncData() { grabbablePlayerIDS = networkClientMap, singleReceiver = singleReceiver });
             }
         }
 
@@ -113,34 +120,58 @@ namespace LCShrinkRay.comp
             grabbablePlayerObjects.Clear();
         }
 
-        //Runs whenever player count changes,
-        //if you're the host, then delete all grabbablePlayerObjects and make new ones(should maybe just delete the one that leaves or make the one that joins)
-        //if you're a client, then delete all grabbablePlayerObjects and make new ones, then ask the host to help it initialize properly
-        public static void UpdateGrabbablePlayerObjects()
+        public static void SetPlayerGrabbable(PlayerControllerB pcb)
         {
-            clearGrabbablePlayerObjects();
-
-            if (PlayerHelper.isHost())
-            {
-                //for each shrunken player, create and initialize a GrabbablePlayerObject, these will be networked, and should spawn for other players
-                foreach (GameObject player in PlayerHelper.getAllPlayers())
-                {
-                    if (PlayerHelper.isShrunk(player))
-                        setPlayerGrabbable(player);
-                }
-            }
-        }
-
-        public static void setPlayerGrabbable(GameObject playerObject)
-        {
-            var pcb = playerObject.GetComponent<PlayerControllerB>();
-            Plugin.log("Adding grabbable player: " + playerObject.ToString());
+            Plugin.log("Adding grabbable player: " + pcb.gameObject.ToString());
             var newObject = UnityEngine.Object.Instantiate(ShrinkRay.grabbablePlayerPrefab);
             newObject.GetComponent<NetworkObject>().Spawn();
             GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
             
             gpo.Initialize(pcb);
             grabbablePlayerObjects.Add(newObject);
+
+            // Let everyone know
+            BroadcastGrabbedPlayerObjectsList();
+        }
+
+        public static void RemoveAllPlayerGrabbables()
+        {
+            for (int i = grabbablePlayerObjects.Count - 1; i >= 0; i--)
+                RemovePlayerGrabbable(grabbablePlayerObjects[i]);
+        }
+
+        public static void RemovePlayerGrabbableIfExists(PlayerControllerB pcb)
+        {
+            var index = grabbablePlayerObjects.FindIndex(0, bindingObject =>
+            {
+                var hasGPO = bindingObject.TryGetComponent(out GrabbablePlayerObject gpo);
+                return (hasGPO && gpo != null && gpo.grabbedPlayer.playerClientId == pcb.playerClientId);
+            });
+
+            if (index != -1)
+            {
+                RemovePlayerGrabbable(grabbablePlayerObjects[index]);
+                try
+                {
+                    grabbablePlayerObjects.RemoveAt(index);
+                }
+                catch(Exception e)
+                {
+                    Plugin.log("I knew this would happen... Anyways, here's the error: " + e.Message);
+                }
+            }
+        }
+
+        public static void RemovePlayerGrabbable(GameObject bindingObject)
+        {
+            if(bindingObject == null) return;
+
+            var gpo = bindingObject.GetComponent<GrabbablePlayerObject>();
+            if (gpo != null)
+                UnityEngine.Object.Destroy(gpo);
+
+            if (bindingObject != null)
+                UnityEngine.Object.Destroy(bindingObject);
 
             // Let everyone know
             BroadcastGrabbedPlayerObjectsList();
