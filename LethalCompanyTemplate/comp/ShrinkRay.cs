@@ -24,6 +24,7 @@ namespace LCShrinkRay.comp
         public float beamLength = 10f;
         public float beamDuration = 2f;
 
+        public static GameObject shrinkRayFXPrefab;
         public ShrinkRayFX shrinkRayFX;
         //private Color beamColor = Color.blue;
         private List<ulong> handledRayHits = new List<ulong>();
@@ -50,6 +51,15 @@ namespace LCShrinkRay.comp
             ShrinkRay visScript = networkPrefab.AddComponent<ShrinkRay>();
             //GrabbablePlayerList.Instance = networkPrefab.AddComponent<GrabbablePlayerList>();
             shrinkRayItem.spawnPrefab.AddComponent<ShrinkRayFX>();
+
+			// Load ShrinkRayFX AssetBundle -- The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
+            string FXAssetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
+            AssetBundle FXAssets = AssetBundle.LoadFromFile(FXAssetDir);
+            shrinkRayFXPrefab = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");
+            if (shrinkRayFXPrefab == null)
+            {
+                Plugin.log("AssetBundle Loading Error: Shrink Ray VFX", Plugin.LogType.Error);
+            }
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 

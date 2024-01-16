@@ -76,46 +76,20 @@ namespace LCShrinkRay.comp
             }
         }
         
-        public GameObject CreateNewBeam(Transform startTransform, Transform endTransform, float duration)
-        {
-            
-            
-            GameObject gameObject = Instantiate(prefab);
-            
-            Transform bezier1 = gameObject.transform.Find("Pos1");
-            Transform bezier2 = gameObject.transform.Find("Pos2");
-            Transform bezier3 = gameObject.transform.Find("Pos3");
-            Transform bezier4 = gameObject.transform.Find("Pos4");
-            
-            // Set the start pos of the beam
-            bezier1.SetParent(startTransform);
-            bezier1.localPosition = Vector3.zero;
-            bezier2.SetParent(startTransform);
-            bezier2.localPosition = Vector3.zero;
-            
-            // Set the end pos of the beam
-            bezier3.SetParent(endTransform);
-            bezier3.localPosition = Vector3.zero;
-            bezier4.SetParent(endTransform);
-            bezier4.localPosition = Vector3.zero;
-
-            Destroy(gameObject, duration);
-
-            return gameObject;
-        }
-        
         public GameObject CreateNewBeam(Transform parent)
         {
-            GameObject gameObject = Instantiate(prefab);
-            
             // Get the visual effect unity component if it's not set yet
             if (!visualEffect)
             {
-                if (prefab.TryGetComponent(out visualEffect) == false)
+                visualEffect = visualEffect.GetComponentInChildren<VisualEffect>();
+                
+                if (!visualEffect)
                 {
                     Plugin.log("Shrink Ray VFX: Couldn't get VisualEffect component", Plugin.LogType.Error);   
                 }
             }
+            
+            GameObject gameObject = Instantiate(prefab);
 
             return gameObject;
         }
