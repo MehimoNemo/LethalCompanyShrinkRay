@@ -328,7 +328,7 @@ namespace LCShrinkRay.comp
             if (!ModConfig.Instance.values.multipleShrinking)
                 return possiblePlayerSizes[1];
 
-            var currentPlayerSize = targetObject.transform.localScale.x;
+            var currentPlayerSize = Mathf.Round(targetObject.transform.localScale.x * 100f) / 100f; // round to 2 digits
             var currentSizeIndex = possiblePlayerSizes.IndexOf(currentPlayerSize);
             if (currentSizeIndex <= 0)
                 return currentPlayerSize;
@@ -338,12 +338,12 @@ namespace LCShrinkRay.comp
 
         public static float NextIncreasedSizeOf(GameObject targetObject)
         {
-            var currentPlayerSize = targetObject.transform.localScale.x;
+            var currentPlayerSize = Mathf.Round(targetObject.transform.localScale.x * 100f) / 100f; // round to 2 digits
             var currentSizeIndex = possiblePlayerSizes.IndexOf(currentPlayerSize);
             if (currentSizeIndex == -1 || currentPlayerSize == possiblePlayerSizes.Count - 1)
                 return currentPlayerSize;
 
-            if(currentSizeIndex > 2) // remove this if() once we think about growing
+            if(currentSizeIndex >= 2) // remove this if() once we think about growing
                 return possiblePlayerSizes[2];
 
             return possiblePlayerSizes[currentSizeIndex + 1];

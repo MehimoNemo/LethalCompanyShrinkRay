@@ -101,6 +101,9 @@ namespace LCShrinkRay.helper
             return isShrunk(playerObject.transform.localScale.x);
         }
         public static bool isCurrentPlayerShrunk() { return isShrunk(currentPlayerScale()); }
-        public static bool isShrunk(float size) { return size < 0.9f; } // used 1f here, which lead to weird behaviour. added 0.1f tolerance
+        public static bool isShrunk(float size) {
+            var roundedSize = Mathf.Round(size * 100f) / 100f; // round to 2 digits
+            return roundedSize < 1f;
+        }
     }
 }
