@@ -59,6 +59,7 @@ namespace LCShrinkRay
             {
                 // LC_API Network Setup
                 Network.RegisterAll(typeof(Shrinking));
+                Network.RegisterAll(typeof(ShrinkRay));
                 Network.RegisterAll(typeof(GrabbablePlayerObject));
                 Network.RegisterAll(typeof(GrabbablePlayerList));
             }

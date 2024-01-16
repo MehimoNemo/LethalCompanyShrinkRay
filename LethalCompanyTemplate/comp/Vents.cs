@@ -17,8 +17,19 @@ namespace LCShrinkRay.comp
     {
         private static bool sussification = false;
 
+        private static EnemyVent[] getAllVents()
+        {
+            if (RoundManager.Instance.allEnemyVents != null && RoundManager.Instance.allEnemyVents.Length > 0)
+                return RoundManager.Instance.allEnemyVents;
+
+            return UnityEngine.Object.FindObjectsOfType<EnemyVent>();
+        }
+
         public static void SussifyAll()
         {
+            if (!GameNetworkManager.Instance.gameHasStarted)
+                return;
+
             if(sussification) // Already sussified
                 return;
 
@@ -36,15 +47,11 @@ namespace LCShrinkRay.comp
 
             Plugin.log("SUSSIFYING VENTS");
 
-            var vents = RoundManager.Instance.allEnemyVents;
+            var vents = getAllVents();
             if (vents == null || vents.Length == 0)
             {
-                vents = UnityEngine.Object.FindObjectsOfType<EnemyVent>();
-                if (vents == null || vents.Length == 0)
-                {
-                    Plugin.log("No vents to sussify.");
-                    return;
-                }
+                Plugin.log("No vents to sussify.");
+                return;
             }
 
             GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
@@ -71,6 +78,12 @@ namespace LCShrinkRay.comp
         public static void sussify(EnemyVent enemyVent, EnemyVent siblingVent)
         {
             GameObject vent = enemyVent.gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
+            if (!vent)
+            {
+                Plugin.log("Vent has no cover to sussify");
+                return;
+            }
+
             vent.GetComponent<MeshRenderer>();
             vent.tag = "InteractTrigger";
             vent.layer = LayerMask.NameToLayer("InteractableObject");
@@ -107,15 +120,38 @@ namespace LCShrinkRay.comp
         }
 
         // when unshrinking will be a thing
-        /*public static void unsussifyAll()
+        public static void unsussifyAll()
         {
-            
+            return; // wip
+            foreach (var vent in getAllVents())
+                unsussify(vent);
+
+            sussification = false;
         }
 
         public static void unsussify(EnemyVent enemyVent)
         {
+            GameObject vent = enemyVent.gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject;
+            if (!vent)
+                return;
+
+            Plugin.log("0");
+            if (enemyVent.gameObject.AddComponent<SussifiedVent>() != null)
+            {
+                Plugin.log("1");
+                UnityEngine.Object.Destroy(enemyVent.gameObject.AddComponent<SussifiedVent>());
+            }
+            if (vent.GetComponent<BoxCollider>() != null)
+            {
+                Plugin.log("2");
+                UnityEngine.Object.Destroy(vent.GetComponent<BoxCollider>());
+            }
+            if (vent.GetComponent<InteractTrigger>() != null)
+            {
+                Plugin.log("3");
+                UnityEngine.Object.Destroy(vent.GetComponent<InteractTrigger>());
+            }
         }
-        */
 
 
         internal class SussifiedVent : NetworkBehaviour

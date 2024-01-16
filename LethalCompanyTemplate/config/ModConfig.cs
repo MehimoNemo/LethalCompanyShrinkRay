@@ -9,6 +9,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using GameNetcodeStuff;
 using static UnityEngine.InputSystem.InputRemoting;
+using LCShrinkRay.helper;
 
 namespace LCShrinkRay.Config
 {
@@ -82,8 +83,7 @@ namespace LCShrinkRay.Config
         public void setup()
         {
             values.shrinkRayCost            = Plugin.bepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
-            //sizeDecrease                  = Plugin.bepInExConfig().Bind("General", "SizeDecrease", SizeDecrease.Half, "Defines how tiny shrunken players will become.\"").Value;
-            //values.multipleShrinking      = Plugin.bepInExConfig().Bind("General", "MultipleShrinking", true, "If true, a player can shrink multiple times.. unfortunatly.").Value;
+            values.multipleShrinking        = Plugin.bepInExConfig().Bind("General", "MultipleShrinking", true, "If true, a player can shrink multiple times.. unfortunatly.").Value;
 
             values.movementSpeedMultiplier  = Plugin.bepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.5f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (slow) to 2 (fast).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
             values.jumpHeightMultiplier     = Plugin.bepInExConfig().Bind("Shrunken", "JumpHeightMultiplier", 1.5f, new ConfigDescription("Jump-height multiplier for shrunken players, ranging from 0.5 (lower) to 2 (higher).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
@@ -117,7 +117,7 @@ namespace LCShrinkRay.Config
             [HarmonyPostfix]
             public static void Initialize()
             {
-                if (NetworkManager.Singleton.IsServer)
+                if (PlayerHelper.isHost())
                 {
                     Plugin.log("Current player is the host.");
                     NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_HostConfigRequested", new HandleNamedMessageDelegate(HostConfigRequested));
@@ -143,7 +143,7 @@ namespace LCShrinkRay.Config
 
             public static void HostConfigRequested(ulong clientId, FastBufferReader reader)
             {
-                if (!NetworkManager.Singleton.IsServer) // Current player is not the host and therefor not the one who should react
+                if (!PlayerHelper.isHost()) // Current player is not the host and therefor not the one who should react
                     return;
 
                 string json = JsonConvert.SerializeObject(ModConfig.Instance.values);

@@ -5,40 +5,56 @@ using UnityEngine;
 
 namespace LCShrinkRay.coroutines
 {
-    internal class ObjectShrinkAnimation : MonoBehaviour
+    internal class ObjectShrinkAnimation : MonoBehaviour // todo: rename to ObjectChangeSizeAnimation
     {
         public GameObject playerObj { get; private set; }
 
-        public static void StartRoutine(GameObject playerObj, float shrinkAmt)
+        public static void StartRoutine(GameObject playerObj, float newSize, Action onComplete = null)
         {
             var routine = playerObj.AddComponent<ObjectShrinkAnimation>();
             routine.playerObj = playerObj;
-            routine.StartCoroutine(routine.run(shrinkAmt));
+            routine.StartCoroutine(routine.run(newSize, onComplete));
         }
 
-        private IEnumerator run(float shrinkAmt)
+        private IEnumerator run(float newSize, Action onComplete)
         {
             Plugin.log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
             Plugin.log("gObject: " + playerObj, Plugin.LogType.Warning);
             Transform objectTransform = playerObj.GetComponent<Transform>();
             float duration = 2f;
             float elapsedTime = 0f;
-            float shrinkage = 1f;
+            float currentSize = playerObj.transform.localScale.x;
+            if (currentSize == newSize)
+                yield break;
 
-            while (elapsedTime < duration && shrinkage > shrinkAmt)
+            var modificationType = newSize < currentSize ? ShrinkRay.ModificationType.Shrinking : ShrinkRay.ModificationType.Enlarging;
+            float directionalForce, offset;
+            if (modificationType == ShrinkRay.ModificationType.Shrinking)
             {
-                //shrinkage = -(Mathf.Pow(elapsedTime / duration, 3) - (elapsedTime / duration) * amplitude * Mathf.Sin((elapsedTime / duration) * Mathf.PI)) + 1f;
-                shrinkage = (float)(0.58 * Math.Sin((4 * elapsedTime / duration) + 0.81) + 0.58);
-                //mls.LogFatal(shrinkage);
-                objectTransform.localScale = new Vector3(shrinkage, shrinkage, shrinkage);
+                directionalForce = 0.58f;
+                offset = currentSize - 0.42f;
+            }
+            else
+            {
+                directionalForce = -0.58f;
+                offset = currentSize + 0.42f;
+            }
+
+            while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
+            {
+                currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
+                objectTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
             }
 
             // Ensure final scale is set to the desired value
-            objectTransform.localScale = new Vector3(shrinkAmt, shrinkAmt, shrinkAmt);
+            objectTransform.localScale = new Vector3(newSize, newSize, newSize);
             Shrinking.Instance.updatePitch();
+
+            if (onComplete != null)
+                onComplete();
         }
     }
 }
