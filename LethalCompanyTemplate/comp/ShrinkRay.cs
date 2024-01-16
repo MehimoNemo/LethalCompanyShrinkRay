@@ -98,7 +98,7 @@ namespace LCShrinkRay.comp
             visScript.grabbable = true;
             visScript.useCooldown = 2f;
             visScript.grabbableToEnemies = true;
-            //visScript.itemProperties.syncUseFunction = true;
+            visScript.itemProperties.syncUseFunction = true;
 
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(grabbablePlayerItem.spawnPrefab);
