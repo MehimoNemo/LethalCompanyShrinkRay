@@ -23,6 +23,8 @@ namespace LCShrinkRay.comp
         public float beamWidth = 0.1f;
         public float beamLength = 10f;
         public float beamDuration = 2f;
+
+        public ShrinkRayFX shrinkRayFX;
         //private Color beamColor = Color.blue;
         private List<ulong> handledRayHits = new List<ulong>();
 
@@ -47,6 +49,7 @@ namespace LCShrinkRay.comp
 
             ShrinkRay visScript = networkPrefab.AddComponent<ShrinkRay>();
             //GrabbablePlayerList.Instance = networkPrefab.AddComponent<GrabbablePlayerList>();
+            shrinkRayItem.spawnPrefab.AddComponent<ShrinkRayFX>();
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
@@ -107,7 +110,8 @@ namespace LCShrinkRay.comp
                     ShootRayAndSync(ModificationType.Shrinking);
             }
             catch (Exception e) {
-                Plugin.log("Error while shooting ray: " + e.Message);
+                Plugin.log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
+                Plugin.log($"Stack Trace: {e.StackTrace}");
             }
         }
 
@@ -192,7 +196,7 @@ namespace LCShrinkRay.comp
         public void ShootRayAndSync(ModificationType type)
         {
             var transform = playerHeldBy.gameplayCamera.transform;
-            
+
             var beamStartPos = transform.position - transform.up * 0.1f;
             var forward = transform.forward;
             forward = forward * beamLength + beamStartPos;
@@ -213,7 +217,9 @@ namespace LCShrinkRay.comp
         private void ShootRay(Vector3 beamStartPos, Vector3 forward, ModificationType type)
         {
             Plugin.log("shootingggggg");
-            RenderRayBeam(beamStartPos, beamStartPos + forward * beamLength, type);
+            
+            // Old call, now render ray beam when it finds a player
+            // RenderRayBeam(beamStartPos, beamStartPos + forward * beamLength, type);
 
             if (PlayerHelper.currentPlayer().playerClientId != playerHeldBy.playerClientId)
                 return;
@@ -230,14 +236,127 @@ namespace LCShrinkRay.comp
             for (int i = 0; i < hitEnemiesCount; i++)
             {
                 //Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
+
+                GameObject beamStartTargetObj, beamEndTargetObj;
+                
                 if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
                 {
+                    // Did raycast hit wall?
                     Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
                     Debug.DrawLine(beamStartPos, enemyColliders[i].point, Color.cyan, 15f);
                     Plugin.log("Raycast hit wall :c");
+                    
                 }
                 else
+                {
+                    // Raycast hit player
                     OnRayHit(enemyColliders[i], type);
+                    
+                    // RenderSingleRayBeam(beamStartPos, enemyColliders[i].transform.position, type);
+                    
+                    // beamStartTargetObj = Instantiate(new GameObject());
+                    // beamStartTargetObj.transform.position = beamStartPos;
+                    // beamStartTargetObj.transform.SetParent(playerHeldBy.gameplayCamera.transform, true);
+                    //
+                    // beamEndTargetObj = Instantiate(new GameObject());
+                    // beamEndTargetObj.transform.position = hitInfo.point;
+
+                    // RenderSingleRayBeam(beamStartTargetObj.transform, beamEndTargetObj.transform, type);
+                    
+                    
+                    // Render beam
+                    // beamStartTargetObj = Instantiate(new GameObject());
+                    // beamStartTargetObj.transform.position = beamStartPos;
+                    // beamStartTargetObj.transform.SetParent(playerHeldBy.gameplayCamera.transform, true);
+                    // beamEndTargetObj = enemyColliders[i].transform.gameObject;
+                    //
+                    // RenderSingleRayBeam(beamStartTargetObj.transform, beamEndTargetObj.transform, type);
+                }
+            }
+        }
+        
+        private void RenderSingleRayBeam(Transform start, Transform target, ModificationType type)
+        {
+            // Created overload to reduce merge conflicts between both branches, can remove the old method after
+            
+            Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
+            try
+            {
+                if (!shrinkRayFX) shrinkRayFX = transform.GetComponent<ShrinkRayFX>();
+
+                GameObject fxObject = shrinkRayFX.CreateNewBeam(playerHeldBy.gameplayCamera.transform);
+                    
+                if (!fxObject) Plugin.log("FX Object Null", Plugin.LogType.Error);
+                
+                Transform bezier1 = fxObject.transform.GetChild(0).Find("Pos1");
+                Transform bezier2 = fxObject.transform.GetChild(0).Find("Pos2");
+                Transform bezier3 = fxObject.transform.GetChild(0).Find("Pos3");
+                Transform bezier4 = fxObject.transform.GetChild(0).Find("Pos4");
+                
+                if (!bezier1) Plugin.log("bezier1 Null", Plugin.LogType.Error);
+                if (!bezier2) Plugin.log("bezier2 Null", Plugin.LogType.Error);
+                if (!bezier3) Plugin.log("bezier3 Null", Plugin.LogType.Error);
+                if (!bezier4) Plugin.log("bezier4 Null", Plugin.LogType.Error);
+
+                
+                // Stole this from above, minor adjustments to where the beam comes from
+                Vector3 beamStartPos = (start.position - (transform.up * 0.1f) + (transform.right * 0.35f) + (transform.forward * 1.3f));
+                
+                bezier1.transform.position = beamStartPos;
+                bezier1.transform.SetParent(start, true);
+                bezier2.transform.position = beamStartPos;
+                bezier2.transform.SetParent(start, true);
+
+                bezier3.transform.position = target.position;
+                bezier3.transform.SetParent(target, true);
+                bezier4.transform.position = target.position;
+                bezier4.transform.SetParent(target, true);
+                    
+                // Plugin.log($"VFX: Start Target Position: {beamStartTargetObj.transform.position}");
+                // Plugin.log($"VFX: End Target Position: {beamEndTargetObj.transform.position}");
+                // beamStartTargetObj.name = "Beam EndPoint 1";
+                // beamEndTargetObj.name = "Beam EndPoint 4";
+                    
+                Destroy(fxObject, beamDuration);
+                
+                
+                //
+                // shrinkRayFX.CreateNewBeam(beamStartParent, beamEndParent, beamDuration); // TODO fix this method
+
+                /*
+                if (parentObject.transform.Find("Beam") != null || beamMaterial == null)
+                    return;
+
+                Plugin.log("trying to create beam object");
+                beamObject = new GameObject("Beam");
+                
+                Plugin.log("Before creating LineRenderer");
+                lineRenderer = beamObject.AddComponent<LineRenderer>();
+                
+                Plugin.log("After creating LineRenderer");
+                
+                lineRenderer.material = beamMaterial;
+                lineRenderer.startWidth = beamWidth;
+                lineRenderer.endWidth = beamWidth * 16;
+                lineRenderer.endColor = new Color(0, 0.5f, 0.5f, 0.5f);
+                lineRenderer.material.renderQueue = 2500; // Adjust as needed
+                lineRenderer.SetPosition(0, beamStartPos);
+                lineRenderer.SetPosition(1, forward);
+                lineRenderer.enabled = true;
+                lineRenderer.numCapVertices = 6;
+                lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                lineRenderer.receiveShadows = false;
+                
+                Plugin.log("Done with rendering beam");
+
+                Destroy(beamObject, beamDuration);
+                */
+            }
+            catch (Exception e)
+            {
+                Plugin.log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
+                Plugin.log("error source: " + e.Source);
+                Plugin.log("error stack: " + e.StackTrace);
             }
         }
 
@@ -299,7 +418,7 @@ namespace LCShrinkRay.comp
             Enlarging
         }
 
-        internal static readonly List<float> possiblePlayerSizes = [0f, 0.4f, 1f, 1.3f, 1.6f];
+        internal static readonly List<float> possiblePlayerSizes = new() {0f, 0.4f, 1f, 1.3f, 1.6f};
 
         // ------ Ray hitting Player ------
 

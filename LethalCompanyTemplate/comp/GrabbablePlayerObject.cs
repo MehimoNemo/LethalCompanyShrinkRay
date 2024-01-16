@@ -328,7 +328,11 @@ namespace LCShrinkRay.comp
             Plugin.log("setControlTips");
             if (base.IsOwner)
             {
-                HUDManager.Instance.ChangeControlTipMultiple(["Throw player: LMB"], holdingItem: true, itemProperties);
+                string[] tips = { "Throw player: LMB" };
+                HUDManager.Instance.ChangeControlTipMultiple(
+                    tips, 
+                    holdingItem: true, 
+                    itemProperties);
             }
             else if (!ModConfig.Instance.values.CanEscapeGrab)
                 return;
@@ -342,7 +346,10 @@ namespace LCShrinkRay.comp
                     HUDManager.Instance.ChangeControlTipMultiple(toolTips.ToArray(), holdingItem: true, grabbedPlayerItem.itemProperties);
                 }
                 else
-                    HUDManager.Instance.ChangeControlTipMultiple(["Ungrab: JUMP"], holdingItem: false, itemProperties);
+                {
+                    string[] tips = {"Ungrab: JUMP"};
+                    HUDManager.Instance.ChangeControlTipMultiple(tips, holdingItem: false, itemProperties);
+                }
             }
         }
 

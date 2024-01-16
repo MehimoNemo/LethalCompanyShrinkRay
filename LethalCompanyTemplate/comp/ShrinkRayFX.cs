@@ -6,10 +6,12 @@ using UnityEngine.VFX;
 
 namespace LCShrinkRay.comp
 {
-    public class ShrinkRayFX
+    public class ShrinkRayFX : MonoBehaviour
     {
         private GameObject shrinkRayFX;
         private VisualEffect visualEffect;
+
+        // Bez 1 is the start, 4 is the end
 
         #region Properties
         public float thickness {
@@ -57,43 +59,65 @@ namespace LCShrinkRay.comp
             }
         }
         #endregion
-
-            // This is the method I was having an issue with, loading the asset bundle and getting it into game :(
-        // I can instantiate the normal Unity way, but I'm worried LC_API / LethalLib have methods I'm unaware of
-        // Still new to modding 😬
-        public void AddShrinkRayFXToGame()
+        
+        public ShrinkRayFX()
         {
-            // Do `fxasset` loading here, tried copying Nemo's code in shrinking.cs
             var assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
             var FXAssets = AssetBundle.LoadFromFile(assetDir);
 
             // The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
-            shrinkRayFX = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");
+            prefab = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");
             NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
 
             if (shrinkRayFX == null)
             {
-                Plugin.log("\n\nFRICKIN HECK WHY IS IT NULL???\n\n");
+                Plugin.log("\n\nLOAD ASSET ERROR: Shrink Ray VFX\n\n");
+                return;
             }
         }
-
-        /// <summary>
-        /// This should be set to the tip of the shrinkray most likely
-        /// </summary>
-        public void SetStartPoint(Vector3 point)
+        
+        public GameObject CreateNewBeam(Transform startTransform, Transform endTransform, float duration)
         {
-            shrinkRayFX.transform.Find("Pos1").position = point;
-            shrinkRayFX.transform.Find("Pos2").position = point;
+            
+            
+            GameObject gameObject = Instantiate(prefab);
+            
+            Transform bezier1 = gameObject.transform.Find("Pos1");
+            Transform bezier2 = gameObject.transform.Find("Pos2");
+            Transform bezier3 = gameObject.transform.Find("Pos3");
+            Transform bezier4 = gameObject.transform.Find("Pos4");
+            
+            // Set the start pos of the beam
+            bezier1.SetParent(startTransform);
+            bezier1.localPosition = Vector3.zero;
+            bezier2.SetParent(startTransform);
+            bezier2.localPosition = Vector3.zero;
+            
+            // Set the end pos of the beam
+            bezier3.SetParent(endTransform);
+            bezier3.localPosition = Vector3.zero;
+            bezier4.SetParent(endTransform);
+            bezier4.localPosition = Vector3.zero;
+
+            Destroy(gameObject, duration);
+
+            return gameObject;
         }
         
-        /// <summary>
-        /// On clientside, target should be set to half a unit below the camera so they don't get blinded by lights
-        /// </summary>
-        public void SetEndPoint(Vector3 point)
+        public GameObject CreateNewBeam(Transform parent)
         {
-            // Pos 3 and 4 are the final points of the bezier curve
-            shrinkRayFX.transform.Find("Pos3").position = point;
-            shrinkRayFX.transform.Find("Pos4").position = point;
+            GameObject gameObject = Instantiate(prefab);
+            
+            // Get the visual effect unity component if it's not set yet
+            if (!visualEffect)
+            {
+                if (prefab.TryGetComponent(out visualEffect) == false)
+                {
+                    Plugin.log("Shrink Ray VFX: Couldn't get VisualEffect component", Plugin.LogType.Error);   
+                }
+            }
+
+            return gameObject;
         }
 
         private void SetFloat(string name, float value)
