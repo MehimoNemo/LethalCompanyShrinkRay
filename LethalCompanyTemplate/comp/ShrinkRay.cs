@@ -60,6 +60,16 @@ namespace LCShrinkRay.comp
             {
                 Plugin.log("AssetBundle Loading Error: Shrink Ray VFX", Plugin.LogType.Error);
             }
+            
+            // Add the FX component
+            ShrinkRayFX shrinkRayFX = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRayFX>();
+            
+            // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
+            shrinkRayFX.noiseSpeed = 5;
+            shrinkRayFX.noisePower = 0.1f;
+            
+            
+            // END ShrinkRay Setup
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
@@ -261,26 +271,6 @@ namespace LCShrinkRay.comp
                 {
                     // Raycast hit player
                     OnRayHit(enemyColliders[i], type);
-                    
-                    // RenderSingleRayBeam(beamStartPos, enemyColliders[i].transform.position, type);
-                    
-                    // beamStartTargetObj = Instantiate(new GameObject());
-                    // beamStartTargetObj.transform.position = beamStartPos;
-                    // beamStartTargetObj.transform.SetParent(playerHeldBy.gameplayCamera.transform, true);
-                    //
-                    // beamEndTargetObj = Instantiate(new GameObject());
-                    // beamEndTargetObj.transform.position = hitInfo.point;
-
-                    // RenderSingleRayBeam(beamStartTargetObj.transform, beamEndTargetObj.transform, type);
-                    
-                    
-                    // Render beam
-                    // beamStartTargetObj = Instantiate(new GameObject());
-                    // beamStartTargetObj.transform.position = beamStartPos;
-                    // beamStartTargetObj.transform.SetParent(playerHeldBy.gameplayCamera.transform, true);
-                    // beamEndTargetObj = enemyColliders[i].transform.gameObject;
-                    //
-                    // RenderSingleRayBeam(beamStartTargetObj.transform, beamEndTargetObj.transform, type);
                 }
             }
         }
@@ -322,45 +312,12 @@ namespace LCShrinkRay.comp
                 bezier4.transform.position = target.position;
                 bezier4.transform.SetParent(target, true);
                     
-                // Plugin.log($"VFX: Start Target Position: {beamStartTargetObj.transform.position}");
-                // Plugin.log($"VFX: End Target Position: {beamEndTargetObj.transform.position}");
-                // beamStartTargetObj.name = "Beam EndPoint 1";
-                // beamEndTargetObj.name = "Beam EndPoint 4";
-                    
+                // Destroy the beziers before the fxObject, just barely
+                Destroy(bezier1, beamDuration - 0.05f);
+                Destroy(bezier2, beamDuration - 0.05f);
+                Destroy(bezier3, beamDuration - 0.05f);
+                Destroy(bezier4, beamDuration - 0.05f);
                 Destroy(fxObject, beamDuration);
-                
-                
-                //
-                // shrinkRayFX.CreateNewBeam(beamStartParent, beamEndParent, beamDuration); // TODO fix this method
-
-                /*
-                if (parentObject.transform.Find("Beam") != null || beamMaterial == null)
-                    return;
-
-                Plugin.log("trying to create beam object");
-                beamObject = new GameObject("Beam");
-                
-                Plugin.log("Before creating LineRenderer");
-                lineRenderer = beamObject.AddComponent<LineRenderer>();
-                
-                Plugin.log("After creating LineRenderer");
-                
-                lineRenderer.material = beamMaterial;
-                lineRenderer.startWidth = beamWidth;
-                lineRenderer.endWidth = beamWidth * 16;
-                lineRenderer.endColor = new Color(0, 0.5f, 0.5f, 0.5f);
-                lineRenderer.material.renderQueue = 2500; // Adjust as needed
-                lineRenderer.SetPosition(0, beamStartPos);
-                lineRenderer.SetPosition(1, forward);
-                lineRenderer.enabled = true;
-                lineRenderer.numCapVertices = 6;
-                lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                lineRenderer.receiveShadows = false;
-                
-                Plugin.log("Done with rendering beam");
-
-                Destroy(beamObject, beamDuration);
-                */
             }
             catch (Exception e)
             {
@@ -369,41 +326,7 @@ namespace LCShrinkRay.comp
                 Plugin.log("error stack: " + e.StackTrace);
             }
         }
-
-        private void RenderRayBeam(Vector3 beamStartPos, Vector3 forward, ModificationType type)
-        {
-            //Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
-            try
-            {
-                if (parentObject.transform.Find("Beam") != null || beamMaterial == null)
-                    return;
-
-                //Plugin.log("trying to create beam object");
-                beamObject = new GameObject("Beam");
-                //Plugin.log("Before creating LineRenderer");
-                lineRenderer = beamObject.AddComponent<LineRenderer>();
-                //Plugin.log("After creating LineRenderer");
-                lineRenderer.material = beamMaterial;
-                lineRenderer.startWidth = beamWidth;
-                lineRenderer.endWidth = beamWidth * 16;
-                lineRenderer.endColor = new Color(0, 0.5f, 0.5f, 0.5f);
-                lineRenderer.material.renderQueue = 2500; // Adjust as needed
-                lineRenderer.SetPosition(0, beamStartPos);
-                lineRenderer.SetPosition(1, forward);
-                lineRenderer.enabled = true;
-                lineRenderer.numCapVertices = 6;
-                lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                lineRenderer.receiveShadows = false;
-                //Plugin.log("Done with rendering beam");
-
-                Destroy(beamObject, beamDuration);
-            }
-            catch (Exception e)
-            {
-                Plugin.log("Rendern't.. maybe it was " + e.Message);
-            }
-        }
-
+        
         private void OnRayHit(RaycastHit hit, ModificationType type)
         {
             if (hit.transform.TryGetComponent(out PlayerControllerB component))

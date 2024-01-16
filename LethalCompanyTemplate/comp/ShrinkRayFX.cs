@@ -71,24 +71,20 @@ namespace LCShrinkRay.comp
 
             if (shrinkRayFX == null)
             {
-                prefab = ShrinkRay.shrinkRayFXPrefab;
-                return;
+                if (ShrinkRay.shrinkRayFXPrefab != null) prefab = ShrinkRay.shrinkRayFXPrefab;
+                else Plugin.log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
             }
-        }
-        
-        public GameObject CreateNewBeam(Transform parent)
-        {
+            
             // Get the visual effect unity component if it's not set yet
             if (!visualEffect)
             {
                 visualEffect = prefab.GetComponentInChildren<VisualEffect>();
-                
-                if (!visualEffect)
-                {
-                    Plugin.log("Shrink Ray VFX: Couldn't get VisualEffect component", Plugin.LogType.Error);   
-                }
+                if (!visualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
             }
-            
+        }
+
+        public GameObject CreateNewBeam(Transform parent)
+        {
             GameObject gameObject = Instantiate(prefab);
 
             return gameObject;
