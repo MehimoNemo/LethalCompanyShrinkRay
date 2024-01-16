@@ -5,18 +5,18 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 ## Configuration ##
 |  Group       |          Option             |                           Description                                                     | Possible values                        | Default |
 | ------------ | --------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------- | ------- |
-| General      | ShrinkRayCost               | Store cost of the shrink ray                                                              | 0                                      | 0       |
-|              | MultipleShrinking           | If true, a player can shrink multiple times.. unfortunatly.                               | false                                  | false   |
-| Shrunken     | MovementSpeedMultiplier     | Speed multiplier for shrunken players                                                     | 0.5 (slow) to 2 (fast)                 | 1.2     |
-|              | JumpHeightMultiplier        | Jump-height multiplier for shrunken players                                               | 0.5 (lower) to 2 (higher)              | 1.5     |
-|              | WeightMultiplier            | Weight multiplier applied on held items of shrunken players                               | 0.5 (lighter) to 2 (heavier)           | 1.5     |
-|              | CanUseVents                 | If true, shrunken players can teleport between vents.                                     | true                                   | true    |
-|              | PitchDistortionIntensity \* | Intensity of the pitch distortion for shrunken players.                                   | 0 (normal voice) to 0.5 (high pitched) | 0.3     |
-|              | CanEscapeGrab               | If true, a player who got grabbed can escape by jumping.                                  | true                                   | true    |
-| Interactions | JumpOnShrunkenPlayers       | If true, normal-sized players can harm shrunken players by jumping on them.               | true                                   | true    |
-|              | ThrowablePlayers            | If true, shrunken players can be thrown by normal sized players.                          | true                                   | true    |
-|              | FriendlyFlight              | If true, held players can grab other players, causing comedic, but game breaking effects. | false                                  | false   |
-| Enemies      | HoardingBugSteal            | If true, hoarding/loot bugs can treat a shrunken player like an item.                     | true                                   | true    |
+| General      | ShrinkRayCost               | Store cost of the shrink ray                                                              | any number                             | 0       |
+|              | MultipleShrinking           | If true, a player can shrink multiple times.. unfortunatly.                               | true / false                           | false   |
+| Shrunken     | MovementSpeedMultiplier     | Speed multiplier for shrunken players                                                     | 0.5 (slow) - 2 (fast)                  | 1.2     |
+|              | JumpHeightMultiplier        | Jump-height multiplier for shrunken players                                               | 0.5 (lower) - 2 (higher)               | 1.5     |
+|              | WeightMultiplier            | Weight multiplier applied on held items of shrunken players                               | 0.5 (lighter) - 2 (heavier)            | 1.5     |
+|              | CanUseVents                 | If true, shrunken players can teleport between vents.                                     | true / false                           | true    |
+|              | PitchDistortionIntensity \* | Intensity of the pitch distortion for shrunken players.                                   | 0 (normal voice) - 0.5 (high pitched)  | 0.3     |
+|              | CanEscapeGrab               | If true, a player who got grabbed can escape by jumping.                                  | true / false                           | true    |
+| Interactions | JumpOnShrunkenPlayers       | If true, normal-sized players can harm shrunken players by jumping on them.               | true / false                           | true    |
+|              | ThrowablePlayers            | If true, shrunken players can be thrown by normal sized players.                          | true / false                           | true    |
+|              | FriendlyFlight              | If true, held players can grab other players, causing comedic, but game breaking effects. | true / false                           | false   |
+| Enemies      | HoardingBugSteal            | If true, hoarding/loot bugs can treat a shrunken player like an item.                     | true / false                           | true    |
 |              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot, Bumper              | Default |
 > client-sided options are marked with a \*, others will by synced with the host.
 
