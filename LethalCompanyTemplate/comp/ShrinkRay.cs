@@ -204,7 +204,7 @@ namespace LCShrinkRay.comp
 
             if(Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
             {
-                if (beamObject == null || beamObject.gameObject == null)
+                if ((beamObject == null || beamObject.gameObject == null) && this.playerHeldBy != null)
                 {
                     ShootRayAndSync(ModificationType.Enlarging);
                 }
