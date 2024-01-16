@@ -71,7 +71,7 @@ namespace LCShrinkRay.comp
 
             if (shrinkRayFX == null)
             {
-                Plugin.log("\n\nLOAD ASSET ERROR: Shrink Ray VFX\n\n");
+                prefab = ShrinkRay.shrinkRayFXPrefab;
                 return;
             }
         }
@@ -81,7 +81,7 @@ namespace LCShrinkRay.comp
             // Get the visual effect unity component if it's not set yet
             if (!visualEffect)
             {
-                visualEffect = visualEffect.GetComponentInChildren<VisualEffect>();
+                visualEffect = prefab.GetComponentInChildren<VisualEffect>();
                 
                 if (!visualEffect)
                 {
