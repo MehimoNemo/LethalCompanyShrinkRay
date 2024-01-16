@@ -257,8 +257,6 @@ namespace LCShrinkRay.comp
             {
                 //Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
 
-                GameObject beamStartTargetObj, beamEndTargetObj;
-                
                 if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
                 {
                     // Did raycast hit wall?
@@ -298,19 +296,27 @@ namespace LCShrinkRay.comp
                 if (!bezier3) Plugin.log("bezier3 Null", Plugin.LogType.Error);
                 if (!bezier4) Plugin.log("bezier4 Null", Plugin.LogType.Error);
 
-                
+                Transform targetHeadTransform = target.gameObject.GetComponent<PlayerControllerB>().gameplayCamera.transform.Find("HUDHelmetPosition").transform;
+
                 // Stole this from above, minor adjustments to where the beam comes from
                 Vector3 beamStartPos = (start.position - (transform.up * 0.1f) + (transform.right * 0.35f) + (transform.forward * 1.3f));
                 
+                // Set bezier 1 (start point)
                 bezier1.transform.position = beamStartPos;
                 bezier1.transform.SetParent(start, true);
+                
+                // Set bezier 2 (curve)
                 bezier2.transform.position = beamStartPos;
                 bezier2.transform.SetParent(start, true);
-
-                bezier3.transform.position = target.position;
-                bezier3.transform.SetParent(target, true);
-                bezier4.transform.position = target.position;
-                bezier4.transform.SetParent(target, true);
+                
+                // Set bezier 3 (curve)
+                bezier3.transform.position = (targetHeadTransform.position) + (Vector3.up * shrinkRayFX.bezier3YOffset);
+                bezier3.transform.SetParent(targetHeadTransform, true);
+                
+                // Set Bezier 4 (final endpoint)
+                Vector3 beamEndPos = (targetHeadTransform.position) + (Vector3.up * shrinkRayFX.bezier4YOffset); // endpos is targets head adjusted on y axis slightly
+                bezier4.transform.position = beamEndPos;
+                bezier4.transform.SetParent(targetHeadTransform, true);
                     
                 // Destroy the beziers before the fxObject, just barely
                 Destroy(bezier1, beamDuration - 0.05f);
