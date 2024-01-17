@@ -39,10 +39,7 @@ namespace LCShrinkRay.patches
                 foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
                 {
                     if(PlayerHelper.isShrunk(player.gameObject))
-                    {
-                        OnPlayerModification(PlayerHelper.currentPlayer(), ModificationType.Normalizing);
-                        Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Normalizing });
-                    }
+                        ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ModificationType.Normalizing);
                 }
 
                 //reset speed, pitch(if it doesn't reset naturally)

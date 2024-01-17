@@ -8,6 +8,7 @@ using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System;
 using LC_API.Networking;
+using System.Reflection;
 
 namespace LCShrinkRay
 {
@@ -41,6 +42,8 @@ namespace LCShrinkRay
 
             mls.LogInfo(PluginInfo.PLUGIN_NAME + " mod has awoken!");
 
+            netcodePatching();
+
             harmony.PatchAll(typeof(Plugin));
             //harmony.PatchAll(typeof(SoundManagerPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
@@ -69,6 +72,23 @@ namespace LCShrinkRay
             }
 
             ShrinkRay.AddToGame();
+        }
+
+        private void netcodePatching()
+        {
+            var types = Assembly.GetExecutingAssembly().GetTypes();
+            foreach (var type in types)
+            {
+                var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                foreach (var method in methods)
+                {
+                    var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
+                    if (attributes.Length > 0)
+                    {
+                        method.Invoke(null, null);
+                    }
+                }
+            }
         }
 
         public enum LogType

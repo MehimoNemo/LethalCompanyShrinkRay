@@ -72,23 +72,23 @@ namespace LCShrinkRay.comp
 
             //Lethal Company_Data
             Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
+            NetworkManager.Singleton.AddNetworkPrefab(shrinkRayItem.spawnPrefab);
+
             //I SWEAR TO GOD IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
             Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("grabbablePlayerItem.asset");
             if (grabbablePlayerItem == null)
-            {
                 Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
-            }
+
+            NetworkManager.Singleton.AddNetworkPrefab(grabbablePlayerItem.spawnPrefab);
 
             shrinkRayItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
             shrinkRayItem.weight = 1.05f;
             shrinkRayItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
-
             shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
             ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
             GrabbablePlayerObject grabbyScript = grabbablePlayerItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
             PhysicsProp grabbyPhysProp = shrinkRayItem.spawnPrefab.GetComponent<PhysicsProp>();
             grabbyScript.itemProperties = grabbyPhysProp.itemProperties;
-
 
             visScript.itemProperties = shrinkRayItem;
             grabbyScript.itemProperties = grabbablePlayerItem;
@@ -302,8 +302,8 @@ namespace LCShrinkRay.comp
                 Plugin.log($"Ray has hit player " + component.playerClientId);
                 if (component.playerClientId != this.playerHeldBy.playerClientId)
                 {
-                    OnPlayerModification(component, type);
-                    Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = component.playerClientId, modificationType = type });
+                    OnPlayerModificationServerRpc(component.playerClientId, type);
+                    //Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = component.playerClientId, modificationType = type });
                 }
             }
             else
@@ -349,25 +349,27 @@ namespace LCShrinkRay.comp
             return possiblePlayerSizes[currentSizeIndex + 1];
         }
 
-        internal class PlayerModificationData
+        public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
-            public ulong playerID { get; set; }
-            public ModificationType modificationType { get; set; }
+            var sr = new ShrinkRay();
+            sr.OnPlayerModificationServerRpc(targetPlayer.playerClientId, type);
+            Destroy(sr,4);
         }
 
-        [NetworkMessage("OnPlayerModificationSync")]
-        public static void OnPlayerModificationSync(ulong sender, PlayerModificationData modificationData)
+        [ServerRpc(RequireOwnership = false)]
+        //[NetworkMessage("OnPlayerModificationSync")]
+        public void OnPlayerModificationServerRpc(ulong targetPlayerID, ModificationType type)
         {
-            Plugin.log("Player (" + sender + ") modified Player(" + modificationData.playerID + "): " + modificationData.modificationType.ToString());
-            var targetPlayer = PlayerHelper.GetPlayerController(modificationData.playerID);
-            if (targetPlayer == null)
-                return;
-
-            OnPlayerModification(targetPlayer, modificationData.modificationType );
+            Plugin.log("Player (" + PlayerHelper.currentPlayer().playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
+            OnPlayerModificationClientRpc(targetPlayerID, type );
         }
 
-        public static void OnPlayerModification(PlayerControllerB targetPlayer, ModificationType type)
+        [ClientRpc]
+        public void OnPlayerModificationClientRpc(ulong targetPlayerID, ModificationType type)
         {
+            var targetPlayer = PlayerHelper.GetPlayerController(targetPlayerID);
+            if (targetPlayer == null) return;
+
             if (targetPlayer == null || targetPlayer.gameObject == null || targetPlayer.gameObject.transform == null)
             {
                 Plugin.log("Ay.. that's not a valid player somehow..");
