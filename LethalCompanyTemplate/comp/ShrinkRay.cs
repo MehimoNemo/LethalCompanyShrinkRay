@@ -41,7 +41,6 @@ namespace LCShrinkRay.comp
             assetItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
 
             ShrinkRay visScript = assetItem.spawnPrefab.AddComponent<ShrinkRay>();
-            NetworkManager.Singleton.AddNetworkPrefab(assetItem.spawnPrefab);
 
             Destroy(assetItem.spawnPrefab.GetComponent<PhysicsProp>());
 

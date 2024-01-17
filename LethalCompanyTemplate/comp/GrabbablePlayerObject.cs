@@ -27,9 +27,11 @@ namespace LCShrinkRay.comp
             if (assetItem == null)
                 Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
 
-            var component = assetItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
+            networkPrefab = assetItem.spawnPrefab;
 
-            Destroy(assetItem.spawnPrefab.GetComponent<PhysicsProp>());
+            var component = networkPrefab.AddComponent<GrabbablePlayerObject>();
+
+            Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
             component.itemProperties = assetItem;
             if (component.itemProperties == null)
@@ -38,10 +40,7 @@ namespace LCShrinkRay.comp
             }
             component.itemProperties.isConductiveMetal = false;
 
-            networkPrefab = assetItem.spawnPrefab;
-
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(networkPrefab);
-            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
 
         //Null player container and null itemProperties

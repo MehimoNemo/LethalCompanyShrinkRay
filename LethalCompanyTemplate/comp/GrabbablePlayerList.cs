@@ -1,4 +1,5 @@
 ﻿using GameNetcodeStuff;
+using LCShrinkRay.Config;
 using LCShrinkRay.helper;
 using LethalLib.Modules;
 using Newtonsoft.Json;
@@ -12,33 +13,24 @@ namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerList : NetworkBehaviour
     {
-        public List<GameObject> grabbablePlayerObjects { get; private set; } = new List<GameObject>();
+        public List<GameObject> grabbablePlayerObjects { get; private set; }
 
-        private static GrabbablePlayerList instance = null;
-        private static readonly object padlock = new object();
+        public static GrabbablePlayerList Instance = null;
         public static GameObject networkPrefab { get; set; }
 
-        public static GrabbablePlayerList Instance
+        public static void loadAsset(AssetBundle assetBundle)
         {
-            get
+            var networkPrefab = assetBundle.LoadAsset<GameObject>("GrabbablePlayerList.prefab");
+            if (networkPrefab == null)
             {
-                lock (padlock)
-                {
-                    if (instance == null)
-                    {
-                        instance = new GrabbablePlayerList();
-                    }
-                    return instance;
-                }
+                Plugin.log("GrabbablePlayerList.asset not found!", Plugin.LogType.Error);
+                return;
             }
-        }
 
-        public static void load()
-        {
-            networkPrefab = new GameObject();
-            networkPrefab.AddComponent<NetworkObject>();
+            Instance = networkPrefab.AddComponent<GrabbablePlayerList>();
+            Instance.grabbablePlayerObjects = new List<GameObject>();
 
-            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(networkPrefab);
         }
 
         // ---- Helper ----

@@ -12,18 +12,6 @@ namespace LCShrinkRay.patches
     internal class GameNetworkManagerPatch
     {
         public static bool isGameInitialized = false;
-
-        [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
-        public static void Init()
-        {
-            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
-            AssetBundle upgradeAssets = AssetBundle.LoadFromFile(assetDir);
-
-            GrabbablePlayerObject.loadAsset(upgradeAssets);
-            GrabbablePlayerList.load();
-            ShrinkRay.loadAsset(upgradeAssets);
-        }
-
 		[HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
         public static void Uninitialize()
         {

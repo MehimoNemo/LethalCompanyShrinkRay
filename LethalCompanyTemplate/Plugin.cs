@@ -8,6 +8,7 @@ using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System;
 using System.Reflection;
+using System.IO;
 
 namespace LCShrinkRay
 {
@@ -39,9 +40,14 @@ namespace LCShrinkRay
                 mls.LogError(ex.Message);
             }
 
-            mls.LogInfo(PluginInfo.PLUGIN_NAME + " mod has awoken!");
+            // Debug
+            ModConfig.debugMode = true;
+
+            log(PluginInfo.PLUGIN_NAME + " mod has awoken!", LogType.Message);
 
             netcodePatching();
+
+            loadAssets();
 
             harmony.PatchAll(typeof(Plugin));
             //harmony.PatchAll(typeof(SoundManagerPatch));
@@ -52,10 +58,9 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(HoarderBugAIPatch));
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
 
-            // Debug
-            ModConfig.debugMode = true;
-            if(ModConfig.debugMode)
+            if (ModConfig.debugMode)
                 harmony.PatchAll(typeof(DebugPatches));
+
         }
 
         private void netcodePatching()
@@ -73,6 +78,16 @@ namespace LCShrinkRay
                     }
                 }
             }
+        }
+
+        private void loadAssets()
+        {
+            Plugin.log("Loading assets.");
+            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
+            AssetBundle upgradeAssets = AssetBundle.LoadFromFile(assetDir);
+            ShrinkRay.loadAsset(upgradeAssets);
+            GrabbablePlayerObject.loadAsset(upgradeAssets);
+            GrabbablePlayerList.loadAsset(upgradeAssets);
         }
 
         public enum LogType
