@@ -70,8 +70,6 @@ namespace LCShrinkRay
             {
                 mls.LogError(e.Message);
             }
-
-            ShrinkRay.AddToGame();
         }
 
         private void netcodePatching()

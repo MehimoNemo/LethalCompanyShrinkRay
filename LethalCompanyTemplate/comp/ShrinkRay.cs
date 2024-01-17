@@ -22,6 +22,9 @@ namespace LCShrinkRay.comp
     {
         public const string itemname = "Shrink Ray";
 
+        public static GameObject shrinkRayPrefab { get; private set; }
+        public static GameObject grabbablePlayerPrefab { get; private set; }
+
         private PlayerControllerB previousPlayerHeldBy;
         GameObject beamObject;
         LineRenderer lineRenderer;
@@ -31,8 +34,6 @@ namespace LCShrinkRay.comp
         public float beamLength = 10f;
         public float beamDuration = 2f;
         //private Color beamColor = Color.blue;
-
-        public static GameObject grabbablePlayerPrefab;
         internal class HitObjectData
         {
             public string objectName { get; set; }
@@ -72,21 +73,24 @@ namespace LCShrinkRay.comp
 
             //Lethal Company_Data
             Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
-            NetworkManager.Singleton.AddNetworkPrefab(shrinkRayItem.spawnPrefab);
 
             //I SWEAR TO GOD IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
             Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("grabbablePlayerItem.asset");
             if (grabbablePlayerItem == null)
                 Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
 
-            NetworkManager.Singleton.AddNetworkPrefab(grabbablePlayerItem.spawnPrefab);
 
             shrinkRayItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
             shrinkRayItem.weight = 1.05f;
             shrinkRayItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
             shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
+
             ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
+            NetworkManager.Singleton.AddNetworkPrefab(shrinkRayItem.spawnPrefab);
+
             GrabbablePlayerObject grabbyScript = grabbablePlayerItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
+            NetworkManager.Singleton.AddNetworkPrefab(grabbablePlayerItem.spawnPrefab);
+
             PhysicsProp grabbyPhysProp = shrinkRayItem.spawnPrefab.GetComponent<PhysicsProp>();
             grabbyScript.itemProperties = grabbyPhysProp.itemProperties;
 
@@ -111,8 +115,10 @@ namespace LCShrinkRay.comp
             visScript.itemProperties.syncUseFunction = true;
 
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
+            shrinkRayPrefab = shrinkRayItem.spawnPrefab;
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(grabbablePlayerItem.spawnPrefab);
             grabbablePlayerPrefab = grabbablePlayerItem.spawnPrefab;
+
             TerminalNode nightNode = new TerminalNode();
             nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
             Items.RegisterShopItem(shrinkRayItem, null, null, nightNode, shrinkRayItem.creditsWorth);

@@ -14,22 +14,26 @@ namespace LCShrinkRay.patches
     internal class GameNetworkManagerPatch
     {
         public static bool isGameInitialized = false;
-        [HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
-        [HarmonyPostfix()]
+
+        [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        public static void Init()
+        {
+            ShrinkRay.AddToGame();
+        }
+
+		[HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
         public static void Uninitialize()
         {
             isGameInitialized = false;
         }
 
-        [HarmonyPatch(typeof(StartOfRound), "SceneManager_OnLoadComplete1")]
-        [HarmonyPostfix()]
+        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "SceneManager_OnLoadComplete1")]
         public static void Initialize()
         {
             isGameInitialized = true;
         }
 
-        [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
-        [HarmonyPrefix()]
+        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
         public static void endOfRound()
         {
             Plugin.log("EndOfGame");
