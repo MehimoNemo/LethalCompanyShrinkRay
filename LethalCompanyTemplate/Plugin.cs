@@ -7,7 +7,6 @@ using LCShrinkRay.comp;
 using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System;
-using LC_API.Networking;
 using System.Reflection;
 
 namespace LCShrinkRay
@@ -57,19 +56,6 @@ namespace LCShrinkRay
             ModConfig.debugMode = true;
             if(ModConfig.debugMode)
                 harmony.PatchAll(typeof(DebugPatches));
-
-            try
-            {
-                // LC_API Network Setup
-                Network.RegisterAll(typeof(Shrinking));
-                Network.RegisterAll(typeof(ShrinkRay));
-                Network.RegisterAll(typeof(GrabbablePlayerObject));
-                Network.RegisterAll(typeof(GrabbablePlayerList));
-            }
-            catch (Exception e)
-            {
-                mls.LogError(e.Message);
-            }
         }
 
         private void netcodePatching()

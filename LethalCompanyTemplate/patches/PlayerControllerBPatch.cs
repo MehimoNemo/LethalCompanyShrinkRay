@@ -1,9 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LC_API.Networking;
 using LCShrinkRay.comp;
-using UnityEngine.InputSystem;
-using UnityEngine;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
 

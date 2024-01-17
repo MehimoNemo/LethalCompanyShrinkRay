@@ -1,13 +1,11 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LC_API.Networking;
 using LCShrinkRay.comp;
 using LCShrinkRay.helper;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Reflection;
+using Unity.Netcode;
 using UnityEngine;
-using static LCShrinkRay.comp.ShrinkRay;
 
 namespace LCShrinkRay.patches
 {
@@ -18,7 +16,11 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
         public static void Init()
         {
-            ShrinkRay.AddToGame();
+            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
+            AssetBundle upgradeAssets = AssetBundle.LoadFromFile(assetDir);
+
+            GrabbablePlayerObject.loadAsset(upgradeAssets);
+            ShrinkRay.loadAsset(upgradeAssets);
         }
 
 		[HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
@@ -43,7 +45,7 @@ namespace LCShrinkRay.patches
                 foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
                 {
                     if(PlayerHelper.isShrunk(player.gameObject))
-                        ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ModificationType.Normalizing);
+                        ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ShrinkRay.ModificationType.Normalizing);
                 }
 
                 //reset speed, pitch(if it doesn't reset naturally)

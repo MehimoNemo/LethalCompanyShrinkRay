@@ -1,18 +1,10 @@
-﻿using BepInEx.Logging;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using System;
 using UnityEngine;
 using Unity.Netcode;
-using LC_API.Networking;
 using LethalLib.Modules;
-using System.IO;
-using System.Reflection;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using static LCShrinkRay.comp.Shrinking;
-using System.Runtime.InteropServices;
-using System.ComponentModel;
-using static LCShrinkRay.comp.ShrinkRay;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
@@ -21,9 +13,6 @@ namespace LCShrinkRay.comp
     internal class ShrinkRay : GrabbableObject
     {
         public const string itemname = "Shrink Ray";
-
-        public static GameObject shrinkRayPrefab { get; private set; }
-        public static GameObject grabbablePlayerPrefab { get; private set; }
 
         private PlayerControllerB previousPlayerHeldBy;
         GameObject beamObject;
@@ -34,10 +23,48 @@ namespace LCShrinkRay.comp
         public float beamLength = 10f;
         public float beamDuration = 2f;
         //private Color beamColor = Color.blue;
-        internal class HitObjectData
+
+        public static GameObject networkPrefab { get; set; }
+
+        public static void loadAsset(AssetBundle assetBundle)
         {
-            public string objectName { get; set; }
-            public float newSize { get; set; }
+            var assetItem = assetBundle.LoadAsset<Item>("ShrinkRayItem.asset");
+            if(assetItem == null )
+            {
+                Plugin.log("ShrinkRayItem.asset not found!", Plugin.LogType.Error);
+                return;
+            }
+
+            assetItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
+            assetItem.weight = 1.05f;
+            assetItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
+            assetItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
+
+            ShrinkRay visScript = assetItem.spawnPrefab.AddComponent<ShrinkRay>();
+            NetworkManager.Singleton.AddNetworkPrefab(assetItem.spawnPrefab);
+
+            Destroy(assetItem.spawnPrefab.GetComponent<PhysicsProp>());
+
+            visScript.itemProperties = assetItem;
+
+            //-0.115 0.56 0.02
+            visScript.itemProperties = assetItem;
+            visScript.itemProperties.itemName = itemname;
+            visScript.itemProperties.name = itemname;
+            visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
+            visScript.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
+            visScript.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
+            visScript.grabbable = true;
+            visScript.useCooldown = 2f;
+            visScript.grabbableToEnemies = true;
+            visScript.itemProperties.syncUseFunction = true;
+
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(assetItem.spawnPrefab);
+            networkPrefab = assetItem.spawnPrefab;
+
+            TerminalNode nightNode = new TerminalNode();
+            nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
+            Items.RegisterShopItem(assetItem, null, null, nightNode, assetItem.creditsWorth);
         }
 
 
@@ -65,63 +92,11 @@ namespace LCShrinkRay.comp
             
         }
 
-        public static void AddToGame()
+        public static void AddToGame(AssetBundle assetBundle)
         {
             Plugin.log("Addin " + itemname);
-            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
-            AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
 
-            //Lethal Company_Data
-            Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
-
-            //I SWEAR TO GOD IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
-            Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("grabbablePlayerItem.asset");
-            if (grabbablePlayerItem == null)
-                Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
-
-
-            shrinkRayItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
-            shrinkRayItem.weight = 1.05f;
-            shrinkRayItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
-            shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
-
-            ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
-            NetworkManager.Singleton.AddNetworkPrefab(shrinkRayItem.spawnPrefab);
-
-            GrabbablePlayerObject grabbyScript = grabbablePlayerItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
-            NetworkManager.Singleton.AddNetworkPrefab(grabbablePlayerItem.spawnPrefab);
-
-            PhysicsProp grabbyPhysProp = shrinkRayItem.spawnPrefab.GetComponent<PhysicsProp>();
-            grabbyScript.itemProperties = grabbyPhysProp.itemProperties;
-
-            visScript.itemProperties = shrinkRayItem;
-            grabbyScript.itemProperties = grabbablePlayerItem;
-            if (grabbyScript.itemProperties == null)
-            {
-                Plugin.log("\n\nSHIT HOW IS IT NULL???\n\n");
-            }
-            PhysicsProp.Destroy(grabbyPhysProp);
-            UnityEngine.Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponent<PhysicsProp>());
-            //-0.115 0.56 0.02
-            grabbyScript.itemProperties.isConductiveMetal = false;
-            visScript.itemProperties.itemName = itemname;
-            visScript.itemProperties.name = itemname;
-            visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
-            visScript.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
-            visScript.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
-            visScript.grabbable = true;
-            visScript.useCooldown = 2f;
-            visScript.grabbableToEnemies = true;
-            visScript.itemProperties.syncUseFunction = true;
-
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
-            shrinkRayPrefab = shrinkRayItem.spawnPrefab;
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(grabbablePlayerItem.spawnPrefab);
-            grabbablePlayerPrefab = grabbablePlayerItem.spawnPrefab;
-
-            TerminalNode nightNode = new TerminalNode();
-            nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
-            Items.RegisterShopItem(shrinkRayItem, null, null, nightNode, shrinkRayItem.creditsWorth);
+            
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -303,13 +278,12 @@ namespace LCShrinkRay.comp
 
         private void OnRayHit(RaycastHit hit, ModificationType type)
         {
-            if (hit.transform.TryGetComponent<PlayerControllerB>(out PlayerControllerB component))
+            if (hit.transform.TryGetComponent(out PlayerControllerB component))
             {
                 Plugin.log($"Ray has hit player " + component.playerClientId);
                 if (component.playerClientId != this.playerHeldBy.playerClientId)
                 {
                     OnPlayerModificationServerRpc(component.playerClientId, type);
-                    //Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = component.playerClientId, modificationType = type });
                 }
             }
             else
@@ -363,7 +337,6 @@ namespace LCShrinkRay.comp
         }
 
         [ServerRpc(RequireOwnership = false)]
-        //[NetworkMessage("OnPlayerModificationSync")]
         public void OnPlayerModificationServerRpc(ulong targetPlayerID, ModificationType type)
         {
             Plugin.log("Player (" + PlayerHelper.currentPlayer().playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
@@ -389,7 +362,6 @@ namespace LCShrinkRay.comp
             {
                 case ModificationType.Normalizing:
                     {
-                        Plugin.log("Normalizing..");
                         var newSize = 1f;
                         if (newSize != targetPlayer.gameObject.transform.localScale.x)
                         {
@@ -400,7 +372,8 @@ namespace LCShrinkRay.comp
                                 coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
                         }
 
-                        GrabbablePlayerList.RemovePlayerGrabbableIfExists(targetPlayer);
+                        if(PlayerHelper.isHost())
+                            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)
                             Vents.unsussifyAll();
@@ -410,7 +383,6 @@ namespace LCShrinkRay.comp
                 case ModificationType.Shrinking:
                     {
                         var newSize = NextShrunkenSizeOf(targetPlayer.gameObject);
-                        Plugin.log("Shrinking to size " + newSize);
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
@@ -428,7 +400,14 @@ namespace LCShrinkRay.comp
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
                         if (PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.SetPlayerGrabbableServer(targetPlayer);
+                        {
+                            Plugin.log("About to call SetPlayerGrabbableServerRpc");
+                            GrabbablePlayerList.Instance.SetPlayerGrabbableServerRpc(targetPlayer.playerClientId);
+                        }
+                        else
+                        {
+                            Plugin.log("NOT HOST!");
+                        }
 
                         if (targetingUs)
                             Vents.SussifyAll();
@@ -439,7 +418,6 @@ namespace LCShrinkRay.comp
                 case ModificationType.Enlarging:
                     {
                         var newSize = NextIncreasedSizeOf(targetPlayer.gameObject);
-                        Plugin.log("Enlarging to size " + newSize);
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
@@ -450,7 +428,7 @@ namespace LCShrinkRay.comp
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
                         if (newSize >= 1f) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.RemovePlayerGrabbableIfExists(targetPlayer);
+                            GrabbablePlayerList.Instance.RemovePlayerGrabbable(targetPlayer.playerClientId);
 
                         if (targetingUs)
                             Vents.unsussifyAll();

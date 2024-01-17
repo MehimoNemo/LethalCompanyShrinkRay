@@ -1,13 +1,12 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.Config;
 using System;
-using System.Collections.Generic;
-using LC_API.Networking;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using LCShrinkRay.helper;
+using Unity.Netcode;
+using LethalLib.Modules;
 
 namespace LCShrinkRay.comp
 {
@@ -15,6 +14,36 @@ namespace LCShrinkRay.comp
     {
         public PlayerControllerB grabbedPlayer { get; set; }
         MeshRenderer helmet;
+        private bool grabbedPlayerDemandedDrop = false;
+
+        public static GameObject networkPrefab { get; set; }
+
+        public static void loadAsset(AssetBundle assetBundle)
+        {
+            if (networkPrefab != null) // Already loaded
+                return;
+
+            var assetItem = assetBundle.LoadAsset<Item>("grabbablePlayerItem.asset");
+            if (assetItem == null)
+                Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
+
+            var component = assetItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
+
+            Destroy(assetItem.spawnPrefab.GetComponent<PhysicsProp>());
+
+            component.itemProperties = assetItem;
+            if (component.itemProperties == null)
+            {
+                Plugin.log("\n\nSHIT HOW IS IT NULL???\n\n");
+            }
+            component.itemProperties.isConductiveMetal = false;
+
+            networkPrefab = assetItem.spawnPrefab;
+            GrabbablePlayerList.Instance.Setup();
+
+            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(networkPrefab);
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+        }
 
         //Null player container and null itemProperties
         //okay gonna do stuff good :)
@@ -95,15 +124,12 @@ namespace LCShrinkRay.comp
             }
         }
 
-        [NetworkMessage("DemandDropFromPlayer")]
-        public static void DemandDropFromPlayer(ulong sender, string playerID)
+        public void DemandDropFromPlayer()
         {
-            Plugin.log("A player demands to be dropped from player " + playerID);
-            if (StartOfRound.Instance.localPlayerController.playerClientId == ulong.Parse(playerID)) // I have to drop him...
-            {
-                Plugin.log("I have to drop them... sadly!", Plugin.LogType.Warning);
-                StartOfRound.Instance.localPlayerController.DiscardHeldObject();
-            }
+            Plugin.log("A player demanded to be dropped from player " + PlayerHelper.currentPlayer().playerClientId + " .. so it shall be!");
+
+            StartOfRound.Instance.localPlayerController.DiscardHeldObject();
+            grabbedPlayerDemandedDrop = false;
         }
 
         public override void LateUpdate()
@@ -111,6 +137,9 @@ namespace LCShrinkRay.comp
             base.LateUpdate();
             if (grabbedPlayer != null)
             {
+                if(grabbedPlayerDemandedDrop && base.IsOwner) // We're the holder
+                    DemandDropFromPlayer();
+
                 this.grabbable = PlayerHelper.isShrunk(grabbedPlayer.gameObject);
 
                 if (this.isHeld)
@@ -128,7 +157,7 @@ namespace LCShrinkRay.comp
                     if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     {
                         Plugin.log("Player demands to be dropped!");
-                        Network.Broadcast("DemandDropFromPlayer", playerHeldBy.playerClientId.ToString()); // PlayerControllerBPatch
+                        grabbedPlayerDemandedDrop = true;
                     }
                 }
                 else
@@ -140,7 +169,7 @@ namespace LCShrinkRay.comp
             {
                 //mls.LogError("GRABBED PLAYER IS NULL IN UPDATE");
             }
-                //base.Update();
+            //base.Update();
         }
 
         public override void PocketItem()
