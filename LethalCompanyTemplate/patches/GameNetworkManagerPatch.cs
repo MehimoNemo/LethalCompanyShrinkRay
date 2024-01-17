@@ -20,6 +20,7 @@ namespace LCShrinkRay.patches
             AssetBundle upgradeAssets = AssetBundle.LoadFromFile(assetDir);
 
             GrabbablePlayerObject.loadAsset(upgradeAssets);
+            GrabbablePlayerList.load();
             ShrinkRay.loadAsset(upgradeAssets);
         }
 

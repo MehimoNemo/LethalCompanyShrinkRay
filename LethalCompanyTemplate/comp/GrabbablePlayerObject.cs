@@ -39,7 +39,6 @@ namespace LCShrinkRay.comp
             component.itemProperties.isConductiveMetal = false;
 
             networkPrefab = assetItem.spawnPrefab;
-            GrabbablePlayerList.Instance.Setup();
 
             LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(networkPrefab);
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);

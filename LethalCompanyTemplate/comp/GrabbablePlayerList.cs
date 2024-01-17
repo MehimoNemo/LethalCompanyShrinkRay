@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.helper;
+using LethalLib.Modules;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -11,10 +12,11 @@ namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerList : NetworkBehaviour
     {
-        public List<GameObject> grabbablePlayerObjects { get; private set; }
+        public List<GameObject> grabbablePlayerObjects { get; private set; } = new List<GameObject>();
 
         private static GrabbablePlayerList instance = null;
         private static readonly object padlock = new object();
+        public static GameObject networkPrefab { get; set; }
 
         public static GrabbablePlayerList Instance
         {
@@ -24,17 +26,19 @@ namespace LCShrinkRay.comp
                 {
                     if (instance == null)
                     {
-                        Plugin.log("Generated GrabbablePlayerList");
-                        instance = GrabbablePlayerObject.networkPrefab.AddComponent<GrabbablePlayerList>();
+                        instance = new GrabbablePlayerList();
                     }
                     return instance;
                 }
             }
         }
 
-        public void Setup()
+        public static void load()
         {
-            grabbablePlayerObjects = new List<GameObject>();
+            networkPrefab = new GameObject();
+            networkPrefab.AddComponent<NetworkObject>();
+
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
 
         // ---- Helper ----
