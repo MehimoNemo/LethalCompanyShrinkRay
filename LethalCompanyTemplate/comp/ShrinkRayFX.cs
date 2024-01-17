@@ -61,7 +61,7 @@ namespace LCShrinkRay.comp
 
         // Transform & Position properties
         public float bezier3YOffset = 2.5f;
-        public float bezier4YOffset = 0.5f;
+        public float bezier4YOffset = 0f;
         
         #endregion
         

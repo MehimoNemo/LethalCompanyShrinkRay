@@ -319,10 +319,10 @@ namespace LCShrinkRay.comp
                 bezier4.transform.SetParent(targetHeadTransform, true);
                     
                 // Destroy the beziers before the fxObject, just barely
-                Destroy(bezier1, beamDuration - 0.05f);
-                Destroy(bezier2, beamDuration - 0.05f);
-                Destroy(bezier3, beamDuration - 0.05f);
-                Destroy(bezier4, beamDuration - 0.05f);
+                Destroy(bezier1.gameObject, beamDuration - 0.05f);
+                Destroy(bezier2.gameObject, beamDuration - 0.05f);
+                Destroy(bezier3.gameObject, beamDuration - 0.05f);
+                Destroy(bezier4.gameObject, beamDuration - 0.05f);
                 Destroy(fxObject, beamDuration);
             }
             catch (Exception e)
