@@ -25,7 +25,8 @@ namespace LCShrinkRay.comp
         public float beamDuration = 2f;
 
         public static GameObject shrinkRayFXPrefab;
-        public ShrinkRayFX shrinkRayFX;
+        public static GameObject deathPoofFXPrefab;
+        public static ShrinkRayFX shrinkRayFX;
         //private Color beamColor = Color.blue;
         private List<ulong> handledRayHits = new List<ulong>();
 
@@ -55,13 +56,20 @@ namespace LCShrinkRay.comp
 			// Load ShrinkRayFX AssetBundle -- The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
             string FXAssetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
             AssetBundle FXAssets = AssetBundle.LoadFromFile(FXAssetDir);
+            // Load beam asset
             shrinkRayFXPrefab = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");
             if (shrinkRayFXPrefab == null)
             {
                 Plugin.log("AssetBundle Loading Error: Shrink Ray VFX", Plugin.LogType.Error);
             }
+            // Load death poof asset
+            deathPoofFXPrefab = FXAssets.LoadAsset<GameObject>("Poof FX");
+            if (deathPoofFXPrefab == null)
+            {
+                Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
+            }
             
-            // Add the FX component
+            // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRayFX>();
             
             // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
@@ -444,13 +452,24 @@ namespace LCShrinkRay.comp
                             return; // Well, nothing changed..
 
                         if (newSize <= 0 && !targetPlayer.AllowPlayerDeath())
+                        {
+                            // MOVE poof below
+                            GameObject deathPoofObject = Instantiate(deathPoofFXPrefab, targetPlayer.transform.position, Quaternion.identity);
+                            Destroy(deathPoofObject, 4f);
                             return; // Can't shrink players to death in ship phase
+                        }
 
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, newSize, () =>
                         {
                             if (targetingUs && newSize <= 0f)
+                            {
+								// Poof Target to death because they are too small to exist
+                                Vector3 pos = targetPlayer.transform.position;
+                                GameObject deathPoofObject = Instantiate(deathPoofFXPrefab, pos, Quaternion.identity);
+                                Destroy(deathPoofObject, 4f);
                                 targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
+							}
                         });
 
                         if (newSize < 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
