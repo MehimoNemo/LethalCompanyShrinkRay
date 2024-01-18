@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using GameNetcodeStuff;
 
 using LCShrinkRay.patches;
-using System.IO;
-using System.Reflection;
-using LethalLib.Modules;
 using LCShrinkRay.Config;
-using LC_API.Networking;
 using Unity.Netcode;
-using LC_API.ServerAPI;
 using System.Linq;
 using Newtonsoft.Json;
 using LCShrinkRay.helper;
@@ -90,11 +84,18 @@ namespace LCShrinkRay.comp
 
         private static bool isGoombaCoroutineRunning = false;
 
-        [NetworkMessage("OnGoomba")]
-        public static void OnGoomba(ulong sender, string playerID)
+        [ServerRpc(RequireOwnership = false)]
+        public static void OnGoombaServerRpc(ulong playerID)
+        {
+            Plugin.log("WE GETTING GOOMBAD");
+            OnGoombaClientRpc(playerID);
+        }
+
+        [ClientRpc]
+        public static void OnGoombaClientRpc(ulong playerID)
         {
             Plugin.log("A goomba...... stompin' on player " + playerID);
-            coroutines.GoombaStomp.StartRoutine(PlayerHelper.GetPlayerObject(ulong.Parse(playerID)));
+            coroutines.GoombaStomp.StartRoutine(PlayerHelper.GetPlayerObject(playerID));
         }
 
         public void OnGoombaCoroutineComplete()
@@ -139,9 +140,7 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            Plugin.log("WE GETTING GOOMBAD");
-            Network.Broadcast("OnGoomba", StartOfRound.Instance.localPlayerController.playerClientId.ToString());
-            coroutines.GoombaStomp.StartRoutine(StartOfRound.Instance.localPlayerController.gameObject);
+            OnGoombaServerRpc(PlayerHelper.currentPlayer().playerClientId);
             isGoombaCoroutineRunning = true;
         }
 
@@ -254,7 +253,7 @@ namespace LCShrinkRay.comp
         {
             foreach ( var pcb in StartOfRound.Instance.allPlayerScripts.Where(p => p != null))
             {
-                Plugin.log("Altering player voice pitches");
+                //Plugin.log("Altering player voice pitches");
                 SetPlayerPitch(1f, pcb.playerClientId);
             }
         }

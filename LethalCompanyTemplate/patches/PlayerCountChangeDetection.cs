@@ -25,11 +25,9 @@ namespace LCShrinkRay.patches
             Plugin.log("Player " + clientId + " joined.");
 
             // Place things that should run after a player joins or leaves here vVVVVvvVVVVv
+            Vents.rerenderAllSussified();
 
-            MeshRenderer renderer = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>()[0];
-            renderer.enabled = true; // re-enable renderers for all vent covers
-
-            GrabbablePlayerList.BroadcastGrabbedPlayerObjectsList(clientId);
+            GrabbablePlayerList.Instance.SendGrabbablePlayerListServerRpc(clientId);
         }
 
         // Before client disconnects
@@ -45,9 +43,7 @@ namespace LCShrinkRay.patches
             if(PlayerHelper.currentPlayer().playerClientId == clientId)
                 return; // handled in Disconnect() below
 
-            var pcb = PlayerHelper.GetPlayerController(clientId);
-            if(pcb != null )
-                GrabbablePlayerList.RemovePlayerGrabbableIfExists(pcb);
+            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(clientId);
         }
 
         [HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
@@ -55,8 +51,11 @@ namespace LCShrinkRay.patches
         public static void OnDisconnect()
         {
             Plugin.log("We disconnected!");
-            GrabbablePlayerList.RemoveAllPlayerGrabbables(onlyLocal: true); // a clean up of all player grabbables that somehow survived
-            return;
+
+            if (!PlayerHelper.isHost())
+                return;
+           
+            GrabbablePlayerList.Instance.RemoveAllPlayerGrabbablesServerRpc(); // a clean up of all player grabbables
         }
 
 

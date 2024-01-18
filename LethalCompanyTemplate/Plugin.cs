@@ -7,7 +7,8 @@ using LCShrinkRay.comp;
 using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System;
-using LC_API.Networking;
+using System.Reflection;
+using System.IO;
 
 namespace LCShrinkRay
 {
@@ -39,7 +40,12 @@ namespace LCShrinkRay
                 mls.LogError(ex.Message);
             }
 
-            mls.LogInfo(PluginInfo.PLUGIN_NAME + " mod has awoken!");
+            // Debug
+            ModConfig.debugMode = true;
+
+            log(PluginInfo.PLUGIN_NAME + " mod has awoken!", LogType.Message);
+
+            netcodePatching();
 
             harmony.PatchAll(typeof(Plugin));
             //harmony.PatchAll(typeof(SoundManagerPatch));
@@ -50,25 +56,26 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(HoarderBugAIPatch));
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
 
-            // Debug
-            ModConfig.debugMode = true;
-            if(ModConfig.debugMode)
+            if (ModConfig.debugMode)
                 harmony.PatchAll(typeof(DebugPatches));
 
-            try
-            {
-                // LC_API Network Setup
-                Network.RegisterAll(typeof(Shrinking));
-                Network.RegisterAll(typeof(ShrinkRay));
-                Network.RegisterAll(typeof(GrabbablePlayerObject));
-                Network.RegisterAll(typeof(GrabbablePlayerList));
-            }
-            catch (Exception e)
-            {
-                mls.LogError(e.Message);
-            }
+        }
 
-            ShrinkRay.AddToGame();
+        private void netcodePatching()
+        {
+            var types = Assembly.GetExecutingAssembly().GetTypes();
+            foreach (var type in types)
+            {
+                var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                foreach (var method in methods)
+                {
+                    var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
+                    if (attributes.Length > 0)
+                    {
+                        method.Invoke(null, null);
+                    }
+                }
+            }
         }
 
         public enum LogType

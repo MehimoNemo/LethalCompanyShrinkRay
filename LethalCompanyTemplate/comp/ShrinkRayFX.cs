@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -70,8 +71,9 @@ namespace LCShrinkRay.comp
 
             // The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
             shrinkRayFX = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");
+            NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
 
-            if(shrinkRayFX == null)
+            if (shrinkRayFX == null)
             {
                 Plugin.log("\n\nFRICKIN HECK WHY IS IT NULL???\n\n");
             }

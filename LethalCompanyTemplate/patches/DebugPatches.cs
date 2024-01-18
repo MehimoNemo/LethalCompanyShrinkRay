@@ -1,10 +1,10 @@
 ﻿using HarmonyLib;
-using LC_API.Networking;
 using System;
 using UnityEngine.InputSystem;
 using GameNetcodeStuff;
 using LCShrinkRay.helper;
 using static LCShrinkRay.comp.ShrinkRay;
+using LCShrinkRay.comp;
 
 namespace LCShrinkRay.patches
 {
@@ -47,15 +47,13 @@ namespace LCShrinkRay.patches
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
                     Plugin.log("Shrinking player model");
-                    OnPlayerModification(PlayerHelper.currentPlayer(), ModificationType.Shrinking);
-                    Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Shrinking });
+                    ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ModificationType.Shrinking);
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
                     Plugin.log("Growing player model");
-                    OnPlayerModification(PlayerHelper.currentPlayer(), ModificationType.Enlarging);
-                    Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = PlayerHelper.currentPlayer().playerClientId, modificationType = ModificationType.Enlarging });
+                    ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ModificationType.Enlarging);
                 }
 
                 else if (Keyboard.current.f4Key.wasPressedThisFrame)
@@ -63,8 +61,7 @@ namespace LCShrinkRay.patches
                     foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
                     {
                         Plugin.log("Shrinking Player (" + pcb.playerClientId + ")");
-                        OnPlayerModification(pcb, ModificationType.Shrinking);
-                        Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = pcb.playerClientId, modificationType = ModificationType.Shrinking });
+                        ShrinkRay.debugOnPlayerModificationWorkaround(pcb, ModificationType.Shrinking);
                     }
                 }
 
@@ -73,8 +70,7 @@ namespace LCShrinkRay.patches
                     foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
                     {
                         Plugin.log("Growing Player (" + pcb.playerClientId + ")");
-                        OnPlayerModification(pcb, ModificationType.Enlarging);
-                        Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = pcb.playerClientId, modificationType = ModificationType.Enlarging });
+                        ShrinkRay.debugOnPlayerModificationWorkaround(pcb, ModificationType.Enlarging);
                     }
                 }
 

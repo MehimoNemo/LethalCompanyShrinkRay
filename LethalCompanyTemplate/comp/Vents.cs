@@ -1,15 +1,9 @@
 ﻿using GameNetcodeStuff;
-using LC_API.GameInterfaceAPI.Events;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Unity.Netcode;
 using UnityEngine;
-using static LCShrinkRay.comp.Vents;
 
 namespace LCShrinkRay.comp
 {
@@ -119,14 +113,20 @@ namespace LCShrinkRay.comp
             Plugin.log("Hover Icon: " + (trigger.hoverIcon != null ? trigger.hoverIcon.name : "null"));
         }
 
+        public static void rerenderAllSussified()
+        {
+            MeshRenderer renderer = GameObject.Find("VentEntrance").gameObject.transform.Find("Hinge").gameObject.transform.Find("VentCover").gameObject.GetComponentsInChildren<MeshRenderer>()[0];
+            renderer.enabled = true; // re-enable renderers for all vent covers
+        }
+
         // when unshrinking will be a thing
         public static void unsussifyAll()
         {
             return; // wip
-            foreach (var vent in getAllVents())
+            /*foreach (var vent in getAllVents())
                 unsussify(vent);
 
-            sussification = false;
+            sussification = false;*/
         }
 
         public static void unsussify(EnemyVent enemyVent)

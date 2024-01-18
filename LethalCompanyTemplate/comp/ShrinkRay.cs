@@ -1,18 +1,10 @@
-﻿using BepInEx.Logging;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using System;
 using UnityEngine;
 using Unity.Netcode;
-using LC_API.Networking;
 using LethalLib.Modules;
-using System.IO;
-using System.Reflection;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using static LCShrinkRay.comp.Shrinking;
-using System.Runtime.InteropServices;
-using System.ComponentModel;
-using static LCShrinkRay.comp.ShrinkRay;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
@@ -31,12 +23,51 @@ namespace LCShrinkRay.comp
         public float beamLength = 10f;
         public float beamDuration = 2f;
         //private Color beamColor = Color.blue;
+        private List<ulong> handledRayHits = new List<ulong>();
 
-        public static GameObject grabbablePlayerPrefab;
-        internal class HitObjectData
+        public static GameObject networkPrefab { get; set; }
+
+        public static void LoadAsset(AssetBundle assetBundle)
         {
-            public string objectName { get; set; }
-            public float newSize { get; set; }
+            if (networkPrefab != null) return; // Already loaded
+
+            var assetItem = assetBundle.LoadAsset<Item>("ShrinkRayItem.asset");
+            if(assetItem == null )
+            {
+                Plugin.log("ShrinkRayItem.asset not found!", Plugin.LogType.Error);
+                return;
+            }
+
+            networkPrefab = assetItem.spawnPrefab;
+            assetItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
+            assetItem.weight = 1.05f;
+            assetItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
+            networkPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
+
+            ShrinkRay visScript = networkPrefab.AddComponent<ShrinkRay>();
+            //GrabbablePlayerList.Instance = networkPrefab.AddComponent<GrabbablePlayerList>();
+
+            Destroy(networkPrefab.GetComponent<PhysicsProp>());
+
+            visScript.itemProperties = assetItem;
+
+            //-0.115 0.56 0.02
+            visScript.itemProperties = assetItem;
+            visScript.itemProperties.itemName = itemname;
+            visScript.itemProperties.name = itemname;
+            visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
+            visScript.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
+            visScript.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
+            visScript.grabbable = true;
+            visScript.useCooldown = 2f;
+            visScript.grabbableToEnemies = true;
+            visScript.itemProperties.syncUseFunction = true;
+
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+
+            TerminalNode nightNode = new TerminalNode();
+            nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
+            Items.RegisterShopItem(assetItem, null, null, nightNode, assetItem.creditsWorth);
         }
 
 
@@ -62,60 +93,6 @@ namespace LCShrinkRay.comp
             //beamMaterial.mainTexture = blueTexture;
             //beamMaterial.color = beamColor;
             
-        }
-
-        public static void AddToGame()
-        {
-            Plugin.log("Addin " + itemname);
-            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
-            AssetBundle UpgradeAssets = AssetBundle.LoadFromFile(assetDir);
-
-            //Lethal Company_Data
-            Item shrinkRayItem = UpgradeAssets.LoadAsset<Item>("ShrinkRayItem.asset");
-            //I SWEAR TO GOD IF THE PROBLEM WAS A LOWERCASE G I WILL KILL ALL OF MANKIND
-            Item grabbablePlayerItem = UpgradeAssets.LoadAsset<Item>("grabbablePlayerItem.asset");
-            if (grabbablePlayerItem == null)
-            {
-                Plugin.log("\n\nFUCK WHY IS IT NULL???\n\n");
-            }
-
-            shrinkRayItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
-            shrinkRayItem.weight = 1.05f;
-            shrinkRayItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
-
-            shrinkRayItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
-            ShrinkRay visScript = shrinkRayItem.spawnPrefab.AddComponent<ShrinkRay>();
-            GrabbablePlayerObject grabbyScript = grabbablePlayerItem.spawnPrefab.AddComponent<GrabbablePlayerObject>();
-            PhysicsProp grabbyPhysProp = shrinkRayItem.spawnPrefab.GetComponent<PhysicsProp>();
-            grabbyScript.itemProperties = grabbyPhysProp.itemProperties;
-
-
-            visScript.itemProperties = shrinkRayItem;
-            grabbyScript.itemProperties = grabbablePlayerItem;
-            if (grabbyScript.itemProperties == null)
-            {
-                Plugin.log("\n\nSHIT HOW IS IT NULL???\n\n");
-            }
-            PhysicsProp.Destroy(grabbyPhysProp);
-            UnityEngine.Component.Destroy(grabbablePlayerItem.spawnPrefab.GetComponent<PhysicsProp>());
-            //-0.115 0.56 0.02
-            grabbyScript.itemProperties.isConductiveMetal = false;
-            visScript.itemProperties.itemName = itemname;
-            visScript.itemProperties.name = itemname;
-            visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
-            visScript.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
-            visScript.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
-            visScript.grabbable = true;
-            visScript.useCooldown = 2f;
-            visScript.grabbableToEnemies = true;
-            visScript.itemProperties.syncUseFunction = true;
-
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(shrinkRayItem.spawnPrefab);
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(grabbablePlayerItem.spawnPrefab);
-            grabbablePlayerPrefab = grabbablePlayerItem.spawnPrefab;
-            TerminalNode nightNode = new TerminalNode();
-            nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
-            Items.RegisterShopItem(shrinkRayItem, null, null, nightNode, shrinkRayItem.creditsWorth);
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -245,11 +222,13 @@ namespace LCShrinkRay.comp
             Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
 
             int hitEnemiesCount = Physics.SphereCastNonAlloc(ray, 5f, enemyColliders, beamLength, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Collide);
-            Plugin.log("Casted Ray");
-            Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
+            //Plugin.log("Casted Ray");
+            //Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
+
+            handledRayHits.Clear();
             for (int i = 0; i < hitEnemiesCount; i++)
             {
-                Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
+                //Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
                 if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
                 {
                     Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
@@ -263,17 +242,17 @@ namespace LCShrinkRay.comp
 
         private void RenderRayBeam(Vector3 beamStartPos, Vector3 forward, ModificationType type)
         {
-            Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
+            //Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
             try
             {
                 if (parentObject.transform.Find("Beam") != null || beamMaterial == null)
                     return;
 
-                Plugin.log("trying to create beam object");
+                //Plugin.log("trying to create beam object");
                 beamObject = new GameObject("Beam");
-                Plugin.log("Before creating LineRenderer");
+                //Plugin.log("Before creating LineRenderer");
                 lineRenderer = beamObject.AddComponent<LineRenderer>();
-                Plugin.log("After creating LineRenderer");
+                //Plugin.log("After creating LineRenderer");
                 lineRenderer.material = beamMaterial;
                 lineRenderer.startWidth = beamWidth;
                 lineRenderer.endWidth = beamWidth * 16;
@@ -285,7 +264,7 @@ namespace LCShrinkRay.comp
                 lineRenderer.numCapVertices = 6;
                 lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lineRenderer.receiveShadows = false;
-                Plugin.log("Done with rendering beam");
+                //Plugin.log("Done with rendering beam");
 
                 Destroy(beamObject, beamDuration);
             }
@@ -297,13 +276,13 @@ namespace LCShrinkRay.comp
 
         private void OnRayHit(RaycastHit hit, ModificationType type)
         {
-            if (hit.transform.TryGetComponent<PlayerControllerB>(out PlayerControllerB component))
+            if (hit.transform.TryGetComponent(out PlayerControllerB component))
             {
                 Plugin.log($"Ray has hit player " + component.playerClientId);
-                if (component.playerClientId != this.playerHeldBy.playerClientId)
+                if (component.playerClientId != this.playerHeldBy.playerClientId && !handledRayHits.Contains(component.playerClientId))
                 {
-                    OnPlayerModification(component, type);
-                    Network.Broadcast("OnPlayerModificationSync", new PlayerModificationData() { playerID = component.playerClientId, modificationType = type });
+                    OnPlayerModificationServerRpc(component.playerClientId, type);
+                    handledRayHits.Add(component.playerClientId);
                 }
             }
             else
@@ -349,25 +328,28 @@ namespace LCShrinkRay.comp
             return possiblePlayerSizes[currentSizeIndex + 1];
         }
 
-        internal class PlayerModificationData
+        public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
-            public ulong playerID { get; set; }
-            public ModificationType modificationType { get; set; }
+            Plugin.log("debugOnPlayerModificationWorkaround");
+            var sr = new ShrinkRay();
+            sr.OnPlayerModificationServerRpc(targetPlayer.playerClientId, type);
+            Destroy(sr,4);
         }
 
-        [NetworkMessage("OnPlayerModificationSync")]
-        public static void OnPlayerModificationSync(ulong sender, PlayerModificationData modificationData)
+        [ServerRpc(RequireOwnership = false)]
+        public void OnPlayerModificationServerRpc(ulong targetPlayerID, ModificationType type)
         {
-            Plugin.log("Player (" + sender + ") modified Player(" + modificationData.playerID + "): " + modificationData.modificationType.ToString());
-            var targetPlayer = PlayerHelper.GetPlayerController(modificationData.playerID);
-            if (targetPlayer == null)
-                return;
-
-            OnPlayerModification(targetPlayer, modificationData.modificationType );
+            Plugin.log("OnPlayerModificationServerRpc");
+            Plugin.log("Player (" + PlayerHelper.currentPlayer().playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
+            OnPlayerModificationClientRpc(targetPlayerID, type );
         }
 
-        public static void OnPlayerModification(PlayerControllerB targetPlayer, ModificationType type)
+        [ClientRpc]
+        public void OnPlayerModificationClientRpc(ulong targetPlayerID, ModificationType type)
         {
+            var targetPlayer = PlayerHelper.GetPlayerController(targetPlayerID);
+            if (targetPlayer == null) return;
+
             if (targetPlayer == null || targetPlayer.gameObject == null || targetPlayer.gameObject.transform == null)
             {
                 Plugin.log("Ay.. that's not a valid player somehow..");
@@ -381,7 +363,6 @@ namespace LCShrinkRay.comp
             {
                 case ModificationType.Normalizing:
                     {
-                        Plugin.log("Normalizing..");
                         var newSize = 1f;
                         if (newSize != targetPlayer.gameObject.transform.localScale.x)
                         {
@@ -392,7 +373,8 @@ namespace LCShrinkRay.comp
                                 coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
                         }
 
-                        GrabbablePlayerList.RemovePlayerGrabbableIfExists(targetPlayer);
+                        if(PlayerHelper.isHost())
+                            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)
                             Vents.unsussifyAll();
@@ -402,7 +384,6 @@ namespace LCShrinkRay.comp
                 case ModificationType.Shrinking:
                     {
                         var newSize = NextShrunkenSizeOf(targetPlayer.gameObject);
-                        Plugin.log("Shrinking to size " + newSize);
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
@@ -419,8 +400,15 @@ namespace LCShrinkRay.comp
                         else
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
-                        if (PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.SetPlayerGrabbableServer(targetPlayer);
+                        if (newSize < 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
+                        {
+                            Plugin.log("About to call SetPlayerGrabbableServerRpc");
+                            GrabbablePlayerList.Instance.SetPlayerGrabbableServerRpc(targetPlayer.playerClientId);
+                        }
+                        else
+                        {
+                            Plugin.log("NOT HOST!");
+                        }
 
                         if (targetingUs)
                             Vents.SussifyAll();
@@ -431,7 +419,6 @@ namespace LCShrinkRay.comp
                 case ModificationType.Enlarging:
                     {
                         var newSize = NextIncreasedSizeOf(targetPlayer.gameObject);
-                        Plugin.log("Enlarging to size " + newSize);
                         if (newSize == targetPlayer.gameObject.transform.localScale.x)
                             return; // Well, nothing changed..
 
@@ -441,8 +428,8 @@ namespace LCShrinkRay.comp
                         else
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
-                        if (newSize >= 1f) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.RemovePlayerGrabbableIfExists(targetPlayer);
+                        if (newSize >= 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
+                            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)
                             Vents.unsussifyAll();
