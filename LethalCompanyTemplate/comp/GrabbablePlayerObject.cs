@@ -8,6 +8,7 @@ using LCShrinkRay.helper;
 using Unity.Netcode;
 using static Unity.Netcode.CustomMessagingManager;
 using Unity.Collections;
+using Newtonsoft.Json;
 
 namespace LCShrinkRay.comp
 {
@@ -161,7 +162,11 @@ namespace LCShrinkRay.comp
                     if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     {
                         Plugin.log("You demanded to be dropped from player " + playerHeldBy.playerClientId + " .. so it may be ..");
-                        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", playerHeldBy.playerClientId, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
+                        var playerHeldByID = playerHeldBy.playerClientId.ToString();
+                        int writeSize = FastBufferWriter.GetWriteSize(playerHeldByID);
+                        using FastBufferWriter writer = new FastBufferWriter(writeSize, Allocator.Temp);
+                        writer.WriteValueSafe(playerHeldByID);
+                        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", PlayerHelper.isHost() ? playerHeldBy.playerClientId : 0ul, writer, NetworkDelivery.ReliableSequenced);
                         //DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId);
                     }
                 }
@@ -392,8 +397,7 @@ namespace LCShrinkRay.comp
                 Plugin.log("grabbedPlayer has no name!", Plugin.LogType.Error);
             }
 
-            if (base.IsOwner)
-                NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_DemandDrop", new HandleNamedMessageDelegate(DemandDrop));
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_DemandDrop", new HandleNamedMessageDelegate(DemandDrop));
 
             calculateScrapValue();
             setIsGrabbableToEnemies(true);
@@ -401,13 +405,21 @@ namespace LCShrinkRay.comp
 
         public static void DemandDrop(ulong clientId, FastBufferReader reader)
         {
+            reader.ReadValueSafe(out string playerIDString);
+            var playerHeldByID = JsonConvert.DeserializeObject<ulong>(playerIDString);
+            if (PlayerHelper.isHost() && playerHeldByID != 0ul) // Forward
+            {
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", playerHeldByID, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
+                return;
+            }
+
             var currentPlayer = PlayerHelper.currentPlayer();
             Plugin.log("A player demanded to be dropped from player " + currentPlayer.playerClientId + " .. so it shall be!");
 
             var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(clientId);
             if (gpo == null) return;
 
-            if (gpo.grabbedPlayer == null || gpo.playerHeldBy.playerClientId != currentPlayer.playerClientId)
+            if (gpo.grabbedPlayer == null || gpo.playerHeldBy == null || gpo.playerHeldBy.playerClientId != currentPlayer.playerClientId)
                 return;
 
             currentPlayer.DiscardHeldObject();
