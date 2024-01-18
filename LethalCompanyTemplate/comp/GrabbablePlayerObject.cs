@@ -6,7 +6,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using LCShrinkRay.helper;
 using Unity.Netcode;
-using LethalLib.Modules;
+using static Unity.Netcode.CustomMessagingManager;
+using Unity.Collections;
 
 namespace LCShrinkRay.comp
 {
@@ -19,7 +20,7 @@ namespace LCShrinkRay.comp
 
         public static void LoadAsset(AssetBundle assetBundle)
         {
-            if (networkPrefab != null) return; // ALready loaded
+            if (networkPrefab != null) return; // Already loaded
 
             var assetItem = assetBundle.LoadAsset<Item>("grabbablePlayerItem.asset");
             if (assetItem == null)
@@ -120,7 +121,8 @@ namespace LCShrinkRay.comp
             }
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        // WIP - not working
+        /*[ServerRpc(RequireOwnership = false)]
         public void DemandDropFromPlayerServerRpc(ulong holdingPlayerID)
         {
             Plugin.log("You demanded to be dropped from player " + PlayerHelper.currentPlayer().playerClientId + " .. so it shall be!");
@@ -135,7 +137,7 @@ namespace LCShrinkRay.comp
 
             if (PlayerHelper.currentPlayer().playerClientId == holdingPlayerID)
                 StartOfRound.Instance.localPlayerController.DiscardHeldObject();
-        }
+        }*/
 
         public override void LateUpdate()
         {
@@ -158,8 +160,9 @@ namespace LCShrinkRay.comp
 
                     if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     {
-                        Plugin.log("Player demands to be dropped!");
-                        DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId);
+                        Plugin.log("You demanded to be dropped from player " + playerHeldBy.playerClientId + " .. so it may be ..");
+                        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", playerHeldBy.playerClientId, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
+                        //DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId);
                     }
                 }
                 else
@@ -389,8 +392,25 @@ namespace LCShrinkRay.comp
                 Plugin.log("grabbedPlayer has no name!", Plugin.LogType.Error);
             }
 
+            if (base.IsOwner)
+                NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_DemandDrop", new HandleNamedMessageDelegate(DemandDrop));
+
             calculateScrapValue();
             setIsGrabbableToEnemies(true);
+        }
+
+        public static void DemandDrop(ulong clientId, FastBufferReader reader)
+        {
+            var currentPlayer = PlayerHelper.currentPlayer();
+            Plugin.log("A player demanded to be dropped from player " + currentPlayer.playerClientId + " .. so it shall be!");
+
+            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(clientId);
+            if (gpo == null) return;
+
+            if (gpo.grabbedPlayer == null || gpo.playerHeldBy.playerClientId != currentPlayer.playerClientId)
+                return;
+
+            currentPlayer.DiscardHeldObject();
         }
     }
 }

@@ -28,7 +28,7 @@ namespace LCShrinkRay.comp
 
         public static void LoadAsset(AssetBundle assetBundle)
         {
-            if (networkPrefab != null) return; // ALready loaded
+            if (networkPrefab != null) return; // Already loaded
 
             var assetItem = assetBundle.LoadAsset<Item>("ShrinkRayItem.asset");
             if(assetItem == null )

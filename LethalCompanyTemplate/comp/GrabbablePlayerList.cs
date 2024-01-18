@@ -38,7 +38,7 @@ namespace LCShrinkRay.comp
 
         public static void LoadAsset(AssetBundle assetBundle)
         {
-            if (networkPrefab != null) return; // ALready loaded
+            if (networkPrefab != null) return; // Already loaded
 
             networkPrefab = assetBundle.LoadAsset<GameObject>("GrabbablePlayerList.prefab");
             if (networkPrefab == null)
@@ -55,10 +55,19 @@ namespace LCShrinkRay.comp
 
         public static void Initialize()
         {
-            var newObject = Instantiate(networkPrefab);
-            var networkObj = newObject.GetComponent<NetworkObject>();
-            networkObj.Spawn();
-            instance = newObject.GetComponent<GrabbablePlayerList>();
+            if (instance != null) return; // Already initialized
+
+            if(PlayerHelper.isHost())
+            {
+                var newObject = Instantiate(networkPrefab);
+                var networkObj = newObject.GetComponent<NetworkObject>();
+                networkObj.Spawn();
+                instance = newObject.GetComponent<GrabbablePlayerList>();
+            }
+            else
+            {
+                instance = networkPrefab.GetComponent<GrabbablePlayerList>();
+            }
         }
 
         // ---- Helper ----
