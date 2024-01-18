@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
+using LCShrinkRay.patches;
 using LethalLib.Modules;
 using Newtonsoft.Json;
 using System;
@@ -13,24 +14,51 @@ namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerList : NetworkBehaviour
     {
-        public List<GameObject> grabbablePlayerObjects { get; private set; }
+        public List<GameObject> grabbablePlayerObjects = new List<GameObject>();
 
-        public static GrabbablePlayerList Instance = null;
+        private static GrabbablePlayerList instance = null;
+        public static GrabbablePlayerList Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    Plugin.log("GrabbablePlayerList.Instance called earlier than expected. Trying to load assets earlier.", Plugin.LogType.Warning);
+
+                    if (networkPrefab == null)
+                        GameNetworkManagerPatch.LoadAllAssets();
+                    Initialize();
+                }
+
+                return instance;
+            }
+        }
+
         public static GameObject networkPrefab { get; set; }
 
-        public static void loadAsset(AssetBundle assetBundle)
+        public static void LoadAsset(AssetBundle assetBundle)
         {
-            var networkPrefab = assetBundle.LoadAsset<GameObject>("GrabbablePlayerList.prefab");
+            if (networkPrefab != null) return; // ALready loaded
+
+            networkPrefab = assetBundle.LoadAsset<GameObject>("GrabbablePlayerList.prefab");
             if (networkPrefab == null)
             {
                 Plugin.log("GrabbablePlayerList.asset not found!", Plugin.LogType.Error);
                 return;
             }
 
-            Instance = networkPrefab.AddComponent<GrabbablePlayerList>();
-            Instance.grabbablePlayerObjects = new List<GameObject>();
+            networkPrefab.AddComponent<GrabbablePlayerList>();
+            Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(networkPrefab);
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+        }
+
+        public static void Initialize()
+        {
+            var newObject = Instantiate(networkPrefab);
+            var networkObj = newObject.GetComponent<NetworkObject>();
+            networkObj.Spawn();
+            instance = newObject.GetComponent<GrabbablePlayerList>();
         }
 
         // ---- Helper ----

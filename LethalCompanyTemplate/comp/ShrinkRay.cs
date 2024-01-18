@@ -26,8 +26,10 @@ namespace LCShrinkRay.comp
 
         public static GameObject networkPrefab { get; set; }
 
-        public static void loadAsset(AssetBundle assetBundle)
+        public static void LoadAsset(AssetBundle assetBundle)
         {
+            if (networkPrefab != null) return; // ALready loaded
+
             var assetItem = assetBundle.LoadAsset<Item>("ShrinkRayItem.asset");
             if(assetItem == null )
             {
@@ -35,14 +37,16 @@ namespace LCShrinkRay.comp
                 return;
             }
 
+            networkPrefab = assetItem.spawnPrefab;
             assetItem.creditsWorth = 0; // ModConfig.Instance.values.shrinkRayCost
             assetItem.weight = 1.05f;
             assetItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
-            assetItem.spawnPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
+            networkPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
 
-            ShrinkRay visScript = assetItem.spawnPrefab.AddComponent<ShrinkRay>();
+            ShrinkRay visScript = networkPrefab.AddComponent<ShrinkRay>();
+            //GrabbablePlayerList.Instance = networkPrefab.AddComponent<GrabbablePlayerList>();
 
-            Destroy(assetItem.spawnPrefab.GetComponent<PhysicsProp>());
+            Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
             visScript.itemProperties = assetItem;
 
@@ -58,8 +62,7 @@ namespace LCShrinkRay.comp
             visScript.grabbableToEnemies = true;
             visScript.itemProperties.syncUseFunction = true;
 
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(assetItem.spawnPrefab);
-            networkPrefab = assetItem.spawnPrefab;
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
             TerminalNode nightNode = new TerminalNode();
             nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
@@ -88,13 +91,6 @@ namespace LCShrinkRay.comp
             }
             //beamMaterial.mainTexture = blueTexture;
             //beamMaterial.color = beamColor;
-            
-        }
-
-        public static void AddToGame(AssetBundle assetBundle)
-        {
-            Plugin.log("Addin " + itemname);
-
             
         }
 
@@ -330,6 +326,7 @@ namespace LCShrinkRay.comp
 
         public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
+            Plugin.log("debugOnPlayerModificationWorkaround");
             var sr = new ShrinkRay();
             sr.OnPlayerModificationServerRpc(targetPlayer.playerClientId, type);
             Destroy(sr,4);
@@ -338,6 +335,7 @@ namespace LCShrinkRay.comp
         [ServerRpc(RequireOwnership = false)]
         public void OnPlayerModificationServerRpc(ulong targetPlayerID, ModificationType type)
         {
+            Plugin.log("OnPlayerModificationServerRpc");
             Plugin.log("Player (" + PlayerHelper.currentPlayer().playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
             OnPlayerModificationClientRpc(targetPlayerID, type );
         }

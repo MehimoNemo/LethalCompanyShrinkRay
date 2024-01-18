@@ -47,8 +47,6 @@ namespace LCShrinkRay
 
             netcodePatching();
 
-            loadAssets();
-
             harmony.PatchAll(typeof(Plugin));
             //harmony.PatchAll(typeof(SoundManagerPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
@@ -78,16 +76,6 @@ namespace LCShrinkRay
                     }
                 }
             }
-        }
-
-        private void loadAssets()
-        {
-            Plugin.log("Loading assets.");
-            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
-            AssetBundle upgradeAssets = AssetBundle.LoadFromFile(assetDir);
-            ShrinkRay.loadAsset(upgradeAssets);
-            GrabbablePlayerObject.loadAsset(upgradeAssets);
-            GrabbablePlayerList.loadAsset(upgradeAssets);
         }
 
         public enum LogType

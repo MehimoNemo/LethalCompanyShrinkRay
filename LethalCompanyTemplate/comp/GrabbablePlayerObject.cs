@@ -14,14 +14,12 @@ namespace LCShrinkRay.comp
     {
         public PlayerControllerB grabbedPlayer { get; set; }
         MeshRenderer helmet;
-        private bool grabbedPlayerDemandedDrop = false;
 
         public static GameObject networkPrefab { get; set; }
 
-        public static void loadAsset(AssetBundle assetBundle)
+        public static void LoadAsset(AssetBundle assetBundle)
         {
-            if (networkPrefab != null) // Already loaded
-                return;
+            if (networkPrefab != null) return; // ALready loaded
 
             var assetItem = assetBundle.LoadAsset<Item>("grabbablePlayerItem.asset");
             if (assetItem == null)
@@ -40,7 +38,7 @@ namespace LCShrinkRay.comp
             }
             component.itemProperties.isConductiveMetal = false;
 
-            LethalLib.Modules.NetworkPrefabs.RegisterNetworkPrefab(networkPrefab);
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
 
         //Null player container and null itemProperties
@@ -122,12 +120,21 @@ namespace LCShrinkRay.comp
             }
         }
 
-        public void DemandDropFromPlayer()
+        [ServerRpc(RequireOwnership = false)]
+        public void DemandDropFromPlayerServerRpc(ulong holdingPlayerID)
+        {
+            Plugin.log("You demanded to be dropped from player " + PlayerHelper.currentPlayer().playerClientId + " .. so it shall be!");
+
+            DemandDropFromPlayerClientRpc(holdingPlayerID);
+        }
+
+        [ClientRpc]
+        public void DemandDropFromPlayerClientRpc(ulong holdingPlayerID)
         {
             Plugin.log("A player demanded to be dropped from player " + PlayerHelper.currentPlayer().playerClientId + " .. so it shall be!");
 
-            StartOfRound.Instance.localPlayerController.DiscardHeldObject();
-            grabbedPlayerDemandedDrop = false;
+            if (PlayerHelper.currentPlayer().playerClientId == holdingPlayerID)
+                StartOfRound.Instance.localPlayerController.DiscardHeldObject();
         }
 
         public override void LateUpdate()
@@ -135,9 +142,6 @@ namespace LCShrinkRay.comp
             base.LateUpdate();
             if (grabbedPlayer != null)
             {
-                if(grabbedPlayerDemandedDrop && base.IsOwner) // We're the holder
-                    DemandDropFromPlayer();
-
                 this.grabbable = PlayerHelper.isShrunk(grabbedPlayer.gameObject);
 
                 if (this.isHeld)
@@ -155,7 +159,7 @@ namespace LCShrinkRay.comp
                     if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     {
                         Plugin.log("Player demands to be dropped!");
-                        grabbedPlayerDemandedDrop = true;
+                        DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId);
                     }
                 }
                 else
