@@ -23,6 +23,7 @@ namespace LCShrinkRay.comp
         public float beamLength = 10f;
         public float beamDuration = 2f;
         //private Color beamColor = Color.blue;
+        private List<ulong> handledRayHits = new List<ulong>();
 
         public static GameObject networkPrefab { get; set; }
 
@@ -221,11 +222,13 @@ namespace LCShrinkRay.comp
             Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
 
             int hitEnemiesCount = Physics.SphereCastNonAlloc(ray, 5f, enemyColliders, beamLength, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Collide);
-            Plugin.log("Casted Ray");
-            Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
+            //Plugin.log("Casted Ray");
+            //Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
+
+            handledRayHits.Clear();
             for (int i = 0; i < hitEnemiesCount; i++)
             {
-                Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
+                //Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
                 if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
                 {
                     Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
@@ -239,17 +242,17 @@ namespace LCShrinkRay.comp
 
         private void RenderRayBeam(Vector3 beamStartPos, Vector3 forward, ModificationType type)
         {
-            Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
+            //Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
             try
             {
                 if (parentObject.transform.Find("Beam") != null || beamMaterial == null)
                     return;
 
-                Plugin.log("trying to create beam object");
+                //Plugin.log("trying to create beam object");
                 beamObject = new GameObject("Beam");
-                Plugin.log("Before creating LineRenderer");
+                //Plugin.log("Before creating LineRenderer");
                 lineRenderer = beamObject.AddComponent<LineRenderer>();
-                Plugin.log("After creating LineRenderer");
+                //Plugin.log("After creating LineRenderer");
                 lineRenderer.material = beamMaterial;
                 lineRenderer.startWidth = beamWidth;
                 lineRenderer.endWidth = beamWidth * 16;
@@ -261,7 +264,7 @@ namespace LCShrinkRay.comp
                 lineRenderer.numCapVertices = 6;
                 lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lineRenderer.receiveShadows = false;
-                Plugin.log("Done with rendering beam");
+                //Plugin.log("Done with rendering beam");
 
                 Destroy(beamObject, beamDuration);
             }
@@ -276,9 +279,10 @@ namespace LCShrinkRay.comp
             if (hit.transform.TryGetComponent(out PlayerControllerB component))
             {
                 Plugin.log($"Ray has hit player " + component.playerClientId);
-                if (component.playerClientId != this.playerHeldBy.playerClientId)
+                if (component.playerClientId != this.playerHeldBy.playerClientId && !handledRayHits.Contains(component.playerClientId))
                 {
                     OnPlayerModificationServerRpc(component.playerClientId, type);
+                    handledRayHits.Add(component.playerClientId);
                 }
             }
             else
@@ -396,7 +400,7 @@ namespace LCShrinkRay.comp
                         else
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
-                        if (PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
+                        if (newSize < 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
                         {
                             Plugin.log("About to call SetPlayerGrabbableServerRpc");
                             GrabbablePlayerList.Instance.SetPlayerGrabbableServerRpc(targetPlayer.playerClientId);
@@ -424,8 +428,8 @@ namespace LCShrinkRay.comp
                         else
                             coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
 
-                        if (newSize >= 1f) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.Instance.RemovePlayerGrabbable(targetPlayer.playerClientId);
+                        if (newSize >= 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
+                            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)
                             Vents.unsussifyAll();

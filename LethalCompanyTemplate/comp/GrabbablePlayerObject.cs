@@ -58,11 +58,6 @@ namespace LCShrinkRay.comp
             this.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
             this.grabbable = false;
 
-            calculateScrapValue();
-            //itemProperties.weight = PlayerHelper.calculatePlayerWeightFor(grabbedPlayer);
-
-            setIsGrabbableToEnemies(true);
-
             //get our collider and save it for later use
 
             /*Rigidbody rb = GetComponent<Rigidbody>();
@@ -78,7 +73,7 @@ namespace LCShrinkRay.comp
             //Plugin.log("adding scannode");
         }
 
-        private void calculateScrapValue()
+        public void calculateScrapValue()
         {
             // todo: change scrap value when grabbed player grabs something
             int value = 5; // todo: find where that's set in code for deadBody
@@ -98,7 +93,7 @@ namespace LCShrinkRay.comp
             Plugin.log("Scrap value: " + value);
         }
 
-        private void setIsGrabbableToEnemies(bool isGrabbable = true)
+        public void setIsGrabbableToEnemies(bool isGrabbable = true)
         {
             if (!PlayerHelper.isCurrentPlayerShrunk())
                 isGrabbable = false;
@@ -111,13 +106,13 @@ namespace LCShrinkRay.comp
             {
                 if(isGrabbable)
                 {
-                    if (HoarderBugAI.grabbableObjectsInMap != null && !HoarderBugAI.grabbableObjectsInMap.Contains(base.gameObject))
-                        HoarderBugAI.grabbableObjectsInMap.Add(base.gameObject);
+                    if (HoarderBugAI.grabbableObjectsInMap != null && !HoarderBugAI.grabbableObjectsInMap.Contains(grabbedPlayer.gameObject))
+                        HoarderBugAI.grabbableObjectsInMap.Add(grabbedPlayer.gameObject);
                 }
                 else
                 {
-                    if (HoarderBugAI.grabbableObjectsInMap != null && HoarderBugAI.grabbableObjectsInMap.Contains(base.gameObject))
-                        HoarderBugAI.grabbableObjectsInMap.Remove(base.gameObject);
+                    if (HoarderBugAI.grabbableObjectsInMap != null && HoarderBugAI.grabbableObjectsInMap.Contains(grabbedPlayer.gameObject))
+                        HoarderBugAI.grabbableObjectsInMap.Remove(grabbedPlayer.gameObject);
                 }
             }
         }
@@ -158,21 +153,20 @@ namespace LCShrinkRay.comp
                     //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
                     grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
-
-                    if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
-                    {
-                        Plugin.log("You demanded to be dropped from player " + playerHeldBy.playerClientId + " .. so it may be ..");
-                        var playerHeldByID = playerHeldBy.playerClientId.ToString();
-                        int writeSize = FastBufferWriter.GetWriteSize(playerHeldByID);
-                        using FastBufferWriter writer = new FastBufferWriter(writeSize, Allocator.Temp);
-                        writer.WriteValueSafe(playerHeldByID);
-                        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", PlayerHelper.isHost() ? playerHeldBy.playerClientId : 0ul, writer, NetworkDelivery.ReliableSequenced);
-                        //DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId);
-                    }
                 }
                 else
                 {
                     this.transform.position = grabbedPlayer.transform.position;
+                }
+
+                if(!base.IsOwner)
+                {
+                    if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
+                    {
+                        Plugin.log("You demanded to be dropped from player " + playerHeldBy.playerClientId + " .. so it may be ..");
+                        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", PlayerHelper.isHost() ? playerHeldBy.playerClientId : 0ul, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
+                        //DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId);
+                    }
                 }
             }
             else
@@ -368,6 +362,8 @@ namespace LCShrinkRay.comp
 
         public void Initialize(PlayerControllerB pcb)
         {
+            Plugin.log("GrabbablePlayerObject.Initialize");
+
             if (pcb == StartOfRound.Instance.localPlayerController)
             {
                 Plugin.log("Finding helmet!");
@@ -403,21 +399,19 @@ namespace LCShrinkRay.comp
             setIsGrabbableToEnemies(true);
         }
 
-        public static void DemandDrop(ulong clientId, FastBufferReader reader)
+        public static void DemandDrop(ulong grabbedPlayerID, FastBufferReader reader)
         {
-            reader.ReadValueSafe(out string playerIDString);
-            var playerHeldByID = JsonConvert.DeserializeObject<ulong>(playerIDString);
-            if (PlayerHelper.isHost() && playerHeldByID != 0ul) // Forward
+            var currentPlayer = PlayerHelper.currentPlayer();
+            Plugin.log("Player " + grabbedPlayerID + " demanded to be dropped from player " + currentPlayer.playerClientId + " .. so it shall be!");
+
+            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(grabbedPlayerID);
+            if (gpo == null) return;
+
+            if (PlayerHelper.isHost() && gpo.playerHeldBy.playerClientId != currentPlayer.playerClientId) // Forward to holder
             {
-                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", playerHeldByID, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", gpo.playerHeldBy.playerClientId, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
                 return;
             }
-
-            var currentPlayer = PlayerHelper.currentPlayer();
-            Plugin.log("A player demanded to be dropped from player " + currentPlayer.playerClientId + " .. so it shall be!");
-
-            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(clientId);
-            if (gpo == null) return;
 
             if (gpo.grabbedPlayer == null || gpo.playerHeldBy == null || gpo.playerHeldBy.playerClientId != currentPlayer.playerClientId)
                 return;

@@ -31,7 +31,7 @@ namespace LCShrinkRay.coroutines
                 yield break;
             }
 
-            Plugin.log("SUCCESSFULLY RUNNING PITCH FROM PATCH");
+            //Plugin.log("SUCCESSFULLY RUNNING PITCH FROM PATCH");
 
             float elapsedTime = 0f;
 
@@ -47,15 +47,15 @@ namespace LCShrinkRay.coroutines
             float modifiedPitch = (intensity * (scale - PlayerHelper.currentPlayerScale()) + 1f) * pitch;
 
             // Set the modified pitch using the original method
-            Plugin.log("changing pitch of playerID " + playerObj.name);
-            Plugin.log("\tpitch: " + modifiedPitch);
+            //Plugin.log("changing pitch of playerID " + playerObj.name);
+            //Plugin.log("\tpitch: " + modifiedPitch);
             if (SoundManager.Instance == null)
             {
                 Plugin.log("SOUNDMANAGER IS NULL", Plugin.LogType.Warning);
                 yield break;
             }
             elapsedTime += Time.deltaTime;
-            Plugin.log("Elapsed time: " + elapsedTime);
+            //Plugin.log("Elapsed time: " + elapsedTime);
             try
             {
                 SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)playerID); // pr-todo: remove (int)... my VS did weird things with precompiled files...

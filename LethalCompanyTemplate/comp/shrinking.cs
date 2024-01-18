@@ -253,7 +253,7 @@ namespace LCShrinkRay.comp
         {
             foreach ( var pcb in StartOfRound.Instance.allPlayerScripts.Where(p => p != null))
             {
-                Plugin.log("Altering player voice pitches");
+                //Plugin.log("Altering player voice pitches");
                 SetPlayerPitch(1f, pcb.playerClientId);
             }
         }

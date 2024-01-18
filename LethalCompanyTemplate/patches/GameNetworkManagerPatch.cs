@@ -65,6 +65,7 @@ namespace LCShrinkRay.patches
         public static void Initialize()
         {
             isGameInitialized = true;
+            GrabbablePlayerList.Instance.OnNewRound();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
