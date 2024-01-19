@@ -116,9 +116,11 @@ namespace LCShrinkRay.comp
         {
             foreach(var obj in grabbablePlayerObjects)
             {
+                Plugin.log("OnNewRound grabbable.");
                 if (!obj.TryGetComponent(out GrabbablePlayerObject gpo))
                     continue;
 
+                gpo.Reinitialize();
                 gpo.setIsGrabbableToEnemies(PlayerHelper.isShrunk(gpo.grabbedPlayer.gameObject));
             }
         }
@@ -187,8 +189,11 @@ namespace LCShrinkRay.comp
 
             foreach(var obj in grabbablePlayerObjects)
             {
-                if (obj.TryGetComponent(out GrabbablePlayerObject gpoObj) && gpoObj.grabbedPlayer.playerClientId == playerID)
-                    return; // Already existing
+                if (obj.TryGetComponent(out GrabbablePlayerObject gpoObj))
+                {
+                    if(gpoObj.grabbedPlayer.playerClientId == playerID)
+                        return; // Already existing
+                }
             }
 
             var pcb = PlayerHelper.GetPlayerController(playerID);
@@ -196,9 +201,10 @@ namespace LCShrinkRay.comp
 
             Plugin.log("Adding grabbable player object for player: " + playerID);
             var newObject = Instantiate(GrabbablePlayerObject.networkPrefab);
+            DontDestroyOnLoad(newObject);
             var networkObj = newObject.GetComponent<NetworkObject>();
             networkObj.Spawn();
-            GrabbablePlayerObject gpo = newObject.GetComponent<GrabbablePlayerObject>();
+            newObject.GetComponent<GrabbablePlayerObject>();
 
             if (!onlyLocal) // Let everyone know
                 SetPlayerGrabbableClientRpc(playerID, networkObj.NetworkObjectId);

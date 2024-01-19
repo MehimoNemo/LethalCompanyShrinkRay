@@ -77,73 +77,6 @@ namespace LCShrinkRay.comp
                 Plugin.log('\"' + item + '\"');
         }
 
-
-        // Multiplayer Networking
-
-        
-
-        private static bool isGoombaCoroutineRunning = false;
-
-        [ServerRpc(RequireOwnership = false)]
-        public static void OnGoombaServerRpc(ulong playerID)
-        {
-            Plugin.log("WE GETTING GOOMBAD");
-            OnGoombaClientRpc(playerID);
-        }
-
-        [ClientRpc]
-        public static void OnGoombaClientRpc(ulong playerID)
-        {
-            Plugin.log("A goomba...... stompin' on player " + playerID);
-            coroutines.GoombaStomp.StartRoutine(PlayerHelper.GetPlayerObject(playerID));
-        }
-
-        public void OnGoombaCoroutineComplete()
-        {
-            isGoombaCoroutineRunning = false;
-        }
-
-        private static PlayerControllerB GetPlayerAbove()
-        {
-            // Cast a ray upwards to check for the player above
-            RaycastHit hit;
-            if (Physics.Raycast(StartOfRound.Instance.localPlayerController.gameplayCamera.transform.position, StartOfRound.Instance.localPlayerController.gameObject.transform.up, out hit, 1f, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
-            {
-                // todo: check if getting held by that player to avoid eternal stomping
-                return hit.collider.gameObject.GetComponent<PlayerControllerB>();
-            }
-
-            return null;
-        }
-
-        private static void CheckForGoomba()
-        {
-            if (!ModConfig.Instance.values.jumpOnShrunkenPlayers || !PlayerHelper.isCurrentPlayerShrunk())
-                return;
-
-            if (isGoombaCoroutineRunning)
-                return;
-
-            if(PlayerHelper.IsCurrentPlayerGrabbed())
-            {
-                //Plugin.log("Apes together strong! Goomba impossible.");
-                return;
-            }
-
-            var playerAbove = GetPlayerAbove();
-            if (playerAbove == null)
-                return;
-
-            if(PlayerHelper.isShrunk(playerAbove.gameObject))
-            {
-                //Plugin.log("2 Weak 2 Goomba c:");
-                return;
-            }
-
-            OnGoombaServerRpc(PlayerHelper.currentPlayer().playerClientId);
-            isGoombaCoroutineRunning = true;
-        }
-
         public void SetPlayerPitch(float pitch, ulong playerID)
         {
             coroutines.SetPlayerPitch.StartRoutine(playerID, pitch);
@@ -151,11 +84,12 @@ namespace LCShrinkRay.comp
 
         public void Update()
         {
-            var players = PlayerHelper.getAllPlayers();
-            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController || players == null)
+            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController)
                 return;
 
-            CheckForGoomba();
+            var players = PlayerHelper.getAllPlayers();
+            if (players == null)
+                return;
 
             foreach (GameObject player in players)
             {

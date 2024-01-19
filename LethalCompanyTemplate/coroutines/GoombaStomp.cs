@@ -11,17 +11,14 @@ namespace LCShrinkRay.coroutines
     {
         public GameObject playerObj { get; private set; }
 
-        public static void StartRoutine(GameObject playerObj)
+        public static void StartRoutine(GameObject playerObj, Action onComplete = null)
         {
-            if (playerObj.transform.localScale.x < 1)
-            {
-                var routine = playerObj.AddComponent<GoombaStomp>();
-                routine.playerObj = playerObj;
-                routine.StartCoroutine(routine.run());
-            }
+            var routine = playerObj.AddComponent<GoombaStomp>();
+            routine.playerObj = playerObj;
+            routine.StartCoroutine(routine.run(onComplete));
         }
 
-        private IEnumerator run()
+        private IEnumerator run(Action onComplete = null)
         {
             AnimationCurve scaleCurve = new AnimationCurve(
                 new Keyframe(0, 0.4f),
@@ -52,7 +49,9 @@ namespace LCShrinkRay.coroutines
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
-            Shrinking.Instance.OnGoombaCoroutineComplete();
+
+            if(onComplete != null)
+                onComplete();
         }
     }
 }

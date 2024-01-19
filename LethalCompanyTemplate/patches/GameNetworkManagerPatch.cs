@@ -72,19 +72,15 @@ namespace LCShrinkRay.patches
         public static void endOfRound()
         {
             Plugin.log("EndOfGame");
-            if (true)
+            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
             {
-                Plugin.log("EndOfGame host");
-                foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
-                {
-                    if(PlayerHelper.isShrunk(player.gameObject))
-                        ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ShrinkRay.ModificationType.Normalizing);
-                }
-
-                //reset speed, pitch(if it doesn't reset naturally)
-                PlayerControllerBPatch.defaultsInitialized = false;
-                Vents.unsussifyAll();
+                if(PlayerHelper.isShrunk(player.gameObject))
+                    coroutines.PlayerShrinkAnimation.StartRoutine(player.gameObject, 1f, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
             }
+
+            //reset speed, pitch(if it doesn't reset naturally)
+            PlayerControllerBPatch.defaultsInitialized = false;
+            Vents.unsussifyAll();
         }
     }
 }

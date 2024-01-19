@@ -9,13 +9,17 @@ using Unity.Netcode;
 using static Unity.Netcode.CustomMessagingManager;
 using Unity.Collections;
 using Newtonsoft.Json;
+using LCShrinkRay.coroutines;
+using LethalLib.Modules;
 
 namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {
         public PlayerControllerB grabbedPlayer { get; set; }
+        private ulong grabbedPlayerID {  get; set; }
         MeshRenderer helmet;
+        private int frameCount = 0;
 
         public static GameObject networkPrefab { get; set; }
 
@@ -118,22 +122,93 @@ namespace LCShrinkRay.comp
         }
 
         // WIP - not working
-        /*[ServerRpc(RequireOwnership = false)]
-        public void DemandDropFromPlayerServerRpc(ulong holdingPlayerID)
+        [ServerRpc(RequireOwnership = false)]
+        public void DemandDropFromPlayerServerRpc(ulong holdingPlayerID, ulong heldPlayerID)
         {
-            Plugin.log("You demanded to be dropped from player " + PlayerHelper.currentPlayer().playerClientId + " .. so it shall be!");
-
-            DemandDropFromPlayerClientRpc(holdingPlayerID);
+            DemandDropFromPlayerClientRpc(holdingPlayerID, heldPlayerID);
         }
 
         [ClientRpc]
-        public void DemandDropFromPlayerClientRpc(ulong holdingPlayerID)
+        public void DemandDropFromPlayerClientRpc(ulong holdingPlayerID, ulong heldPlayerID)
         {
-            Plugin.log("A player demanded to be dropped from player " + PlayerHelper.currentPlayer().playerClientId + " .. so it shall be!");
-
-            if (PlayerHelper.currentPlayer().playerClientId == holdingPlayerID)
+            var currentPlayerID = PlayerHelper.currentPlayer().playerClientId;
+            var whoDemandedIt = (currentPlayerID == heldPlayerID) ? "A player" : "You";
+            if (currentPlayerID == holdingPlayerID)
+            {
+                Plugin.log("Player " + heldPlayerID + " demanded to be dropped from you .. so it shall be!");
                 StartOfRound.Instance.localPlayerController.DiscardHeldObject();
-        }*/
+            }
+            else if (currentPlayerID == heldPlayerID)
+                Plugin.log("You demanded to be dropped from player " + holdingPlayerID);
+            else
+                Plugin.log("Player " + heldPlayerID + " demanded to be dropped from player " + currentPlayerID + ".");
+        }
+
+        // GOOMBA
+        [ServerRpc(RequireOwnership = false)]
+        public void OnGoombaServerRpc(ulong playerID)
+        {
+            OnGoombaClientRpc(playerID);
+        }
+
+        [ClientRpc]
+        public void OnGoombaClientRpc(ulong playerID)
+        {
+            var currentPlayer = PlayerHelper.currentPlayer();
+            if(currentPlayer.playerClientId == playerID)
+                Plugin.log("WE GETTING GOOMBAD");
+            else
+                Plugin.log("A goomba...... stompin' on player " + playerID);
+            coroutines.GoombaStomp.StartRoutine(PlayerHelper.GetPlayerObject(playerID), () =>
+            {
+                if (playerID == currentPlayer.playerClientId)
+                    isGoombaCoroutineRunning = false;
+            });
+        }
+
+        private PlayerControllerB GetPlayerAbove()
+        {
+            // Cast a ray upwards to check for the player above
+            RaycastHit hit;
+            if (Physics.Raycast(StartOfRound.Instance.localPlayerController.gameplayCamera.transform.position, StartOfRound.Instance.localPlayerController.gameObject.transform.up, out hit, 1f, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
+            {
+                // todo: check if getting held by that player to avoid eternal stomping
+                return hit.collider.gameObject.GetComponent<PlayerControllerB>();
+            }
+
+            return null;
+        }
+
+        private bool isGoombaCoroutineRunning = false;
+        private void CheckForGoomba()
+        {
+            if (isGoombaCoroutineRunning)
+                return; // Already running
+
+            if (!ModConfig.Instance.values.jumpOnShrunkenPlayers)
+                return;
+
+            if (PlayerHelper.IsCurrentPlayerGrabbed())
+            {
+                //Plugin.log("Apes together strong! Goomba impossible.");
+                return;
+            }
+
+            var playerAbove = GetPlayerAbove();
+            if (playerAbove == null)
+                return;
+
+            var currentPlayer = PlayerHelper.currentPlayer();
+            if (currentPlayer.gameObject.transform.localScale.x >= playerAbove.gameObject.transform.localScale.x)
+            {
+                //Plugin.log("2 Weak 2 Goomba c:");
+                return;
+            }
+
+            isGoombaCoroutineRunning = true;
+
+            OnGoombaServerRpc(currentPlayer.playerClientId);
+        }
 
         public override void LateUpdate()
         {
@@ -157,23 +232,22 @@ namespace LCShrinkRay.comp
                 else
                 {
                     this.transform.position = grabbedPlayer.transform.position;
+                    if(frameCount == 1)
+                        CheckForGoomba(); // Only check this every 10 frames as it's pretty gpu consuming
                 }
 
                 if(!base.IsOwner)
                 {
                     if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
-                    {
-                        Plugin.log("You demanded to be dropped from player " + playerHeldBy.playerClientId + " .. so it may be ..");
-                        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", PlayerHelper.isHost() ? playerHeldBy.playerClientId : 0ul, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
-                        //DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId);
-                    }
+                        DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayerID);
                 }
             }
             else
             {
-                //mls.LogError("GRABBED PLAYER IS NULL IN UPDATE");
+                Plugin.log("GRABBED PLAYER IS NULL IN UPDATE", Plugin.LogType.Error);
             }
-            //base.Update();
+
+            frameCount = frameCount % 10 + 1;
         }
 
         public override void PocketItem()
@@ -381,6 +455,7 @@ namespace LCShrinkRay.comp
                 }
             }
             this.grabbedPlayer = pcb;
+            this.grabbedPlayerID = pcb.playerClientId;
             this.tag = "PhysicsProp";
             if (grabbedPlayer.name != null)
             {
@@ -393,30 +468,17 @@ namespace LCShrinkRay.comp
                 Plugin.log("grabbedPlayer has no name!", Plugin.LogType.Error);
             }
 
-            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_DemandDrop", new HandleNamedMessageDelegate(DemandDrop));
-
             calculateScrapValue();
             setIsGrabbableToEnemies(true);
         }
 
-        public static void DemandDrop(ulong grabbedPlayerID, FastBufferReader reader)
+        public void Reinitialize()
         {
-            var currentPlayer = PlayerHelper.currentPlayer();
-            Plugin.log("Player " + grabbedPlayerID + " demanded to be dropped from player " + currentPlayer.playerClientId + " .. so it shall be!");
-
-            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(grabbedPlayerID);
-            if (gpo == null) return;
-
-            if (PlayerHelper.isHost() && gpo.playerHeldBy.playerClientId != currentPlayer.playerClientId) // Forward to holder
+            if (this.grabbedPlayer == null)
             {
-                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_DemandDrop", gpo.playerHeldBy.playerClientId, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
-                return;
+                Plugin.log("Reinitializing grabbable player object with ID: " + grabbedPlayerID);
+                this.grabbedPlayer = PlayerHelper.GetPlayerController(grabbedPlayerID);
             }
-
-            if (gpo.grabbedPlayer == null || gpo.playerHeldBy == null || gpo.playerHeldBy.playerClientId != currentPlayer.playerClientId)
-                return;
-
-            currentPlayer.DiscardHeldObject();
         }
     }
 }
