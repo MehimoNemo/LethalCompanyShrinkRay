@@ -18,6 +18,7 @@ namespace LCShrinkRay.patches
         public static bool isPlayerSelling;
         private static PlayerControllerB playerWhoTriggered;
         private static GrabbableObject placedItem;
+        private static List<GrabbableObject> placedItems = new List<GrabbableObject>();
 
         [HarmonyPatch(typeof(DepositItemsDesk), "Start")]
         [HarmonyPostfix()]
@@ -40,6 +41,7 @@ namespace LCShrinkRay.patches
             }
             DeskPatch.playerWhoTriggered = playerWhoTriggered;
             placedItem = playerWhoTriggered.currentlyHeldObjectServer;
+            placedItems.Add(placedItem);
             if (placedItem == null)
             {
                 Plugin.log("placedItem is null", Plugin.LogType.Error);
@@ -55,21 +57,41 @@ namespace LCShrinkRay.patches
             {
                 Plugin.log("Oh my god it's null.....", Plugin.LogType.Error);
             }
-            if (isPlayerSelling && placedItem !=  null)
+            if (isPlayerSelling && placedItem != null)
             {
                 Plugin.log("Running sellable player code now", Plugin.LogType.Error);
                 GrabbableObject item = placedItem;
-                //GrabbablePlayerObject gpo = item.gameObject.TryGetComponent<GrabbablePlayerObject>;
                 if (item is GrabbablePlayerObject)
                 {
                     Plugin.log("Item is sellable player >:)", Plugin.LogType.Error);
                     GrabbablePlayerObject gPlayerObject = (GrabbablePlayerObject)item;
                     doomedPlayers.Add(gPlayerObject);
                     //freeze player here!
+                    gPlayerObject.Freeze();
+                    //Set player value to value of held items??? here
+
+                    int scrapValue = 5;
+                    foreach (GrabbableObject valuableItem in gPlayerObject.grabbedPlayer.ItemSlots)
+                    {
+                        if (valuableItem != null)
+                            scrapValue += valuableItem.scrapValue;
+                        else
+                            Plugin.log("the item is null....");
+                    }
+                    gPlayerObject.scrapValue = scrapValue;
                 }
                 else
                 {
                     Plugin.log("Fuck you, idiot, grabbable object is null");
+                }
+            }
+            if (!isPlayerSelling) {
+                foreach (GrabbableObject item in placedItems)
+                {
+                    if (item is GrabbablePlayerObject)
+                    {
+                        Plugin.log("Nuh uh honey bear! We are not selling this fella!!!", Plugin.LogType.Warning);
+                    }
                 }
             }
             else
@@ -77,6 +99,30 @@ namespace LCShrinkRay.patches
                 Plugin.log("isPlayerSelling is uhh....false... or placedItem is null??", Plugin.LogType.Error);
             }
         }
+
+        [HarmonyPatch(typeof(DepositItemsDesk), "AddObjectToDeskServerRpc")]
+        [HarmonyPostfix()]
+        public static void AddToDeskServer(DepositItemsDesk __instance, NetworkObjectReference grabbableObjectNetObject)
+        {
+            NetworkObject thisObject;
+            grabbableObjectNetObject.TryGet(out thisObject);
+            GrabbableObject grabbableObject = null;
+            try
+            {
+                grabbableObject = thisObject.gameObject.GetComponent<GrabbableObject>();
+            } catch (Exception e) { }
+            //if the object exists, and it is a player object
+            bool isPlayer = grabbableObject != null && grabbableObject is GrabbablePlayerObject;
+            //return true and DON'T run the rest of the original method
+            if (!isPlayerSelling && isPlayer)
+            {
+                Plugin.log("CANCELLING ORIGINAL METHOD CALL IN AddObjectToDeskServerRpc");
+                //exit the original method early
+                __instance.itemsOnCounterNetworkObjects.Remove(grabbableObjectNetObject);
+                __instance.itemsOnCounter.Remove(grabbableObject);
+            }
+        }
+
 
         [HarmonyPatch(typeof(DepositItemsDesk), "SellAndDisplayItemProfits")]
         [HarmonyPostfix()]
@@ -92,7 +138,9 @@ namespace LCShrinkRay.patches
                     PlayerControllerB player = gplayer.grabbedPlayer;
                     Plugin.log("Killing player: " + player.playerClientId, Plugin.LogType.Error);
                     //kill player then enable movement here!!
-                    player.DamagePlayer(250);
+                    gplayer.SellKill();
+                    gplayer.Unfreeze();
+                    placedItems.Clear();
                 }
             }
         }

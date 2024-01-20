@@ -22,6 +22,7 @@ namespace LCShrinkRay.comp
         private int frameCount = 0;
 
         public static GameObject networkPrefab { get; set; }
+        public bool IsFrozen { get; private set; }
 
         public static void LoadAsset(AssetBundle assetBundle)
         {
@@ -228,6 +229,12 @@ namespace LCShrinkRay.comp
                     //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
                     grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
+                }
+                else if (IsFrozen)
+                {
+                    grabbedPlayer.transform.position = this.transform.position;
+                    if (frameCount == 1)
+                        CheckForGoomba(); // Only check this every 10 frames as it's pretty gpu consuming
                 }
                 else
                 {
@@ -479,6 +486,63 @@ namespace LCShrinkRay.comp
                 Plugin.log("Reinitializing grabbable player object with ID: " + grabbedPlayerID);
                 this.grabbedPlayer = PlayerHelper.GetPlayerController(grabbedPlayerID);
             }
+        }
+
+        internal void Freeze()
+        {
+            FreezePlayerServerRPC(grabbedPlayer.playerClientId);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void FreezePlayerServerRPC(ulong playerID)
+        {
+            FreezePlayerClientRpc(playerID);
+        }
+
+        [ClientRpc]
+        public void FreezePlayerClientRpc(ulong playerID)
+        {
+            this.IsFrozen = true;
+            if (helmet != null)
+                helmet.enabled = false;
+        }
+
+
+        internal void Unfreeze()
+        {
+            UnfreezePlayerServerRPC(grabbedPlayer.playerClientId);
+            if (helmet != null)
+                helmet.enabled = true;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void UnfreezePlayerServerRPC(ulong playerID)
+        {
+            UnfreezePlayerClientRpc(playerID);
+        }
+
+        [ClientRpc]
+        public void UnfreezePlayerClientRpc(ulong playerID)
+        {
+            this.IsFrozen = false;
+        }
+
+        internal void SellKill()
+        {
+            SellKillServerRPC(grabbedPlayer.playerClientId);
+            //grabbedPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void SellKillServerRPC(ulong playerID)
+        {
+            SellKillClientRpc(playerID);
+        }
+
+        [ClientRpc]
+        public void SellKillClientRpc(ulong playerID)
+        {
+            grabbedPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
         }
     }
 }

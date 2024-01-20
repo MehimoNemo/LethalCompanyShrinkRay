@@ -55,6 +55,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(ThumperAIPatch));
             harmony.PatchAll(typeof(HoarderBugAIPatch));
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
+            harmony.PatchAll(typeof(DeskPatch));
 
             if (ModConfig.debugMode)
                 harmony.PatchAll(typeof(DebugPatches));
