@@ -19,7 +19,6 @@ namespace LCShrinkRay.comp
         public PlayerControllerB grabbedPlayer { get; set; }
         private ulong grabbedPlayerID {  get; set; }
         MeshRenderer helmet;
-        private int frameCount = 0;
 
         public static GameObject networkPrefab { get; set; }
         public bool IsFrozen { get; private set; }
@@ -233,14 +232,11 @@ namespace LCShrinkRay.comp
                 else if (IsFrozen)
                 {
                     grabbedPlayer.transform.position = this.transform.position;
-                    if (frameCount == 1)
-                        CheckForGoomba(); // Only check this every 10 frames as it's pretty gpu consuming
                 }
                 else
                 {
                     this.transform.position = grabbedPlayer.transform.position;
-                    if(frameCount == 1)
-                        CheckForGoomba(); // Only check this every 10 frames as it's pretty gpu consuming
+                    CheckForGoomba();
                 }
 
                 if(!base.IsOwner)
@@ -253,8 +249,6 @@ namespace LCShrinkRay.comp
             {
                 Plugin.log("GRABBED PLAYER IS NULL IN UPDATE", Plugin.LogType.Error);
             }
-
-            frameCount = frameCount % 10 + 1;
         }
 
         public override void PocketItem()
