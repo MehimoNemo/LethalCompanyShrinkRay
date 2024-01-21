@@ -3,51 +3,58 @@ using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using UnityEngine;
 
 namespace LCShrinkRay.patches
 {
     [HarmonyPatch]
     internal class PlayerControllerBPatch
     {
-        public static float defaultJumpForce { get; set; }
-        public static float defaultSprintMultiplier { get; set; }
-
-        public static bool defaultsInitialized = false;
-        public static bool modified = false;
+        public struct DefaultPlayerValues
+        {
+            public float jumpForce { get; set; }
+            public float sprintMultiplier { get; set; }
+        }
+        public static DefaultPlayerValues defaultPlayerValues;
+        public static bool defaultsInitialized = false, modified = false;
 
         //static bool logShowed = false, log2Showed = false;
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
         public static void OnUpdate(PlayerControllerB __instance, ref float ___sprintMultiplier, ref float ___jumpForce)
         {
-            Shrinking.Instance.Update(); // todo: remove once Shrinking.Update() is gone
+            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController)
+                return;
+
+            if(__instance.playerClientId != PlayerHelper.currentPlayer().playerClientId)
+                return;
+
+            Shrinking.Instance.Update(); // maybe put that in shrinking?
 
             if (!defaultsInitialized)
             {
-                defaultJumpForce = ___jumpForce;
-                defaultSprintMultiplier = ___sprintMultiplier;
+                defaultPlayerValues = new DefaultPlayerValues();
+                defaultPlayerValues.jumpForce = ___jumpForce;
+                defaultPlayerValues.sprintMultiplier = ___sprintMultiplier;
+                defaultsInitialized = true;
             }
 
             // Speed & Jump Multiplier for shrunken players
-            var isShrunk = PlayerHelper.isCurrentPlayerShrunk();
-            if (isShrunk) // Modifying sadly has to be done each frame
+            if (PlayerHelper.isCurrentPlayerShrunk())
             {
-                ___jumpForce = defaultJumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
+                ___jumpForce = defaultPlayerValues.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
 
-                ___sprintMultiplier = defaultSprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
+                ___sprintMultiplier = defaultPlayerValues.sprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
+                if (__instance.isSprinting)
+                    ___sprintMultiplier *= 2.25f;
 
-                if(!modified)
-                    __instance.carryWeight = PlayerHelper.calculatePlayerWeightFor(__instance);
-
-                modified = true;
+                //__instance.carryWeight = PlayerHelper.calculatePlayerWeightFor(__instance);
             }
-            else if(modified) // Reset single time upon enlarge
+            else if (modified)
             {
-                ___jumpForce = defaultJumpForce;
-
-                ___sprintMultiplier = defaultSprintMultiplier;
-                __instance.carryWeight = PlayerHelper.calculatePlayerWeightFor(__instance);
+                ___jumpForce = defaultPlayerValues.jumpForce;
+                ___sprintMultiplier = defaultPlayerValues.sprintMultiplier;
+                if (__instance.isSprinting)
+                    ___sprintMultiplier *= 2.25f;
                 modified = false;
             }
         }
