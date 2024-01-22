@@ -138,9 +138,10 @@ namespace LCShrinkRay.comp
                 }
             }
 
-            //Remove the item from the list of altered items and reset them if they're not being held
-            foreach (GrabbableObject obj in alteredGrabbedItems)
+            //Remove the item from the list of altered items and reset them if they're not being held. todo: move this to GrabItem / DiscardItem in GrabbablePlayerObject
+            for(int i = alteredGrabbedItems.Count - 1; i >= 0; i--)
             {
+                var obj = alteredGrabbedItems[i];
                 if (!obj.isHeld)
                 {
                     Plugin.log("removing held object!!! from the list!!!!!");

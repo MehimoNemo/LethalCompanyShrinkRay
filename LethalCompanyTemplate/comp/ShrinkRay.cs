@@ -7,6 +7,7 @@ using LCShrinkRay.Config;
 using LCShrinkRay.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using LCShrinkRay.patches;
 
 namespace LCShrinkRay.comp
 {
@@ -390,7 +391,7 @@ namespace LCShrinkRay.comp
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, newSize, () =>
                         {
-                            if (newSize <= 0f)
+                            if (targetingUs && newSize <= 0f)
                                 targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
                         });
 
