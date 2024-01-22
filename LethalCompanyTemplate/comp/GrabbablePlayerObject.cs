@@ -60,7 +60,7 @@ namespace LCShrinkRay.comp
             //this.gameObject.layer = 6;
             this.itemProperties.canBeGrabbedBeforeGameStart = true;
             this.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
-            this.grabbable = false;
+            this.grabbable = true;
 
             //get our collider and save it for later use
 
@@ -215,8 +215,6 @@ namespace LCShrinkRay.comp
             base.LateUpdate();
             if (grabbedPlayer != null)
             {
-                this.grabbable = PlayerHelper.isShrunk(grabbedPlayer.gameObject);
-
                 if (this.isHeld)
                 {
                     //this looks like trash unfortunately
@@ -272,24 +270,8 @@ namespace LCShrinkRay.comp
             return null;
         }
 
-        private bool GrabbedPlayerIsHoldingAnotherPlayer()
-        {
-            Plugin.log("CHECKING IF HELD OBJECT IS PLAYER OBJECT");
-            var item = grabbedPlayerCurrentItem();
-            return item != null && item is GrabbablePlayerObject;
-        }
-
         public override void GrabItem()
         {
-            var isHoldingPlayer = GrabbedPlayerIsHoldingAnotherPlayer();
-            if (grabbedPlayer == playerHeldBy || (!ModConfig.Instance.values.friendlyFlight && isHoldingPlayer))
-            {
-                Plugin.log("Unable to grab player " + grabbedPlayer.ToString());
-                playerHeldBy.DiscardHeldObject();
-                DiscardItem();
-                return;
-            }
-
             Plugin.log("Okay, let's grab!");
             base.GrabItem();
 
@@ -324,6 +306,16 @@ namespace LCShrinkRay.comp
                 if(gpo != null)
                     gpo.calculateWeight();
             }*/
+
+            if(!ModConfig.Instance.values.friendlyFlight)
+                setHolderGrabbable(false);
+        }
+
+        private void setHolderGrabbable(bool isGrabbable = true)
+        {
+            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(playerHeldBy.playerClientId);
+            if (gpo != null)
+                gpo.grabbable = isGrabbable;
         }
 
         private void setControlTips()
@@ -411,6 +403,9 @@ namespace LCShrinkRay.comp
 
         public override void DiscardItem()
         {
+            if (!ModConfig.Instance.values.friendlyFlight)
+                setHolderGrabbable(true);
+
             base.DiscardItem();
             grabbedPlayer.playerCollider.enabled = true;
             this.propColliders[0].enabled = true;
