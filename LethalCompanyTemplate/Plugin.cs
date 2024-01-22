@@ -48,7 +48,6 @@ namespace LCShrinkRay
             netcodePatching();
 
             harmony.PatchAll(typeof(Plugin));
-            //harmony.PatchAll(typeof(SoundManagerPatch));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
             harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));

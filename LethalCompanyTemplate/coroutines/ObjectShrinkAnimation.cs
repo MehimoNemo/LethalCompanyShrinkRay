@@ -7,23 +7,23 @@ namespace LCShrinkRay.coroutines
 {
     internal class ObjectShrinkAnimation : MonoBehaviour // todo: rename to ObjectChangeSizeAnimation
     {
-        public GameObject playerObj { get; private set; }
+        public GameObject gameObj { get; private set; }
 
-        public static void StartRoutine(GameObject playerObj, float newSize, Action onComplete = null)
+        public static void StartRoutine(GameObject gameObj, float newSize, Action onComplete = null)
         {
-            var routine = playerObj.AddComponent<ObjectShrinkAnimation>();
-            routine.playerObj = playerObj;
+            var routine = gameObj.AddComponent<ObjectShrinkAnimation>();
+            routine.gameObj = gameObj;
             routine.StartCoroutine(routine.run(newSize, onComplete));
         }
 
         private IEnumerator run(float newSize, Action onComplete)
         {
             Plugin.log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
-            Plugin.log("gObject: " + playerObj, Plugin.LogType.Warning);
-            Transform objectTransform = playerObj.GetComponent<Transform>();
+            Plugin.log("gObject: " + gameObj, Plugin.LogType.Warning);
+            Transform objectTransform = gameObj.GetComponent<Transform>();
             float duration = 2f;
             float elapsedTime = 0f;
-            float currentSize = playerObj.transform.localScale.x;
+            float currentSize = gameObj.transform.localScale.x;
             if (currentSize == newSize)
                 yield break;
 
@@ -51,7 +51,6 @@ namespace LCShrinkRay.coroutines
 
             // Ensure final scale is set to the desired value
             objectTransform.localScale = new Vector3(newSize, newSize, newSize);
-            Shrinking.Instance.updatePitch();
 
             if (onComplete != null)
                 onComplete();

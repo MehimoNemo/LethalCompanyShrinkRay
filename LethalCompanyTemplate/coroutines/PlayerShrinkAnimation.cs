@@ -1,7 +1,11 @@
-﻿using LCShrinkRay.comp;
+﻿using GameNetcodeStuff;
+using LCShrinkRay.comp;
+using LCShrinkRay.Config;
+using LCShrinkRay.helper;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -9,25 +13,32 @@ namespace LCShrinkRay.coroutines
 {
     internal class PlayerShrinkAnimation : MonoBehaviour
     {
-        public GameObject playerObj { get; private set; }
+        public PlayerControllerB targetPlayer { get; private set; }
+        public bool targetingUs {  get; private set; }
 
-        public static void StartRoutine(GameObject playerObj, float newSize, Transform maskTransform, Action onComplete = null)
+        public static void StartRoutine(PlayerControllerB affectedPlayer, float newSize, Action onComplete = null)
         {
-            var routine = playerObj.AddComponent<PlayerShrinkAnimation>();
-            routine.playerObj = playerObj;
-            routine.StartCoroutine(routine.run(newSize, maskTransform, onComplete));
+            var routine = affectedPlayer.gameObject.AddComponent<PlayerShrinkAnimation>();
+            routine.targetPlayer = affectedPlayer;
+            routine.targetingUs = (affectedPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId);
+
+            routine.StartCoroutine(routine.run(newSize, onComplete));
         }
 
-        private IEnumerator run(float newSize, Transform maskTransform, Action onComplete)
+        private IEnumerator run(float newSize, Action onComplete)
         {
-            Shrinking.Instance.playerTransform = playerObj.GetComponent<Transform>();
-            //TODO: REPLACE WITH STORED REFERENCE
-            Plugin.log(Shrinking.Instance.playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly").ToString());
-            //TODO: REPLACE WITH STORED REFERENCE
-            Transform armTransform = Shrinking.Instance.playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
+            var playerTransform = targetPlayer.gameObject.GetComponent<Transform>();
+
+            Transform armTransform = null, maskTransform = null;
+            if(targetingUs)
+            {
+                armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
+                maskTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
+            }
+
             float duration = 2f;
             float elapsedTime = 0f;
-            float currentSize = playerObj.transform.localScale.x;
+            float currentSize = targetPlayer.gameObject.transform.localScale.x;
 
             var modificationType = newSize < currentSize ? ShrinkRay.ModificationType.Shrinking : ShrinkRay.ModificationType.Enlarging;
             float directionalForce, offset;
@@ -42,28 +53,37 @@ namespace LCShrinkRay.coroutines
                 offset = currentSize + 0.42f;
             }
 
+
+            int count = 0;
             while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
             {
-                //shrinkage = -(Mathf.Pow(elapsedTime / duration, 3) - (elapsedTime / duration) * amplitude * Mathf.Sin((elapsedTime / duration) * Mathf.PI)) + 1f;
                 currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
-                //mls.LogFatal(shrinkage);
-                Shrinking.Instance.playerTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
-                maskTransform.localScale = CalcMaskScaleVec(currentSize);
-                maskTransform.localPosition = CalcMaskPosVec(currentSize);
-                armTransform.localScale = CalcArmScale(currentSize);
+
+                playerTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
+
+                if (targetingUs)
+                {
+                    maskTransform.localScale = CalcMaskScaleVec(currentSize);
+                    maskTransform.localPosition = CalcMaskPosVec(currentSize);
+                    armTransform.localScale = CalcArmScale(currentSize);
+                }
 
                 elapsedTime += Time.deltaTime;
-                yield return null; // Wait for the next frame
+
+                count = count % 20 + 1;
+                yield return count == 1 ? adjustAllPlayerPitches() : null; // Wait for the next frame (& adjust pitch every 20 frames)
             }
 
             // Ensure final scale is set to the desired value
-            Shrinking.Instance.playerTransform.localScale = new Vector3(newSize, newSize, newSize);
-            maskTransform.localScale = CalcMaskScaleVec(newSize);
-            maskTransform.localPosition = CalcMaskPosVec(newSize);
-            armTransform.localScale = CalcArmScale(newSize);
-            Shrinking.Instance.updatePitch();
+            playerTransform.localScale = new Vector3(newSize, newSize, newSize);
+            if (targetingUs)
+            {
+                maskTransform.localScale = CalcMaskScaleVec(newSize);
+                maskTransform.localPosition = CalcMaskPosVec(newSize);
+                armTransform.localScale = CalcArmScale(newSize);
+            }
 
-            if(onComplete != null)
+            if (onComplete != null)
                 onComplete();
         }
         private Vector3 CalcMaskPosVec(float scale)
@@ -94,6 +114,50 @@ namespace LCShrinkRay.coroutines
             float z = -0.125f * scale + 1.15f;
             pos = new Vector3(x, y, z);
             return pos;
+        }
+
+        private IEnumerator adjustAllPlayerPitches()
+        {
+            if (targetingUs) // Change pitch of every other player
+            {
+                foreach (var pcb in StartOfRound.Instance.allPlayerScripts.Where(p => p != null && p.isPlayerControlled && p.playerClientId != targetPlayer.playerClientId))
+                    yield return adjustPlayerPitch(pcb);
+            }
+            else // Only need to change pitch of affected player
+            {
+                yield return adjustPlayerPitch(targetPlayer);
+            }
+        }
+
+        private IEnumerator adjustPlayerPitch(PlayerControllerB pcb)
+        {
+            if (pcb.gameObject == null || pcb.gameObject.transform == null)
+            {
+                Plugin.log("SetPlayerPitch: Unable to get playerObj.transform", Plugin.LogType.Warning);
+                yield break;
+            }
+
+            if (SoundManager.Instance == null)
+            {
+                Plugin.log("SetPlayerPitch: SoundManager is null", Plugin.LogType.Warning);
+                yield break;
+            }
+
+            float playerScale = pcb.gameObject.transform.localScale.x;
+            float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
+
+            float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerHelper.currentPlayerScale()) + 1f);
+
+            try
+            {
+                SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
+                Plugin.log("Pitch from player " + pcb.playerClientId + " adjusted to " + modifiedPitch + ". currentPlayerScale: " + PlayerHelper.currentPlayerScale() + " / playerScale: " + playerScale + " / intensity: " + intensity);
+            }
+            catch (NullReferenceException e)
+            {
+                Plugin.log("Hey! So, there's a null reference exception in SetPlayerPitch ... and here's why: " + e.ToString() + "\n" + e.StackTrace.ToString(), Plugin.LogType.Warning);
+            }
+            yield return null; // Wait for the next frame
         }
     }
 }

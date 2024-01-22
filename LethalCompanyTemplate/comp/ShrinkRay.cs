@@ -367,10 +367,7 @@ namespace LCShrinkRay.comp
                         if (newSize != targetPlayer.gameObject.transform.localScale.x)
                         {
                             Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
-                            if (targetingUs)
-                                coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                            else
-                                coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
+                            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, newSize);
                         }
 
                         if(PlayerHelper.isHost())
@@ -391,14 +388,11 @@ namespace LCShrinkRay.comp
                             return; // Can't shrink players to death in ship phase
 
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
-                        if (targetingUs)
-                            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>(), () =>
-                            {
-                                if (newSize <= 0f)
-                                    targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
-                            });
-                        else
-                            coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
+                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, newSize, () =>
+                        {
+                            if (newSize <= 0f)
+                                targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
+                        });
 
                         if (newSize < 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
                         {
@@ -423,10 +417,7 @@ namespace LCShrinkRay.comp
                             return; // Well, nothing changed..
 
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + newSize);
-                        if (targetingUs)
-                            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
-                        else
-                            coroutines.ObjectShrinkAnimation.StartRoutine(targetPlayer.gameObject, newSize);
+                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, newSize);
 
                         if (newSize >= 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
                             GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);

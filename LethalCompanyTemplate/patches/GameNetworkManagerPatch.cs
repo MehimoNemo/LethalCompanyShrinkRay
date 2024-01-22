@@ -75,7 +75,7 @@ namespace LCShrinkRay.patches
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
             {
                 if(PlayerHelper.isShrunk(player.gameObject))
-                    coroutines.PlayerShrinkAnimation.StartRoutine(player.gameObject, 1f, GameObject.Find("ScavengerHelmet").GetComponent<Transform>());
+                    coroutines.PlayerShrinkAnimation.StartRoutine(player, 1f);
             }
 
             //reset speed, pitch(if it doesn't reset naturally)

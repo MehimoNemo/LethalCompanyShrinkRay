@@ -9,8 +9,6 @@ namespace LCShrinkRay.comp
     public class ShrinkRayFX
     {
         private GameObject shrinkRayFX;
-        private string assetDir;
-        private AssetBundle FXAssets;
         private VisualEffect visualEffect;
 
         #region Properties
@@ -66,8 +64,8 @@ namespace LCShrinkRay.comp
         public void AddShrinkRayFXToGame()
         {
             // Do `fxasset` loading here, tried copying Nemo's code in shrinking.cs
-            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
-            AssetBundle FXAssets = AssetBundle.LoadFromFile(assetDir);
+            var assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
+            var FXAssets = AssetBundle.LoadFromFile(assetDir);
 
             // The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
             shrinkRayFX = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");

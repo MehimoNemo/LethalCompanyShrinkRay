@@ -110,7 +110,10 @@ namespace LCShrinkRay.patches
             try
             {
                 grabbableObject = thisObject.gameObject.GetComponent<GrabbableObject>();
-            } catch (Exception e) { }
+            } catch (Exception e)
+            {
+                Plugin.log("Unable to add player to sell counter. Reason: " + e.Message, Plugin.LogType.Error);
+            }
             //if the object exists, and it is a player object
             bool isPlayer = grabbableObject != null && grabbableObject is GrabbablePlayerObject;
             //return true and DON'T run the rest of the original method
