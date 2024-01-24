@@ -90,7 +90,7 @@ namespace LCShrinkRay.helper
                 return 1f;
             }
 
-            return player.gameObject.transform.localScale.x;
+            return Mathf.Round(player.gameObject.transform.localScale.x * 100f) / 100f; // round to 2 digits
         }
 
         public static bool isShrunk(GameObject playerObject)

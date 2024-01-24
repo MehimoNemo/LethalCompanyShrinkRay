@@ -39,7 +39,8 @@ namespace LCShrinkRay.patches
             }
 
             // Speed & Jump Multiplier for shrunken players
-            if (PlayerHelper.isCurrentPlayerShrunk())
+            var scale = PlayerHelper.currentPlayerScale();
+            if (PlayerHelper.isShrunk(scale) && scale > 0f)
             {
                 ___jumpForce = defaultPlayerValues.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
 

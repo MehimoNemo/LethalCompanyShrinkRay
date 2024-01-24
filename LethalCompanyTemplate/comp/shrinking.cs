@@ -9,6 +9,7 @@ using Unity.Netcode;
 using System.Linq;
 using Newtonsoft.Json;
 using LCShrinkRay.helper;
+using LethalLib.Modules;
 
 namespace LCShrinkRay.comp
 {
@@ -34,8 +35,6 @@ namespace LCShrinkRay.comp
         public Transform helmetHudTransform;
         public static List<GameObject> grabbables = new List<GameObject>();
         public static List<GrabbableObject> alteredGrabbedItems = new List<GrabbableObject>();
-
-        public Transform playerTransform, player1Transform; // needed?
 
         private string[] ScreenBlockingItems = {
             "Boombox(Clone)",
@@ -75,11 +74,6 @@ namespace LCShrinkRay.comp
             Plugin.log("COUNT OF LIST IS: " + ScreenBlockingItems.Length);
             foreach (string item in ScreenBlockingItems)
                 Plugin.log('\"' + item + '\"');
-        }
-
-        public void SetPlayerPitch(float pitch, ulong playerID)
-        {
-            coroutines.SetPlayerPitch.StartRoutine(playerID, pitch);
         }
 
         public void Update()
@@ -144,9 +138,10 @@ namespace LCShrinkRay.comp
                 }
             }
 
-            //Remove the item from the list of altered items and reset them if they're not being held
-            foreach (GrabbableObject obj in alteredGrabbedItems)
+            //Remove the item from the list of altered items and reset them if they're not being held. todo: move this to GrabItem / DiscardItem in GrabbablePlayerObject
+            for(int i = alteredGrabbedItems.Count - 1; i >= 0; i--)
             {
+                var obj = alteredGrabbedItems[i];
                 if (!obj.isHeld)
                 {
                     Plugin.log("removing held object!!! from the list!!!!!");
@@ -155,40 +150,14 @@ namespace LCShrinkRay.comp
                 }
             }
 
-            if (playerTransform == null) // needed?
+            if (helmetHudTransform == null)
             {
-                try
+                if (GameObject.Find("ScavengerHelmet") != null)
                 {
-                    //TODO: REPLACE WITH STORED REFERENCE
-                    var player = GameObject.Find("Player");
-                    if (player != null)
-                        playerTransform = player.GetComponent<Transform>();
-
-                    //TODO: REPLACE WITH STORED REFERENCE
-                    if (GameObject.Find("ScavengerHelmet") != null)
-                    {
-                        //TODO: REPLACE WITH STORED REFERENCE
-                        helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
-                        helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
-                        Plugin.log("Player transform got!");
-                    }
-                    var player1Object = GameObject.Find("Player (1)");
-                    if (player1Object != null)
-                        player1Transform = player1Object.GetComponent<Transform>();
+                    helmetHudTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
+                    helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
+                    Plugin.log("Player transform got!");
                 }
-                catch (Exception e)
-                {
-                    Plugin.log("Error in Update(): " + e.Message);
-                }
-            }
-        }
-
-        public void updatePitch()
-        {
-            foreach ( var pcb in StartOfRound.Instance.allPlayerScripts.Where(p => p != null))
-            {
-                //Plugin.log("Altering player voice pitches");
-                SetPlayerPitch(1f, pcb.playerClientId);
             }
         }
 

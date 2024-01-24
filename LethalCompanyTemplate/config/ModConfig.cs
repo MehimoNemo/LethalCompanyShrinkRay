@@ -36,7 +36,7 @@ namespace LCShrinkRay.Config
 
         public float weightMultiplier { get; set; }
 
-        [JsonIgnore]
+        // [JsonIgnore] // currently gets overwritten by default (0) upon host sync
         public float pitchDistortionIntensity { get; set; }
 
         public bool canUseVents { get; set; }
