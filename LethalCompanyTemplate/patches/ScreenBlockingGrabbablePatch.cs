@@ -16,7 +16,13 @@ namespace LCShrinkRay.patches
 {
     internal class ScreenBlockingGrabbablePatch
     {
-        public static Dictionary<ulong, Vector3> initialItemOffsets = new Dictionary<ulong, Vector3>();
+        public struct GrabbableObjectDefaults
+        {
+            public Vector3 scale { get; set; }
+            public Vector3 offset { get; set; }
+        }
+
+        public static Dictionary<ulong, GrabbableObjectDefaults> itemDefaults = new Dictionary<ulong, GrabbableObjectDefaults>();
 
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
@@ -27,7 +33,7 @@ namespace LCShrinkRay.patches
                 return;
             }
 
-            initialItemOffsets.Add(__instance.NetworkObjectId, __instance.itemProperties.positionOffset);
+            itemDefaults.Add(__instance.NetworkObjectId, new GrabbableObjectDefaults() { scale = __instance.transform.localScale, offset = __instance.itemProperties.positionOffset });
 
             transformItemRelativeTo(__instance, __instance.playerHeldBy);
 
@@ -43,10 +49,11 @@ namespace LCShrinkRay.patches
         {
             // __instance.transform.localScale /= __instance.playerHeldBy.transform.localScale.x; // already resetting automatically
 
-            if(initialItemOffsets.ContainsKey(__instance.NetworkObjectId))
+            if(itemDefaults.ContainsKey(__instance.NetworkObjectId))
             {
-                __instance.itemProperties.positionOffset = initialItemOffsets[__instance.NetworkObjectId];
-                initialItemOffsets.Remove(__instance.NetworkObjectId);
+                __instance.itemProperties.positionOffset = itemDefaults[__instance.NetworkObjectId].offset;
+                __instance.transform.localScale = itemDefaults[__instance.NetworkObjectId].scale;
+                itemDefaults.Remove(__instance.NetworkObjectId);
             }
         }
 
@@ -55,9 +62,9 @@ namespace LCShrinkRay.patches
             if (pcb.transform.localScale.x == 1f)
                 return;
 
-            Vector3 initialOffset = initialItemOffsets.GetValueOrDefault(item.NetworkObjectId, item.itemProperties.positionOffset);
+            var itemDefault = itemDefaults.GetValueOrDefault(item.NetworkObjectId, new GrabbableObjectDefaults() { scale = item.transform.localScale, offset = item.itemProperties.positionOffset });
 
-            item.transform.localScale *= pcb.transform.localScale.x;
+            item.transform.localScale = itemDefault.scale * pcb.transform.localScale.x;
             var yOffset = item.transform.localScale.y - (item.transform.localScale.y * pcb.transform.localScale.x);
             item.itemProperties.positionOffset = new Vector3(0f, item.itemProperties.twoHanded ? -yOffset : yOffset, 0f);
         }
