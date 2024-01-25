@@ -57,9 +57,9 @@ namespace LCShrinkRay.patches
 
             Vector3 initialOffset = initialItemOffsets.GetValueOrDefault(item.NetworkObjectId, item.itemProperties.positionOffset);
 
-            var yOffset = (item.transform.localScale.y - (item.transform.localScale.y * pcb.transform.localScale.x)) / 2.5f; // somehow not exactly 2f as it should be for radius.. meh
-            item.itemProperties.positionOffset = new Vector3(initialOffset.x, initialOffset.y - yOffset, initialOffset.z);
             item.transform.localScale *= pcb.transform.localScale.x;
+            var yOffset = item.transform.localScale.y - (item.transform.localScale.y * pcb.transform.localScale.x);
+            item.itemProperties.positionOffset = new Vector3(0f, item.itemProperties.twoHanded ? -yOffset : yOffset, 0f);
         }
     }
 }
