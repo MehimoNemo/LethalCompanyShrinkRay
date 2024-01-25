@@ -72,7 +72,6 @@ namespace LCShrinkRay.coroutines
                     armTransform.localScale = CalcArmScale(currentSize);
                     if (heldItem != null)
                         ScreenBlockingGrabbablePatch.transformItemRelativeTo(heldItem, targetPlayer);
-                        //itemTransform.localScale = currentScale;
                 }
 
                 elapsedTime += Time.deltaTime;
