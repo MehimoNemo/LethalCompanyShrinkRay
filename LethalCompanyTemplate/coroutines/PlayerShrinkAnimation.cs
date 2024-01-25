@@ -2,6 +2,7 @@
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
+using LCShrinkRay.patches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,10 +31,12 @@ namespace LCShrinkRay.coroutines
             var playerTransform = targetPlayer.gameObject.GetComponent<Transform>();
 
             Transform armTransform = null, maskTransform = null;
+            GrabbableObject heldItem = null;
             if(targetingUs)
             {
                 armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
                 maskTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
+                heldItem = PlayerHelper.HeldItem(targetPlayer);
             }
 
             float duration = 2f;
@@ -59,13 +62,17 @@ namespace LCShrinkRay.coroutines
             {
                 currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
 
-                playerTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
+                var currentScale = new Vector3(currentSize, currentSize, currentSize);
+                playerTransform.localScale = currentScale;
 
                 if (targetingUs)
                 {
                     maskTransform.localScale = CalcMaskScaleVec(currentSize);
                     maskTransform.localPosition = CalcMaskPosVec(currentSize);
                     armTransform.localScale = CalcArmScale(currentSize);
+                    if (heldItem != null)
+                        ScreenBlockingGrabbablePatch.transformItemRelativeTo(heldItem, targetPlayer);
+                        //itemTransform.localScale = currentScale;
                 }
 
                 elapsedTime += Time.deltaTime;
@@ -75,12 +82,15 @@ namespace LCShrinkRay.coroutines
             }
 
             // Ensure final scale is set to the desired value
+            var finalScale = new Vector3(newSize, newSize, newSize);
             playerTransform.localScale = new Vector3(newSize, newSize, newSize);
             if (targetingUs)
             {
                 maskTransform.localScale = CalcMaskScaleVec(newSize);
                 maskTransform.localPosition = CalcMaskPosVec(newSize);
                 armTransform.localScale = CalcArmScale(newSize);
+                if (heldItem != null)
+                    ScreenBlockingGrabbablePatch.transformItemRelativeTo(heldItem, targetPlayer);
             }
 
             if (onComplete != null)

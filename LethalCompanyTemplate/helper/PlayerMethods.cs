@@ -105,5 +105,13 @@ namespace LCShrinkRay.helper
             var roundedSize = Mathf.Round(size * 100f) / 100f; // round to 2 digits
             return roundedSize < 1f;
         }
+
+        public static GrabbableObject HeldItem(PlayerControllerB pcb)
+        {
+            if (pcb.isHoldingObject && pcb.ItemSlots[pcb.currentItemSlot] != null)
+                return pcb.ItemSlots[pcb.currentItemSlot];
+
+            return null;
+        }
     }
 }
