@@ -33,7 +33,6 @@ namespace LCShrinkRay
             try
             {
                 ModConfig.Instance.setup();
-                Shrinking.Instance.setup(); // todo: split shrinking.cs further into smaller classes, so that this line can get removed
             }
             catch(Exception ex)
             {
@@ -55,6 +54,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(HoarderBugAIPatch));
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
             harmony.PatchAll(typeof(DeskPatch));
+            harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
 
             if (ModConfig.debugMode)
                 harmony.PatchAll(typeof(DebugPatches));

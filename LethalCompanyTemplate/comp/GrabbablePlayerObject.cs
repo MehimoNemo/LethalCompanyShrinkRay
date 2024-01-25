@@ -434,22 +434,18 @@ namespace LCShrinkRay.comp
         {
             Plugin.log("GrabbablePlayerObject.Initialize");
 
-            if (pcb == StartOfRound.Instance.localPlayerController)
+            if (pcb.playerClientId == PlayerHelper.currentPlayer().playerClientId)
             {
                 Plugin.log("Finding helmet!");
                 try
                 {
                     helmet = Shrinking.Instance.helmetHudTransform.gameObject.GetComponent<MeshRenderer>();
-                } catch { }
-                if(helmet == null)
-                {
-                    Plugin.log("uhhh helmet is null...");
                 }
-                if (helmet != null)
-                {
-                    Plugin.log("Found helmet");
+                catch(Exception e) {
+                    Plugin.log(e.Message, Plugin.LogType.Warning);
                 }
             }
+
             this.grabbedPlayer = pcb;
             this.grabbedPlayerID = pcb.playerClientId;
             this.tag = "PhysicsProp";
