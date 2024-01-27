@@ -21,12 +21,11 @@ namespace LCShrinkRay.patches
                 return;
             }
 
-            TransformItemRelativeTo(__instance, __instance.playerHeldBy.transform.localScale.x); // __instance.playerHeldBy
-
+            TransformItemRelativeTo(__instance, __instance.playerHeldBy.transform.localScale.x);
             CheckForGlassify(__instance);
         }
 
-        [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
+        [HarmonyPrefix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
         public static void DiscardItem(GrabbableObject __instance)
         {
             OnItemNormalize(__instance);
@@ -34,11 +33,11 @@ namespace LCShrinkRay.patches
 
         public static void CheckForGlassify(GrabbableObject item)
         {
-            if (item == null || item.playerHeldBy == null) return;
+            if (item == null || item.playerHeldBy == null || PlayerHelper.isNormalSize(item.playerHeldBy.transform.localScale.x)) return;
 
-            Plugin.log("CheckForGlassify - Item layer: " + item.gameObject.layer.ToString());
-            var camera = item.playerHeldBy.gameplayCamera;
-            var ray = new Ray(camera.transform.position, camera.transform.position + camera.transform.forward);
+            //Plugin.log("CheckForGlassify - Item layer: " + item.gameObject.layer.ToString());
+            //var camera = item.playerHeldBy.gameplayCamera;
+            //var ray = new Ray(camera.transform.position, camera.transform.position + camera.transform.forward);
             // all vanilla items are on mask 6. may cause issues with other mods
             //if (Physics.Raycast(ray, out RaycastHit raycastHit, 2f, 6, QueryTriggerInteraction.Collide))
             if(item.itemProperties.twoHanded)
@@ -47,7 +46,6 @@ namespace LCShrinkRay.patches
 
                 //Plugin.log("Held item is visible in the center of the screen");
                 GlassifyItem(item);
-                return;
             }
             else
                 UnGlassifyItem(item);
@@ -72,7 +70,7 @@ namespace LCShrinkRay.patches
         {
             if (item == null) return;
 
-            if ((Mathf.Round(scale * 100f) / 100f) == 1f)
+            if (PlayerHelper.isNormalSize(scale))
             {
                 OnItemNormalize(item);
                 return;
@@ -90,10 +88,7 @@ namespace LCShrinkRay.patches
             if (item == null) return;
 
             if (scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
-            {
-                Plugin.log("ScaledGrabbableObjectData missing. Unable to unglassify!", Plugin.LogType.Warning);
                 return;
-            }
 
             var meshRenderer = item.gameObject.GetComponentsInChildren<MeshRenderer>();
             if (meshRenderer != null)
