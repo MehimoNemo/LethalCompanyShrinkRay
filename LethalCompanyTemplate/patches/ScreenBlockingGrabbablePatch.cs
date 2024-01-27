@@ -1,72 +1,157 @@
-﻿using DunGen;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.helper;
-using System;
-using System.Collections;
+using LethalLib.Modules;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
-using static System.Net.Mime.MediaTypeNames;
+using UnityEngine.InputSystem.HID;
+using static UnityEngine.GraphicsBuffer;
 
 namespace LCShrinkRay.patches
 {
     internal class ScreenBlockingGrabbablePatch
     {
-        public struct GrabbableObjectDefaults
-        {
-            public Vector3 scale { get; set; }
-            public Vector3 offset { get; set; }
-        }
-
-        public static Dictionary<ulong, GrabbableObjectDefaults> itemDefaults = new Dictionary<ulong, GrabbableObjectDefaults>();
-
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
         {
+            Plugin.log("GrabItem", Plugin.LogType.Warning);
             if (__instance.playerHeldBy == null || __instance is GrabbablePlayerObject)
             {
                 Plugin.log("adjustItemOffset: object is not held or other player", Plugin.LogType.Warning);
                 return;
             }
 
-            itemDefaults.Add(__instance.NetworkObjectId, new GrabbableObjectDefaults() { scale = __instance.transform.localScale, offset = __instance.itemProperties.positionOffset });
+            TransformItemRelativeTo(__instance, PlayerHelper.currentPlayerScale()); // __instance.playerHeldBy
 
-            transformItemRelativeTo(__instance, __instance.playerHeldBy);
-
-            /*Vector3 viewPos = __instance.playerHeldBy.gameplayCamera.WorldToViewportPoint(__instance.gameObject.transform.position);
-            if (viewPos.x >= 0 && viewPos.x <= 1 && viewPos.y >= 0 && viewPos.y <= 1 && viewPos.z > 0)
-            {
-                Plugin.log("Held item is visible on screen");
-            }*/
+            CheckForGlassify(__instance);
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
+        [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
         public static void DiscardItem(GrabbableObject __instance)
         {
-            // __instance.transform.localScale /= __instance.playerHeldBy.transform.localScale.x; // already resetting automatically
+            Plugin.log("DiscardItem", Plugin.LogType.Warning);
+            OnItemNormalize(__instance);
+        }
 
-            if(itemDefaults.ContainsKey(__instance.NetworkObjectId))
+        public static void CheckForGlassify(GrabbableObject item)
+        {
+            Plugin.log("CheckForGlassify");
+            Plugin.log("Item layer: " + item.gameObject.layer.ToString());
+
+            var camera = item.playerHeldBy.gameplayCamera;
+            var ray = new Ray(camera.transform.position, camera.transform.position + camera.transform.forward);
+            // all vanilla items are on mask 6. may cause issues with other mods
+            //if (Physics.Raycast(ray, out RaycastHit raycastHit, 2f, 6, QueryTriggerInteraction.Collide))
+            if(item.itemProperties.twoHanded)
             {
-                __instance.itemProperties.positionOffset = itemDefaults[__instance.NetworkObjectId].offset;
-                __instance.transform.localScale = itemDefaults[__instance.NetworkObjectId].scale;
-                itemDefaults.Remove(__instance.NetworkObjectId);
+                //Plugin.log("Ray has hit an item! Object: " + raycastHit.collider.name);
+
+                //Plugin.log("Held item is visible in the center of the screen");
+                GlassifyItem(item);
+                return;
+            }
+            else
+                UnGlassifyItem(item);
+        }
+
+        public static void OnItemNormalize(GrabbableObject item)
+        {
+            Plugin.log("OnItemNormalize", Plugin.LogType.Warning);
+            if (!item.gameObject.TryGetComponent(out ScaledGrabbableObjectData scaledItemData))
+                return;
+
+            item.itemProperties.positionOffset = scaledItemData.initialValues.offset;
+            item.transform.localScale = scaledItemData.initialValues.scale;
+            if (scaledItemData.initialValues.rendererDefaults != null)
+                UnGlassifyItem(item, scaledItemData);
+
+            Object.Destroy(scaledItemData);
+        }
+
+        public static void TransformItemRelativeTo(GrabbableObject item, float scale, Vector3 additionalOffset = new Vector3())
+        {
+            Plugin.log("TransformItemRelativeTo");
+            if (scale == 1f)
+            {
+                OnItemNormalize(item);
+                return;
+            }
+
+            if (!item.gameObject.TryGetComponent(out ScaledGrabbableObjectData scaledItemData))
+                scaledItemData = item.gameObject.AddComponent<ScaledGrabbableObjectData>();
+
+            item.itemProperties.positionOffset = scaledItemData.initialValues.offset * scale + additionalOffset;
+            item.transform.localScale = scaledItemData.initialValues.scale * scale;
+        }
+
+        public static void UnGlassifyItem(GrabbableObject item, ScaledGrabbableObjectData scaledItemData = null)
+        {
+            Plugin.log("UnGlassifyItem", Plugin.LogType.Warning);
+            if (scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
+            {
+                Plugin.log("ScaledGrabbableObjectData missing. Unable to unglassify!", Plugin.LogType.Warning);
+                return;
+            }
+
+            var meshRenderer = item.gameObject.GetComponentsInChildren<MeshRenderer>();
+            if (meshRenderer != null)
+            {
+                foreach (var r in meshRenderer)
+                {
+                    var rendererDefaults = scaledItemData.initialValues.rendererDefaults[r.GetInstanceID()];
+                    r.sharedMaterials = rendererDefaults.materials;
+                    r.rendererPriority = rendererDefaults.priority;
+                }
+            }
+
+            scaledItemData.IsGlassified = false;
+        }
+
+        public static void GlassifyItem(GrabbableObject item, ScaledGrabbableObjectData scaledItemData = null)
+        {
+            Plugin.log("GlassifyItem", Plugin.LogType.Warning);
+            if (scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
+                scaledItemData = item.gameObject.AddComponent<ScaledGrabbableObjectData>();
+
+            if (scaledItemData.IsGlassified) return;
+
+            var meshRenderer = item.gameObject.GetComponentsInChildren<MeshRenderer>();
+            if (meshRenderer != null)
+            {
+                foreach (var r in meshRenderer)
+                {
+                    if (r.sharedMaterials == null || r.sharedMaterials.Length == 0)
+                        return;
+
+                    r.rendererPriority = 0;
+
+                    var materials = new Material[r.sharedMaterials.Length];
+                    System.Array.Fill(materials, Glass);
+                    r.sharedMaterials = materials;
+                }
             }
         }
 
-        public static void transformItemRelativeTo(GrabbableObject item, PlayerControllerB pcb)
+        private static string GlassMaterialName { get { return "LCGlass"; } }
+
+        public static Material Glass
         {
-            if (pcb.transform.localScale.x == 1f)
-                return;
-
-            var itemDefault = itemDefaults.GetValueOrDefault(item.NetworkObjectId, new GrabbableObjectDefaults() { scale = item.transform.localScale, offset = item.itemProperties.positionOffset });
-
-            item.transform.localScale = itemDefault.scale * pcb.transform.localScale.x;
-            var yOffset = item.transform.localScale.y - (item.transform.localScale.y * pcb.transform.localScale.x);
-            item.itemProperties.positionOffset = new Vector3(0f, item.itemProperties.twoHanded ? -yOffset : yOffset, 0f);
+            get
+            {
+                var m = new Material(Shader.Find("HDRP/Lit"));
+                m.color = new Color(0.5f, 0.5f, 0.6f, 0.6f);
+                m.renderQueue = 3300;
+                m.shaderKeywords = [
+                    "_SURFACE_TYPE_TRANSPARENT",
+                    "_DISABLE_SSR_TRANSPARENT",
+                    "_REFRACTION_THIN",
+                    "_NORMALMAP_TANGENT_SPACE",
+                    "_ENABLE_FOG_ON_TRANSPARENT"
+                ];
+                m.name = GlassMaterialName;
+                return m;
+            }
         }
     }
 }
