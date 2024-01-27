@@ -15,14 +15,13 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
         {
-            Plugin.log("GrabItem", Plugin.LogType.Warning);
             if (__instance.playerHeldBy == null || __instance is GrabbablePlayerObject)
             {
                 Plugin.log("adjustItemOffset: object is not held or other player", Plugin.LogType.Warning);
                 return;
             }
 
-            TransformItemRelativeTo(__instance, PlayerHelper.currentPlayerScale()); // __instance.playerHeldBy
+            TransformItemRelativeTo(__instance, __instance.playerHeldBy.transform.localScale.x); // __instance.playerHeldBy
 
             CheckForGlassify(__instance);
         }
@@ -30,15 +29,14 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
         public static void DiscardItem(GrabbableObject __instance)
         {
-            Plugin.log("DiscardItem", Plugin.LogType.Warning);
             OnItemNormalize(__instance);
         }
 
         public static void CheckForGlassify(GrabbableObject item)
         {
-            Plugin.log("CheckForGlassify");
-            Plugin.log("Item layer: " + item.gameObject.layer.ToString());
+            if (item == null || item.playerHeldBy == null) return;
 
+            Plugin.log("CheckForGlassify - Item layer: " + item.gameObject.layer.ToString());
             var camera = item.playerHeldBy.gameplayCamera;
             var ray = new Ray(camera.transform.position, camera.transform.position + camera.transform.forward);
             // all vanilla items are on mask 6. may cause issues with other mods
@@ -57,7 +55,8 @@ namespace LCShrinkRay.patches
 
         public static void OnItemNormalize(GrabbableObject item)
         {
-            Plugin.log("OnItemNormalize", Plugin.LogType.Warning);
+            if (item == null || item.playerHeldBy == null) return;
+
             if (!item.gameObject.TryGetComponent(out ScaledGrabbableObjectData scaledItemData))
                 return;
 
@@ -71,8 +70,9 @@ namespace LCShrinkRay.patches
 
         public static void TransformItemRelativeTo(GrabbableObject item, float scale, Vector3 additionalOffset = new Vector3())
         {
-            Plugin.log("TransformItemRelativeTo");
-            if (scale == 1f)
+            if (item == null) return;
+
+            if ((Mathf.Round(scale * 100f) / 100f) == 1f)
             {
                 OnItemNormalize(item);
                 return;
@@ -87,7 +87,8 @@ namespace LCShrinkRay.patches
 
         public static void UnGlassifyItem(GrabbableObject item, ScaledGrabbableObjectData scaledItemData = null)
         {
-            Plugin.log("UnGlassifyItem", Plugin.LogType.Warning);
+            if (item == null) return;
+
             if (scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
             {
                 Plugin.log("ScaledGrabbableObjectData missing. Unable to unglassify!", Plugin.LogType.Warning);
@@ -110,7 +111,8 @@ namespace LCShrinkRay.patches
 
         public static void GlassifyItem(GrabbableObject item, ScaledGrabbableObjectData scaledItemData = null)
         {
-            Plugin.log("GlassifyItem", Plugin.LogType.Warning);
+            if (item == null) return;
+
             if (scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
                 scaledItemData = item.gameObject.AddComponent<ScaledGrabbableObjectData>();
 
