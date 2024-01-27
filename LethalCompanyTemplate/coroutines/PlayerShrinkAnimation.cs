@@ -55,7 +55,7 @@ namespace LCShrinkRay.coroutines
                 directionalForce = -0.58f;
                 offset = currentSize + 0.42f;
             }
-
+            var initialArmScale = armTransform.localScale;
 
             int count = 0;
             while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
@@ -69,15 +69,23 @@ namespace LCShrinkRay.coroutines
                 {
                     maskTransform.localScale = CalcMaskScaleVec(currentSize);
                     maskTransform.localPosition = CalcMaskPosVec(currentSize);
-                    armTransform.localScale = CalcArmScale(currentSize);
+                    var newArmScale = CalcArmScale(newSize);
+                    armTransform.localScale = newArmScale;
                     if (heldItem != null)
-                        ScreenBlockingGrabbablePatch.transformItemRelativeTo(heldItem, targetPlayer);
+                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
                 }
 
                 elapsedTime += Time.deltaTime;
 
                 count = count % 20 + 1;
-                yield return count == 1 ? adjustAllPlayerPitches() : null; // Wait for the next frame (& adjust pitch every 20 frames)
+                if(count == 1)
+                {
+                    adjustAllPlayerPitches(); // Adjust pitch & item every 20 frames
+                    //if (targetingUs && heldItem != null)
+                        //ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
+                }
+                else
+                    yield return null; // Wait for the next frame 
             }
 
             // Ensure final scale is set to the desired value
@@ -87,9 +95,13 @@ namespace LCShrinkRay.coroutines
             {
                 maskTransform.localScale = CalcMaskScaleVec(newSize);
                 maskTransform.localPosition = CalcMaskPosVec(newSize);
-                armTransform.localScale = CalcArmScale(newSize);
+                var newArmScale = CalcArmScale(newSize);
+                armTransform.localScale = newArmScale;
                 if (heldItem != null)
-                    ScreenBlockingGrabbablePatch.transformItemRelativeTo(heldItem, targetPlayer);
+                {
+                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
+                    ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
+                }
             }
 
             if (onComplete != null)
