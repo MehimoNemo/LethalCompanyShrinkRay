@@ -109,32 +109,32 @@ namespace LCShrinkRay.coroutines
         }
         private Vector3 CalcMaskPosVec(float scale)
         {
-            Vector3 pos;
-            float x = 0;
-            float y = 0.00375f * scale + 0.05425f;
-            float z = 0.005f * scale - 0.279f;
-            pos = new Vector3(x, y, z);
-            return pos;
+            return new Vector3()
+            {
+                x = 0,
+                y = 0.00375f * scale + 0.05425f,
+                z = 0.005f * scale - 0.279f
+            };
         }
 
         private Vector3 CalcMaskScaleVec(float scale)
         {
-            Vector3 pos;
-            float x = 0.277f * scale + 0.2546f;
-            float y = 0.2645f * scale + 0.267f;
-            float z = 0.177f * scale + 0.3546f;
-            pos = new Vector3(x, y, z);
-            return pos;
+            return new Vector3()
+            {
+                x = 0.277f * scale + 0.2546f,
+                y = 0.2645f * scale + 0.267f,
+                z = 0.177f * scale + 0.3546f
+            };
         }
 
         private Vector3 CalcArmScale(float scale)
         {
-            Vector3 pos;
-            float x = 0.35f * scale  + 0.58f;
-            float y = -0.0625f * scale + 1.0625f;
-            float z = -0.125f * scale + 1.15f;
-            pos = new Vector3(x, y, z);
-            return pos;
+            return new Vector3()
+            {
+                x = 0.35f * scale + 0.58f,
+                y = -0.0625f * scale + 1.0625f,
+                z = -0.125f * scale + 1.15f
+            };
         }
 
         private IEnumerator adjustAllPlayerPitches()
