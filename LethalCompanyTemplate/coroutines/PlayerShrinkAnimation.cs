@@ -2,6 +2,7 @@
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
+using LCShrinkRay.patches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,10 +31,12 @@ namespace LCShrinkRay.coroutines
             var playerTransform = targetPlayer.gameObject.GetComponent<Transform>();
 
             Transform armTransform = null, maskTransform = null;
+            GrabbableObject heldItem = null;
             if(targetingUs)
             {
                 armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
                 maskTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
+                heldItem = PlayerHelper.HeldItem(targetPlayer);
             }
 
             float duration = 2f;
@@ -52,35 +55,53 @@ namespace LCShrinkRay.coroutines
                 directionalForce = -0.58f;
                 offset = currentSize + 0.42f;
             }
-
+            var initialArmScale = armTransform.localScale;
 
             int count = 0;
             while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
             {
                 currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
 
-                playerTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
+                var currentScale = new Vector3(currentSize, currentSize, currentSize);
+                playerTransform.localScale = currentScale;
 
                 if (targetingUs)
                 {
                     maskTransform.localScale = CalcMaskScaleVec(currentSize);
                     maskTransform.localPosition = CalcMaskPosVec(currentSize);
-                    armTransform.localScale = CalcArmScale(currentSize);
+                    var newArmScale = CalcArmScale(newSize);
+                    armTransform.localScale = newArmScale;
+                    if (heldItem != null)
+                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
                 }
 
                 elapsedTime += Time.deltaTime;
 
                 count = count % 20 + 1;
-                yield return count == 1 ? adjustAllPlayerPitches() : null; // Wait for the next frame (& adjust pitch every 20 frames)
+                if(count == 1)
+                {
+                    adjustAllPlayerPitches(); // Adjust pitch & item every 20 frames
+                    //if (targetingUs && heldItem != null)
+                        //ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
+                }
+                else
+                    yield return null; // Wait for the next frame 
             }
 
             // Ensure final scale is set to the desired value
+            var finalScale = new Vector3(newSize, newSize, newSize);
             playerTransform.localScale = new Vector3(newSize, newSize, newSize);
             if (targetingUs)
             {
                 maskTransform.localScale = CalcMaskScaleVec(newSize);
                 maskTransform.localPosition = CalcMaskPosVec(newSize);
-                armTransform.localScale = CalcArmScale(newSize);
+                var newArmScale = CalcArmScale(newSize);
+                armTransform.localScale = newArmScale;
+                if (heldItem != null)
+                {
+                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
+                    ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
+                }
             }
 
             if (onComplete != null)
@@ -88,32 +109,32 @@ namespace LCShrinkRay.coroutines
         }
         private Vector3 CalcMaskPosVec(float scale)
         {
-            Vector3 pos;
-            float x = 0;
-            float y = 0.00375f * scale + 0.05425f;
-            float z = 0.005f * scale - 0.279f;
-            pos = new Vector3(x, y, z);
-            return pos;
+            return new Vector3()
+            {
+                x = 0,
+                y = 0.00375f * scale + 0.05425f,
+                z = 0.005f * scale - 0.279f
+            };
         }
 
         private Vector3 CalcMaskScaleVec(float scale)
         {
-            Vector3 pos;
-            float x = 0.277f * scale + 0.2546f;
-            float y = 0.2645f * scale + 0.267f;
-            float z = 0.177f * scale + 0.3546f;
-            pos = new Vector3(x, y, z);
-            return pos;
+            return new Vector3()
+            {
+                x = 0.277f * scale + 0.2546f,
+                y = 0.2645f * scale + 0.267f,
+                z = 0.177f * scale + 0.3546f
+            };
         }
 
         private Vector3 CalcArmScale(float scale)
         {
-            Vector3 pos;
-            float x = 0.35f * scale  + 0.58f;
-            float y = -0.0625f * scale + 1.0625f;
-            float z = -0.125f * scale + 1.15f;
-            pos = new Vector3(x, y, z);
-            return pos;
+            return new Vector3()
+            {
+                x = 0.35f * scale + 0.58f,
+                y = -0.0625f * scale + 1.0625f,
+                z = -0.125f * scale + 1.15f
+            };
         }
 
         private IEnumerator adjustAllPlayerPitches()
