@@ -74,3 +74,4 @@ LethalCompanyTemplate/bin/
 LethalCompanyTemplate/obj/
 LethalCompanyTemplate/LCShrinkRay.csproj
 LethalCompanyTemplate/PluginInfo.cs
+*.csproj
