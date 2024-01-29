@@ -9,8 +9,10 @@ namespace LCShrinkRay.comp
 {
     public class ShrinkRayFX : MonoBehaviour
     {
-        private GameObject shrinkRayFX;
         private VisualEffect visualEffect;
+
+        public static GameObject shrinkRayFX { get; private set; }
+        public static GameObject deathPoofFX { get; private set; }
 
         // Bez 1 is the start, 4 is the end
 
@@ -63,37 +65,43 @@ namespace LCShrinkRay.comp
         // Transform & Position properties
         public float bezier3YOffset = 2.5f;
         public float bezier4YOffset = 0f;
-        
+
         #endregion
-        
-        public ShrinkRayFX()
+
+        ShrinkRayFX()
         {
+            if (shrinkRayFX != null) return;
+
+            Plugin.log("Adding ShrinRayFX asset.");
             var assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
-            var FXAssets = AssetBundle.LoadFromFile(assetDir);
+            var fxAssets = AssetBundle.LoadFromFile(assetDir);
 
             // The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
-            prefab = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");
-            NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
-
+            shrinkRayFX = fxAssets.LoadAsset<GameObject>("Shrink Ray VFX");
             if (shrinkRayFX == null)
             {
-                if (ShrinkRay.shrinkRayFXPrefab != null) prefab = ShrinkRay.shrinkRayFXPrefab;
-                else Plugin.log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
+                Plugin.log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
+                return;
             }
+
+            //NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
             
             // Get the visual effect unity component if it's not set yet
             if (!visualEffect)
             {
-                visualEffect = prefab.GetComponentInChildren<VisualEffect>();
+                visualEffect = shrinkRayFX.GetComponentInChildren<VisualEffect>();
                 if (!visualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
             }
+
+            // Load death poof asset
+            deathPoofFX = fxAssets.LoadAsset<GameObject>("Poof FX");
+            if (deathPoofFX == null)
+                Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
         }
 
         public GameObject CreateNewBeam(Transform parent)
         {
-            GameObject gameObject = Instantiate(prefab);
-
-            return gameObject;
+            return Instantiate(shrinkRayFX);
         }
 
         private void SetFloat(string name, float value)

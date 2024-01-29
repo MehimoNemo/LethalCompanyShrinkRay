@@ -32,11 +32,13 @@ namespace LCShrinkRay.coroutines
 
             Transform armTransform = null, maskTransform = null;
             GrabbableObject heldItem = null;
+            Vector3 initialArmScale = Vector3.one;
             if(targetingUs)
             {
                 armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
                 maskTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
                 heldItem = PlayerHelper.HeldItem(targetPlayer);
+                initialArmScale = armTransform.localScale;
             }
 
             float duration = 2f;
@@ -55,7 +57,6 @@ namespace LCShrinkRay.coroutines
                 directionalForce = -0.58f;
                 offset = currentSize + 0.42f;
             }
-            var initialArmScale = armTransform.localScale;
 
             int count = 0;
             while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
