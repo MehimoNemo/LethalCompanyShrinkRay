@@ -1,7 +1,7 @@
+using GameNetcodeStuff;
+using System;
 using System.IO;
 using System.Reflection;
-using Unity.Netcode;
-using GameNetcodeStuff;
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -63,8 +63,11 @@ namespace LCShrinkRay.comp
         }
 
         // Transform & Position properties
-        public float bezier3YOffset = 2.5f;
-        public float bezier4YOffset = 0f;
+        private const float bezier2YOffset = 2.5f;
+        private const float bezier3YOffset = 2f;
+
+        private const float beamDuration = 2f;
+        //private const Color beamColor = Color.blue;
 
         #endregion
 
@@ -93,10 +96,65 @@ namespace LCShrinkRay.comp
                 if (!visualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
             }
 
-            // Load death poof asset
-            deathPoofFX = fxAssets.LoadAsset<GameObject>("Poof FX");
-            if (deathPoofFX == null)
-                Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
+            // Load death poof asset (WIP)
+            //deathPoofFX = fxAssets.LoadAsset<GameObject>("Poof FX");
+            //if (deathPoofFX == null)
+            //    Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
+        }
+
+        public void RenderRayBeam(Transform holderCamera, Transform target, ShrinkRay.ModificationType type)
+        {
+            try
+            {
+                GameObject fxObject = CreateNewBeam(holderCamera);
+
+                if (!fxObject) Plugin.log("FX Object Null", Plugin.LogType.Error);
+
+                Transform bezier1 = fxObject.transform.GetChild(0).Find("Pos1");
+                Transform bezier2 = fxObject.transform.GetChild(0).Find("Pos2");
+                Transform bezier3 = fxObject.transform.GetChild(0).Find("Pos3");
+                Transform bezier4 = fxObject.transform.GetChild(0).Find("Pos4");
+
+                if (!bezier1) Plugin.log("bezier1 Null", Plugin.LogType.Error);
+                if (!bezier2) Plugin.log("bezier2 Null", Plugin.LogType.Error);
+                if (!bezier3) Plugin.log("bezier3 Null", Plugin.LogType.Error);
+                if (!bezier4) Plugin.log("bezier4 Null", Plugin.LogType.Error);
+
+                Transform targetHeadTransform = target.gameObject.GetComponent<PlayerControllerB>().gameplayCamera.transform.Find("HUDHelmetPosition").transform;
+
+                // Stole this from above, minor adjustments to where the beam comes from
+                Vector3 beamStartPos = this.transform.position + (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);
+
+                // Set bezier 1 (start point)
+                bezier1.transform.position = beamStartPos;
+                bezier1.transform.SetParent(this.transform, true);
+
+                // Set bezier 2 (curve)
+                bezier2.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, 1f/3f) + (Vector3.up * bezier2YOffset);
+                bezier2.transform.SetParent(this.transform, true);
+
+                // Set bezier 3 (curve)
+                bezier3.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, 2f/3f) + (Vector3.up * bezier3YOffset);
+                bezier3.transform.SetParent(targetHeadTransform, true);
+
+                // Set Bezier 4 (final endpoint)
+                Vector3 beamEndPos = (targetHeadTransform.position);
+                bezier4.transform.position = beamEndPos;
+                bezier4.transform.SetParent(targetHeadTransform, true);
+
+                // Destroy the beziers before the fxObject, just barely
+                Destroy(bezier1.gameObject, beamDuration - 0.05f);
+                Destroy(bezier2.gameObject, beamDuration - 0.05f);
+                Destroy(bezier3.gameObject, beamDuration - 0.05f);
+                Destroy(bezier4.gameObject, beamDuration - 0.05f);
+                Destroy(fxObject, beamDuration);
+            }
+            catch (Exception e)
+            {
+                Plugin.log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
+                Plugin.log("error source: " + e.Source);
+                Plugin.log("error stack: " + e.StackTrace);
+            }
         }
 
         public GameObject CreateNewBeam(Transform parent)
