@@ -108,7 +108,7 @@ namespace LCShrinkRay.comp
                 base.ItemActivate(used, buttonDown);
 
                 if (beamObject == null || beamObject.gameObject == null)
-                    ShootRayAndSync(ModificationType.Shrinking);
+                    ShootRay(ModificationType.Shrinking);
             }
             catch (Exception e) {
                 Plugin.log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
@@ -189,48 +189,44 @@ namespace LCShrinkRay.comp
             {
                 if ((beamObject == null || beamObject.gameObject == null) && this.playerHeldBy != null)
                 {
-                    ShootRayAndSync(ModificationType.Enlarging);
+                    ShootRay(ModificationType.Enlarging);
                 }
             }
         }
 
-        public void ShootRayAndSync(ModificationType type)
+        private Ray PositionedRay
         {
-            var transform = playerHeldBy.gameplayCamera.transform;
+            get
+            {
+                var transform = playerHeldBy.gameplayCamera.transform;
 
-            var beamStartPos = transform.position - transform.up * 0.1f;
-            var forward = transform.forward;
-            forward = forward * beamLength + beamStartPos;
+                var beamStartPos = transform.position - transform.up * 0.1f;
+                var forward = transform.forward;
+                forward = forward * beamLength + beamStartPos;
 
-            //offset the ding dang beam a lil to the right 
-            beamStartPos += transform.right * 0.35f;
-            forward += transform.right * 0.35f;
+                //offset the ding dang beam a lil to the right 
+                beamStartPos += transform.right * 0.35f;
+                forward += transform.right * 0.35f;
 
-            //offset the beam a lil bit forwards
-            beamStartPos += transform.forward * 1.3f;
-            forward += transform.forward * 1.3f;
+                //offset the beam a lil bit forwards
+                beamStartPos += transform.forward * 1.3f;
+                forward += transform.forward * 1.3f;
 
-            Plugin.log("Calling shoot gun....");
-            ShootRay(beamStartPos, forward, type);
+                return new Ray(beamStartPos, beamStartPos + forward * beamLength);
+            }
         }
 
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
-        private void ShootRay(Vector3 beamStartPos, Vector3 forward, ModificationType type)
+        private void ShootRay(ModificationType type)
         {
-            Plugin.log("shootingggggg");
-            
-            // Old call, now render ray beam when it finds a player
-            // RenderRayBeam(beamStartPos, beamStartPos + forward * beamLength, type);
-
             if (PlayerHelper.currentPlayer().playerClientId != playerHeldBy.playerClientId)
                 return;
 
+            Plugin.log("shootingggggg");
+
             var enemyColliders = new RaycastHit[10];
-
-            Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
-
+            var ray = PositionedRay;
             int hitEnemiesCount = Physics.SphereCastNonAlloc(ray, 5f, enemyColliders, beamLength, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Collide);
-            //Plugin.log("Casted Ray");
             //Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
 
             handledRayHits.Clear();
@@ -238,13 +234,12 @@ namespace LCShrinkRay.comp
             {
                 //Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
 
-                if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
+                if (Physics.Linecast(ray.origin, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
                 {
                     // Did raycast hit wall?
                     Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
-                    Debug.DrawLine(beamStartPos, enemyColliders[i].point, Color.cyan, 15f);
+                    Debug.DrawLine(ray.origin, enemyColliders[i].point, Color.cyan, 15f);
                     Plugin.log("Raycast hit wall :c");
-                    
                 }
                 else
                 {
@@ -256,8 +251,6 @@ namespace LCShrinkRay.comp
         
         private void RenderSingleRayBeam(Transform holderCamera, Transform target, ModificationType type)
         {
-            // Created overload to reduce merge conflicts between both branches, can remove the old method after
-            
             Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
             try
             {
