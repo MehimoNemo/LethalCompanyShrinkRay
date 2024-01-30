@@ -1,15 +1,20 @@
 using System.IO;
 using System.Reflection;
 using Unity.Netcode;
+using GameNetcodeStuff;
 using UnityEngine;
 using UnityEngine.VFX;
 
 namespace LCShrinkRay.comp
 {
-    public class ShrinkRayFX
+    public class ShrinkRayFX : MonoBehaviour
     {
-        private GameObject shrinkRayFX;
         private VisualEffect visualEffect;
+
+        public static GameObject shrinkRayFX { get; private set; }
+        public static GameObject deathPoofFX { get; private set; }
+
+        // Bez 1 is the start, 4 is the end
 
         #region Properties
         public float thickness {
@@ -56,44 +61,47 @@ namespace LCShrinkRay.comp
                 SetInt("NoiseSmoothing", value);
             }
         }
+
+        // Transform & Position properties
+        public float bezier3YOffset = 2.5f;
+        public float bezier4YOffset = 0f;
+
         #endregion
 
-            // This is the method I was having an issue with, loading the asset bundle and getting it into game :(
-        // I can instantiate the normal Unity way, but I'm worried LC_API / LethalLib have methods I'm unaware of
-        // Still new to modding 😬
-        public void AddShrinkRayFXToGame()
+        ShrinkRayFX()
         {
-            // Do `fxasset` loading here, tried copying Nemo's code in shrinking.cs
+            if (shrinkRayFX != null) return;
+
+            Plugin.log("Adding ShrinRayFX asset.");
             var assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
-            var FXAssets = AssetBundle.LoadFromFile(assetDir);
+            var fxAssets = AssetBundle.LoadFromFile(assetDir);
 
             // The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
-            shrinkRayFX = FXAssets.LoadAsset<GameObject>("Shrink Ray VFX");
-            NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
-
+            shrinkRayFX = fxAssets.LoadAsset<GameObject>("Shrink Ray VFX");
             if (shrinkRayFX == null)
             {
-                Plugin.log("\n\nFRICKIN HECK WHY IS IT NULL???\n\n");
+                Plugin.log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
+                return;
             }
+
+            //NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
+            
+            // Get the visual effect unity component if it's not set yet
+            if (!visualEffect)
+            {
+                visualEffect = shrinkRayFX.GetComponentInChildren<VisualEffect>();
+                if (!visualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
+            }
+
+            // Load death poof asset
+            deathPoofFX = fxAssets.LoadAsset<GameObject>("Poof FX");
+            if (deathPoofFX == null)
+                Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
         }
 
-        /// <summary>
-        /// This should be set to the tip of the shrinkray most likely
-        /// </summary>
-        public void SetStartPoint(Vector3 point)
+        public GameObject CreateNewBeam(Transform parent)
         {
-            shrinkRayFX.transform.Find("Pos1").position = point;
-            shrinkRayFX.transform.Find("Pos2").position = point;
-        }
-        
-        /// <summary>
-        /// On clientside, target should be set to half a unit below the camera so they don't get blinded by lights
-        /// </summary>
-        public void SetEndPoint(Vector3 point)
-        {
-            // Pos 3 and 4 are the final points of the bezier curve
-            shrinkRayFX.transform.Find("Pos3").position = point;
-            shrinkRayFX.transform.Find("Pos4").position = point;
+            return Instantiate(shrinkRayFX);
         }
 
         private void SetFloat(string name, float value)

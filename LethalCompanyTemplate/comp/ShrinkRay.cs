@@ -7,7 +7,6 @@ using LCShrinkRay.Config;
 using LCShrinkRay.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
-using LCShrinkRay.patches;
 
 namespace LCShrinkRay.comp
 {
@@ -46,7 +45,13 @@ namespace LCShrinkRay.comp
             networkPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
 
             ShrinkRay visScript = networkPrefab.AddComponent<ShrinkRay>();
-            //GrabbablePlayerList.Instance = networkPrefab.AddComponent<GrabbablePlayerList>();
+
+            // Add the FX component for controlling beam fx
+            ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
+            
+            // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
+            shrinkRayFX.noiseSpeed = 5;
+            shrinkRayFX.noisePower = 0.1f;
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
@@ -70,7 +75,6 @@ namespace LCShrinkRay.comp
             nightNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
             Items.RegisterShopItem(assetItem, null, null, nightNode, assetItem.creditsWorth);
         }
-
 
         public override void Start()
         {
@@ -104,10 +108,11 @@ namespace LCShrinkRay.comp
                 base.ItemActivate(used, buttonDown);
 
                 if (beamObject == null || beamObject.gameObject == null)
-                    ShootRayAndSync(ModificationType.Shrinking);
+                    ShootRay(ModificationType.Shrinking);
             }
             catch (Exception e) {
-                Plugin.log("Error while shooting ray: " + e.Message);
+                Plugin.log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
+                Plugin.log($"Stack Trace: {e.StackTrace}");
             }
         }
 
@@ -184,97 +189,128 @@ namespace LCShrinkRay.comp
             {
                 if ((beamObject == null || beamObject.gameObject == null) && this.playerHeldBy != null)
                 {
-                    ShootRayAndSync(ModificationType.Enlarging);
+                    ShootRay(ModificationType.Enlarging);
                 }
             }
         }
 
-        public void ShootRayAndSync(ModificationType type)
+        private Ray PositionedRay
         {
-            var transform = playerHeldBy.gameplayCamera.transform;
-            
-            var beamStartPos = transform.position - transform.up * 0.1f;
-            var forward = transform.forward;
-            forward = forward * beamLength + beamStartPos;
+            get
+            {
+                var transform = playerHeldBy.gameplayCamera.transform;
 
-            //offset the ding dang beam a lil to the right 
-            beamStartPos += transform.right * 0.35f;
-            forward += transform.right * 0.35f;
+                var beamStartPos = transform.position - transform.up * 0.1f;
+                var forward = transform.forward;
+                forward = forward * beamLength + beamStartPos;
 
-            //offset the beam a lil bit forwards
-            beamStartPos += transform.forward * 1.3f;
-            forward += transform.forward * 1.3f;
+                //offset the ding dang beam a lil to the right 
+                beamStartPos += transform.right * 0.35f;
+                forward += transform.right * 0.35f;
 
-            Plugin.log("Calling shoot gun....");
-            ShootRay(beamStartPos, forward, type);
+                //offset the beam a lil bit forwards
+                beamStartPos += transform.forward * 1.3f;
+                forward += transform.forward * 1.3f;
+
+                return new Ray(beamStartPos, beamStartPos + forward * beamLength);
+            }
         }
 
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
-        private void ShootRay(Vector3 beamStartPos, Vector3 forward, ModificationType type)
+        private void ShootRay(ModificationType type)
         {
-            Plugin.log("shootingggggg");
-            RenderRayBeam(beamStartPos, beamStartPos + forward * beamLength, type);
-
             if (PlayerHelper.currentPlayer().playerClientId != playerHeldBy.playerClientId)
                 return;
 
+            Plugin.log("shootingggggg");
+
             var enemyColliders = new RaycastHit[10];
-
-            Ray ray = new Ray(beamStartPos, beamStartPos + forward * beamLength);
-
+            var ray = PositionedRay;
             int hitEnemiesCount = Physics.SphereCastNonAlloc(ray, 5f, enemyColliders, beamLength, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Collide);
-            //Plugin.log("Casted Ray");
             //Plugin.log("hitEnemiesCount: " + hitEnemiesCount);
 
             handledRayHits.Clear();
             for (int i = 0; i < hitEnemiesCount; i++)
             {
                 //Plugin.log("enemycolliderpint: " + enemyColliders[i].point);
-                if (Physics.Linecast(beamStartPos, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
+
+                if (Physics.Linecast(ray.origin, enemyColliders[i].point, out var hitInfo, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
                 {
+                    // Did raycast hit wall?
                     Debug.DrawRay(hitInfo.point, Vector3.up, Color.red, 15f);
-                    Debug.DrawLine(beamStartPos, enemyColliders[i].point, Color.cyan, 15f);
+                    Debug.DrawLine(ray.origin, enemyColliders[i].point, Color.cyan, 15f);
                     Plugin.log("Raycast hit wall :c");
                 }
                 else
+                {
+                    // Raycast hit player
                     OnRayHit(enemyColliders[i], type);
+                }
             }
         }
-
-        private void RenderRayBeam(Vector3 beamStartPos, Vector3 forward, ModificationType type)
+        
+        private void RenderSingleRayBeam(Transform holderCamera, Transform target, ModificationType type)
         {
-            //Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
+            Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
             try
             {
-                if (parentObject.transform.Find("Beam") != null || beamMaterial == null)
+                if(!transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) || shrinkRayFX == null)
+                {
+                    Plugin.log("Unable to get ShrinkRayFX.", Plugin.LogType.Error);
                     return;
+                }
 
-                //Plugin.log("trying to create beam object");
-                beamObject = new GameObject("Beam");
-                //Plugin.log("Before creating LineRenderer");
-                lineRenderer = beamObject.AddComponent<LineRenderer>();
-                //Plugin.log("After creating LineRenderer");
-                lineRenderer.material = beamMaterial;
-                lineRenderer.startWidth = beamWidth;
-                lineRenderer.endWidth = beamWidth * 16;
-                lineRenderer.endColor = new Color(0, 0.5f, 0.5f, 0.5f);
-                lineRenderer.material.renderQueue = 2500; // Adjust as needed
-                lineRenderer.SetPosition(0, beamStartPos);
-                lineRenderer.SetPosition(1, forward);
-                lineRenderer.enabled = true;
-                lineRenderer.numCapVertices = 6;
-                lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                lineRenderer.receiveShadows = false;
-                //Plugin.log("Done with rendering beam");
+                GameObject fxObject = shrinkRayFX.CreateNewBeam(holderCamera);
+                    
+                if (!fxObject) Plugin.log("FX Object Null", Plugin.LogType.Error);
+                
+                Transform bezier1 = fxObject.transform.GetChild(0).Find("Pos1");
+                Transform bezier2 = fxObject.transform.GetChild(0).Find("Pos2");
+                Transform bezier3 = fxObject.transform.GetChild(0).Find("Pos3");
+                Transform bezier4 = fxObject.transform.GetChild(0).Find("Pos4");
+                
+                if (!bezier1) Plugin.log("bezier1 Null", Plugin.LogType.Error);
+                if (!bezier2) Plugin.log("bezier2 Null", Plugin.LogType.Error);
+                if (!bezier3) Plugin.log("bezier3 Null", Plugin.LogType.Error);
+                if (!bezier4) Plugin.log("bezier4 Null", Plugin.LogType.Error);
 
-                Destroy(beamObject, beamDuration);
+                Transform targetHeadTransform = target.gameObject.GetComponent<PlayerControllerB>().gameplayCamera.transform.Find("HUDHelmetPosition").transform;
+
+                // Stole this from above, minor adjustments to where the beam comes from
+                Vector3 beamStartPos = this.transform.position + (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);
+                
+                // Set bezier 1 (start point)
+                bezier1.transform.position = beamStartPos;
+                bezier1.transform.SetParent(this.transform, true);
+                
+                // Set bezier 2 (curve)
+                bezier2.transform.position = beamStartPos;
+                bezier2.transform.SetParent(this.transform, true);
+                
+                // Set bezier 3 (curve)
+                bezier3.transform.position = (targetHeadTransform.position) + (Vector3.up * shrinkRayFX.bezier3YOffset);
+                bezier3.transform.SetParent(targetHeadTransform, true);
+                
+                // Set Bezier 4 (final endpoint)
+                Vector3 beamEndPos = (targetHeadTransform.position) + (Vector3.up * shrinkRayFX.bezier4YOffset); // endpos is targets head adjusted on y axis slightly
+                bezier4.transform.position = beamEndPos;
+                bezier4.transform.SetParent(targetHeadTransform, true);
+                    
+                // Destroy the beziers before the fxObject, just barely
+                Destroy(bezier1.gameObject, beamDuration - 0.05f);
+                Destroy(bezier2.gameObject, beamDuration - 0.05f);
+                Destroy(bezier3.gameObject, beamDuration - 0.05f);
+                Destroy(bezier4.gameObject, beamDuration - 0.05f);
+                Destroy(fxObject, beamDuration);
             }
             catch (Exception e)
             {
-                Plugin.log("Rendern't.. maybe it was " + e.Message);
+                Plugin.log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
+                Plugin.log("error source: " + e.Source);
+                Plugin.log("error stack: " + e.StackTrace);
             }
         }
-
+        
         private void OnRayHit(RaycastHit hit, ModificationType type)
         {
             if (hit.transform.TryGetComponent(out PlayerControllerB component))
@@ -282,7 +318,7 @@ namespace LCShrinkRay.comp
                 Plugin.log($"Ray has hit player " + component.playerClientId);
                 if (component.playerClientId != this.playerHeldBy.playerClientId && !handledRayHits.Contains(component.playerClientId))
                 {
-                    OnPlayerModificationServerRpc(component.playerClientId, type);
+                    OnPlayerModificationServerRpc(this.playerHeldBy.playerClientId, component.playerClientId, type);
                     handledRayHits.Add(component.playerClientId);
                 }
             }
@@ -299,7 +335,7 @@ namespace LCShrinkRay.comp
             Enlarging
         }
 
-        internal static readonly List<float> possiblePlayerSizes = [0f, 0.4f, 1f, 1.3f, 1.6f];
+        internal static readonly List<float> possiblePlayerSizes = new() {0f, 0.4f, 1f, 1.3f, 1.6f};
 
         // ------ Ray hitting Player ------
 
@@ -332,21 +368,19 @@ namespace LCShrinkRay.comp
         public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
             Plugin.log("debugOnPlayerModificationWorkaround");
-            var sr = new ShrinkRay();
-            sr.OnPlayerModificationServerRpc(targetPlayer.playerClientId, type);
-            Destroy(sr,4);
+            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer.gameObject) : NextIncreasedSizeOf(targetPlayer.gameObject));
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void OnPlayerModificationServerRpc(ulong targetPlayerID, ModificationType type)
+        public void OnPlayerModificationServerRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
             Plugin.log("OnPlayerModificationServerRpc");
             Plugin.log("Player (" + PlayerHelper.currentPlayer().playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
-            OnPlayerModificationClientRpc(targetPlayerID, type );
+            OnPlayerModificationClientRpc(holderPlayerID, targetPlayerID, type );
         }
 
         [ClientRpc]
-        public void OnPlayerModificationClientRpc(ulong targetPlayerID, ModificationType type)
+        public void OnPlayerModificationClientRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
             var targetPlayer = PlayerHelper.GetPlayerController(targetPlayerID);
             if (targetPlayer == null) return;
@@ -356,6 +390,11 @@ namespace LCShrinkRay.comp
                 Plugin.log("Ay.. that's not a valid player somehow..");
                 return;
             }
+
+            // For other clients
+            var holder = this.playerHeldBy != null ? this.playerHeldBy : PlayerHelper.GetPlayerController(holderPlayerID);
+
+            RenderSingleRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type);
 
             var targetingUs = targetPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId;
             Plugin.log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
@@ -392,7 +431,16 @@ namespace LCShrinkRay.comp
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, newSize, () =>
                         {
                             if (targetingUs && newSize <= 0f)
+                            {
+                                // Poof Target to death because they are too small to exist
+                                if (ShrinkRayFX.deathPoofFX != null)
+                                {
+                                    GameObject deathPoofObject = Instantiate(ShrinkRayFX.deathPoofFX, targetPlayer.transform.position, Quaternion.identity);
+                                    Destroy(deathPoofObject, 4f);
+                                }
+
                                 targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
+							}
                         });
 
                         if (newSize < 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
