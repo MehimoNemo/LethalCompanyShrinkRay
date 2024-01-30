@@ -254,7 +254,7 @@ namespace LCShrinkRay.comp
             }
         }
         
-        private void RenderSingleRayBeam(Transform start, Transform target, ModificationType type)
+        private void RenderSingleRayBeam(Transform holderCamera, Transform target, ModificationType type)
         {
             // Created overload to reduce merge conflicts between both branches, can remove the old method after
             
@@ -267,7 +267,7 @@ namespace LCShrinkRay.comp
                     return;
                 }
 
-                GameObject fxObject = shrinkRayFX.CreateNewBeam(playerHeldBy.gameplayCamera.transform);
+                GameObject fxObject = shrinkRayFX.CreateNewBeam(holderCamera);
                     
                 if (!fxObject) Plugin.log("FX Object Null", Plugin.LogType.Error);
                 
@@ -284,15 +284,15 @@ namespace LCShrinkRay.comp
                 Transform targetHeadTransform = target.gameObject.GetComponent<PlayerControllerB>().gameplayCamera.transform.Find("HUDHelmetPosition").transform;
 
                 // Stole this from above, minor adjustments to where the beam comes from
-                Vector3 beamStartPos = start.position + (Vector3.up * 0.25f) + (playerHeldBy.gameplayCamera.transform.forward * -0.1f);
+                Vector3 beamStartPos = this.transform.position + (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);
                 
                 // Set bezier 1 (start point)
                 bezier1.transform.position = beamStartPos;
-                bezier1.transform.SetParent(start, true);
+                bezier1.transform.SetParent(this.transform, true);
                 
                 // Set bezier 2 (curve)
                 bezier2.transform.position = beamStartPos;
-                bezier2.transform.SetParent(start, true);
+                bezier2.transform.SetParent(this.transform, true);
                 
                 // Set bezier 3 (curve)
                 bezier3.transform.position = (targetHeadTransform.position) + (Vector3.up * shrinkRayFX.bezier3YOffset);
@@ -325,7 +325,7 @@ namespace LCShrinkRay.comp
                 Plugin.log($"Ray has hit player " + component.playerClientId);
                 if (component.playerClientId != this.playerHeldBy.playerClientId && !handledRayHits.Contains(component.playerClientId))
                 {
-                    OnPlayerModificationServerRpc(component.playerClientId, type);
+                    OnPlayerModificationServerRpc(this.playerHeldBy.playerClientId, component.playerClientId, type);
                     handledRayHits.Add(component.playerClientId);
                 }
             }
@@ -375,21 +375,19 @@ namespace LCShrinkRay.comp
         public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
             Plugin.log("debugOnPlayerModificationWorkaround");
-            var sr = new ShrinkRay();
-            sr.OnPlayerModificationServerRpc(targetPlayer.playerClientId, type);
-            Destroy(sr,4);
+            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer.gameObject) : NextIncreasedSizeOf(targetPlayer.gameObject));
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void OnPlayerModificationServerRpc(ulong targetPlayerID, ModificationType type)
+        public void OnPlayerModificationServerRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
             Plugin.log("OnPlayerModificationServerRpc");
             Plugin.log("Player (" + PlayerHelper.currentPlayer().playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
-            OnPlayerModificationClientRpc(targetPlayerID, type );
+            OnPlayerModificationClientRpc(holderPlayerID, targetPlayerID, type );
         }
 
         [ClientRpc]
-        public void OnPlayerModificationClientRpc(ulong targetPlayerID, ModificationType type)
+        public void OnPlayerModificationClientRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
             var targetPlayer = PlayerHelper.GetPlayerController(targetPlayerID);
             if (targetPlayer == null) return;
@@ -400,7 +398,10 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            RenderSingleRayBeam(this.transform, targetPlayer.transform, type);
+            // For other clients
+            var holder = this.playerHeldBy != null ? this.playerHeldBy : PlayerHelper.GetPlayerController(holderPlayerID);
+
+            RenderSingleRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type);
 
             var targetingUs = targetPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId;
             Plugin.log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
