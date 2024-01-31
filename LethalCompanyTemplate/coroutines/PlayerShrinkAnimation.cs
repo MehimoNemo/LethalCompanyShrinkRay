@@ -81,7 +81,7 @@ namespace LCShrinkRay.coroutines
                 count = count % 20 + 1;
                 if(count == 1)
                 {
-                    adjustAllPlayerPitches(); // Adjust pitch & item every 20 frames
+                    yield return StartCoroutine(adjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
                     //if (targetingUs && heldItem != null)
                         //ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
@@ -107,6 +107,8 @@ namespace LCShrinkRay.coroutines
                 else
                     PlayerModificationPatch.reset();
             }
+
+            yield return StartCoroutine(adjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
 
             if (onComplete != null)
                 onComplete();
@@ -146,11 +148,11 @@ namespace LCShrinkRay.coroutines
             if (targetingUs) // Change pitch of every other player
             {
                 foreach (var pcb in StartOfRound.Instance.allPlayerScripts.Where(p => p != null && p.isPlayerControlled && p.playerClientId != targetPlayer.playerClientId))
-                    yield return adjustPlayerPitch(pcb);
+                    yield return StartCoroutine(adjustPlayerPitch(pcb));
             }
             else // Only need to change pitch of affected player
             {
-                yield return adjustPlayerPitch(targetPlayer);
+                yield return StartCoroutine(adjustPlayerPitch(targetPlayer));
             }
         }
 
