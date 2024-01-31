@@ -65,13 +65,13 @@ namespace LCShrinkRay.patches
         public static void Initialize()
         {
             isGameInitialized = true;
-            GrabbablePlayerList.Instance.OnNewRound();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
-        public static void endOfRound()
+        public static void EndOfRound()
         {
             Plugin.log("EndOfGame");
+
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
             {
                 if(PlayerHelper.isShrunk(player.gameObject))
@@ -79,9 +79,6 @@ namespace LCShrinkRay.patches
             }
 
             GrabbablePlayerList.Instance.ClearGrabbablePlayerObjects();
-
-            //reset speed, pitch(if it doesn't reset naturally)
-            PlayerControllerBPatch.defaultsInitialized = false;
             Vents.unsussifyAll();
         }
     }

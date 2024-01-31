@@ -112,23 +112,6 @@ namespace LCShrinkRay.comp
             return null;
         }
 
-        public void OnNewRound()
-        {
-            for (int i = grabbablePlayerObjects.Count - 1; i >= 0; i--)
-                Destroy(grabbablePlayerObjects[i]);
-            grabbablePlayerObjects.Clear();
-
-            /*foreach (var obj in grabbablePlayerObjects)
-            {
-                Plugin.log("OnNewRound grabbable.");
-                if (!obj.TryGetComponent(out GrabbablePlayerObject gpo))
-                    continue;
-
-                gpo.Reinitialize();
-                gpo.setIsGrabbableToEnemies(PlayerHelper.isShrunk(gpo.grabbedPlayer.gameObject));
-            }*/
-        }
-
         // Networking
         [ServerRpc(RequireOwnership = false)]
         public void SendGrabbablePlayerListServerRpc(ulong receiver)
@@ -182,15 +165,13 @@ namespace LCShrinkRay.comp
         // Methods to add/remove/change grabbable players
         public void ClearGrabbablePlayerObjects()
         {
-            if (PlayerHelper.isHost())
+            for (int i = grabbablePlayerObjects.Count - 1; i >= 0; i--)
             {
-                for (int i = grabbablePlayerObjects.Count; i >= 0; i--)
+                if (grabbablePlayerObjects[i] != null)
                 {
-                    if (grabbablePlayerObjects[i] != null)
-                    {
+                    if (PlayerHelper.isHost())
                         grabbablePlayerObjects[i].GetComponent<NetworkObject>().Despawn();
-                        Destroy(grabbablePlayerObjects[i]);
-                    }
+                    Destroy(grabbablePlayerObjects[i]);
                 }
             }
 

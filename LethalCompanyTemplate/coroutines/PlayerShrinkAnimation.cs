@@ -90,7 +90,6 @@ namespace LCShrinkRay.coroutines
             }
 
             // Ensure final scale is set to the desired value
-            var finalScale = new Vector3(newSize, newSize, newSize);
             playerTransform.localScale = new Vector3(newSize, newSize, newSize);
             if (targetingUs)
             {
@@ -103,6 +102,10 @@ namespace LCShrinkRay.coroutines
                     ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
                     ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
+                if (newSize != 1f)
+                    PlayerModificationPatch.modify(newSize);
+                else
+                    PlayerModificationPatch.reset();
             }
 
             if (onComplete != null)

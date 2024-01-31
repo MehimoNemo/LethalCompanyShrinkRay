@@ -36,9 +36,6 @@ namespace LCShrinkRay.comp
 
         public void Update()
         {
-            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController)
-                return;
-
             if (helmetHudTransform == null)
             {
                 if (GameObject.Find("ScavengerHelmet") != null)

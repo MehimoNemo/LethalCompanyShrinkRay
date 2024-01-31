@@ -48,7 +48,7 @@ namespace LCShrinkRay
 
             harmony.PatchAll(typeof(Plugin));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
-            harmony.PatchAll(typeof(PlayerControllerBPatch));
+            harmony.PatchAll(typeof(PlayerModificationPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             harmony.PatchAll(typeof(ThumperAIPatch));
             harmony.PatchAll(typeof(HoarderBugAIPatch));
