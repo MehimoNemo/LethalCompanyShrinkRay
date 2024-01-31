@@ -11,6 +11,7 @@ using Unity.Collections;
 using Newtonsoft.Json;
 using LCShrinkRay.coroutines;
 using LethalLib.Modules;
+using LCShrinkRay.patches;
 
 namespace LCShrinkRay.comp
 {
@@ -446,7 +447,7 @@ namespace LCShrinkRay.comp
                 Plugin.log("Finding helmet!");
                 try
                 {
-                    helmet = Shrinking.Instance.helmetHudTransform.gameObject.GetComponent<MeshRenderer>();
+                    helmet = PlayerModificationPatch.helmetHudTransform.gameObject.GetComponent<MeshRenderer>();
                 }
                 catch(Exception e) {
                     Plugin.log(e.Message, Plugin.LogType.Warning);
