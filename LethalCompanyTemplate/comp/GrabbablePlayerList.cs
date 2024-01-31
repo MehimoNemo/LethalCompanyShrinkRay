@@ -163,16 +163,29 @@ namespace LCShrinkRay.comp
         }
 
         // Methods to add/remove/change grabbable players
-        public void ClearGrabbablePlayerObjects()
+        [ServerRpc(RequireOwnership = false)]
+        public void ClearGrabbablePlayerObjectsServerRpc()
+        {
+            foreach(var obj in grabbablePlayerObjects)
+            {
+                if (obj == null) continue;
+                obj.GetComponent<NetworkObject>().Despawn();
+            }
+
+            ClearGrabbablePlayerObjectsClientRpc();
+        }
+
+        [ClientRpc]
+        public void ClearGrabbablePlayerObjectsClientRpc()
         {
             for (int i = grabbablePlayerObjects.Count - 1; i >= 0; i--)
             {
-                if (grabbablePlayerObjects[i] != null)
-                {
-                    if (PlayerHelper.isHost())
-                        grabbablePlayerObjects[i].GetComponent<NetworkObject>().Despawn();
-                    Destroy(grabbablePlayerObjects[i]);
-                }
+                if (grabbablePlayerObjects[i] == null) continue;
+
+                if (grabbablePlayerObjects[i].TryGetComponent(out GrabbablePlayerObject gpo))
+                    Destroy(gpo);
+
+                Destroy(grabbablePlayerObjects[i]);
             }
 
             grabbablePlayerObjects.Clear();
@@ -209,7 +222,7 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void SetPlayerGrabbableClientRpc(ulong playerID, ulong networkObjectID)
         {
-            Plugin.log("SetPlayerGrabbableClientRpc");
+            Plugin.log("SetPlayerGrabbableClientRpc. Grabbable players: " + grabbablePlayerObjects.Count);
             
             foreach (var obj in grabbablePlayerObjects)
             {

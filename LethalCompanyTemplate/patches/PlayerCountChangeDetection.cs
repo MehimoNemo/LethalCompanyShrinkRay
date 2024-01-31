@@ -52,7 +52,7 @@ namespace LCShrinkRay.patches
         {
             Plugin.log("We disconnected!");
 
-            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjects();
+            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjectsClientRpc();
         }
 
 

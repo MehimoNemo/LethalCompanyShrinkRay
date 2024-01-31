@@ -78,7 +78,7 @@ namespace LCShrinkRay.patches
                     coroutines.PlayerShrinkAnimation.StartRoutine(player, 1f);
             }
 
-            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjects();
+            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjectsServerRpc();
             Vents.unsussifyAll();
         }
     }
