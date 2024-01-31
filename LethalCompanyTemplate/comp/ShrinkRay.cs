@@ -236,6 +236,7 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void OnPlayerModificationClientRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
+            Plugin.log("PLAYER MODIFICATION CLIENT RUNNING");
             var targetPlayer = PlayerHelper.GetPlayerController(targetPlayerID);
             if (targetPlayer == null) return;
 
