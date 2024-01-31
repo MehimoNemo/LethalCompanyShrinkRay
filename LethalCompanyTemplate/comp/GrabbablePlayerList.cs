@@ -14,7 +14,7 @@ namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerList : NetworkBehaviour
     {
-        public List<GameObject> grabbablePlayerObjects = new List<GameObject>();
+        public List<GameObject> grabbablePlayerObjects = new List<GameObject>(); // todo: auf Dictionary<ulong, GameObject> ändern
 
         private static GrabbablePlayerList instance = null;
         public static GrabbablePlayerList Instance
@@ -114,7 +114,11 @@ namespace LCShrinkRay.comp
 
         public void OnNewRound()
         {
-            foreach(var obj in grabbablePlayerObjects)
+            for (int i = grabbablePlayerObjects.Count - 1; i >= 0; i--)
+                Destroy(grabbablePlayerObjects[i]);
+            grabbablePlayerObjects.Clear();
+
+            /*foreach (var obj in grabbablePlayerObjects)
             {
                 Plugin.log("OnNewRound grabbable.");
                 if (!obj.TryGetComponent(out GrabbablePlayerObject gpo))
@@ -122,7 +126,7 @@ namespace LCShrinkRay.comp
 
                 gpo.Reinitialize();
                 gpo.setIsGrabbableToEnemies(PlayerHelper.isShrunk(gpo.grabbedPlayer.gameObject));
-            }
+            }*/
         }
 
         // Networking
@@ -135,6 +139,8 @@ namespace LCShrinkRay.comp
             {
                 foreach (GameObject obj in grabbablePlayerObjects)
                 {
+                    if(obj == null) continue;
+
                     ulong networkId = obj.GetComponent<NetworkObject>().NetworkObjectId;
                     ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
                     networkClientMap.Add((networkId, clientId));
@@ -174,10 +180,19 @@ namespace LCShrinkRay.comp
         }
 
         // Methods to add/remove/change grabbable players
-        public void clearGrabbablePlayerObjects()
+        public void ClearGrabbablePlayerObjects()
         {
-            foreach (GameObject player in grabbablePlayerObjects)
-                player.GetComponent<NetworkObject>().Despawn();
+            if (PlayerHelper.isHost())
+            {
+                for (int i = grabbablePlayerObjects.Count; i >= 0; i--)
+                {
+                    if (grabbablePlayerObjects[i] != null)
+                    {
+                        grabbablePlayerObjects[i].GetComponent<NetworkObject>().Despawn();
+                        Destroy(grabbablePlayerObjects[i]);
+                    }
+                }
+            }
 
             grabbablePlayerObjects.Clear();
         }
@@ -240,21 +255,6 @@ namespace LCShrinkRay.comp
             Plugin.log("Add new grabbablePlayer to list.");
             grabbablePlayerObjects.Add(gpo.gameObject);
             Plugin.log("NEW GRABBALEPLAYER COUNT: " + grabbablePlayerObjects.Count);
-        }
-
-        [ServerRpc]
-        public void RemoveAllPlayerGrabbablesServerRpc()
-        {
-            Plugin.log("RemoveAllPlayerGrabbablesServerRpc");
-            for (int i = grabbablePlayerObjects.Count - 1; i >= 0; i--)
-                Destroy(grabbablePlayerObjects[i]);
-        }
-
-        [ClientRpc]
-        public void RemoveAllPlayerGrabbablesClientRpc()
-        {
-            Plugin.log("RemoveAllPlayerGrabbablesClientRpc");
-            grabbablePlayerObjects.Clear();
         }
 
         private int getBindingObjectIDFromPlayerID(ulong playerID)

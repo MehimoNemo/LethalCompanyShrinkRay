@@ -52,10 +52,7 @@ namespace LCShrinkRay.patches
         {
             Plugin.log("We disconnected!");
 
-            if (!PlayerHelper.isHost())
-                return;
-           
-            GrabbablePlayerList.Instance.RemoveAllPlayerGrabbablesServerRpc(); // a clean up of all player grabbables
+            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjects();
         }
 
 

@@ -78,6 +78,8 @@ namespace LCShrinkRay.patches
                     coroutines.PlayerShrinkAnimation.StartRoutine(player, 1f);
             }
 
+            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjects();
+
             //reset speed, pitch(if it doesn't reset naturally)
             PlayerControllerBPatch.defaultsInitialized = false;
             Vents.unsussifyAll();
