@@ -47,7 +47,7 @@ namespace LCShrinkRay.comp
             networkPrefab = assetItem.spawnPrefab;
             assetItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
             assetItem.weight = 1.05f;
-            assetItem.canBeGrabbedBeforeGameStart = ModConfig.debugMode;
+            assetItem.canBeGrabbedBeforeGameStart = ModConfig.DebugMode;
             networkPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
 
             ShrinkRay visScript = networkPrefab.AddComponent<ShrinkRay>();

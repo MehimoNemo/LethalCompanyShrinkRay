@@ -1,6 +1,4 @@
-﻿using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -8,7 +6,6 @@ using static Unity.Netcode.CustomMessagingManager;
 using Unity.Collections;
 using Unity.Netcode;
 using GameNetcodeStuff;
-using static UnityEngine.InputSystem.InputRemoting;
 using LCShrinkRay.helper;
 
 namespace LCShrinkRay.Config
@@ -22,7 +19,6 @@ namespace LCShrinkRay.Config
 
     public struct ConfigValues
     {
-
         // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
         public bool friendlyFlight { get; set; }
 
@@ -36,7 +32,7 @@ namespace LCShrinkRay.Config
 
         public float weightMultiplier { get; set; }
 
-        // [JsonIgnore] // currently gets overwritten by default (0) upon host sync
+        [JsonIgnore]
         public float pitchDistortionIntensity { get; set; }
 
         public bool canUseVents { get; set; }
@@ -56,27 +52,26 @@ namespace LCShrinkRay.Config
 
     public sealed class ModConfig
     {
+        #region Properties
         private static ModConfig instance = null;
-        private static readonly object padlock = new object();
-        public static bool debugMode { get; set; }
+
+        public static bool DebugMode {
+            get {
+                return true; // Change this to false for release
+            }
+        }
 
         public ConfigValues values = new ConfigValues();
-
-        ModConfig()
-        {
-        }
+        #endregion
 
         public static ModConfig Instance
         {
             get
             {
-                lock (padlock)
-                {
-                    if (instance == null)
-                        instance = new ModConfig();
+                if (instance == null)
+                    instance = new ModConfig();
 
-                    return instance;
-                }
+                return instance;
             }
         }
 
@@ -101,8 +96,11 @@ namespace LCShrinkRay.Config
             values.hoardingBugSteal         = Plugin.bepInExConfig().Bind("Enemies", "HoardingBugSteal", true, "If true, hoarding/loot bugs can treat a shrunken player like an item.").Value;
             values.thumperBehaviour         = Plugin.bepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Default, "Defines the way Thumpers react on shrunken players.").Value;
 
-            string json = JsonConvert.SerializeObject(ModConfig.Instance.values);
-            Plugin.log("Using config:" + json);
+            if (DebugMode)
+            {
+                string json = JsonConvert.SerializeObject(Instance.values);
+                Plugin.log("Using config:" + json);
+            }
         }
 
         public void updated()
@@ -113,6 +111,9 @@ namespace LCShrinkRay.Config
         [HarmonyPatch]
         public class SyncHandshake
         {
+            private const string REQUEST_MESSAGE = PluginInfo.PLUGIN_NAME + "_" + "HostConfigRequested";
+            private const string RECEIVE_MESSAGE = PluginInfo.PLUGIN_NAME + "_" + "HostConfigReceived";
+
             [HarmonyPatch(typeof(PlayerControllerB), "ConnectClientToPlayerObject")]
             [HarmonyPostfix]
             public static void Initialize()
@@ -120,12 +121,12 @@ namespace LCShrinkRay.Config
                 if (PlayerHelper.isHost())
                 {
                     Plugin.log("Current player is the host.");
-                    NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_HostConfigRequested", new HandleNamedMessageDelegate(HostConfigRequested));
+                    NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(REQUEST_MESSAGE, new HandleNamedMessageDelegate(HostConfigRequested));
                 }
                 else
                 {
                     Plugin.log("Current player is not the host.");
-                    NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(PluginInfo.PLUGIN_NAME + "_HostConfigReceived", new HandleNamedMessageDelegate(HostConfigReceived));
+                    NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RECEIVE_MESSAGE, new HandleNamedMessageDelegate(HostConfigReceived));
                     RequestHostConfig();
                 }
             }
@@ -135,7 +136,7 @@ namespace LCShrinkRay.Config
                 if (NetworkManager.Singleton.IsClient)
                 {
                     Plugin.log("Sending config request to host.");
-                    NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_HostConfigRequested", 0uL, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
+                    NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(REQUEST_MESSAGE, 0uL, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
                 }
                 else
                     Plugin.log("Config request not required. No other player available."); // Shouldn't happen, but who knows..
@@ -146,13 +147,13 @@ namespace LCShrinkRay.Config
                 if (!PlayerHelper.isHost()) // Current player is not the host and therefor not the one who should react
                     return;
 
-                string json = JsonConvert.SerializeObject(ModConfig.Instance.values);
+                string json = JsonConvert.SerializeObject(Instance.values);
                 Plugin.log("Client [" + clientId + "] requested host config. Sending own config: " + json);
 
                 int writeSize = FastBufferWriter.GetWriteSize(json);
                 using FastBufferWriter writer = new FastBufferWriter(writeSize, Allocator.Temp);
                 writer.WriteValueSafe(json);
-                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(PluginInfo.PLUGIN_NAME + "_HostConfigReceived", clientId, writer, NetworkDelivery.ReliableSequenced);
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RECEIVE_MESSAGE, clientId, writer, NetworkDelivery.ReliableSequenced);
             }
 
             public static void HostConfigReceived(ulong clientId, FastBufferReader reader)
@@ -161,8 +162,11 @@ namespace LCShrinkRay.Config
                 Plugin.log("Received host config: " + json);
                 ConfigValues hostValues = JsonConvert.DeserializeObject<ConfigValues>(json);
 
-                ModConfig.Instance.values = hostValues;
-                ModConfig.Instance.updated();
+                // Adjust client-sided options (WIP -> replace later with e.g. custom JsonConverter)
+                hostValues.pitchDistortionIntensity = Instance.values.pitchDistortionIntensity;
+
+                Instance.values = hostValues;
+                Instance.updated();
             }
         }
     }

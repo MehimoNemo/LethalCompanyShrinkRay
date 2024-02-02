@@ -39,9 +39,6 @@ namespace LCShrinkRay
                 mls.LogError(ex.Message);
             }
 
-            // Debug
-            ModConfig.debugMode = true;
-
             log(PluginInfo.PLUGIN_NAME + " mod has awoken!", LogType.Message);
 
             netcodePatching();
@@ -56,7 +53,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(DeskPatch));
             harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
 
-            if (ModConfig.debugMode)
+            if (ModConfig.DebugMode)
                 harmony.PatchAll(typeof(DebugPatches));
 
         }
@@ -89,7 +86,7 @@ namespace LCShrinkRay
 
         internal static void log(string message, LogType type = LogType.Debug)
         {
-            if (type == LogType.Debug && !ModConfig.debugMode)
+            if (type == LogType.Debug && !ModConfig.DebugMode)
                 return;
 
             switch(type)
