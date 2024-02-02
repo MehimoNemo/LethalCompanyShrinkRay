@@ -21,7 +21,7 @@ namespace LCShrinkRay.comp
         private PlayerControllerB previousPlayerHeldBy;
         private List<ulong> handledRayHits = new List<ulong>();
 
-        public static GameObject networkPrefab { get; set; }
+        private static GameObject networkPrefab { get; set; }
 
         public enum ModificationType
         {

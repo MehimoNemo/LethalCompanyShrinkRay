@@ -21,7 +21,7 @@ namespace LCShrinkRay.comp
         private ulong grabbedPlayerID {  get; set; }
         MeshRenderer helmet;
 
-        public static GameObject networkPrefab { get; set; }
+        private static GameObject networkPrefab { get; set; }
         public bool IsFrozen { get; private set; }
 
         public static void LoadAsset(AssetBundle assetBundle)
@@ -46,6 +46,16 @@ namespace LCShrinkRay.comp
             component.itemProperties.isConductiveMetal = false;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+        }
+
+        public static NetworkObject Instantiate()
+        {
+            var obj = Instantiate(networkPrefab);
+            DontDestroyOnLoad(obj);
+            var networkObj = obj.GetComponent<NetworkObject>();
+            networkObj.Spawn();
+            obj.GetComponent<GrabbablePlayerObject>();
+            return networkObj;
         }
 
         //Null player container and null itemProperties

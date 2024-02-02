@@ -39,7 +39,6 @@ namespace LCShrinkRay.patches
             AssetBundle upgradeAssets = AssetBundle.LoadFromFile(assetDir);
 
             GrabbablePlayerObject.LoadAsset(upgradeAssets);
-            GrabbablePlayerList.LoadAsset(upgradeAssets);
             ShrinkRay.LoadAsset(upgradeAssets);
         }
 
@@ -47,18 +46,19 @@ namespace LCShrinkRay.patches
         public static void Init()
         {
             LoadAllAssets();
+            GrabbablePlayerList.Init();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
         static void Awake()
         {
-            GrabbablePlayerList.Initialize();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
         public static void Uninitialize()
         {
             isGameInitialized = false;
+            GrabbablePlayerList.RemoveInstance();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "SceneManager_OnLoadComplete1")]

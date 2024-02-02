@@ -23,51 +23,53 @@ namespace LCShrinkRay.comp
             {
                 if (instance == null)
                 {
-                    Plugin.log("GrabbablePlayerList.Instance called earlier than expected. Trying to load assets earlier.", Plugin.LogType.Warning);
+                    /*Plugin.log("GrabbablePlayerList.Instance called earlier than expected. Trying to load assets earlier.", Plugin.LogType.Warning);
 
                     if (networkPrefab == null)
-                        GameNetworkManagerPatch.LoadAllAssets();
-                    Initialize();
+                        GameNetworkManagerPatch.LoadAllAssets();*/
+                    CreateInstance();
                 }
 
                 return instance;
             }
         }
 
-        public static GameObject networkPrefab { get; set; }
+        private static GameObject networkPrefab { get; set; }
+        private static GameObject instanciatedPrefab { get; set; }
 
-        public static void LoadAsset(AssetBundle assetBundle)
+        public static void Init()
         {
             if (networkPrefab != null) return; // Already loaded
 
-            networkPrefab = assetBundle.LoadAsset<GameObject>("GrabbablePlayerList.prefab");
-            if (networkPrefab == null)
-            {
-                Plugin.log("GrabbablePlayerList.asset not found!", Plugin.LogType.Error);
-                return;
-            }
-
+            networkPrefab = LethalLib.Modules.NetworkPrefabs.CreateNetworkPrefab("GrabbablePlayerList");
             networkPrefab.AddComponent<GrabbablePlayerList>();
-            Destroy(networkPrefab.GetComponent<PhysicsProp>());
-
-            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
 
-        public static void Initialize()
+        public static void CreateInstance()
         {
             if (instance != null) return; // Already initialized
 
-            if(PlayerHelper.isHost())
+            if (PlayerHelper.isHost())
             {
-                var newObject = Instantiate(networkPrefab);
-                var networkObj = newObject.GetComponent<NetworkObject>();
+                instanciatedPrefab = Instantiate(networkPrefab);
+                var networkObj = instanciatedPrefab.GetComponent<NetworkObject>();
                 networkObj.Spawn();
-                instance = newObject.GetComponent<GrabbablePlayerList>();
+                instance = instanciatedPrefab.GetComponent<GrabbablePlayerList>();
             }
             else
             {
                 instance = networkPrefab.GetComponent<GrabbablePlayerList>();
             }
+        }
+
+        public static void RemoveInstance()
+        {
+            if (instance == null) return; // Not initialized
+
+            if (PlayerHelper.isHost())
+                Destroy(instanciatedPrefab);
+
+            instance = null;
         }
 
         // ---- Helper ----
@@ -209,12 +211,8 @@ namespace LCShrinkRay.comp
             if (pcb == null) return;
 
             Plugin.log("Adding grabbable player object for player: " + playerID);
-            var newObject = Instantiate(GrabbablePlayerObject.networkPrefab);
-            DontDestroyOnLoad(newObject);
-            var networkObj = newObject.GetComponent<NetworkObject>();
-            networkObj.Spawn();
-            newObject.GetComponent<GrabbablePlayerObject>();
-
+            var networkObj = GrabbablePlayerObject.Instantiate();
+            
             if (!onlyLocal) // Let everyone know
                 SetPlayerGrabbableClientRpc(playerID, networkObj.NetworkObjectId);
         }
