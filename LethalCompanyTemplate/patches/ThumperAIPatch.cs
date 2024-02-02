@@ -24,7 +24,7 @@ namespace LCShrinkRay.patches
 
             switch (ModConfig.Instance.values.thumperBehaviour)
             {
-                case ThumperBehaviour.OneShot:
+                case ModConfig.ThumperBehaviour.OneShot:
                     playerControllerB.KillPlayer(bodyVelocity: default(Vector3), spawnBody: false, CauseOfDeath.Mauling);
                     break;
                 /*case ThumperBehaviour.Bumper: // NOT WORKING YET

@@ -10,60 +10,58 @@ using LCShrinkRay.helper;
 
 namespace LCShrinkRay.Config
 {
-    public enum ThumperBehaviour
-    {
-        Default,
-        OneShot,
-        //Bumper
-    }
-
-    public struct ConfigValues
-    {
-        // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
-        public bool friendlyFlight { get; set; }
-
-        public bool sellablePlayers { get; set; }
-
-        public int shrinkRayCost { get; set; }
-
-        public float movementSpeedMultiplier { get; set; }
-
-        public float jumpHeightMultiplier { get; set; }
-
-        public float weightMultiplier { get; set; }
-
-        [JsonIgnore]
-        public float pitchDistortionIntensity { get; set; }
-
-        public bool canUseVents { get; set; }
-
-        public bool jumpOnShrunkenPlayers { get; set; }
-
-        public bool hoardingBugSteal { get; set; }
-
-        public bool throwablePlayers { get; set; }
-
-        public bool CanEscapeGrab { get; set; }
-
-        public bool multipleShrinking { get; set; }
-
-        public ThumperBehaviour thumperBehaviour { get; set; }
-    }
-
     public sealed class ModConfig
     {
         #region Properties
-        private static ModConfig instance = null;
-
         public static bool DebugMode {
             get {
                 return true; // Change this to false for release
             }
         }
 
-        public ConfigValues values = new ConfigValues();
-        #endregion
+        public enum ThumperBehaviour
+        {
+            Default,
+            OneShot,
+            //Bumper
+        }
 
+        public struct ConfigValues
+        {
+            // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
+            public bool friendlyFlight { get; set; }
+
+            public bool sellablePlayers { get; set; }
+
+            public int shrinkRayCost { get; set; }
+
+            public float movementSpeedMultiplier { get; set; }
+
+            public float jumpHeightMultiplier { get; set; }
+
+            public float weightMultiplier { get; set; }
+
+            [JsonIgnore]
+            public float pitchDistortionIntensity { get; set; }
+
+            public bool canUseVents { get; set; }
+
+            public bool jumpOnShrunkenPlayers { get; set; }
+
+            public bool hoardingBugSteal { get; set; }
+
+            public bool throwablePlayers { get; set; }
+
+            public bool CanEscapeGrab { get; set; }
+
+            public bool multipleShrinking { get; set; }
+
+            public ThumperBehaviour thumperBehaviour { get; set; }
+        }
+
+        public ConfigValues values = new ConfigValues();
+
+        private static ModConfig instance = null;
         public static ModConfig Instance
         {
             get
@@ -74,7 +72,9 @@ namespace LCShrinkRay.Config
                 return instance;
             }
         }
+        #endregion
 
+        #region Methods
         public void setup()
         {
             values.shrinkRayCost            = Plugin.bepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
@@ -107,13 +107,17 @@ namespace LCShrinkRay.Config
         {
             // TODO: reload things if needed
         }
+        #endregion
 
         [HarmonyPatch]
         public class SyncHandshake
         {
+            #region Constants
             private const string REQUEST_MESSAGE = PluginInfo.PLUGIN_NAME + "_" + "HostConfigRequested";
             private const string RECEIVE_MESSAGE = PluginInfo.PLUGIN_NAME + "_" + "HostConfigReceived";
+            #endregion
 
+            #region Networking
             [HarmonyPatch(typeof(PlayerControllerB), "ConnectClientToPlayerObject")]
             [HarmonyPostfix]
             public static void Initialize()
@@ -168,6 +172,7 @@ namespace LCShrinkRay.Config
                 Instance.values = hostValues;
                 Instance.updated();
             }
+            #endregion
         }
     }
 }

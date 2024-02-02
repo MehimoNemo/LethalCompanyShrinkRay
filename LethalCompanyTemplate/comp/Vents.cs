@@ -9,8 +9,11 @@ namespace LCShrinkRay.comp
 {
     internal class Vents
     {
+        #region Properties
         private static bool sussification = false;
+        #endregion
 
+        #region Methods
         private static EnemyVent[] getAllVents()
         {
             if (RoundManager.Instance.allEnemyVents != null && RoundManager.Instance.allEnemyVents.Length > 0)
@@ -152,12 +155,16 @@ namespace LCShrinkRay.comp
                 UnityEngine.Object.Destroy(vent.GetComponent<InteractTrigger>());
             }
         }
+        #endregion
 
 
         internal class SussifiedVent : NetworkBehaviour
         {
+            #region Properties
             public EnemyVent siblingVent { get; set; }
+            #endregion
 
+            #region Methods
             internal void Start() { }
 
             internal void TeleportPlayer(PlayerControllerB player)
@@ -169,14 +176,13 @@ namespace LCShrinkRay.comp
                     if (PlayerHelper.isShrunk(player.gameObject))
                     {
                         Plugin.log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
-                        //StartCoroutine(OccupyVent(siblingVent));
+                        //StartCoroutine(OccupyVent());
                         //siblingVent.ventAudio.Play();
                         transform.position = siblingVent.floorNode.transform.position;
                     }
                 }
                 else
                 {
-                    //7.9186 0.286 -14.1901
                     transform.position = new Vector3(7.9186f, 0.286f, -14.1901f);
                 }
             }
@@ -193,6 +199,7 @@ namespace LCShrinkRay.comp
                 siblingVent.occupied = false;
                 siblingVent.OpenVentClientRpc();
             }
+            #endregion
         }
     }
 }

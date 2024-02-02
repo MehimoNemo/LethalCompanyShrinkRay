@@ -15,34 +15,32 @@ namespace LCShrinkRay
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
+        #region Properties
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
         private static Plugin Instance;
         private static ManualLogSource mls;
 
         public static ConfigFile bepInExConfig() { return Instance.Config; }
+        #endregion
 
         private void Awake()
         {
             // Plugin startup logic
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             if (Instance == null)
                 Instance = this;
 
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
-
-            try
-            {
-                ModConfig.Instance.setup();
-            }
-            catch(Exception ex)
-            {
-                mls.LogError(ex.Message);
-            }
-
-            log(PluginInfo.PLUGIN_NAME + " mod has awoken!", LogType.Message);
+            ModConfig.Instance.setup();
 
             netcodePatching();
+            applyHarmonyPatches();
 
+            log(PluginInfo.PLUGIN_NAME + " mod has awoken!", LogType.Message);
+        }
+
+        #region Patching
+        private void applyHarmonyPatches()
+        {
             harmony.PatchAll(typeof(Plugin));
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
             harmony.PatchAll(typeof(PlayerModificationPatch));
@@ -55,7 +53,6 @@ namespace LCShrinkRay
 
             if (ModConfig.DebugMode)
                 harmony.PatchAll(typeof(DebugPatches));
-
         }
 
         private void netcodePatching()
@@ -74,7 +71,9 @@ namespace LCShrinkRay
                 }
             }
         }
+        #endregion
 
+        #region Logging
         public enum LogType
         {
             Message,
@@ -97,5 +96,6 @@ namespace LCShrinkRay
                 default: mls.LogMessage(message); break;
             }
         }
+        #endregion
     }
 }
