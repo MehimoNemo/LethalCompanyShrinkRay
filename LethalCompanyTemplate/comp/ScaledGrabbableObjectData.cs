@@ -8,6 +8,7 @@ namespace LCShrinkRay.comp
 {
     internal class ScaledGrabbableObjectData : MonoBehaviour
     {
+        #region Properties
         public struct RendererDefaults
         {
             public Material[] materials { get; set; }
@@ -23,6 +24,7 @@ namespace LCShrinkRay.comp
 
         public InitialValues initialValues { get; private set; }
         public bool IsGlassified { get; set; }
+        #endregion
 
         private void Awake()
         {

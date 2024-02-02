@@ -2,6 +2,7 @@ using GameNetcodeStuff;
 using System;
 using System.IO;
 using System.Reflection;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -9,14 +10,13 @@ namespace LCShrinkRay.comp
 {
     public class ShrinkRayFX : MonoBehaviour
     {
-        private VisualEffect visualEffect;
-
-        public static GameObject shrinkRayFX { get; private set; }
-        public static GameObject deathPoofFX { get; private set; }
-
-        // Bez 1 is the start, 4 is the end
-
         #region Properties
+        private static GameObject shrinkRayFX { get; set; }
+        private static GameObject deathPoofFX { get; set; }
+
+        private VisualEffect defaultVisualEffect { get; set; }
+        private VisualEffect activeVisualEffect { get; set; }
+
         public float thickness {
             set {
                 SetFloat("Thickness", value);
@@ -62,9 +62,11 @@ namespace LCShrinkRay.comp
             }
         }
 
+        // Bez 1 is the start, 4 is the end
+
         // Transform & Position properties
-        private const float bezier2YOffset = 2.5f;
-        private const float bezier3YOffset = 2f;
+        private const float bezier2YOffset = 2.5f;  // Height offset at 1/3 length
+        private const float bezier3YOffset = 2f;    // Height offset at 2/3 length
 
         private const float beamDuration = 2f;
         //private const Color beamColor = Color.blue;
@@ -90,10 +92,10 @@ namespace LCShrinkRay.comp
             //NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
             
             // Get the visual effect unity component if it's not set yet
-            if (!visualEffect)
+            if (!defaultVisualEffect)
             {
-                visualEffect = shrinkRayFX.GetComponentInChildren<VisualEffect>();
-                if (!visualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
+                defaultVisualEffect = shrinkRayFX.GetComponentInChildren<VisualEffect>();
+                if (!defaultVisualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
             }
 
             // Load death poof asset (WIP)
@@ -106,9 +108,35 @@ namespace LCShrinkRay.comp
         {
             try
             {
-                GameObject fxObject = CreateNewBeam(holderCamera);
+                if(!TryCreateNewBeam(out GameObject fxObject))
+                {
+                    Plugin.log("FX Object Null", Plugin.LogType.Error);
+                    return;
+                }
 
-                if (!fxObject) Plugin.log("FX Object Null", Plugin.LogType.Error);
+                activeVisualEffect = fxObject.GetComponentInChildren<VisualEffect>();
+                if (!activeVisualEffect)
+                {
+                    Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
+                }
+                else
+                {
+                    switch (type)
+                    {
+                        case ShrinkRay.ModificationType.Shrinking:
+                            colorPrimary = Color.red;
+                            colorSecondary = Color.blue;
+                            break;
+                        case ShrinkRay.ModificationType.Enlarging:
+                            colorPrimary = Color.cyan;
+                            colorSecondary = Color.yellow;
+                            break;
+                        case ShrinkRay.ModificationType.Normalizing:
+                            colorPrimary = Color.white;
+                            colorSecondary = Color.gray;
+                            break;
+                    }
+                }
 
                 Transform bezier1 = fxObject.transform.GetChild(0).Find("Pos1");
                 Transform bezier2 = fxObject.transform.GetChild(0).Find("Pos2");
@@ -157,24 +185,54 @@ namespace LCShrinkRay.comp
             }
         }
 
-        public GameObject CreateNewBeam(Transform parent)
+        public static bool TryCreateNewBeam(out GameObject beam)
         {
-            return Instantiate(shrinkRayFX);
+            if (shrinkRayFX == null)
+            {
+                beam = null;
+                return false;
+            }
+
+            beam = Instantiate(shrinkRayFX);
+            DontDestroyOnLoad(beam);
+            return beam != null;
+        }
+
+        public static bool TryCreateDeathPoofAt(out GameObject deathPoof, Vector3 position, Quaternion rotation)
+        {
+            if (deathPoofFX == null)
+            {
+                deathPoof = null;
+                return false;
+            }
+
+            deathPoof = Instantiate(deathPoofFX, position, rotation);
+            DontDestroyOnLoad(deathPoof);
+            return deathPoof != null;
         }
 
         private void SetFloat(string name, float value)
         {
-            visualEffect.SetFloat(name, value);
+            if (activeVisualEffect == null)
+                defaultVisualEffect.SetFloat(name, value);
+            else
+                activeVisualEffect.SetFloat(name, value);
         }
         
         private void SetVector4(string name, Vector4 value)
         {
-            visualEffect.SetVector4(name, value);
+            if (activeVisualEffect == null)
+                defaultVisualEffect.SetVector4(name, value);
+            else
+                activeVisualEffect.SetVector4(name, value);
         }
         
         private void SetInt(string name, int value)
         {
-            visualEffect.SetInt(name, value);
+            if (activeVisualEffect == null)
+                defaultVisualEffect.SetInt(name, value);
+            else
+                activeVisualEffect.SetInt(name, value);
         }
     }
 }

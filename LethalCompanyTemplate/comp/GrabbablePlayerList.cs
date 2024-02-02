@@ -1,10 +1,6 @@
 ﻿using GameNetcodeStuff;
-using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using LCShrinkRay.patches;
-using LethalLib.Modules;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -14,6 +10,7 @@ namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerList : NetworkBehaviour
     {
+        #region Properties
         public List<GameObject> grabbablePlayerObjects = new List<GameObject>(); // todo: auf Dictionary<ulong, GameObject> ändern
 
         private static GrabbablePlayerList instance = null;
@@ -36,8 +33,10 @@ namespace LCShrinkRay.comp
 
         private static GameObject networkPrefab { get; set; }
         private static GameObject instanciatedPrefab { get; set; }
+        #endregion
 
-        public static void Init()
+        #region Networking
+        public static void CreateNetworkPrefab()
         {
             if (networkPrefab != null) return; // Already loaded
 
@@ -71,8 +70,9 @@ namespace LCShrinkRay.comp
 
             instance = null;
         }
+        #endregion
 
-        // ---- Helper ----
+        #region Helper
         private static string TupleListToString(List<(ulong, ulong)> tupleList)
         {
             return JsonConvert.SerializeObject(tupleList);
@@ -114,7 +114,23 @@ namespace LCShrinkRay.comp
             return null;
         }
 
-        // Networking
+        private int getBindingObjectIDFromPlayerID(ulong playerID)
+        {
+            var index = grabbablePlayerObjects.FindIndex(0, bindingObject =>
+            {
+                if (bindingObject == null)
+                    return false;
+
+                var hasGPO = bindingObject.TryGetComponent(out GrabbablePlayerObject gpo);
+                var hasNO = bindingObject.TryGetComponent(out NetworkObject networkObject);
+                return (hasGPO && hasNO && gpo != null && gpo.grabbedPlayer != null && gpo.grabbedPlayer.playerClientId == playerID);
+            });
+
+            return index;
+        }
+        #endregion
+
+        #region Methods
         [ServerRpc(RequireOwnership = false)]
         public void SendGrabbablePlayerListServerRpc(ulong receiver)
         {
@@ -133,7 +149,7 @@ namespace LCShrinkRay.comp
                 SendGrabbablePlayerListClientRpc(TupleListToString(networkClientMap), receiver);
             }
         }
-
+        
         [ClientRpc]
         public void SendGrabbablePlayerListClientRpc(string grabbablePlayerListString, ulong receiver)
         {
@@ -164,7 +180,6 @@ namespace LCShrinkRay.comp
             }
         }
 
-        // Methods to add/remove/change grabbable players
         [ServerRpc(RequireOwnership = false)]
         public void ClearGrabbablePlayerObjectsServerRpc()
         {
@@ -249,21 +264,6 @@ namespace LCShrinkRay.comp
             Plugin.log("NEW GRABBALEPLAYER COUNT: " + grabbablePlayerObjects.Count);
         }
 
-        private int getBindingObjectIDFromPlayerID(ulong playerID)
-        {
-            var index = grabbablePlayerObjects.FindIndex(0, bindingObject =>
-            {
-                if (bindingObject == null)
-                    return false;
-
-                var hasGPO = bindingObject.TryGetComponent(out GrabbablePlayerObject gpo);
-                var hasNO = bindingObject.TryGetComponent(out NetworkObject networkObject);
-                return (hasGPO && hasNO && gpo != null && gpo.grabbedPlayer != null && gpo.grabbedPlayer.playerClientId == playerID);
-            });
-
-            return index;
-        }
-
         [ServerRpc]
         public void RemovePlayerGrabbableServerRpc(ulong playerID)
         {
@@ -293,5 +293,6 @@ namespace LCShrinkRay.comp
 
             grabbablePlayerObjects.RemoveAt(bindingObjectID);
         }
+        #endregion
     }
 }

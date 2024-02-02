@@ -35,18 +35,19 @@ namespace LCShrinkRay.patches
 
         public static void LoadAllAssets()
         {
-            string assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "shrinkasset");
-            AssetBundle upgradeAssets = AssetBundle.LoadFromFile(assetDir);
+            string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            GrabbablePlayerObject.LoadAsset(upgradeAssets);
-            ShrinkRay.LoadAsset(upgradeAssets);
+            // shrinkassets
+            var shrinkAssets = AssetBundle.LoadFromFile(Path.Combine(assetDir, "shrinkasset"));
+            GrabbablePlayerObject.LoadAsset(shrinkAssets);
+            ShrinkRay.LoadAsset(shrinkAssets);
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
         public static void Init()
         {
             LoadAllAssets();
-            GrabbablePlayerList.Init();
+            GrabbablePlayerList.CreateNetworkPrefab();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]

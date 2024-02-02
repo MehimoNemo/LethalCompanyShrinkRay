@@ -291,11 +291,8 @@ namespace LCShrinkRay.comp
                             if (targetingUs && newSize <= 0f)
                             {
                                 // Poof Target to death because they are too small to exist
-                                if (ShrinkRayFX.deathPoofFX != null)
-                                {
-                                    GameObject deathPoofObject = Instantiate(ShrinkRayFX.deathPoofFX, targetPlayer.transform.position, Quaternion.identity);
-                                    Destroy(deathPoofObject, 4f);
-                                }
+                                if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
+                                    Destroy(deathPoof, 4f);
 
                                 targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
 							}
