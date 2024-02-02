@@ -27,7 +27,7 @@ namespace LCShrinkRay.patches
                 case ThumperBehaviour.OneShot:
                     playerControllerB.KillPlayer(bodyVelocity: default(Vector3), spawnBody: false, CauseOfDeath.Mauling);
                     break;
-                case ThumperBehaviour.Bumper: // NOT WORKING YET
+                /*case ThumperBehaviour.Bumper: // NOT WORKING YET
                     Plugin.log("Forward: " + __instance.transform.forward.ToString());
                     var force = __instance.transform.forward * 10000f; // maybe forward is 0?
                     force.x = 4.2f;
@@ -48,7 +48,7 @@ namespace LCShrinkRay.patches
                     rb.freezeRotation = true;
                     rb.AddForce(force, ForceMode.Impulse);
                     resetToKinetic(rb).GetAwaiter();
-                    break;
+                    break;*/
                 default:
                     break;
             }
