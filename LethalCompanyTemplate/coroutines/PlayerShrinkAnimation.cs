@@ -41,7 +41,6 @@ namespace LCShrinkRay.coroutines
                 initialArmScale = armTransform.localScale;
             }
 
-            float duration = 2f;
             float elapsedTime = 0f;
             float currentSize = targetPlayer.gameObject.transform.localScale.x;
 
@@ -59,9 +58,9 @@ namespace LCShrinkRay.coroutines
             }
 
             int count = 0;
-            while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
+            while (elapsedTime < ShrinkRayFX.beamDuration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
             {
-                currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
+                currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / ShrinkRayFX.beamDuration) + 0.81) + offset);
 
                 var currentScale = new Vector3(currentSize, currentSize, currentSize);
                 playerTransform.localScale = currentScale;

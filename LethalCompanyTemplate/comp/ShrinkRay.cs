@@ -74,6 +74,7 @@ namespace LCShrinkRay.comp
             visScript.useCooldown = 2f;
             visScript.grabbableToEnemies = true;
             visScript.itemProperties.syncUseFunction = true;
+            visScript.useCooldown = ShrinkRayFX.beamDuration + 0.3f;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 

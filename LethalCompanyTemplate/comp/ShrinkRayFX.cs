@@ -68,7 +68,7 @@ namespace LCShrinkRay.comp
         private const float bezier2YOffset = 2.5f;  // Height offset at 1/3 length
         private const float bezier3YOffset = 2f;    // Height offset at 2/3 length
 
-        private const float beamDuration = 2f;
+        public static float beamDuration = 2f;
         //private const Color beamColor = Color.blue;
 
         #endregion
