@@ -14,11 +14,20 @@ namespace LCShrinkRay.comp
         public List<GameObject> grabbablePlayerObjects = new List<GameObject>(); // todo: auf Dictionary<ulong, GameObject> ändern
 
         private static GrabbablePlayerList instance = null;
+
+        public static bool HasInstance
+        {
+            get
+            {
+                return instance != null;
+            }
+        }
+
         public static GrabbablePlayerList Instance
         {
             get
             {
-                if (instance == null)
+                if (!HasInstance)
                 {
                     /*Plugin.log("GrabbablePlayerList.Instance called earlier than expected. Trying to load assets earlier.", Plugin.LogType.Warning);
 
@@ -64,6 +73,8 @@ namespace LCShrinkRay.comp
         public static void RemoveInstance()
         {
             if (instance == null) return; // Not initialized
+
+            ClearGrabbablePlayerObjects();
 
             if (PlayerHelper.isHost())
                 Destroy(instanciatedPrefab);
@@ -178,6 +189,16 @@ namespace LCShrinkRay.comp
                     }
                 }
             }
+        }
+
+        public static void ClearGrabbablePlayerObjects()
+        {
+            if(!HasInstance) return;
+
+            if (PlayerHelper.isHost())
+                Instance.ClearGrabbablePlayerObjectsServerRpc();
+            else
+                Instance.ClearGrabbablePlayerObjectsClientRpc();
         }
 
         [ServerRpc(RequireOwnership = false)]

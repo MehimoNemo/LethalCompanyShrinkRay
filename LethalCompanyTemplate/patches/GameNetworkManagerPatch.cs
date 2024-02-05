@@ -14,25 +14,6 @@ namespace LCShrinkRay.patches
     {
         public static bool isGameInitialized = false;
 
-        private static void SpawnNetworkPrefab(GameObject networkPrefab)
-        {
-            if (networkPrefab == null)
-            {
-                Plugin.log("A networkPrefab was null!");
-                return;
-            }
-
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
-            {
-                var networkHandlerHost = GameObject.Instantiate(networkPrefab, Vector3.zero, Quaternion.identity);
-                if (networkHandlerHost.TryGetComponent(out NetworkObject networkObject))
-                {
-                    Plugin.log("Spawned a networkObject!");
-                    networkObject.Spawn();
-                }
-            }
-        }
-
         public static void LoadAllAssets()
         {
             string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -50,9 +31,11 @@ namespace LCShrinkRay.patches
             GrabbablePlayerList.CreateNetworkPrefab();
         }
 
-        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
-        static void Awake()
+        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "SceneManager_OnLoadComplete1")]
+        public static void Initialize()
         {
+            isGameInitialized = true;
+            GrabbablePlayerList.CreateInstance();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
@@ -60,12 +43,6 @@ namespace LCShrinkRay.patches
         {
             isGameInitialized = false;
             GrabbablePlayerList.RemoveInstance();
-        }
-
-        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "SceneManager_OnLoadComplete1")]
-        public static void Initialize()
-        {
-            isGameInitialized = true;
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
@@ -79,7 +56,7 @@ namespace LCShrinkRay.patches
                     coroutines.PlayerShrinkAnimation.StartRoutine(player, 1f);
             }
 
-            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjectsServerRpc();
+            GrabbablePlayerList.ClearGrabbablePlayerObjects();
             Vents.unsussifyAll();
         }
     }

@@ -17,7 +17,7 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void OnClientConnect(ulong clientId)
         {
-            if (!PlayerHelper.isHost())
+            if (!PlayerHelper.isHost() || !GameNetworkManagerPatch.isGameInitialized)
                 return;
 
             // cigarette
@@ -35,26 +35,15 @@ namespace LCShrinkRay.patches
         [HarmonyPrefix]
         public static void OnClientDisconnect(ulong clientId)
         {
-            if (!PlayerHelper.isHost())
+            if (!PlayerHelper.isHost() || !GameNetworkManagerPatch.isGameInitialized)
                 return;
 
             Plugin.log("Player " + clientId + " left.");
 
             if(PlayerHelper.currentPlayer().playerClientId == clientId)
-                return; // handled in Disconnect() below
+                return; // handled in GameNetworkManagerPatch.Disconnect()
 
             GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(clientId);
         }
-
-        [HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
-        [HarmonyPrefix]
-        public static void OnDisconnect()
-        {
-            Plugin.log("We disconnected!");
-
-            GrabbablePlayerList.Instance.ClearGrabbablePlayerObjectsClientRpc();
-        }
-
-
     }
 }
