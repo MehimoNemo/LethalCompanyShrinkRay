@@ -121,7 +121,7 @@ namespace LCShrinkRay.comp
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(ModificationType type)
         {
-            if (playerHeldBy == null || PlayerHelper.currentPlayer().playerClientId != playerHeldBy.playerClientId)
+            if (playerHeldBy == null || PlayerHelper.currentPlayer().playerClientId != playerHeldBy.playerClientId || playerHeldBy.isClimbingLadder)
                 return;
 
             Plugin.log("shootingggggg");
@@ -238,6 +238,9 @@ namespace LCShrinkRay.comp
         public bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
         {
             if (targetPlayer.playerClientId == playerHeldBy.playerClientId)
+                return false;
+
+            if(targetPlayer.isClimbingLadder)
                 return false;
 
             switch(type)

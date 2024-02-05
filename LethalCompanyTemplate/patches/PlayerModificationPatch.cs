@@ -18,24 +18,21 @@ namespace LCShrinkRay.patches
             public float jumpForce { get; set; }
             public float sprintMultiplier { get; set; }
         }
-        private static PlayerControllerValues? defaultPlayerValues = null, modifiedPlayerValues = null;
+        private static PlayerControllerValues? defaultPlayerValues = null;
+        private static bool modified = false, wasModifiedLastFrame = false, wasResetLastFrame = false;
+        private static float modifiedSprintMultiplier = 0f;
 
         public static void modify(float playerSize)
         {
-            if (defaultPlayerValues == null) return;
-
-            modifiedPlayerValues = new PlayerControllerValues
-            {
-                jumpForce = defaultPlayerValues.Value.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier,
-                sprintMultiplier = defaultPlayerValues.Value.sprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier
-            };
-            Plugin.log("Setting modified values: J -> " + modifiedPlayerValues.Value.jumpForce + " / S -> " + modifiedPlayerValues.Value.sprintMultiplier);
+            modified = true;
+            wasModifiedLastFrame = true;
         }
 
         public static void reset()
         {
             Plugin.log("Resetting player modifications");
-            modifiedPlayerValues = null;
+            modified = false;
+            wasResetLastFrame = true;
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
@@ -69,10 +66,32 @@ namespace LCShrinkRay.patches
                 Plugin.log("Setting default values: J -> " + ___jumpForce + " / S -> " + ___sprintMultiplier);
             }
 
-            ___jumpForce = modifiedPlayerValues != null ? modifiedPlayerValues.Value.jumpForce : defaultPlayerValues.Value.jumpForce;
-            ___sprintMultiplier = modifiedPlayerValues != null ? modifiedPlayerValues.Value.sprintMultiplier : defaultPlayerValues.Value.sprintMultiplier;
-            if (__instance.isSprinting)
-                ___sprintMultiplier *= 2.25f;
+            // Single-time changes
+            if(wasModifiedLastFrame)
+            {
+                ___jumpForce *= ModConfig.Instance.values.jumpHeightMultiplier;
+                wasModifiedLastFrame = false;
+            }
+
+            if(wasResetLastFrame)
+            {
+                ___jumpForce /= ModConfig.Instance.values.jumpHeightMultiplier;
+                wasResetLastFrame = false;
+            }
+
+            // Continuos changes
+            if (modified)
+            {
+                if (modifiedSprintMultiplier == 0f)
+                    modifiedSprintMultiplier = defaultPlayerValues.Value.sprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
+
+                // Base values taken from PlayerControllerB.Update()
+                var baseModificationSpeed = __instance.isSprinting ? Time.deltaTime : (Time.deltaTime * 10f);
+                var baseSpeed = (__instance.isSprinting ? 2.25f : 1f) * ModConfig.Instance.values.movementSpeedMultiplier;
+
+                modifiedSprintMultiplier = Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed);
+                ___sprintMultiplier = modifiedSprintMultiplier;
+            }
 
             //__instance.carryWeight = PlayerHelper.calculatePlayerWeightFor(__instance);
         }
