@@ -16,7 +16,7 @@ namespace LCShrinkRay.patches
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, bool cannotBeInShip, bool overrideInsideFactoryCheck, ref EnemyType ___enemyType)
         {
             if (ModConfig.Instance.values.hoardingBugSteal && ___enemyType.name == "HoarderBug")  // Not working yet i believe... it never wanted me :(
-                return !PlayerHelper.isShrunk(playerScript.gameObject);
+                return !PlayerInfo.IsShrunk(playerScript);
 
             return __result;
         }

@@ -21,7 +21,7 @@ namespace LCShrinkRay.coroutines
         {
             var routine = affectedPlayer.gameObject.AddComponent<PlayerShrinkAnimation>();
             routine.targetPlayer = affectedPlayer;
-            routine.targetingUs = (affectedPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId);
+            routine.targetingUs = (affectedPlayer.playerClientId == PlayerInfo.CurrentPlayer.playerClientId);
 
             routine.StartCoroutine(routine.run(newSize, onComplete));
         }
@@ -37,7 +37,7 @@ namespace LCShrinkRay.coroutines
             {
                 armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
                 maskTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
-                heldItem = PlayerHelper.HeldItem(targetPlayer);
+                heldItem = PlayerInfo.HeldItem(targetPlayer);
                 initialArmScale = armTransform.localScale;
             }
 
@@ -172,12 +172,12 @@ namespace LCShrinkRay.coroutines
             float playerScale = pcb.gameObject.transform.localScale.x;
             float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
 
-            float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerHelper.currentPlayerScale()) + 1f);
+            float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
 
             try
             {
                 SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
-                Plugin.log("Pitch from player " + pcb.playerClientId + " adjusted to " + modifiedPitch + ". currentPlayerScale: " + PlayerHelper.currentPlayerScale() + " / playerScale: " + playerScale + " / intensity: " + intensity);
+                Plugin.log("Pitch from player " + pcb.playerClientId + " adjusted to " + modifiedPitch + ". currentPlayerScale: " + PlayerInfo.CurrentPlayerScale + " / playerScale: " + playerScale + " / intensity: " + intensity);
             }
             catch (NullReferenceException e)
             {

@@ -57,7 +57,7 @@ namespace LCShrinkRay.comp
         {
             if (instance != null) return; // Already initialized
 
-            if (PlayerHelper.isHost())
+            if (PlayerInfo.IsHost)
             {
                 instanciatedPrefab = Instantiate(networkPrefab);
                 var networkObj = instanciatedPrefab.GetComponent<NetworkObject>();
@@ -76,7 +76,7 @@ namespace LCShrinkRay.comp
 
             ClearGrabbablePlayerObjects();
 
-            if (PlayerHelper.isHost())
+            if (PlayerInfo.IsHost)
                 Destroy(instanciatedPrefab);
 
             instance = null;
@@ -167,7 +167,7 @@ namespace LCShrinkRay.comp
             Plugin.log("SendGrabbablePlayerListClientRpc");
             var grabbablePlayerList = StringToTupleList(grabbablePlayerListString);
 
-            if(PlayerHelper.currentPlayer().playerClientId != receiver) return; // Not meant for us
+            if(PlayerInfo.CurrentPlayer.playerClientId != receiver) return; // Not meant for us
 
             Plugin.log("Oh hey!! There's that list I needed!!!!", Plugin.LogType.Error);
             Plugin.log("\t" + grabbablePlayerListString);
@@ -184,7 +184,7 @@ namespace LCShrinkRay.comp
                     if (item.networkId == gpoNetworkObjId)
                     {
                         Plugin.log("\t" + item.networkId + ", " + item.clientId);
-                        PlayerControllerB pcb = PlayerHelper.GetPlayerObject(item.clientId).GetComponent<PlayerControllerB>();
+                        PlayerControllerB pcb = PlayerInfo.ControllerFromID(item.clientId).gameObject.GetComponent<PlayerControllerB>();
                         gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb);
                     }
                 }
@@ -195,7 +195,7 @@ namespace LCShrinkRay.comp
         {
             if(!HasInstance) return;
 
-            if (PlayerHelper.isHost())
+            if (PlayerInfo.IsHost)
                 Instance.ClearGrabbablePlayerObjectsServerRpc();
             else
                 Instance.ClearGrabbablePlayerObjectsClientRpc();
@@ -243,7 +243,7 @@ namespace LCShrinkRay.comp
                 }
             }
 
-            var pcb = PlayerHelper.GetPlayerController(playerID);
+            var pcb = PlayerInfo.ControllerFromID(playerID);
             if (pcb == null) return;
 
             Plugin.log("Adding grabbable player object for player: " + playerID);
@@ -264,7 +264,7 @@ namespace LCShrinkRay.comp
                     return; // Already existing
             }
 
-            var pcb = PlayerHelper.GetPlayerController(playerID);
+            var pcb = PlayerInfo.ControllerFromID(playerID);
             if(pcb == null)
             {
                 Plugin.log("Unable to find Player (" + playerID + ")");

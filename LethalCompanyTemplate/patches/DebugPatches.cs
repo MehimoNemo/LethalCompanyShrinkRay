@@ -47,13 +47,13 @@ namespace LCShrinkRay.patches
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
                     Plugin.log("Shrinking player model");
-                    ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ModificationType.Shrinking);
+                    ShrinkRay.debugOnPlayerModificationWorkaround(PlayerInfo.CurrentPlayer, ModificationType.Shrinking);
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
                     Plugin.log("Growing player model");
-                    ShrinkRay.debugOnPlayerModificationWorkaround(PlayerHelper.currentPlayer(), ModificationType.Enlarging);
+                    ShrinkRay.debugOnPlayerModificationWorkaround(PlayerInfo.CurrentPlayer, ModificationType.Enlarging);
                 }
 
                 else if (Keyboard.current.f4Key.wasPressedThisFrame)

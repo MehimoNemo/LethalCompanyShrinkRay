@@ -52,7 +52,7 @@ namespace LCShrinkRay.patches
 
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
             {
-                if(PlayerHelper.isShrunk(player.gameObject))
+                if(PlayerInfo.IsShrunk(player))
                     coroutines.PlayerShrinkAnimation.StartRoutine(player, 1f);
             }
 

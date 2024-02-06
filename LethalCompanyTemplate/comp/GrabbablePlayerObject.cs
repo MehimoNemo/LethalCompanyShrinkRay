@@ -164,7 +164,7 @@ namespace LCShrinkRay.comp
         {
             Plugin.log("GrabbablePlayerObject.Initialize");
 
-            if (pcb.playerClientId == PlayerHelper.currentPlayer().playerClientId)
+            if (pcb.playerClientId == PlayerInfo.CurrentPlayer.playerClientId)
             {
                 Plugin.log("Finding helmet!");
                 try
@@ -219,7 +219,7 @@ namespace LCShrinkRay.comp
 
         public void setIsGrabbableToEnemies(bool isGrabbable = true)
         {
-            if (!PlayerHelper.isCurrentPlayerShrunk())
+            if (!PlayerInfo.IsCurrentPlayerShrunk)
                 isGrabbable = false;
 
             this.grabbableToEnemies = isGrabbable;
@@ -250,7 +250,7 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void DemandDropFromPlayerClientRpc(ulong holdingPlayerID, ulong heldPlayerID)
         {
-            var currentPlayerID = PlayerHelper.currentPlayer().playerClientId;
+            var currentPlayerID = PlayerInfo.CurrentPlayer.playerClientId;
             if (currentPlayerID == holdingPlayerID)
             {
                 Plugin.log("Player " + heldPlayerID + " demanded to be dropped from you .. so it shall be!");
@@ -271,12 +271,12 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void OnGoombaClientRpc(ulong playerID)
         {
-            var currentPlayer = PlayerHelper.currentPlayer();
+            var currentPlayer = PlayerInfo.CurrentPlayer;
             if(currentPlayer.playerClientId == playerID)
                 Plugin.log("WE GETTING GOOMBAD");
             else
                 Plugin.log("A goomba...... stompin' on player " + playerID);
-            coroutines.GoombaStomp.StartRoutine(PlayerHelper.GetPlayerObject(playerID), () =>
+            coroutines.GoombaStomp.StartRoutine(PlayerInfo.ControllerFromID(playerID).gameObject, () =>
             {
                 if (playerID == currentPlayer.playerClientId)
                     isGoombaCoroutineRunning = false;
@@ -304,7 +304,7 @@ namespace LCShrinkRay.comp
             if (!ModConfig.Instance.values.jumpOnShrunkenPlayers)
                 return;
 
-            if (PlayerHelper.IsCurrentPlayerGrabbed())
+            if (PlayerInfo.IsCurrentPlayerGrabbed())
             {
                 //Plugin.log("Apes together strong! Goomba impossible.");
                 return;
@@ -314,7 +314,7 @@ namespace LCShrinkRay.comp
             if (playerAbove == null)
                 return;
 
-            var currentPlayer = PlayerHelper.currentPlayer();
+            var currentPlayer = PlayerInfo.CurrentPlayer;
             if (currentPlayer.gameObject.transform.localScale.x >= playerAbove.gameObject.transform.localScale.x)
             {
                 //Plugin.log("2 Weak 2 Goomba c:");
@@ -466,7 +466,7 @@ namespace LCShrinkRay.comp
             if (this.grabbedPlayer == null)
             {
                 Plugin.log("Reinitializing grabbable player object with ID: " + grabbedPlayerID);
-                this.grabbedPlayer = PlayerHelper.GetPlayerController(grabbedPlayerID);
+                this.grabbedPlayer = PlayerInfo.ControllerFromID(grabbedPlayerID);
             }
         }
 

@@ -122,7 +122,7 @@ namespace LCShrinkRay.Config
             [HarmonyPostfix]
             public static void Initialize()
             {
-                if (PlayerHelper.isHost())
+                if (PlayerInfo.IsHost)
                 {
                     Plugin.log("Current player is the host.");
                     NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(REQUEST_MESSAGE, new HandleNamedMessageDelegate(HostConfigRequested));
@@ -148,7 +148,7 @@ namespace LCShrinkRay.Config
 
             public static void HostConfigRequested(ulong clientId, FastBufferReader reader)
             {
-                if (!PlayerHelper.isHost()) // Current player is not the host and therefor not the one who should react
+                if (!PlayerInfo.IsHost) // Current player is not the host and therefor not the one who should react
                     return;
 
                 string json = JsonConvert.SerializeObject(Instance.values);

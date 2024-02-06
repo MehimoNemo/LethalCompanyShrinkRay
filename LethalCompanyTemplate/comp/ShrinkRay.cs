@@ -117,7 +117,7 @@ namespace LCShrinkRay.comp
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(ModificationType type)
         {
-            if (playerHeldBy == null || PlayerHelper.currentPlayer().playerClientId != playerHeldBy.playerClientId || playerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || PlayerInfo.CurrentPlayer.playerClientId != playerHeldBy.playerClientId || playerHeldBy.isClimbingLadder)
                 return;
 
             Plugin.log("shootingggggg");
@@ -242,7 +242,7 @@ namespace LCShrinkRay.comp
             switch(type)
             {
                 case ModificationType.Normalizing:
-                    if (PlayerHelper.isNormalSize(targetPlayer.gameObject.transform.localScale.x))
+                    if (PlayerInfo.IsNormalSize(targetPlayer))
                         return false;
                     return true;
 
@@ -266,7 +266,7 @@ namespace LCShrinkRay.comp
         [ServerRpc(RequireOwnership = false)]
         public void OnPlayerModificationServerRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
-            Plugin.log("Player (" + PlayerHelper.currentPlayer().playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
+            Plugin.log("Player (" + PlayerInfo.CurrentPlayer.playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
             OnPlayerModificationClientRpc(holderPlayerID, targetPlayerID, type );
         }
 
@@ -274,7 +274,7 @@ namespace LCShrinkRay.comp
         public void OnPlayerModificationClientRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
             Plugin.log("OnPlayerModificationClientRpc");
-            var targetPlayer = PlayerHelper.GetPlayerController(targetPlayerID);
+            var targetPlayer = PlayerInfo.ControllerFromID(targetPlayerID);
             if (targetPlayer == null) return;
 
             if (targetPlayer == null || targetPlayer.gameObject == null || targetPlayer.gameObject.transform == null)
@@ -284,9 +284,9 @@ namespace LCShrinkRay.comp
             }
 
             // For other clients
-            var holder = playerHeldBy != null ? playerHeldBy : PlayerHelper.GetPlayerController(holderPlayerID);
+            var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
 
-            var targetingUs = targetPlayer.playerClientId == PlayerHelper.currentPlayer().playerClientId;
+            var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayer.playerClientId;
             Plugin.log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
 
             switch (type)
@@ -298,7 +298,7 @@ namespace LCShrinkRay.comp
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, normalizedSize, () => IsOnCooldown = false);
 
-                        if(PlayerHelper.isHost())
+                        if(PlayerInfo.IsHost)
                             GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)
@@ -324,7 +324,7 @@ namespace LCShrinkRay.comp
 							}
                         });
 
-                        if (nextShrunkenSize < 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
+                        if (nextShrunkenSize < 1f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
                         {
                             Plugin.log("About to call SetPlayerGrabbableServerRpc");
                             GrabbablePlayerList.Instance.SetPlayerGrabbableServerRpc(targetPlayer.playerClientId);
@@ -347,7 +347,7 @@ namespace LCShrinkRay.comp
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () => IsOnCooldown = false);
 
-                        if (nextIncreasedSize >= 1f && PlayerHelper.isHost()) // todo: create a mechanism that only allows larger players to grab small ones
+                        if (nextIncreasedSize >= 1f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
                             GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)

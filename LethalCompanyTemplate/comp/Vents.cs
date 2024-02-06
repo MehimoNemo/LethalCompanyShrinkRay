@@ -36,7 +36,7 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            if(PlayerHelper.isCurrentPlayerShrunk())
+            if(PlayerInfo.IsCurrentPlayerShrunk)
             {
                 Plugin.log("Sussification of vents only for shrunken players.");
                 return;
@@ -173,7 +173,7 @@ namespace LCShrinkRay.comp
                 //teleport da playa to dis vent
                 if (siblingVent != null)
                 {
-                    if (PlayerHelper.isShrunk(player.gameObject))
+                    if (PlayerInfo.IsShrunk(player))
                     {
                         Plugin.log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
                         //StartCoroutine(OccupyVent());

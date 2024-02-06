@@ -33,7 +33,7 @@ namespace LCShrinkRay.patches
 
         public static void CheckForGlassify(GrabbableObject item)
         {
-            if (item == null || item.playerHeldBy == null || PlayerHelper.isNormalSize(item.playerHeldBy.transform.localScale.x)) return;
+            if (item == null || item.playerHeldBy == null || PlayerInfo.IsNormalSize(item.playerHeldBy)) return;
 
             //Plugin.log("CheckForGlassify - Item layer: " + item.gameObject.layer.ToString());
             //var camera = item.playerHeldBy.gameplayCamera;
@@ -70,7 +70,7 @@ namespace LCShrinkRay.patches
         {
             if (item == null) return;
 
-            if (PlayerHelper.isNormalSize(scale))
+            if (PlayerInfo.IsNormalSize(scale))
             {
                 OnItemNormalize(item);
                 return;
