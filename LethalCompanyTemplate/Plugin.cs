@@ -50,6 +50,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
             harmony.PatchAll(typeof(DeskPatch));
             harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
+            harmony.PatchAll(typeof(SandwormAIPatch));
 
             if (ModConfig.DebugMode)
                 harmony.PatchAll(typeof(DebugPatches));
