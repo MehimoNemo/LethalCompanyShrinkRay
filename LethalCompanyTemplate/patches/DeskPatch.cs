@@ -3,38 +3,32 @@ using HarmonyLib;
 using LCShrinkRay.comp;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Unity.Netcode;
-using UnityEngine;
 
 namespace LCShrinkRay.patches
 {
-
     internal class DeskPatch
     {
-        
-
         private static List<GrabbablePlayerObject> doomedPlayers = new List<GrabbablePlayerObject>();
-        public static bool isPlayerSelling;
-        private static PlayerControllerB playerWhoTriggered;
-        private static GrabbableObject placedItem;
+        public static bool isPlayerSelling = false;
+        private static PlayerControllerB playerWhoTriggered = null;
+        private static GrabbableObject placedItem = null;
         private static List<GrabbableObject> placedItems = new List<GrabbableObject>();
 
         [HarmonyPatch(typeof(DepositItemsDesk), "Start")]
         [HarmonyPostfix()]
         public static void Start()
         {
-            
-            Plugin.log("STARTING PLAYER SELLING PATCH", Plugin.LogType.Error);
+            Plugin.log("STARTING PLAYER SELLING PATCH");
             isPlayerSelling = Config.ModConfig.Instance.values.sellablePlayers;
-            Plugin.log("isPlayerSelling: " + isPlayerSelling.ToString(), Plugin.LogType.Error);
+            Plugin.log("isPlayerSelling: " + isPlayerSelling.ToString());
         }
 
         [HarmonyPatch(typeof(DepositItemsDesk), "PlaceItemOnCounter")]
         [HarmonyPrefix()]
         public static void PlaceItemOnCounterPrefix(PlayerControllerB playerWhoTriggered)
         {
-            Plugin.log("PlaceItemOnCounterPrefix", Plugin.LogType.Error);
+            Plugin.log("PlaceItemOnCounterPrefix");
             if (playerWhoTriggered == null)
             {
                 Plugin.log("Player is null", Plugin.LogType.Error);
@@ -43,60 +37,50 @@ namespace LCShrinkRay.patches
             placedItem = playerWhoTriggered.currentlyHeldObjectServer;
             placedItems.Add(placedItem);
             if (placedItem == null)
-            {
                 Plugin.log("placedItem is null", Plugin.LogType.Error);
-            }
         }
 
         [HarmonyPatch(typeof(DepositItemsDesk), "AddObjectToDeskServerRpc")]
         [HarmonyPrefix()]
         public static void AddObjectToDeskServerRpcPrefix()
         {
-            Plugin.log("addin Object to desk", Plugin.LogType.Error);
+            Plugin.log("addin Object to desk");
             if (playerWhoTriggered == null)
             {
-                Plugin.log("Oh my god it's null.....", Plugin.LogType.Error);
+                Plugin.log("Oh sure, now nobody want to be in fault for placing this poor player here.....");
             }
-            if (isPlayerSelling && placedItem != null)
+            if (isPlayerSelling)
             {
-                Plugin.log("Running sellable player code now", Plugin.LogType.Error);
-                GrabbableObject item = placedItem;
-                if (item is GrabbablePlayerObject)
+                var placedPlayer = placedItem as GrabbablePlayerObject;
+                if (placedPlayer == null)
                 {
-                    Plugin.log("Item is sellable player >:)", Plugin.LogType.Error);
-                    GrabbablePlayerObject gPlayerObject = (GrabbablePlayerObject)item;
-                    doomedPlayers.Add(gPlayerObject);
-                    //freeze player here!
-                    gPlayerObject.Freeze();
-                    //Set player value to value of held items??? here
+                    Plugin.log("placedItem is not a player.. not my job");
+                    return;
+                }
 
-                    int scrapValue = 5;
-                    foreach (GrabbableObject valuableItem in gPlayerObject.grabbedPlayer.ItemSlots)
-                    {
-                        if (valuableItem != null)
-                            scrapValue += valuableItem.scrapValue;
-                        else
-                            Plugin.log("the item is null....");
-                    }
-                    gPlayerObject.scrapValue = scrapValue;
-                }
-                else
+                Plugin.log("Item is a sellable player >:) little does he know..");
+                doomedPlayers.Add(placedPlayer);
+                //freeze player here!
+                placedPlayer.Freeze();
+                //Set player value to value of held items??? here
+
+                int scrapValue = 5;
+                foreach (var valuableItem in placedPlayer.grabbedPlayer.ItemSlots)
                 {
-                    Plugin.log("Fuck you, idiot, grabbable object is null");
+                    if (valuableItem != null)
+                        scrapValue += valuableItem.scrapValue;
+                    else
+                        Plugin.log("item of the placedPlayer is null....");
                 }
-            }
-            if (!isPlayerSelling) {
-                foreach (GrabbableObject item in placedItems)
-                {
-                    if (item is GrabbablePlayerObject)
-                    {
-                        Plugin.log("Nuh uh honey bear! We are not selling this fella!!!", Plugin.LogType.Warning);
-                    }
-                }
+                placedPlayer.scrapValue = scrapValue;
             }
             else
             {
-                Plugin.log("isPlayerSelling is uhh....false... or placedItem is null??", Plugin.LogType.Error);
+                foreach (var item in placedItems)
+                {
+                    if (item is GrabbablePlayerObject)
+                        Plugin.log("Nuh uh honey bear! We are not selling this fella!!!", Plugin.LogType.Warning);
+                }
             }
         }
 
@@ -104,8 +88,7 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix()]
         public static void AddToDeskServer(DepositItemsDesk __instance, NetworkObjectReference grabbableObjectNetObject)
         {
-            NetworkObject thisObject;
-            grabbableObjectNetObject.TryGet(out thisObject);
+            grabbableObjectNetObject.TryGet(out NetworkObject thisObject);
             GrabbableObject grabbableObject = null;
             try
             {
@@ -126,20 +109,18 @@ namespace LCShrinkRay.patches
             }
         }
 
-
         [HarmonyPatch(typeof(DepositItemsDesk), "SellAndDisplayItemProfits")]
         [HarmonyPostfix()]
         public static void SellStuffPostfix()
         {
-            Plugin.log("selling on desk", Plugin.LogType.Error);
+            Plugin.log("selling on desk");
             if (isPlayerSelling && doomedPlayers.Count > 0)
             {
-
-                Plugin.log("doomedPlayersCount: " + doomedPlayers.Count, Plugin.LogType.Error);
+                Plugin.log("doomedPlayersCount: " + doomedPlayers.Count);
                 foreach (GrabbablePlayerObject gplayer in doomedPlayers)
                 {
                     PlayerControllerB player = gplayer.grabbedPlayer;
-                    Plugin.log("Killing player: " + player.playerClientId, Plugin.LogType.Error);
+                    Plugin.log("Killing player: " + player.playerClientId);
                     //kill player then enable movement here!!
                     gplayer.SellKill();
                     gplayer.Unfreeze();
