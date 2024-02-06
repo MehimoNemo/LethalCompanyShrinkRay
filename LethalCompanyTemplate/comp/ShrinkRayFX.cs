@@ -65,8 +65,11 @@ namespace LCShrinkRay.comp
         // Bez 1 is the start, 4 is the end
 
         // Transform & Position properties
-        private const float bezier2YOffset = 2.5f;  // Height offset at 1/3 length
-        private const float bezier3YOffset = 2f;    // Height offset at 2/3 length
+        private const float bezier2YPoint = 0.5f;  // at 50%
+        private const float bezier2YOffset = 0.5f; // Height offset
+
+        private const float bezier3YPoint= 0.80f;  // at 80%
+        private const float bezier3YOffset = 1.5f; // Height offset
 
         public static float beamDuration = 2f;
         //private const Color beamColor = Color.blue;
@@ -98,6 +101,12 @@ namespace LCShrinkRay.comp
                 if (!defaultVisualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
             }
 
+            // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
+            noiseSpeed = 5;
+            noisePower = 0.1f;
+            sparksSize = 1f;
+            thickness = 0.1f;
+
             // Load death poof asset (WIP)
             //deathPoofFX = fxAssets.LoadAsset<GameObject>("Poof FX");
             //if (deathPoofFX == null)
@@ -124,12 +133,12 @@ namespace LCShrinkRay.comp
                     switch (type)
                     {
                         case ShrinkRay.ModificationType.Shrinking:
-                            colorPrimary = Color.red;
-                            colorSecondary = Color.blue;
+                            colorPrimary = new Color(0.61f, 0.04f, 0.04f); // red like shrinkray
+                            colorSecondary = new Color(1f, 1f, 0f); // yellow
                             break;
                         case ShrinkRay.ModificationType.Enlarging:
-                            colorPrimary = Color.cyan;
-                            colorSecondary = Color.yellow;
+                            colorPrimary = new Color(0f, 0.3f, 0f); // darkgreen
+                            colorSecondary = new Color(1f, 1f, 0f); // yellow
                             break;
                         case ShrinkRay.ModificationType.Normalizing:
                             colorPrimary = Color.white;
@@ -158,11 +167,11 @@ namespace LCShrinkRay.comp
                 bezier1.transform.SetParent(this.transform, true);
 
                 // Set bezier 2 (curve)
-                bezier2.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, 1f/3f) + (Vector3.up * bezier2YOffset);
+                bezier2.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, bezier2YPoint) + (Vector3.up * bezier2YOffset);
                 bezier2.transform.SetParent(this.transform, true);
 
                 // Set bezier 3 (curve)
-                bezier3.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, 2f/3f) + (Vector3.up * bezier3YOffset);
+                bezier3.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, bezier3YPoint) + (Vector3.up * bezier3YOffset);
                 bezier3.transform.SetParent(targetHeadTransform, true);
 
                 // Set Bezier 4 (final endpoint)

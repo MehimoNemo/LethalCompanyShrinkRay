@@ -56,10 +56,6 @@ namespace LCShrinkRay.comp
 
             // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
-            
-            // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
-            shrinkRayFX.noiseSpeed = 5;
-            shrinkRayFX.noisePower = 0.1f;
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
