@@ -3,12 +3,9 @@ using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 using BepInEx.Configuration;
-using LCShrinkRay.comp;
 using LCShrinkRay.patches;
 using LCShrinkRay.Config;
-using System;
 using System.Reflection;
-using System.IO;
 
 namespace LCShrinkRay
 {

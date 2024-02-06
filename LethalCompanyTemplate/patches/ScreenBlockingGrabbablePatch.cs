@@ -5,8 +5,6 @@ using LCShrinkRay.helper;
 using LethalLib.Modules;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem.HID;
-using static UnityEngine.GraphicsBuffer;
 
 namespace LCShrinkRay.patches
 {

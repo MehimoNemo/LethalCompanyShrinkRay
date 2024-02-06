@@ -2,10 +2,8 @@
 using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.helper;
-using LethalLib.Modules;
 using System.IO;
 using System.Reflection;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace LCShrinkRay.patches

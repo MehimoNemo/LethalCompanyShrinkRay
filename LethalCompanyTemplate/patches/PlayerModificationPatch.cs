@@ -1,9 +1,7 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace LCShrinkRay.patches

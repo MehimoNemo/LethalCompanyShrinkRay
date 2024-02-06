@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using BepInEx.Configuration;
 using HarmonyLib;
 using static Unity.Netcode.CustomMessagingManager;
