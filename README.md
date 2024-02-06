@@ -21,14 +21,12 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 > client-sided options are marked with a \*, others will by synced with the host.
 
 ## Known bugs ##
-+ Text "Ungrab: JUMP" not getting shown when held player holds an item
 + Shrunken players sometimes face the wrong direction when climbing ladders
-+ HoardingBug not consistently grabbing players
++ HoardingBug not grabbing players
 + Shrinkray floats above the ground when dropped
 + Weight of held players not updating
 + Jetpack offset for shrunken players
 + Clients are sometimes unable to shrinking host when shooting
-+ Ray not always showing for other players
 + Collision detection when holding players not accurate enough
 + Held players mask (visor) is in the view
 
@@ -36,10 +34,10 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 ## Planned features ##
 - [ ] Throw players further
 - [ ] Animations for holding / throwing players
-- [ ] Add cooler ray / improved sfx & fx
+- [ ] Improved ray sfx & fx
 - [ ] Item slot icon for held player
-- [ ] Sellable players
-- [ ] Size resetting / Unshrinking
+- [x] Sellable players
+- [x] Size resetting / Unshrinking
 - [ ] Make sandworms unlikely targeting shrunken players
 
 ## Got more ideas? ##
