@@ -14,7 +14,7 @@ namespace LCShrinkRay.Config
         #region Properties
         public static bool DebugMode {
             get {
-                return true; // Change this to false for release
+                return false; // Change this to false for release
             }
         }
 

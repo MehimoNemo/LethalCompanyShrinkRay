@@ -5,10 +5,10 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 ## Configuration ##
 |  Group       |          Option             |                           Description                                                     | Possible values                        | Default |
 | ------------ | --------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------- | ------- |
-| General      | ShrinkRayCost               | Store cost of the shrink ray                                                              | any number                             | 0       |
-|              | MultipleShrinking           | If true, a player can shrink multiple times.. unfortunatly.                               | true / false                           | false   |
-| Shrunken     | MovementSpeedMultiplier     | Speed multiplier for shrunken players                                                     | 0.5 (slow) - 2 (fast)                  | 1.2     |
-|              | JumpHeightMultiplier        | Jump-height multiplier for shrunken players                                               | 0.5 (lower) - 2 (higher)               | 1.5     |
+| General      | ShrinkRayCost               | Store cost of the shrink ray                                                              | any number                             | 0 (BETA)|
+|              | MultipleShrinking           | If true, a player can shrink multiple times.. unfortunatly.                               | true / false                           | true    |
+| Shrunken     | MovementSpeedMultiplier     | Speed multiplier for shrunken players                                                     | 0.5 (slow) - 1.5 (fast)                | 1.2     |
+|              | JumpHeightMultiplier        | Jump-height multiplier for shrunken players                                               | 0.5 (lower) - 2 (higher)               | 1.3     |
 |              | WeightMultiplier            | Weight multiplier applied on held items of shrunken players                               | 0.5 (lighter) - 2 (heavier)            | 1.5     |
 |              | CanUseVents                 | If true, shrunken players can teleport between vents.                                     | true / false                           | true    |
 |              | PitchDistortionIntensity \* | Intensity of the pitch distortion for shrunken players.                                   | 0 (normal voice) - 0.5 (high pitched)  | 0.3     |
@@ -17,7 +17,7 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | ThrowablePlayers            | If true, shrunken players can be thrown by normal sized players.                          | true / false                           | true    |
 |              | FriendlyFlight              | If true, held players can grab other players, causing comedic, but game breaking effects. | true / false                           | false   |
 | Enemies      | HoardingBugSteal            | If true, hoarding/loot bugs can treat a shrunken player like an item.                     | true / false                           | true    |
-|              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot, Bumper              | Default |
+|              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot                      | Default |
 > client-sided options are marked with a \*, others will by synced with the host.
 
 ## Known bugs ##
@@ -36,8 +36,6 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 - [ ] Animations for holding / throwing players
 - [ ] Improved ray sfx & fx
 - [ ] Item slot icon for held player
-- [x] Sellable players
-- [x] Size resetting / Unshrinking
 - [ ] Make sandworms unlikely targeting shrunken players
 
 ## Got more ideas? ##
