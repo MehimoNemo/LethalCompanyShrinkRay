@@ -68,7 +68,7 @@ namespace LCShrinkRay.patches
         {
             if (item == null) return;
 
-            if (PlayerInfo.IsNormalSize(scale))
+            if (PlayerInfo.Rounded(scale) == 1f)
             {
                 OnItemNormalize(item);
                 return;

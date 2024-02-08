@@ -139,8 +139,9 @@ namespace LCShrinkRay.comp
                     Plugin.log("\"" + hitInfo.collider.name + "\" [Layer " + hitInfo.collider.gameObject.layer + "] is between us and \"" + hit.collider.name + "\" [Layer " + hit.collider.gameObject.layer + "]");
                     continue;
                 }
-                
-                bool handledHit = OnRayHit(hit, type);
+
+                if (OnRayHit(hit, type)) // Only single hits for now
+                    break;
             }
         }
         
@@ -176,7 +177,7 @@ namespace LCShrinkRay.comp
 
                         Plugin.log("Ray has hit an ITEM -> " + item.name);
                         Plugin.log("WIP");
-                        return true;
+                        return false;
                     }
                 case Mask.InteractableObject:
                     {
@@ -185,7 +186,7 @@ namespace LCShrinkRay.comp
 
                         Plugin.log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
                         Plugin.log("WIP");
-                        return true;
+                        return false;
                     }
                 case Mask.Enemies:
                     {
@@ -194,7 +195,7 @@ namespace LCShrinkRay.comp
 
                         Plugin.log("Ray has hit an ENEMY -> \"" + hit.collider.name);
                         Plugin.log("WIP");
-                        return true;
+                        return false;
                     }
                 default:
                     Plugin.log("Ray has hit an unhandled object named \"" + hit.collider.name + "\" [Layer " + layer + "]");
@@ -205,25 +206,25 @@ namespace LCShrinkRay.comp
 
         // ------ Ray hitting Player ------
 
-        public static float NextShrunkenSizeOf(GameObject targetObject)
+        public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             if (!ModConfig.Instance.values.multipleShrinking)
                 return possiblePlayerSizes[1];
 
-            var currentPlayerSize = Mathf.Round(targetObject.transform.localScale.x * 100f) / 100f; // round to 2 digits
-            var currentSizeIndex = possiblePlayerSizes.IndexOf(currentPlayerSize);
+            var playerSize = PlayerInfo.SizeOf(targetPlayer);
+            var currentSizeIndex = possiblePlayerSizes.IndexOf(playerSize);
             if (currentSizeIndex <= 0)
-                return currentPlayerSize;
+                return playerSize;
 
             return possiblePlayerSizes[currentSizeIndex-1];
         }
 
-        public static float NextIncreasedSizeOf(GameObject targetObject)
+        public static float NextIncreasedSizeOf(PlayerControllerB targetPlayer)
         {
-            var currentPlayerSize = Mathf.Round(targetObject.transform.localScale.x * 100f) / 100f; // round to 2 digits
-            var currentSizeIndex = possiblePlayerSizes.IndexOf(currentPlayerSize);
-            if (currentSizeIndex == -1 || currentPlayerSize == possiblePlayerSizes.Count - 1)
-                return currentPlayerSize;
+            var playerSize = PlayerInfo.SizeOf(targetPlayer);
+            var currentSizeIndex = possiblePlayerSizes.IndexOf(playerSize);
+            if (currentSizeIndex == -1 || playerSize == possiblePlayerSizes.Count - 1)
+                return playerSize;
 
             if(currentSizeIndex >= 2) // remove this if() once we think about growing
                 return possiblePlayerSizes[2];
@@ -247,8 +248,14 @@ namespace LCShrinkRay.comp
                     return true;
 
                 case ModificationType.Shrinking:
-                    var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer.gameObject);
-                    if (nextShrunkenSize == 0f && !targetPlayer.AllowPlayerDeath())
+                    var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
+                    if (nextShrunkenSize == PlayerInfo.SizeOf(targetPlayer) || (nextShrunkenSize == 0f && !targetPlayer.AllowPlayerDeath()))
+                        return false;
+                    return true;
+
+                case ModificationType.Enlarging:
+                    var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
+                    if (nextIncreasedSize == PlayerInfo.SizeOf(targetPlayer))
                         return false;
                     return true;
 
@@ -260,7 +267,7 @@ namespace LCShrinkRay.comp
         public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
             Plugin.log("debugOnPlayerModificationWorkaround");
-            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer.gameObject) : NextIncreasedSizeOf(targetPlayer.gameObject));
+            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer) : NextIncreasedSizeOf(targetPlayer));
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -308,7 +315,7 @@ namespace LCShrinkRay.comp
 
                 case ModificationType.Shrinking:
                     {
-                        var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer.gameObject);
+                        var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + nextShrunkenSize);
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextShrunkenSize, () =>
@@ -342,7 +349,7 @@ namespace LCShrinkRay.comp
 
                 case ModificationType.Enlarging:
                     {
-                        var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer.gameObject);
+                        var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
                         Plugin.log("Raytype: " + type.ToString() + ". New size: " + nextIncreasedSize);
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () => IsOnCooldown = false);

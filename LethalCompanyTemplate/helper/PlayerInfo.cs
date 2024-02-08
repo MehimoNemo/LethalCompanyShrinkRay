@@ -116,6 +116,11 @@ namespace LCShrinkRay.helper
             return Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
         }
 
+        public static float SizeOf(PlayerControllerB player)
+        {
+            return Rounded(player.gameObject.transform.localScale.x);
+        }
+
         public static bool IsShrunk(PlayerControllerB player)
         {
             return IsShrunk(player.gameObject);
@@ -136,20 +141,7 @@ namespace LCShrinkRay.helper
 
         public static bool IsNormalSize(PlayerControllerB player)
         {
-            return IsNormalSize(player.gameObject);
-        }
-
-        public static bool IsNormalSize(GameObject playerObject)
-        {
-            if (playerObject == null)
-                return false;
-
-            return IsNormalSize(playerObject.transform.localScale.x);
-        }
-
-        public static bool IsNormalSize(float size)
-        {
-            return Rounded(size) == 1f;
+            return SizeOf(player) == 1f;
         }
 
         public static bool IsCurrentPlayerShrunk
