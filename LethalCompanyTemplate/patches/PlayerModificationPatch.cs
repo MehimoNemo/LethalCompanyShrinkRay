@@ -40,7 +40,7 @@ namespace LCShrinkRay.patches
             if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController)
                 return;
 
-            if(__instance.playerClientId != PlayerInfo.CurrentPlayer.playerClientId)
+            if(__instance.playerClientId != PlayerInfo.CurrentPlayerID)
                 return; 
 
             if (helmetHudTransform == null)

@@ -29,7 +29,7 @@ namespace LCShrinkRay.patches
             GrabbablePlayerList.CreateNetworkPrefab();
         }
 
-        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "SceneManager_OnLoadComplete1")]
+        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
         public static void Initialize()
         {
             isGameInitialized = true;

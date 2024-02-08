@@ -117,7 +117,7 @@ namespace LCShrinkRay.comp
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(ModificationType type)
         {
-            if (playerHeldBy == null || PlayerInfo.CurrentPlayer.playerClientId != playerHeldBy.playerClientId || playerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || PlayerInfo.CurrentPlayerID != playerHeldBy.playerClientId || playerHeldBy.isClimbingLadder)
                 return;
 
             Plugin.log("shootingggggg");
@@ -266,7 +266,7 @@ namespace LCShrinkRay.comp
         [ServerRpc(RequireOwnership = false)]
         public void OnPlayerModificationServerRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
-            Plugin.log("Player (" + PlayerInfo.CurrentPlayer.playerClientId + ") modified Player(" + targetPlayerID + "): " + type.ToString());
+            Plugin.log("Player (" + PlayerInfo.CurrentPlayerID + ") modified Player(" + targetPlayerID + "): " + type.ToString());
             OnPlayerModificationClientRpc(holderPlayerID, targetPlayerID, type );
         }
 
@@ -286,7 +286,7 @@ namespace LCShrinkRay.comp
             // For other clients
             var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
 
-            var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayer.playerClientId;
+            var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
             Plugin.log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
 
             switch (type)

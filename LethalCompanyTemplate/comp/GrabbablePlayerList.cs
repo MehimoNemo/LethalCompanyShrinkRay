@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.helper;
 using Newtonsoft.Json;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -53,21 +54,24 @@ namespace LCShrinkRay.comp
             networkPrefab.AddComponent<GrabbablePlayerList>();
         }
 
+        private static string GameObjectName
+        {
+            get
+            {
+                return PluginInfo.PLUGIN_NAME + "_" + typeof(GrabbablePlayerList).Name;
+            }
+        }
         public static void CreateInstance()
         {
             if (instance != null) return; // Already initialized
 
-            if (PlayerInfo.IsHost)
-            {
-                instanciatedPrefab = Instantiate(networkPrefab);
-                var networkObj = instanciatedPrefab.GetComponent<NetworkObject>();
-                networkObj.Spawn();
-                instance = instanciatedPrefab.GetComponent<GrabbablePlayerList>();
-            }
-            else
-            {
-                instance = networkPrefab.GetComponent<GrabbablePlayerList>();
-            }
+            if (!PlayerInfo.IsHost) return;
+                
+            instanciatedPrefab = Instantiate(networkPrefab);
+            instanciatedPrefab.name = GameObjectName;
+            var networkObj = instanciatedPrefab.GetComponent<NetworkObject>();
+            networkObj.Spawn();
+            instance = instanciatedPrefab.GetComponent<GrabbablePlayerList>();
         }
 
         public static void RemoveInstance()
@@ -143,38 +147,34 @@ namespace LCShrinkRay.comp
 
         #region Methods
         [ServerRpc(RequireOwnership = false)]
-        public void SendGrabbablePlayerListServerRpc(ulong receiver)
+        public void SyncGrabbablePlayerListServerRpc(ulong receiver)
         {
-            Plugin.log("SendGrabbablePlayerListServerRpc");
             var networkClientMap = new List<(ulong networkId, ulong client)>();
-            if (grabbablePlayerObjects!.Count > 0)
-            {
-                foreach (GameObject obj in grabbablePlayerObjects)
-                {
-                    if(obj == null) continue;
 
-                    ulong networkId = obj.GetComponent<NetworkObject>().NetworkObjectId;
-                    ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
-                    networkClientMap.Add((networkId, clientId));
-                }
-                SendGrabbablePlayerListClientRpc(TupleListToString(networkClientMap), receiver);
+            foreach (GameObject obj in grabbablePlayerObjects)
+            {
+                if(obj == null) continue;
+
+                ulong networkId = obj.GetComponent<NetworkObject>().NetworkObjectId;
+                ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
+                networkClientMap.Add((networkId, clientId));
             }
+            SyncGrabbablePlayerListClientRpc(TupleListToString(networkClientMap), receiver);
         }
-        
+
         [ClientRpc]
-        public void SendGrabbablePlayerListClientRpc(string grabbablePlayerListString, ulong receiver)
+        public void SyncGrabbablePlayerListClientRpc(string grabbablePlayerListString, ulong receiver)
         {
-            Plugin.log("SendGrabbablePlayerListClientRpc");
             var grabbablePlayerList = StringToTupleList(grabbablePlayerListString);
 
-            if(PlayerInfo.CurrentPlayer.playerClientId != receiver) return; // Not meant for us
+            if(NetworkManager.Singleton.LocalClientId != receiver) return; // Not meant for us
+            instance = this; // Set instance on initial list receive
 
-            Plugin.log("Oh hey!! There's that list I needed!!!!", Plugin.LogType.Error);
-            Plugin.log("\t" + grabbablePlayerListString);
+            Plugin.log("Oh hey!! There's that list I needed!!!! (the list: " + grabbablePlayerListString + ")");
 
             var filteredObjects = GameObject.FindObjectsOfType<GrabbablePlayerObject>().Select(gpo => gpo.gameObject).ToList();
             if (filteredObjects.Count == 0)
-                Plugin.log("ZERO?????", Plugin.LogType.Error);
+                Plugin.log("ZERO????? Nobody got shrinked so far?!");
 
             foreach (GameObject gpo in filteredObjects)
             {

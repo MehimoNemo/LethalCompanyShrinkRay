@@ -164,7 +164,7 @@ namespace LCShrinkRay.comp
         {
             Plugin.log("GrabbablePlayerObject.Initialize");
 
-            if (pcb.playerClientId == PlayerInfo.CurrentPlayer.playerClientId)
+            if (pcb.playerClientId == PlayerInfo.CurrentPlayerID)
             {
                 Plugin.log("Finding helmet!");
                 try
@@ -219,7 +219,13 @@ namespace LCShrinkRay.comp
 
         public void setIsGrabbableToEnemies(bool isGrabbable = true)
         {
-            if (!PlayerInfo.IsCurrentPlayerShrunk)
+            if(grabbedPlayer == null)
+            {
+                Plugin.log("SetIsGrabbableToEnemies: Grabbed player is null.", Plugin.LogType.Error);
+                return;
+            }
+
+            if (!PlayerInfo.IsShrunk(grabbedPlayer))
                 isGrabbable = false;
 
             this.grabbableToEnemies = isGrabbable;
@@ -250,7 +256,7 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void DemandDropFromPlayerClientRpc(ulong holdingPlayerID, ulong heldPlayerID)
         {
-            var currentPlayerID = PlayerInfo.CurrentPlayer.playerClientId;
+            var currentPlayerID = PlayerInfo.CurrentPlayerID;
             if (currentPlayerID == holdingPlayerID)
             {
                 Plugin.log("Player " + heldPlayerID + " demanded to be dropped from you .. so it shall be!");

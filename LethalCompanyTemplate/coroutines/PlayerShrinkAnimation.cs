@@ -19,7 +19,7 @@ namespace LCShrinkRay.coroutines
         {
             var routine = affectedPlayer.gameObject.AddComponent<PlayerShrinkAnimation>();
             routine.targetPlayer = affectedPlayer;
-            routine.targetingUs = (affectedPlayer.playerClientId == PlayerInfo.CurrentPlayer.playerClientId);
+            routine.targetingUs = (affectedPlayer.playerClientId == PlayerInfo.CurrentPlayerID);
 
             routine.StartCoroutine(routine.run(newSize, onComplete));
         }
