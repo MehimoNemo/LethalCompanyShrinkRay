@@ -71,39 +71,38 @@ namespace LCShrinkRay.comp
         public override void LateUpdate()
         {
             base.LateUpdate();
-            if (grabbedPlayer != null)
+            if (grabbedPlayer == null)
             {
-                if (this.isHeld)
-                {
-                    //this looks like trash unfortunately
-                    grabbedPlayer.transform.position = this.transform.position;
-                    //change this
-                    Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
-                    Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
-                    Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
-                    //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
-                    grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
-                    grabbedPlayer.playerCollider.enabled = false;
-                }
-                else if (IsFrozen)
-                {
-                    grabbedPlayer.transform.position = this.transform.position;
-                }
-                else
-                {
-                    this.transform.position = grabbedPlayer.transform.position;
-                    CheckForGoomba();
-                }
+                Plugin.log("grabbedPlayer was null in LateUpdate");
+                return;
+            }
 
-                if (!base.IsOwner)
-                {
-                    if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
-                        DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayerID);
-                }
+            if (this.isHeld)
+            {
+                //this looks like trash unfortunately
+                grabbedPlayer.transform.position = this.transform.position;
+                //change this
+                Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
+                Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
+                Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
+                //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
+                grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
+                grabbedPlayer.playerCollider.enabled = false;
+            }
+            else if (IsFrozen)
+            {
+                grabbedPlayer.transform.position = this.transform.position;
             }
             else
             {
-                Plugin.log("GRABBED PLAYER IS NULL IN UPDATE", Plugin.LogType.Error);
+                this.transform.position = grabbedPlayer.transform.position;
+                CheckForGoomba();
+            }
+
+            if (!base.IsOwner)
+            {
+                if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
+                    DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayerID);
             }
         }
 
