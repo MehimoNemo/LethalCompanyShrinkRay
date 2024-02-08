@@ -2,6 +2,7 @@
 using HarmonyLib;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
+using System;
 using UnityEngine;
 
 namespace LCShrinkRay.patches
@@ -9,7 +10,7 @@ namespace LCShrinkRay.patches
     [HarmonyPatch]
     internal class PlayerModificationPatch
     {
-        public static Transform helmetHudTransform;
+        public static MeshRenderer helmetRenderer;
         
         public struct PlayerControllerValues
         {
@@ -43,14 +44,24 @@ namespace LCShrinkRay.patches
             if(__instance.playerClientId != PlayerInfo.CurrentPlayerID)
                 return; 
 
-            if (helmetHudTransform == null)
+            if (helmetRenderer == null)
             {
                 var scavengerHelmet = GameObject.Find("ScavengerHelmet");
                 if(scavengerHelmet != null)
                 {
-                    helmetHudTransform = scavengerHelmet.GetComponent<Transform>();
-                    helmetHudTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
+                    var helmetTransform = scavengerHelmet.GetComponent<Transform>();
+                    helmetTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
                     Plugin.log("Player transform got!");
+
+                    Plugin.log("Finding helmet!");
+                    try
+                    {
+                        helmetRenderer = helmetTransform.gameObject.GetComponent<MeshRenderer>();
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.log(e.Message, Plugin.LogType.Warning);
+                    }
                 }
             }
 

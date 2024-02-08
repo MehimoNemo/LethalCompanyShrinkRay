@@ -29,13 +29,7 @@ namespace LCShrinkRay.comp
             get
             {
                 if (!HasInstance)
-                {
-                    /*Plugin.log("GrabbablePlayerList.Instance called earlier than expected. Trying to load assets earlier.", Plugin.LogType.Warning);
-
-                    if (networkPrefab == null)
-                        GameNetworkManagerPatch.LoadAllAssets();*/
                     CreateInstance();
-                }
 
                 return instance;
             }
@@ -54,34 +48,29 @@ namespace LCShrinkRay.comp
             networkPrefab.AddComponent<GrabbablePlayerList>();
         }
 
-        private static string GameObjectName
-        {
-            get
-            {
-                return PluginInfo.PLUGIN_NAME + "_" + typeof(GrabbablePlayerList).Name;
-            }
-        }
         public static void CreateInstance()
         {
-            if (instance != null) return; // Already initialized
+            if (HasInstance) return; // Already initialized
 
             if (!PlayerInfo.IsHost) return;
-                
+
             instanciatedPrefab = Instantiate(networkPrefab);
-            instanciatedPrefab.name = GameObjectName;
             var networkObj = instanciatedPrefab.GetComponent<NetworkObject>();
             networkObj.Spawn();
             instance = instanciatedPrefab.GetComponent<GrabbablePlayerList>();
+
+            instance.SyncInstanceServerRpc();
         }
 
         public static void RemoveInstance()
         {
             if (instance == null) return; // Not initialized
 
-            ClearGrabbablePlayerObjects();
-
             if (PlayerInfo.IsHost)
+            {
+                instance.ClearGrabbablePlayerObjectsServerRpc();
                 Destroy(instanciatedPrefab);
+            }
 
             instance = null;
         }
@@ -146,8 +135,20 @@ namespace LCShrinkRay.comp
         #endregion
 
         #region Methods
+        [ServerRpc]
+        public void SyncInstanceServerRpc()
+        {
+            SyncInstanceClientRpc();
+        }
+        
+        [ClientRpc]
+        public void SyncInstanceClientRpc()
+        {
+            instance = this;
+        }
+
         [ServerRpc(RequireOwnership = false)]
-        public void SyncGrabbablePlayerListServerRpc(ulong receiver)
+        public void SyncGrabbablePlayerListServerRpc()
         {
             var networkClientMap = new List<(ulong networkId, ulong client)>();
 
@@ -159,16 +160,13 @@ namespace LCShrinkRay.comp
                 ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
                 networkClientMap.Add((networkId, clientId));
             }
-            SyncGrabbablePlayerListClientRpc(TupleListToString(networkClientMap), receiver);
+            SyncGrabbablePlayerListClientRpc(TupleListToString(networkClientMap));
         }
 
         [ClientRpc]
-        public void SyncGrabbablePlayerListClientRpc(string grabbablePlayerListString, ulong receiver)
+        public void SyncGrabbablePlayerListClientRpc(string grabbablePlayerListString)
         {
             var grabbablePlayerList = StringToTupleList(grabbablePlayerListString);
-
-            if(NetworkManager.Singleton.LocalClientId != receiver) return; // Not meant for us
-            instance = this; // Set instance on initial list receive
 
             Plugin.log("Oh hey!! There's that list I needed!!!! (the list: " + grabbablePlayerListString + ")");
 
@@ -285,17 +283,24 @@ namespace LCShrinkRay.comp
             Plugin.log("NEW GRABBALEPLAYER COUNT: " + grabbablePlayerObjects.Count);
         }
 
-        [ServerRpc]
+        [ServerRpc(RequireOwnership = false)]
         public void RemovePlayerGrabbableServerRpc(ulong playerID)
         {
             Plugin.log("RemovePlayerGrabbableServerRpc");
             var bindingObjectID = getBindingObjectIDFromPlayerID(playerID);
             if (bindingObjectID == -1)
+            {
+                Plugin.log("Player wasn't grabbable.");
                 return;
+            }
 
             var bindingObject = grabbablePlayerObjects[bindingObjectID];
             if (!bindingObject.TryGetComponent( out GrabbablePlayerObject gpo))
+            {
+
+                Plugin.log("Player had no GrabbablePlayerObject somehow.");
                 return;
+            }
 
             RemovePlayerGrabbableClientRpc(playerID); // Let everyone know
 
@@ -310,7 +315,14 @@ namespace LCShrinkRay.comp
             Plugin.log("RemovePlayerGrabbable");
             var bindingObjectID = getBindingObjectIDFromPlayerID(playerID);
             if (bindingObjectID == -1)
+            {
+                Plugin.log("Player wasn't grabbable.");
                 return;
+            }
+
+            var bindingObject = grabbablePlayerObjects[bindingObjectID];
+            if (bindingObject.TryGetComponent(out GrabbablePlayerObject gpo) && gpo.grabbedPlayer != null && !PlayerInfo.IsNormalSize(gpo.grabbedPlayer))
+                gpo.grabbedPlayer.transform.localScale = Vector3.one; // Reset size
 
             grabbablePlayerObjects.RemoveAt(bindingObjectID);
         }

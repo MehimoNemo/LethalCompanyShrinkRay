@@ -2,8 +2,8 @@
 {
     internal class PluginInfo
     {
-        public const string PLUGIN_GUID = "LCShrinkRay.WIP";
+        public const string PLUGIN_GUID = "LCShrinkRay.BETA";
         public const string PLUGIN_NAME = "LCShrinkRay";
-        public const string PLUGIN_VERSION = "1.0.0";
+        public const string PLUGIN_VERSION = "0.1.0";
     }
 }

@@ -22,7 +22,8 @@ namespace LCShrinkRay.patches
             // Place things that should run after a player joins or leaves here vVVVVvvVVVVv
             Vents.rerenderAllSussified();
 
-            GrabbablePlayerList.Instance.SyncGrabbablePlayerListServerRpc(clientId);
+            GrabbablePlayerList.Instance.SyncInstanceServerRpc();
+            GrabbablePlayerList.Instance.SyncGrabbablePlayerListServerRpc();
         }
 
         // Before client disconnects
@@ -34,11 +35,6 @@ namespace LCShrinkRay.patches
                 return;
 
             Plugin.log("Player " + clientId + " left.");
-
-            if(PlayerInfo.CurrentPlayerID == clientId)
-                return; // handled in GameNetworkManagerPatch.Disconnect()
-
-            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(clientId);
         }
     }
 }

@@ -70,18 +70,19 @@ namespace LCShrinkRay.helper
             return ulong.Parse(gameObject.name.Substring(startIndex + 1, endIndex - startIndex - 1));
         }
 
-        public static float CurrentPlayerID // Works even before CurrentPlayer is set
-        {
-            get
-            {
-                return NetworkManager.Singleton.LocalClientId;
-            }
-        }
         public static PlayerControllerB CurrentPlayer
         {
             get
             {
                 return StartOfRound.Instance.localPlayerController;
+            }
+        }
+
+        public static ulong CurrentPlayerID
+        {
+            get
+            {
+                return CurrentPlayer.playerClientId;
             }
         }
 

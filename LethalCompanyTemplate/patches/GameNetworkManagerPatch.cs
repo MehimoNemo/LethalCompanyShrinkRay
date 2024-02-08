@@ -36,11 +36,13 @@ namespace LCShrinkRay.patches
             GrabbablePlayerList.CreateInstance();
         }
 
-        [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
+        [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
         public static void Uninitialize()
         {
             isGameInitialized = false;
+            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(PlayerInfo.CurrentPlayerID); // remove us from the list, in case we were grabbable
             GrabbablePlayerList.RemoveInstance();
+            PlayerModificationPatch.helmetRenderer = null;
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]

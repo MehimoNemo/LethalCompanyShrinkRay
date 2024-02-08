@@ -15,7 +15,6 @@ namespace LCShrinkRay.comp
         #region Properties
         public PlayerControllerB grabbedPlayer { get; set; }
         private ulong grabbedPlayerID {  get; set; }
-        MeshRenderer helmet;
 
         private static GameObject networkPrefab { get; set; }
         public bool IsFrozen { get; private set; }
@@ -137,10 +136,10 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerCollider.enabled = true;
             this.propColliders[0].enabled = true;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
-            if (helmet != null)
-            {
-                helmet.enabled = true;
-            }
+
+            if (PlayerModificationPatch.helmetRenderer != null)
+                PlayerModificationPatch.helmetRenderer.enabled = true;
+
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if (grabbedPlayer != player)
@@ -162,19 +161,6 @@ namespace LCShrinkRay.comp
         public void Initialize(PlayerControllerB pcb)
         {
             Plugin.log("GrabbablePlayerObject.Initialize");
-
-            if (pcb.playerClientId == PlayerInfo.CurrentPlayerID)
-            {
-                Plugin.log("Finding helmet!");
-                try
-                {
-                    helmet = PlayerModificationPatch.helmetHudTransform.gameObject.GetComponent<MeshRenderer>();
-                }
-                catch (Exception e)
-                {
-                    Plugin.log(e.Message, Plugin.LogType.Warning);
-                }
-            }
 
             this.grabbedPlayer = pcb;
             this.grabbedPlayerID = pcb.playerClientId;
@@ -353,8 +339,9 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerCollider.enabled = false;
             this.propColliders[0].enabled = false;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
-            if (helmet != null)
-                helmet.enabled = false;
+
+            if (PlayerModificationPatch.helmetRenderer != null)
+                PlayerModificationPatch.helmetRenderer.enabled = false;
             
             setIsGrabbableToEnemies(false);
             setControlTips();
@@ -490,15 +477,15 @@ namespace LCShrinkRay.comp
         public void FreezePlayerClientRpc(ulong playerID)
         {
             this.IsFrozen = true;
-            if (helmet != null)
-                helmet.enabled = false;
+            if (PlayerModificationPatch.helmetRenderer != null)
+                PlayerModificationPatch.helmetRenderer.enabled = false;
         }
 
         internal void Unfreeze()
         {
             UnfreezePlayerServerRPC(grabbedPlayer.playerClientId);
-            if (helmet != null)
-                helmet.enabled = true;
+            if (PlayerModificationPatch.helmetRenderer != null)
+                PlayerModificationPatch.helmetRenderer.enabled = true;
         }
 
         [ServerRpc(RequireOwnership = false)]
