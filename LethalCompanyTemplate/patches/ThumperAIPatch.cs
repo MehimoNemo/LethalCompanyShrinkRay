@@ -51,7 +51,7 @@ namespace LCShrinkRay.patches
                     break;
             }
         }
-        public static async Task resetToKinetic(Rigidbody rb)
+        public static async Task ResetToKinetic(Rigidbody rb)
         {
             await Task.Delay(500);
             rb.isKinematic = true;

@@ -10,7 +10,7 @@ namespace LCShrinkRay.patches
 {
     internal class GameNetworkManagerPatch
     {
-        public static bool isGameInitialized = false;
+        public static bool IsGameInitialized = false;
 
         public static void LoadAllAssets()
         {
@@ -32,14 +32,14 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
         public static void Initialize()
         {
-            isGameInitialized = true;
+            IsGameInitialized = true;
             GrabbablePlayerList.CreateInstance();
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
         public static void Uninitialize()
         {
-            isGameInitialized = false;
+            IsGameInitialized = false;
             GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(PlayerInfo.CurrentPlayerID); // remove us from the list, in case we were grabbable
             GrabbablePlayerList.RemoveInstance();
             PlayerModificationPatch.helmetRenderer = null;
@@ -48,7 +48,7 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
         public static void EndRound()
         {
-            Plugin.log("EndOfGame");
+            Plugin.Log("EndOfGame");
 
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
             {

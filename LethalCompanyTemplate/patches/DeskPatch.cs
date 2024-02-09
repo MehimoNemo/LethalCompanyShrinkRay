@@ -10,7 +10,7 @@ namespace LCShrinkRay.patches
     internal class DeskPatch
     {
         private static List<GrabbablePlayerObject> doomedPlayers = new List<GrabbablePlayerObject>();
-        public static bool isPlayerSelling = false;
+        public static bool IsPlayerSelling = false;
         private static PlayerControllerB playerWhoTriggered = null;
         private static GrabbableObject placedItem = null;
         private static List<GrabbableObject> placedItems = new List<GrabbableObject>();
@@ -19,46 +19,46 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix()]
         public static void Start()
         {
-            Plugin.log("STARTING PLAYER SELLING PATCH");
-            isPlayerSelling = Config.ModConfig.Instance.values.sellablePlayers;
-            Plugin.log("isPlayerSelling: " + isPlayerSelling.ToString());
+            Plugin.Log("STARTING PLAYER SELLING PATCH");
+            IsPlayerSelling = Config.ModConfig.Instance.values.sellablePlayers;
+            Plugin.Log("isPlayerSelling: " + IsPlayerSelling.ToString());
         }
 
         [HarmonyPatch(typeof(DepositItemsDesk), "PlaceItemOnCounter")]
         [HarmonyPrefix()]
         public static void PlaceItemOnCounterPrefix(PlayerControllerB playerWhoTriggered)
         {
-            Plugin.log("PlaceItemOnCounterPrefix");
+            Plugin.Log("PlaceItemOnCounterPrefix");
             if (playerWhoTriggered == null)
             {
-                Plugin.log("Player is null", Plugin.LogType.Error);
+                Plugin.Log("Player is null", Plugin.LogType.Error);
             }
             DeskPatch.playerWhoTriggered = playerWhoTriggered;
             placedItem = playerWhoTriggered.currentlyHeldObjectServer;
             placedItems.Add(placedItem);
             if (placedItem == null)
-                Plugin.log("placedItem is null", Plugin.LogType.Error);
+                Plugin.Log("placedItem is null", Plugin.LogType.Error);
         }
 
         [HarmonyPatch(typeof(DepositItemsDesk), "AddObjectToDeskServerRpc")]
         [HarmonyPrefix()]
         public static void AddObjectToDeskServerRpcPrefix()
         {
-            Plugin.log("addin Object to desk");
+            Plugin.Log("addin Object to desk");
             if (playerWhoTriggered == null)
             {
-                Plugin.log("Oh sure, now nobody want to be in fault for placing this poor player here.....");
+                Plugin.Log("Oh sure, now nobody want to be in fault for placing this poor player here.....");
             }
-            if (isPlayerSelling)
+            if (IsPlayerSelling)
             {
                 var placedPlayer = placedItem as GrabbablePlayerObject;
                 if (placedPlayer == null)
                 {
-                    Plugin.log("placedItem is not a player.. not my job");
+                    Plugin.Log("placedItem is not a player.. not my job");
                     return;
                 }
 
-                Plugin.log("Item is a sellable player >:) little does he know..");
+                Plugin.Log("Item is a sellable player >:) little does he know..");
                 doomedPlayers.Add(placedPlayer);
                 //freeze player here!
                 placedPlayer.Freeze();
@@ -70,7 +70,7 @@ namespace LCShrinkRay.patches
                     if (valuableItem != null)
                         scrapValue += valuableItem.scrapValue;
                     else
-                        Plugin.log("item of the placedPlayer is null....");
+                        Plugin.Log("item of the placedPlayer is null....");
                 }
                 placedPlayer.scrapValue = scrapValue;
             }
@@ -79,7 +79,7 @@ namespace LCShrinkRay.patches
                 foreach (var item in placedItems)
                 {
                     if (item is GrabbablePlayerObject)
-                        Plugin.log("Nuh uh honey bear! We are not selling this fella!!!", Plugin.LogType.Warning);
+                        Plugin.Log("Nuh uh honey bear! We are not selling this fella!!!", Plugin.LogType.Warning);
                 }
             }
         }
@@ -95,14 +95,14 @@ namespace LCShrinkRay.patches
                 grabbableObject = thisObject.gameObject.GetComponent<GrabbableObject>();
             } catch (Exception e)
             {
-                Plugin.log("Unable to add player to sell counter. Reason: " + e.Message, Plugin.LogType.Error);
+                Plugin.Log("Unable to add player to sell counter. Reason: " + e.Message, Plugin.LogType.Error);
             }
             //if the object exists, and it is a player object
             bool isPlayer = grabbableObject != null && grabbableObject is GrabbablePlayerObject;
             //return true and DON'T run the rest of the original method
-            if (!isPlayerSelling && isPlayer)
+            if (!IsPlayerSelling && isPlayer)
             {
-                Plugin.log("CANCELLING ORIGINAL METHOD CALL IN AddObjectToDeskServerRpc");
+                Plugin.Log("CANCELLING ORIGINAL METHOD CALL IN AddObjectToDeskServerRpc");
                 //exit the original method early
                 __instance.itemsOnCounterNetworkObjects.Remove(grabbableObjectNetObject);
                 __instance.itemsOnCounter.Remove(grabbableObject);
@@ -113,14 +113,14 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix()]
         public static void SellStuffPostfix()
         {
-            Plugin.log("selling on desk");
-            if (isPlayerSelling && doomedPlayers.Count > 0)
+            Plugin.Log("selling on desk");
+            if (IsPlayerSelling && doomedPlayers.Count > 0)
             {
-                Plugin.log("doomedPlayersCount: " + doomedPlayers.Count);
+                Plugin.Log("doomedPlayersCount: " + doomedPlayers.Count);
                 foreach (GrabbablePlayerObject gplayer in doomedPlayers)
                 {
                     PlayerControllerB player = gplayer.grabbedPlayer;
-                    Plugin.log("Killing player: " + player.playerClientId);
+                    Plugin.Log("Killing player: " + player.playerClientId);
                     //kill player then enable movement here!!
                     gplayer.SellKill();
                     gplayer.Unfreeze();

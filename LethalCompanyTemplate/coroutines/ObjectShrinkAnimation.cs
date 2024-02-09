@@ -13,13 +13,13 @@ namespace LCShrinkRay.coroutines
         {
             var routine = gameObj.AddComponent<ObjectShrinkAnimation>();
             routine.gameObj = gameObj;
-            routine.StartCoroutine(routine.run(newSize, onComplete));
+            routine.StartCoroutine(routine.Run(newSize, onComplete));
         }
 
-        private IEnumerator run(float newSize, Action onComplete)
+        private IEnumerator Run(float newSize, Action onComplete)
         {
-            Plugin.log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
-            Plugin.log("gObject: " + gameObj, Plugin.LogType.Warning);
+            Plugin.Log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
+            Plugin.Log("gObject: " + gameObj, Plugin.LogType.Warning);
             Transform objectTransform = gameObj.GetComponent<Transform>();
             float duration = 2f;
             float elapsedTime = 0f;

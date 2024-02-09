@@ -15,7 +15,7 @@ namespace LCShrinkRay.patches
         {
             if (__instance.playerHeldBy == null || __instance is GrabbablePlayerObject)
             {
-                Plugin.log("adjustItemOffset: object is not held or other player", Plugin.LogType.Warning);
+                Plugin.Log("adjustItemOffset: object is not held or other player", Plugin.LogType.Warning);
                 return;
             }
 

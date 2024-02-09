@@ -74,7 +74,7 @@ namespace LCShrinkRay.Config
         #endregion
 
         #region Methods
-        public void setup()
+        public void Setup()
         {
             values.shrinkRayCost            = Plugin.bepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
             values.multipleShrinking        = Plugin.bepInExConfig().Bind("General", "MultipleShrinking", true, "If true, a player can shrink multiple times.. unfortunatly.").Value;
@@ -98,11 +98,11 @@ namespace LCShrinkRay.Config
             if (DebugMode)
             {
                 string json = JsonConvert.SerializeObject(Instance.values);
-                Plugin.log("Using config:" + json);
+                Plugin.Log("Using config:" + json);
             }
         }
 
-        public void updated()
+        public void Updated()
         {
             // TODO: reload things if needed
         }
@@ -123,12 +123,12 @@ namespace LCShrinkRay.Config
             {
                 if (PlayerInfo.IsHost)
                 {
-                    Plugin.log("Current player is the host.");
+                    Plugin.Log("Current player is the host.");
                     NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(REQUEST_MESSAGE, new HandleNamedMessageDelegate(HostConfigRequested));
                 }
                 else
                 {
-                    Plugin.log("Current player is not the host.");
+                    Plugin.Log("Current player is not the host.");
                     NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RECEIVE_MESSAGE, new HandleNamedMessageDelegate(HostConfigReceived));
                     RequestHostConfig();
                 }
@@ -138,11 +138,11 @@ namespace LCShrinkRay.Config
             {
                 if (NetworkManager.Singleton.IsClient)
                 {
-                    Plugin.log("Sending config request to host.");
+                    Plugin.Log("Sending config request to host.");
                     NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(REQUEST_MESSAGE, 0uL, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
                 }
                 else
-                    Plugin.log("Config request not required. No other player available."); // Shouldn't happen, but who knows..
+                    Plugin.Log("Config request not required. No other player available."); // Shouldn't happen, but who knows..
             }
 
             public static void HostConfigRequested(ulong clientId, FastBufferReader reader)
@@ -151,7 +151,7 @@ namespace LCShrinkRay.Config
                     return;
 
                 string json = JsonConvert.SerializeObject(Instance.values);
-                Plugin.log("Client [" + clientId + "] requested host config. Sending own config: " + json);
+                Plugin.Log("Client [" + clientId + "] requested host config. Sending own config: " + json);
 
                 int writeSize = FastBufferWriter.GetWriteSize(json);
                 using FastBufferWriter writer = new FastBufferWriter(writeSize, Allocator.Temp);
@@ -162,14 +162,14 @@ namespace LCShrinkRay.Config
             public static void HostConfigReceived(ulong clientId, FastBufferReader reader)
             {
                 reader.ReadValueSafe(out string json);
-                Plugin.log("Received host config: " + json);
+                Plugin.Log("Received host config: " + json);
                 ConfigValues hostValues = JsonConvert.DeserializeObject<ConfigValues>(json);
 
                 // Adjust client-sided options (WIP -> replace later with e.g. custom JsonConverter)
                 hostValues.pitchDistortionIntensity = Instance.values.pitchDistortionIntensity;
 
                 Instance.values = hostValues;
-                Instance.updated();
+                Instance.Updated();
             }
             #endregion
         }

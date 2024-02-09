@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.InputSystem.Interactions;
 
 namespace LCShrinkRay.comp
 {
@@ -30,13 +29,13 @@ namespace LCShrinkRay.comp
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
         public static void EndRound()
         {
-            Vents.unsussifyAll();
+            Vents.UnsussifyAll();
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
         public static void Uninitialize()
         {
-            Vents.unsussifyAll();
+            Vents.UnsussifyAll();
         }
 
         #region Properties
@@ -45,7 +44,7 @@ namespace LCShrinkRay.comp
         #endregion
 
         #region Methods
-        private static EnemyVent[] getAllVents()
+        private static EnemyVent[] GetAllVents()
         {
             if (RoundManager.Instance.allEnemyVents != null && RoundManager.Instance.allEnemyVents.Length > 0)
                 return RoundManager.Instance.allEnemyVents;
@@ -60,16 +59,16 @@ namespace LCShrinkRay.comp
 
             if (!ModConfig.Instance.values.canUseVents)
             {
-                Plugin.log("Sussification of vents disabled.");
+                Plugin.Log("Sussification of vents disabled.");
                 return;
             }
 
-            Plugin.log("SUSSIFYING VENTS");
+            Plugin.Log("SUSSIFYING VENTS");
 
-            var vents = getAllVents();
+            var vents = GetAllVents();
             if (vents == null || vents.Length == 0)
             {
-                Plugin.log("No vents to sussify.");
+                Plugin.Log("No vents to sussify.");
                 return;
             }
 
@@ -83,9 +82,9 @@ namespace LCShrinkRay.comp
                     siblingIndex = rnd.Next(0, vents.Length);
                 }
 
-                Plugin.log("\tPairing vent " + i + " with vent " + siblingIndex);
+                Plugin.Log("\tPairing vent " + i + " with vent " + siblingIndex);
 
-                sussify(vents[i], vents[siblingIndex]);
+                Sussify(vents[i], vents[siblingIndex]);
             }
 
             sussification = true;
@@ -95,7 +94,7 @@ namespace LCShrinkRay.comp
                 DisableVents();
         }
 
-        public static void sussify(EnemyVent enemyVent, EnemyVent siblingVent)
+        public static void Sussify(EnemyVent enemyVent, EnemyVent siblingVent)
         {
             GameObject vent;
             try
@@ -104,7 +103,7 @@ namespace LCShrinkRay.comp
             }
             catch
             {
-                Plugin.log("Vent has no cover to sussify");
+                Plugin.Log("Vent has no cover to sussify");
                 return;
             }
 
@@ -138,17 +137,17 @@ namespace LCShrinkRay.comp
         }
 
         // when unshrinking will be a thing
-        public static void unsussifyAll()
+        public static void UnsussifyAll()
         {
-            Plugin.log("Vents.unsussifyAll");
-            foreach (var vent in getAllVents())
-                unsussify(vent);
+            Plugin.Log("Vents.unsussifyAll");
+            foreach (var vent in GetAllVents())
+                Unsussify(vent);
 
             ventTrigger.Clear();
             sussification = false;
         }
 
-        public static void unsussify(EnemyVent enemyVent)
+        public static void Unsussify(EnemyVent enemyVent)
         {
             if (enemyVent.gameObject.TryGetComponent(out SussifiedVent sussifiedVent))
                 Object.Destroy(sussifiedVent);
@@ -171,7 +170,7 @@ namespace LCShrinkRay.comp
         
         public static void EnableVents(bool enable = true)
         {
-            Plugin.log((enable ? "Enabling" : "Disabling") + " vents!");
+            Plugin.Log((enable ? "Enabling" : "Disabling") + " vents!");
             foreach (var trigger in ventTrigger)
             {
                 trigger.touchTrigger = enable;
@@ -204,9 +203,9 @@ namespace LCShrinkRay.comp
                 {
                     if (PlayerInfo.IsShrunk(player))
                     {
-                        Plugin.log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
-                        //StartCoroutine(OccupyVent());
-                        //siblingVent.ventAudio.Play();
+                        Plugin.Log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
+                        StartCoroutine(OccupyVent());
+                        siblingVent.ventAudio.Play();
                         transform.position = siblingVent.floorNode.transform.position;
                     }
                 }

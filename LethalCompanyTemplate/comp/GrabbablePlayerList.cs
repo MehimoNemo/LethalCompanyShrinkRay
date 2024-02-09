@@ -87,7 +87,7 @@ namespace LCShrinkRay.comp
             return JsonConvert.DeserializeObject<List<(ulong, ulong)>>(jsonString);
         }
 
-        public static GrabbablePlayerObject findGrabbableObjectForPlayer(ulong playerID)
+        public static GrabbablePlayerObject FindGrabbableObjectForPlayer(ulong playerID)
         {
             foreach (var gpo in GameObject.FindObjectsOfType<GrabbablePlayerObject>())
             {
@@ -100,17 +100,17 @@ namespace LCShrinkRay.comp
             return null;
         }
 
-        private static GrabbablePlayerObject findGrabbableObjectWithNetworkID(ulong networkID)
+        private static GrabbablePlayerObject FindGrabbableObjectWithNetworkID(ulong networkID)
         {
-            Plugin.log("we're looking for network id: " + networkID);
+            Plugin.Log("we're looking for network id: " + networkID);
             foreach (var gpo in GameObject.FindObjectsOfType<GrabbablePlayerObject>())
             {
-                Plugin.log("found one grabbable object..");
+                Plugin.Log("found one grabbable object..");
                 if (gpo == null)
                     continue;
 
                 ulong id = gpo.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
-                Plugin.log("has network id: " + id);
+                Plugin.Log("has network id: " + id);
 
                 if (id == networkID)
                     return gpo;
@@ -118,7 +118,7 @@ namespace LCShrinkRay.comp
             return null;
         }
 
-        private int getBindingObjectIDFromPlayerID(ulong playerID)
+        private int GetBindingObjectIDFromPlayerID(ulong playerID)
         {
             var index = grabbablePlayerObjects.FindIndex(0, bindingObject =>
             {
@@ -170,11 +170,11 @@ namespace LCShrinkRay.comp
 
             var grabbablePlayerList = StringToTupleList(grabbablePlayerListString);
 
-            Plugin.log("Oh hey!! There's that list I needed!!!! (the list: " + grabbablePlayerListString + ")");
+            Plugin.Log("Oh hey!! There's that list I needed!!!! (the list: " + grabbablePlayerListString + ")");
 
             var filteredObjects = GameObject.FindObjectsOfType<GrabbablePlayerObject>().Select(gpo => gpo.gameObject).ToList();
             if (filteredObjects.Count == 0)
-                Plugin.log("ZERO????? Nobody got shrinked so far?!");
+                Plugin.Log("ZERO????? Nobody got shrinked so far?!");
 
             foreach (GameObject gpo in filteredObjects)
             {
@@ -183,7 +183,7 @@ namespace LCShrinkRay.comp
                 {
                     if (item.networkId == gpoNetworkObjId)
                     {
-                        Plugin.log("\t" + item.networkId + ", " + item.clientId);
+                        Plugin.Log("\t" + item.networkId + ", " + item.clientId);
                         PlayerControllerB pcb = PlayerInfo.ControllerFromID(item.clientId).gameObject.GetComponent<PlayerControllerB>();
                         gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb);
                     }
@@ -232,7 +232,7 @@ namespace LCShrinkRay.comp
         [ServerRpc(RequireOwnership = false)]
         public void SetPlayerGrabbableServerRpc(ulong playerID, bool onlyLocal = false)
         {
-            Plugin.log("SetPlayerGrabbableServerRpc");
+            Plugin.Log("SetPlayerGrabbableServerRpc");
 
             foreach(var obj in grabbablePlayerObjects)
             {
@@ -246,7 +246,7 @@ namespace LCShrinkRay.comp
             var pcb = PlayerInfo.ControllerFromID(playerID);
             if (pcb == null) return;
 
-            Plugin.log("Adding grabbable player object for player: " + playerID);
+            Plugin.Log("Adding grabbable player object for player: " + playerID);
             var networkObj = GrabbablePlayerObject.Instantiate();
             
             if (!onlyLocal) // Let everyone know
@@ -256,7 +256,7 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void SetPlayerGrabbableClientRpc(ulong playerID, ulong networkObjectID)
         {
-            Plugin.log("SetPlayerGrabbableClientRpc. Grabbable players: " + grabbablePlayerObjects.Count);
+            Plugin.Log("SetPlayerGrabbableClientRpc. Grabbable players: " + grabbablePlayerObjects.Count);
             
             foreach (var obj in grabbablePlayerObjects)
             {
@@ -267,32 +267,32 @@ namespace LCShrinkRay.comp
             var pcb = PlayerInfo.ControllerFromID(playerID);
             if(pcb == null)
             {
-                Plugin.log("Unable to find Player (" + playerID + ")");
+                Plugin.Log("Unable to find Player (" + playerID + ")");
                 return;
             }
 
-            var gpo = findGrabbableObjectWithNetworkID(networkObjectID);
+            var gpo = FindGrabbableObjectWithNetworkID(networkObjectID);
             if (gpo == null)
             {
-                Plugin.log("Unable to find grabbablePlayerObject for Player (" + pcb.playerClientId + ")");
+                Plugin.Log("Unable to find grabbablePlayerObject for Player (" + pcb.playerClientId + ")");
                 return;
             }
 
-            Plugin.log("Init new grabbablePlayer.");
+            Plugin.Log("Init new grabbablePlayer.");
             gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb);
-            Plugin.log("Add new grabbablePlayer to list.");
+            Plugin.Log("Add new grabbablePlayer to list.");
             grabbablePlayerObjects.Add(gpo.gameObject);
-            Plugin.log("NEW GRABBALEPLAYER COUNT: " + grabbablePlayerObjects.Count);
+            Plugin.Log("NEW GRABBALEPLAYER COUNT: " + grabbablePlayerObjects.Count);
         }
 
         [ServerRpc(RequireOwnership = false)]
         public void RemovePlayerGrabbableServerRpc(ulong playerID)
         {
-            Plugin.log("RemovePlayerGrabbableServerRpc");
-            var bindingObjectID = getBindingObjectIDFromPlayerID(playerID);
+            Plugin.Log("RemovePlayerGrabbableServerRpc");
+            var bindingObjectID = GetBindingObjectIDFromPlayerID(playerID);
             if (bindingObjectID == -1)
             {
-                Plugin.log("Player wasn't grabbable.");
+                Plugin.Log("Player wasn't grabbable.");
                 return;
             }
 
@@ -300,7 +300,7 @@ namespace LCShrinkRay.comp
             if (!bindingObject.TryGetComponent( out GrabbablePlayerObject gpo))
             {
 
-                Plugin.log("Player had no GrabbablePlayerObject somehow.");
+                Plugin.Log("Player had no GrabbablePlayerObject somehow.");
                 return;
             }
 
@@ -314,11 +314,11 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void RemovePlayerGrabbableClientRpc(ulong playerID)
         {
-            Plugin.log("RemovePlayerGrabbable");
-            var bindingObjectID = getBindingObjectIDFromPlayerID(playerID);
+            Plugin.Log("RemovePlayerGrabbable");
+            var bindingObjectID = GetBindingObjectIDFromPlayerID(playerID);
             if (bindingObjectID == -1)
             {
-                Plugin.log("Player wasn't grabbable.");
+                Plugin.Log("Player wasn't grabbable.");
                 return;
             }
 

@@ -42,7 +42,7 @@
             DecalStickableSurface = 29
         }
 
-        internal static int toInt(Mask[] masks)
+        internal static int ToInt(Mask[] masks)
         {
             int bitcode = 0;
             foreach (Mask mask in masks)

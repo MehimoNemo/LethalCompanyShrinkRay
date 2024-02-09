@@ -20,7 +20,7 @@ namespace LCShrinkRay.helper
 
         public static bool IsCurrentPlayerGrabbed()
         {
-            var gpo = GrabbablePlayerList.findGrabbableObjectForPlayer(CurrentPlayer.playerClientId);
+            var gpo = GrabbablePlayerList.FindGrabbableObjectForPlayer(CurrentPlayer.playerClientId);
             return gpo != null && gpo.playerHeldBy != null;
         }
 
@@ -98,7 +98,7 @@ namespace LCShrinkRay.helper
         {
             if (!player || !player.gameObject)
             {
-                Plugin.log("unable to retrieve currentPlayerScale!");
+                Plugin.Log("unable to retrieve currentPlayerScale!");
                 return 1f;
             }
 

@@ -13,10 +13,10 @@ namespace LCShrinkRay.coroutines
         {
             var routine = playerObj.AddComponent<GoombaStomp>();
             routine.playerObj = playerObj;
-            routine.StartCoroutine(routine.run(onComplete));
+            routine.StartCoroutine(routine.Run(onComplete));
         }
 
-        private IEnumerator run(Action onComplete = null)
+        private IEnumerator Run(Action onComplete = null)
         {
             AnimationCurve scaleCurve = new AnimationCurve(
                 new Keyframe(0, 0.4f),

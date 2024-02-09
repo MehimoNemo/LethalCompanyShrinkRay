@@ -42,7 +42,7 @@ namespace LCShrinkRay.comp
             var assetItem = assetBundle.LoadAsset<Item>("ShrinkRayItem.asset");
             if(assetItem == null )
             {
-                Plugin.log("ShrinkRayItem.asset not found!", Plugin.LogType.Error);
+                Plugin.Log("ShrinkRayItem.asset not found!", Plugin.LogType.Error);
                 return;
             }
 
@@ -92,14 +92,14 @@ namespace LCShrinkRay.comp
 
             try
             {
-                Plugin.log("Triggering " + itemname);
+                Plugin.Log("Triggering " + itemname);
                 base.ItemActivate(used, buttonDown);
 
                 ShootRay(ModificationType.Shrinking);
             }
             catch (Exception e) {
-                Plugin.log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
-                Plugin.log($"Stack Trace: {e.StackTrace}");
+                Plugin.Log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
+                Plugin.Log($"Stack Trace: {e.StackTrace}");
             }
         }
 
@@ -120,7 +120,7 @@ namespace LCShrinkRay.comp
            if (playerHeldBy == null || PlayerInfo.CurrentPlayerID != playerHeldBy.playerClientId || playerHeldBy.isClimbingLadder)
                 return;
 
-            Plugin.log("shootingggggg");
+            Plugin.Log("shootingggggg");
 
             handledRayHits.Clear();
 
@@ -128,15 +128,15 @@ namespace LCShrinkRay.comp
             var ray = new Ray(transform.position, transform.position + transform.forward * beamSearchDistance);
             
             handledRayHits.Clear();
-            Plugin.log("playersMask: " + StartOfRound.Instance.playersMask);
-            var layers = toInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies]);
+            Plugin.Log("playersMask: " + StartOfRound.Instance.playersMask);
+            var layers = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies]);
             var raycastHits = Physics.SphereCastAll(ray, 5f, beamSearchDistance, layers, QueryTriggerInteraction.Collide);
             foreach (var hit in raycastHits)
             {
                 // Check if in line of sight
                 if (Physics.Linecast(transform.position, hit.transform.position, out RaycastHit hitInfo, StartOfRound.Instance.collidersRoomDefaultAndFoliage, QueryTriggerInteraction.Ignore))
                 {
-                    Plugin.log("\"" + hitInfo.collider.name + "\" [Layer " + hitInfo.collider.gameObject.layer + "] is between us and \"" + hit.collider.name + "\" [Layer " + hit.collider.gameObject.layer + "]");
+                    Plugin.Log("\"" + hitInfo.collider.name + "\" [Layer " + hitInfo.collider.gameObject.layer + "] is between us and \"" + hit.collider.name + "\" [Layer " + hit.collider.gameObject.layer + "]");
                     continue;
                 }
 
@@ -157,10 +157,10 @@ namespace LCShrinkRay.comp
                             return false;
 
                         handledRayHits.Add(targetPlayer.playerClientId);
-                        Plugin.log("Ray has hit a PLAYER -> " + targetPlayer.name);
+                        Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
                         if(!CanApplyModificationTo(targetPlayer, type))
                         {
-                            Plugin.log("... but would do nothing.");
+                            Plugin.Log("... but would do nothing.");
                             return false;
                         }
 
@@ -175,8 +175,8 @@ namespace LCShrinkRay.comp
                         if(item is GrabbablePlayerObject)
                             return false;
 
-                        Plugin.log("Ray has hit an ITEM -> " + item.name);
-                        Plugin.log("WIP");
+                        Plugin.Log("Ray has hit an ITEM -> " + item.name);
+                        Plugin.Log("WIP");
                         return false;
                     }
                 case Mask.InteractableObject:
@@ -184,8 +184,8 @@ namespace LCShrinkRay.comp
                         if (!hit.transform.TryGetComponent(out Item item))
                             return false;
 
-                        Plugin.log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
-                        Plugin.log("WIP");
+                        Plugin.Log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
+                        Plugin.Log("WIP");
                         return false;
                     }
                 case Mask.Enemies:
@@ -193,12 +193,12 @@ namespace LCShrinkRay.comp
                         if (!hit.transform.TryGetComponent(out EnemyAI enemyAI))
                             return false;
 
-                        Plugin.log("Ray has hit an ENEMY -> \"" + hit.collider.name);
-                        Plugin.log("WIP");
+                        Plugin.Log("Ray has hit an ENEMY -> \"" + hit.collider.name);
+                        Plugin.Log("WIP");
                         return false;
                     }
                 default:
-                    Plugin.log("Ray has hit an unhandled object named \"" + hit.collider.name + "\" [Layer " + layer + "]");
+                    Plugin.Log("Ray has hit an unhandled object named \"" + hit.collider.name + "\" [Layer " + layer + "]");
                     return false;
             };
 
@@ -266,7 +266,7 @@ namespace LCShrinkRay.comp
 
         public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
-            Plugin.log("debugOnPlayerModificationWorkaround");
+            Plugin.Log("debugOnPlayerModificationWorkaround");
             coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer) : NextIncreasedSizeOf(targetPlayer));
             Vents.EnableVents(type == ModificationType.Shrinking);
         }
@@ -274,20 +274,20 @@ namespace LCShrinkRay.comp
         [ServerRpc(RequireOwnership = false)]
         public void OnPlayerModificationServerRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
-            Plugin.log("Player (" + PlayerInfo.CurrentPlayerID + ") modified Player(" + targetPlayerID + "): " + type.ToString());
+            Plugin.Log("Player (" + PlayerInfo.CurrentPlayerID + ") modified Player(" + targetPlayerID + "): " + type.ToString());
             OnPlayerModificationClientRpc(holderPlayerID, targetPlayerID, type );
         }
 
         [ClientRpc]
         public void OnPlayerModificationClientRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
-            Plugin.log("OnPlayerModificationClientRpc");
+            Plugin.Log("OnPlayerModificationClientRpc");
             var targetPlayer = PlayerInfo.ControllerFromID(targetPlayerID);
             if (targetPlayer == null) return;
 
             if (targetPlayer == null || targetPlayer.gameObject == null || targetPlayer.gameObject.transform == null)
             {
-                Plugin.log("Ay.. that's not a valid player somehow..");
+                Plugin.Log("Ay.. that's not a valid player somehow..");
                 return;
             }
 
@@ -295,14 +295,14 @@ namespace LCShrinkRay.comp
             var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
 
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
-            Plugin.log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
+            Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
 
             switch (type)
             {
                 case ModificationType.Normalizing:
                     {
                         var normalizedSize = 1f;
-                        Plugin.log("Raytype: " + type.ToString() + ". New size: " + normalizedSize);
+                        Plugin.Log("Raytype: " + type.ToString() + ". New size: " + normalizedSize);
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, normalizedSize, () => IsOnCooldown = false);
 
@@ -317,7 +317,7 @@ namespace LCShrinkRay.comp
                 case ModificationType.Shrinking:
                     {
                         var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
-                        Plugin.log("Raytype: " + type.ToString() + ". New size: " + nextShrunkenSize);
+                        Plugin.Log("Raytype: " + type.ToString() + ". New size: " + nextShrunkenSize);
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextShrunkenSize, () =>
                         {
@@ -334,12 +334,12 @@ namespace LCShrinkRay.comp
 
                         if (nextShrunkenSize < 1f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
                         {
-                            Plugin.log("About to call SetPlayerGrabbableServerRpc");
+                            Plugin.Log("About to call SetPlayerGrabbableServerRpc");
                             GrabbablePlayerList.Instance.SetPlayerGrabbableServerRpc(targetPlayer.playerClientId);
                         }
                         else
                         {
-                            Plugin.log("Not calling SetPlayerGrabbableServerRpc: Not host.");
+                            Plugin.Log("Not calling SetPlayerGrabbableServerRpc: Not host.");
                         }
 
                         if (targetingUs)
@@ -351,7 +351,7 @@ namespace LCShrinkRay.comp
                 case ModificationType.Enlarging:
                     {
                         var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
-                        Plugin.log("Raytype: " + type.ToString() + ". New size: " + nextIncreasedSize);
+                        Plugin.Log("Raytype: " + type.ToString() + ". New size: " + nextIncreasedSize);
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () => IsOnCooldown = false);
 
@@ -370,7 +370,7 @@ namespace LCShrinkRay.comp
             // --- If we came here then a modification was done ---
 
             // Shoot ray
-            Plugin.log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
+            Plugin.Log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
             if (transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) && shrinkRayFX != null)
                 shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type);
         }
@@ -388,6 +388,7 @@ namespace LCShrinkRay.comp
             previousPlayerHeldBy = playerHeldBy;
             previousPlayerHeldBy.equippedUsableItemQE = true;
         }
+
         public override void PocketItem()
         {
             // idea: play a fading-out sound
@@ -396,7 +397,7 @@ namespace LCShrinkRay.comp
 
         public override void DiscardItem()
         {
-            Plugin.log("Discarding");
+            Plugin.Log("Discarding");
             base.DiscardItem();
         }
     }

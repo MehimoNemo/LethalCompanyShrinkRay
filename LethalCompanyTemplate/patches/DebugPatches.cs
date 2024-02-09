@@ -14,7 +14,7 @@ namespace LCShrinkRay.patches
         private static int waitFrames = 0;
         public static bool throwRoutineRunning = false;
 
-        public static void unsetThrowRoutine() { throwRoutineRunning = false; }
+        public static void UnsetThrowRoutine() { throwRoutineRunning = false; }
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
@@ -32,7 +32,7 @@ namespace LCShrinkRay.patches
                 {
                     string enemyTypes = "";
                     RoundManager.Instance.currentLevel.Enemies.ForEach(enemyType => { enemyTypes += " " + enemyType.enemyType.name; });
-                    Plugin.log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
+                    Plugin.Log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
 
                     int enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == "HoarderBug");
                     if (enemyIndex != -1)
@@ -46,13 +46,13 @@ namespace LCShrinkRay.patches
                 
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
-                    Plugin.log("Shrinking player model");
+                    Plugin.Log("Shrinking player model");
                     ShrinkRay.debugOnPlayerModificationWorkaround(PlayerInfo.CurrentPlayer, ModificationType.Shrinking);
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
-                    Plugin.log("Growing player model");
+                    Plugin.Log("Growing player model");
                     ShrinkRay.debugOnPlayerModificationWorkaround(PlayerInfo.CurrentPlayer, ModificationType.Enlarging);
                 }
 
@@ -60,7 +60,7 @@ namespace LCShrinkRay.patches
                 {
                     foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
                     {
-                        Plugin.log("Shrinking Player (" + pcb.playerClientId + ")");
+                        Plugin.Log("Shrinking Player (" + pcb.playerClientId + ")");
                         ShrinkRay.debugOnPlayerModificationWorkaround(pcb, ModificationType.Shrinking);
                     }
                 }
@@ -69,7 +69,7 @@ namespace LCShrinkRay.patches
                 {
                     foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
                     {
-                        Plugin.log("Growing Player (" + pcb.playerClientId + ")");
+                        Plugin.Log("Growing Player (" + pcb.playerClientId + ")");
                         ShrinkRay.debugOnPlayerModificationWorkaround(pcb, ModificationType.Enlarging);
                     }
                 }
@@ -79,7 +79,7 @@ namespace LCShrinkRay.patches
             }
             catch (Exception e)
             {
-                Plugin.log("Error in Update() [DebugKeys]: " + e.Message);
+                Plugin.Log("Error in Update() [DebugKeys]: " + e.Message);
             }
         }
     }

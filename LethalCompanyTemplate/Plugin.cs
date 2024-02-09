@@ -28,16 +28,16 @@ namespace LCShrinkRay
                 Instance = this;
 
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
-            ModConfig.Instance.setup();
+            ModConfig.Instance.Setup();
 
-            netcodePatching();
-            applyHarmonyPatches();
+            NetcodePatching();
+            ApplyHarmonyPatches();
 
-            log(PluginInfo.PLUGIN_NAME + " mod has awoken!", LogType.Message);
+            Log(PluginInfo.PLUGIN_NAME + " mod has awoken!", LogType.Message);
         }
 
         #region Patching
-        private void applyHarmonyPatches()
+        private void ApplyHarmonyPatches()
         {
             harmony.PatchAll(typeof(Plugin));
 
@@ -58,7 +58,7 @@ namespace LCShrinkRay
                 harmony.PatchAll(typeof(DebugPatches));
         }
 
-        private void netcodePatching()
+        private void NetcodePatching()
         {
             var types = Assembly.GetExecutingAssembly().GetTypes();
             foreach (var type in types)
@@ -86,7 +86,7 @@ namespace LCShrinkRay
             Debug
         }
 
-        internal static void log(string message, LogType type = LogType.Debug)
+        internal static void Log(string message, LogType type = LogType.Debug)
         {
             if (type == LogType.Debug && !ModConfig.DebugMode)
                 return;

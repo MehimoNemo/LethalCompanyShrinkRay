@@ -40,13 +40,13 @@ namespace LCShrinkRay.patches
             // checking if player is set
             if (playerUsingTerminal == null)
             {
-                Plugin.log(string.Format("No player using terminal"), Plugin.LogType.Warning);
+                Plugin.Log(string.Format("No player using terminal"), Plugin.LogType.Warning);
                 return;
             }
             //((1 - y) / (1 - smallestSize))
             // making sure the value is between 0 and 1
             float size = Mathf.Clamp01((1 - playerUsingTerminal.transform.localScale.y) / (1 - smallestPlayerSize));
-            Plugin.log(string.Format("size value: {0}", size), Plugin.LogType.Warning);
+            Plugin.Log(string.Format("size value: {0}", size), Plugin.LogType.Warning);
 
             playerPos.transform.localPosition = Vector3.Lerp(NormalPosition, SmallPosition, size);
         }

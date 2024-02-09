@@ -21,10 +21,10 @@ namespace LCShrinkRay.coroutines
             routine.targetPlayer = affectedPlayer;
             routine.targetingUs = (affectedPlayer.playerClientId == PlayerInfo.CurrentPlayerID);
 
-            routine.StartCoroutine(routine.run(newSize, onComplete));
+            routine.StartCoroutine(routine.Run(newSize, onComplete));
         }
 
-        private IEnumerator run(float newSize, Action onComplete)
+        private IEnumerator Run(float newSize, Action onComplete)
         {
             var playerTransform = targetPlayer.gameObject.GetComponent<Transform>();
 
@@ -78,7 +78,7 @@ namespace LCShrinkRay.coroutines
                 count = count % 20 + 1;
                 if(count == 1)
                 {
-                    yield return StartCoroutine(adjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
+                    yield return StartCoroutine(AdjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
                     //if (targetingUs && heldItem != null)
                         //ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
@@ -100,12 +100,12 @@ namespace LCShrinkRay.coroutines
                     ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
                 if (newSize != 1f)
-                    PlayerModificationPatch.modify(newSize);
+                    PlayerModificationPatch.Modify(newSize);
                 else
-                    PlayerModificationPatch.reset();
+                    PlayerModificationPatch.Reset();
             }
 
-            yield return StartCoroutine(adjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
+            yield return StartCoroutine(AdjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
 
             if (onComplete != null)
                 onComplete();
@@ -140,30 +140,30 @@ namespace LCShrinkRay.coroutines
             };
         }
 
-        private IEnumerator adjustAllPlayerPitches()
+        private IEnumerator AdjustAllPlayerPitches()
         {
             if (targetingUs) // Change pitch of every other player
             {
                 foreach (var pcb in StartOfRound.Instance.allPlayerScripts.Where(p => p != null && p.isPlayerControlled && p.playerClientId != targetPlayer.playerClientId))
-                    yield return StartCoroutine(adjustPlayerPitch(pcb));
+                    yield return StartCoroutine(AdjustPlayerPitch(pcb));
             }
             else // Only need to change pitch of affected player
             {
-                yield return StartCoroutine(adjustPlayerPitch(targetPlayer));
+                yield return StartCoroutine(AdjustPlayerPitch(targetPlayer));
             }
         }
 
-        private IEnumerator adjustPlayerPitch(PlayerControllerB pcb)
+        private IEnumerator AdjustPlayerPitch(PlayerControllerB pcb)
         {
             if (pcb.gameObject == null || pcb.gameObject.transform == null)
             {
-                Plugin.log("SetPlayerPitch: Unable to get playerObj.transform", Plugin.LogType.Warning);
+                Plugin.Log("SetPlayerPitch: Unable to get playerObj.transform", Plugin.LogType.Warning);
                 yield break;
             }
 
             if (SoundManager.Instance == null)
             {
-                Plugin.log("SetPlayerPitch: SoundManager is null", Plugin.LogType.Warning);
+                Plugin.Log("SetPlayerPitch: SoundManager is null", Plugin.LogType.Warning);
                 yield break;
             }
 
@@ -175,11 +175,11 @@ namespace LCShrinkRay.coroutines
             try
             {
                 SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
-                Plugin.log("Pitch from player " + pcb.playerClientId + " adjusted to " + modifiedPitch + ". currentPlayerScale: " + PlayerInfo.CurrentPlayerScale + " / playerScale: " + playerScale + " / intensity: " + intensity);
+                Plugin.Log("Pitch from player " + pcb.playerClientId + " adjusted to " + modifiedPitch + ". currentPlayerScale: " + PlayerInfo.CurrentPlayerScale + " / playerScale: " + playerScale + " / intensity: " + intensity);
             }
             catch (NullReferenceException e)
             {
-                Plugin.log("Hey! So, there's a null reference exception in SetPlayerPitch ... and here's why: " + e.ToString() + "\n" + e.StackTrace.ToString(), Plugin.LogType.Warning);
+                Plugin.Log("Hey! So, there's a null reference exception in SetPlayerPitch ... and here's why: " + e.ToString() + "\n" + e.StackTrace.ToString(), Plugin.LogType.Warning);
             }
             yield return null; // Wait for the next frame
         }

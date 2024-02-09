@@ -21,15 +21,15 @@ namespace LCShrinkRay.patches
         private static bool modified = false, wasModifiedLastFrame = false, wasResetLastFrame = false;
         private static float modifiedSprintMultiplier = 0f;
 
-        public static void modify(float playerSize)
+        public static void Modify(float playerSize)
         {
             modified = true;
             wasModifiedLastFrame = true;
         }
 
-        public static void reset()
+        public static void Reset()
         {
-            Plugin.log("Resetting player modifications");
+            Plugin.Log("Resetting player modifications");
             modified = false;
             wasResetLastFrame = true;
         }
@@ -38,7 +38,7 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void OnUpdate(PlayerControllerB __instance, ref float ___sprintMultiplier, ref float ___jumpForce)
         {
-            if (!GameNetworkManagerPatch.isGameInitialized || !GameNetworkManager.Instance.localPlayerController)
+            if (!GameNetworkManagerPatch.IsGameInitialized || !GameNetworkManager.Instance.localPlayerController)
                 return;
 
             if(__instance.playerClientId != PlayerInfo.CurrentPlayerID)
@@ -51,16 +51,16 @@ namespace LCShrinkRay.patches
                 {
                     var helmetTransform = scavengerHelmet.GetComponent<Transform>();
                     helmetTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
-                    Plugin.log("Player transform got!");
+                    Plugin.Log("Player transform got!");
 
-                    Plugin.log("Finding helmet!");
+                    Plugin.Log("Finding helmet!");
                     try
                     {
                         helmetRenderer = helmetTransform.gameObject.GetComponent<MeshRenderer>();
                     }
                     catch (Exception e)
                     {
-                        Plugin.log(e.Message, Plugin.LogType.Warning);
+                        Plugin.Log(e.Message, Plugin.LogType.Warning);
                     }
                 }
             }
@@ -72,7 +72,7 @@ namespace LCShrinkRay.patches
                     jumpForce = ___jumpForce,
                     sprintMultiplier = ___sprintMultiplier
                 };
-                Plugin.log("Setting default values: J -> " + ___jumpForce + " / S -> " + ___sprintMultiplier);
+                Plugin.Log("Setting default values: J -> " + ___jumpForce + " / S -> " + ___sprintMultiplier);
             }
 
             // Single-time changes

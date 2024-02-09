@@ -79,7 +79,7 @@ namespace LCShrinkRay.comp
         {
             if (shrinkRayFX != null) return;
 
-            Plugin.log("Adding ShrinRayFX asset.");
+            Plugin.Log("Adding ShrinRayFX asset.");
             var assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
             var fxAssets = AssetBundle.LoadFromFile(assetDir);
 
@@ -87,7 +87,7 @@ namespace LCShrinkRay.comp
             shrinkRayFX = fxAssets.LoadAsset<GameObject>("Shrink Ray VFX");
             if (shrinkRayFX == null)
             {
-                Plugin.log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
+                Plugin.Log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
                 return;
             }
 
@@ -97,7 +97,7 @@ namespace LCShrinkRay.comp
             if (!defaultVisualEffect)
             {
                 defaultVisualEffect = shrinkRayFX.GetComponentInChildren<VisualEffect>();
-                if (!defaultVisualEffect) Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
+                if (!defaultVisualEffect) Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
             }
 
             // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
@@ -118,14 +118,14 @@ namespace LCShrinkRay.comp
             {
                 if(!TryCreateNewBeam(out GameObject fxObject))
                 {
-                    Plugin.log("FX Object Null", Plugin.LogType.Error);
+                    Plugin.Log("FX Object Null", Plugin.LogType.Error);
                     return;
                 }
 
                 activeVisualEffect = fxObject.GetComponentInChildren<VisualEffect>();
                 if (!activeVisualEffect)
                 {
-                    Plugin.log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
+                    Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
                 }
                 else
                 {
@@ -151,10 +151,10 @@ namespace LCShrinkRay.comp
                 Transform bezier3 = fxObject.transform.GetChild(0).Find("Pos3");
                 Transform bezier4 = fxObject.transform.GetChild(0).Find("Pos4");
 
-                if (!bezier1) Plugin.log("bezier1 Null", Plugin.LogType.Error);
-                if (!bezier2) Plugin.log("bezier2 Null", Plugin.LogType.Error);
-                if (!bezier3) Plugin.log("bezier3 Null", Plugin.LogType.Error);
-                if (!bezier4) Plugin.log("bezier4 Null", Plugin.LogType.Error);
+                if (!bezier1) Plugin.Log("bezier1 Null", Plugin.LogType.Error);
+                if (!bezier2) Plugin.Log("bezier2 Null", Plugin.LogType.Error);
+                if (!bezier3) Plugin.Log("bezier3 Null", Plugin.LogType.Error);
+                if (!bezier4) Plugin.Log("bezier4 Null", Plugin.LogType.Error);
 
                 Transform targetHeadTransform = target.gameObject.GetComponent<PlayerControllerB>().gameplayCamera.transform.Find("HUDHelmetPosition").transform;
 
@@ -187,9 +187,9 @@ namespace LCShrinkRay.comp
             }
             catch (Exception e)
             {
-                Plugin.log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
-                Plugin.log("error source: " + e.Source);
-                Plugin.log("error stack: " + e.StackTrace);
+                Plugin.Log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
+                Plugin.Log("error source: " + e.Source);
+                Plugin.Log("error stack: " + e.StackTrace);
             }
         }
 

@@ -28,7 +28,7 @@ namespace LCShrinkRay.comp
             var item = GetComponentInParent<GrabbableObject>();
             if (item == null)
             {
-                Plugin.log("GrabbableObjectInitialValues not added to GrabbableObject");
+                Plugin.Log("GrabbableObjectInitialValues not added to GrabbableObject");
                 return;
             }
 
