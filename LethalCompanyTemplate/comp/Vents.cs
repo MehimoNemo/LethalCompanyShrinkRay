@@ -110,6 +110,7 @@ namespace LCShrinkRay.comp
             vent.tag = "InteractTrigger";
             vent.layer = LayerMask.NameToLayer("InteractableObject");
             var sussifiedVent = enemyVent.gameObject.AddComponent<SussifiedVent>();
+            sussifiedVent.thisVent = enemyVent;
             sussifiedVent.siblingVent = siblingVent;
             var trigger = vent.AddComponent<InteractTrigger>();
 
@@ -189,6 +190,7 @@ namespace LCShrinkRay.comp
         internal class SussifiedVent : NetworkBehaviour
         {
             #region Properties
+            public EnemyVent thisVent { get; set; }
             public EnemyVent siblingVent { get; set; }
             #endregion
 
@@ -201,13 +203,9 @@ namespace LCShrinkRay.comp
                 //teleport da playa to dis vent
                 if (siblingVent != null)
                 {
-                    if (PlayerInfo.IsShrunk(player))
-                    {
-                        Plugin.Log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
-                        StartCoroutine(OccupyVent());
-                        siblingVent.ventAudio.Play();
-                        transform.position = siblingVent.floorNode.transform.position;
-                    }
+                    Plugin.Log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
+                    StartCoroutine(OccupyVent());
+                    transform.position = siblingVent.floorNode.transform.position;
                 }
                 else
                 {
@@ -217,15 +215,20 @@ namespace LCShrinkRay.comp
 
             private IEnumerator OccupyVent()
             {
-                EnemyVent thisVent = this.transform.parent.gameObject.transform.GetComponent<EnemyVent>();
+                var thisVentOccupied = thisVent.occupied;
                 thisVent.OpenVentClientRpc();
-                thisVent.occupied = true;
-                siblingVent.occupied = true;
-                float delay = 0.2f;
-                yield return new WaitForSeconds(delay);
-                thisVent.occupied = false;
-                siblingVent.occupied = false;
+                thisVent.occupied = thisVentOccupied;
+
+                yield return new WaitForSeconds(0.2f);
+
+                var siblingVentOccupied = siblingVent.occupied;
                 siblingVent.OpenVentClientRpc();
+
+                siblingVent.ventAudio.Play();
+                siblingVent.occupied = false; // To skip the audio handling in EnemyVent.Update()
+
+                yield return new WaitForSeconds(1f);
+                siblingVent.occupied = siblingVentOccupied;
             }
             #endregion
         }
