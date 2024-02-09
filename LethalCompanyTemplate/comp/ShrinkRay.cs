@@ -8,6 +8,8 @@ using LCShrinkRay.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using static LCShrinkRay.helper.LayerMasks;
+using static UnityEngine.GraphicsBuffer;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace LCShrinkRay.comp
 {
@@ -133,6 +135,12 @@ namespace LCShrinkRay.comp
             var raycastHits = Physics.SphereCastAll(ray, 5f, beamSearchDistance, layers, QueryTriggerInteraction.Collide);
             foreach (var hit in raycastHits)
             {
+                if (Vector3.Dot(transform.forward, hit.transform.position - transform.position) < 0f)
+                {
+                    Plugin.Log("Object " + hit.collider.gameObject.name + " is behind us.");
+                    continue;
+                }
+
                 // Check if in line of sight
                 if (Physics.Linecast(transform.position, hit.transform.position, out RaycastHit hitInfo, StartOfRound.Instance.collidersRoomDefaultAndFoliage, QueryTriggerInteraction.Ignore))
                 {
