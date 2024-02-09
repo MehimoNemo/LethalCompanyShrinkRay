@@ -199,12 +199,19 @@ namespace LCShrinkRay.comp
 
             internal void TeleportPlayer(PlayerControllerB player)
             {
+                if (player == null || player.gameObject == null)
+                {
+                    Plugin.Log("Can't teleport player. GameObject not found.", Plugin.LogType.Error);
+                    return;
+                }
+
                 Transform transform = player.gameObject.transform;
                 //teleport da playa to dis vent
-                if (siblingVent != null)
+                if (thisVent != null && siblingVent != null)
                 {
                     Plugin.Log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
-                    StartCoroutine(OccupyVent());
+                    if(!thisVent.ventIsOpen || !siblingVent.ventIsOpen)
+                        StartCoroutine(OccupyVent());
                     transform.position = siblingVent.floorNode.transform.position;
                 }
                 else
