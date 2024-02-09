@@ -166,6 +166,8 @@ namespace LCShrinkRay.comp
         [ClientRpc]
         public void SyncGrabbablePlayerListClientRpc(string grabbablePlayerListString)
         {
+            if (grabbablePlayerListString == null || grabbablePlayerListString.Length == 0) return;
+
             var grabbablePlayerList = StringToTupleList(grabbablePlayerListString);
 
             Plugin.log("Oh hey!! There's that list I needed!!!! (the list: " + grabbablePlayerListString + ")");

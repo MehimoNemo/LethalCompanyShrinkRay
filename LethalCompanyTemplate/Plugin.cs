@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System.Reflection;
+using LCShrinkRay.comp;
 
 namespace LCShrinkRay
 {
@@ -39,6 +40,8 @@ namespace LCShrinkRay
         private void applyHarmonyPatches()
         {
             harmony.PatchAll(typeof(Plugin));
+
+            // patches
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
             harmony.PatchAll(typeof(PlayerModificationPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
@@ -47,6 +50,9 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
             harmony.PatchAll(typeof(DeskPatch));
             harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
+
+            // comp
+            harmony.PatchAll(typeof(Vents));
 
             if (ModConfig.DebugMode)
                 harmony.PatchAll(typeof(DebugPatches));

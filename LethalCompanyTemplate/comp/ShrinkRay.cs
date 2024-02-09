@@ -268,6 +268,7 @@ namespace LCShrinkRay.comp
         {
             Plugin.log("debugOnPlayerModificationWorkaround");
             coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer) : NextIncreasedSizeOf(targetPlayer));
+            Vents.EnableVents(type == ModificationType.Shrinking);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -309,7 +310,7 @@ namespace LCShrinkRay.comp
                             GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)
-                            Vents.unsussifyAll();
+                            Vents.DisableVents();
                         break;
                     }
 
@@ -342,7 +343,7 @@ namespace LCShrinkRay.comp
                         }
 
                         if (targetingUs)
-                            Vents.SussifyAll();
+                            Vents.EnableVents();
 
                         break;
                     }
@@ -358,7 +359,7 @@ namespace LCShrinkRay.comp
                             GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
 
                         if (targetingUs)
-                            Vents.unsussifyAll();
+                            Vents.DisableVents();
 
                         break;
                     }

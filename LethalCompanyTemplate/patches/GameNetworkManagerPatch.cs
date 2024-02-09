@@ -46,7 +46,7 @@ namespace LCShrinkRay.patches
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
-        public static void EndOfRound()
+        public static void EndRound()
         {
             Plugin.log("EndOfGame");
 
@@ -57,7 +57,6 @@ namespace LCShrinkRay.patches
             }
 
             GrabbablePlayerList.ClearGrabbablePlayerObjects();
-            Vents.unsussifyAll();
         }
     }
 }
