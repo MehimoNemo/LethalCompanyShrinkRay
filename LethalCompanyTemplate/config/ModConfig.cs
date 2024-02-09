@@ -76,24 +76,24 @@ namespace LCShrinkRay.Config
         #region Methods
         public void Setup()
         {
-            values.shrinkRayCost            = Plugin.bepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
-            values.multipleShrinking        = Plugin.bepInExConfig().Bind("General", "MultipleShrinking", true, "If true, a player can shrink multiple times.. unfortunatly.").Value;
+            values.shrinkRayCost            = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
+            values.multipleShrinking        = Plugin.BepInExConfig().Bind("General", "MultipleShrinking", true, "If true, a player can shrink multiple times.. unfortunatly.").Value;
 
-            values.movementSpeedMultiplier  = Plugin.bepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.2f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (very slow) to 1.5 (very fast).", new AcceptableValueRange<float>(0.5f, 1.5f))).Value;
-            values.jumpHeightMultiplier     = Plugin.bepInExConfig().Bind("Shrunken", "JumpHeightMultiplier", 1.3f, new ConfigDescription("Jump-height multiplier for shrunken players, ranging from 0.5 (very low) to 2 (very high).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
-            values.weightMultiplier         = Plugin.bepInExConfig().Bind("Shrunken", "WeightMultiplier", 1.5f, new ConfigDescription("Weight multiplier on held items for shrunken players, ranging from 0.5 (lighter) to 2 (heavier).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
-            values.canUseVents              = Plugin.bepInExConfig().Bind("Shrunken", "CanUseVents", true, "If true, shrunken players can move between vents.").Value;
-            values.pitchDistortionIntensity = Plugin.bepInExConfig().Bind("Shrunken", "PitchDistortionIntensity", 0.3f, new ConfigDescription("Intensity of the pitch distortion for shrunken players. 0 is the normal voice and 0.5 is very high.", new AcceptableValueRange<float>(0f, 0.5f))).Value;
-            values.CanEscapeGrab            = Plugin.bepInExConfig().Bind("Shrunken", "CanEscapeGrab", true, "If true, a player who got grabbed can escape by jumping").Value;
+            values.movementSpeedMultiplier  = Plugin.BepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.2f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (very slow) to 1.5 (very fast).", new AcceptableValueRange<float>(0.5f, 1.5f))).Value;
+            values.jumpHeightMultiplier     = Plugin.BepInExConfig().Bind("Shrunken", "JumpHeightMultiplier", 1.3f, new ConfigDescription("Jump-height multiplier for shrunken players, ranging from 0.5 (very low) to 2 (very high).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
+            values.weightMultiplier         = Plugin.BepInExConfig().Bind("Shrunken", "WeightMultiplier", 1.5f, new ConfigDescription("Weight multiplier on held items for shrunken players, ranging from 0.5 (lighter) to 2 (heavier).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
+            values.canUseVents              = Plugin.BepInExConfig().Bind("Shrunken", "CanUseVents", true, "If true, shrunken players can move between vents.").Value;
+            values.pitchDistortionIntensity = Plugin.BepInExConfig().Bind("Shrunken", "PitchDistortionIntensity", 0.3f, new ConfigDescription("Intensity of the pitch distortion for shrunken players. 0 is the normal voice and 0.5 is very high.", new AcceptableValueRange<float>(0f, 0.5f))).Value;
+            values.CanEscapeGrab            = Plugin.BepInExConfig().Bind("Shrunken", "CanEscapeGrab", true, "If true, a player who got grabbed can escape by jumping").Value;
 
-            values.jumpOnShrunkenPlayers    = Plugin.bepInExConfig().Bind("Interactions", "JumpOnShrunkenPlayers", true, "If true, normal-sized players can harm shrunken players by jumping on them.").Value;
-            values.throwablePlayers         = Plugin.bepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
-            values.friendlyFlight           = Plugin.bepInExConfig().Bind("Interactions", "FriendlyFlight", false, "If true, held players can grab other players, causing comedic, but game breaking effects.").Value;
-            values.sellablePlayers          = Plugin.bepInExConfig().Bind("Interactions", "sellablePlayers", true, "If true, held players can sell other players, causing comedic").Value;
+            values.jumpOnShrunkenPlayers    = Plugin.BepInExConfig().Bind("Interactions", "JumpOnShrunkenPlayers", true, "If true, normal-sized players can harm shrunken players by jumping on them.").Value;
+            values.throwablePlayers         = Plugin.BepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
+            values.friendlyFlight           = Plugin.BepInExConfig().Bind("Interactions", "FriendlyFlight", false, "If true, held players can grab other players, causing comedic, but game breaking effects.").Value;
+            values.sellablePlayers          = Plugin.BepInExConfig().Bind("Interactions", "sellablePlayers", true, "If true, held players can sell other players, causing comedic").Value;
 
 
-            values.hoardingBugSteal         = Plugin.bepInExConfig().Bind("Enemies", "HoardingBugSteal", true, "If true, hoarding/loot bugs can treat a shrunken player like an item.").Value;
-            values.thumperBehaviour         = Plugin.bepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Default, "Defines the way Thumpers react on shrunken players.").Value;
+            values.hoardingBugSteal         = Plugin.BepInExConfig().Bind("Enemies", "HoardingBugSteal", true, "If true, hoarding/loot bugs can treat a shrunken player like an item.").Value;
+            values.thumperBehaviour         = Plugin.BepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Default, "Defines the way Thumpers react on shrunken players.").Value;
 
             if (DebugMode)
             {

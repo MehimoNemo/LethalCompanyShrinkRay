@@ -18,7 +18,7 @@ namespace LCShrinkRay
         private static Plugin Instance;
         private static ManualLogSource mls;
 
-        public static ConfigFile bepInExConfig() { return Instance.Config; }
+        public static ConfigFile BepInExConfig() { return Instance.Config; }
         #endregion
 
         private void Awake()
