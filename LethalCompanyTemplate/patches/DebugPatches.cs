@@ -5,6 +5,8 @@ using GameNetcodeStuff;
 using LCShrinkRay.helper;
 using static LCShrinkRay.comp.ShrinkRay;
 using LCShrinkRay.comp;
+using UnityEngine;
+using static LCShrinkRay.helper.Moons;
 
 namespace LCShrinkRay.patches
 {
@@ -43,7 +45,7 @@ namespace LCShrinkRay.patches
                         // I tried so hard and got so far, but in the end... there's still an errooooorrrrr
                     }
                 }
-                
+
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
                     Plugin.Log("Shrinking player model");
@@ -56,25 +58,67 @@ namespace LCShrinkRay.patches
                     ShrinkRay.debugOnPlayerModificationWorkaround(PlayerInfo.CurrentPlayer, ModificationType.Enlarging);
                 }
 
-                else if (Keyboard.current.f4Key.wasPressedThisFrame)
+                else if (Keyboard.current.f9Key.wasPressedThisFrame)
                 {
-                    foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
-                    {
-                        Plugin.Log("Shrinking Player (" + pcb.playerClientId + ")");
-                        ShrinkRay.debugOnPlayerModificationWorkaround(pcb, ModificationType.Shrinking);
-                    }
+                    // Print position to log
+                    Plugin.Log("Current position: " + PlayerInfo.CurrentPlayer.gameObject.transform.position + ". Moon: " + RoundManager.Instance.currentLevel.name);
                 }
 
-                else if (Keyboard.current.f4Key.wasPressedThisFrame)
+                else if (Keyboard.current.f10Key.wasPressedThisFrame)
                 {
-                    foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
-                    {
-                        Plugin.Log("Growing Player (" + pcb.playerClientId + ")");
-                        ShrinkRay.debugOnPlayerModificationWorkaround(pcb, ModificationType.Enlarging);
-                    }
+                    if (StartOfRound.Instance.inShipPhase || !StartOfRound.Instance.shipHasLanded) return;
+
+                    // Teleport inside ship
+                    PlayerInfo.CurrentPlayer.gameObject.transform.position = new Vector3(2.84f, 0.29f, -14.41f);
                 }
 
-                //waitFrames = 5;
+                else if (Keyboard.current.f11Key.wasPressedThisFrame)
+                {
+                    if (StartOfRound.Instance.inShipPhase) return;
+
+                    // Teleport outside
+                    Vector3 pos;
+                    switch ((Moon)RoundManager.Instance.currentLevel.levelID)
+                    {
+                        case Moon.Experimentation:  pos = new Vector3(-111.04f, 2.97f, -17.62f);    break;
+                        case Moon.Assurance:        pos = new Vector3(131.96f, 6.52f, 74.69f);      break;
+                        case Moon.Vow:              pos = new Vector3(-29.41f, -1.15f, 148.34f);    break;
+                        case Moon.March:            pos = new Vector3(-154.78f, -3.94f, 21.79f);    break;
+                        case Moon.Rend:             pos = new Vector3(49.29f, -16.78f, -149.28f);   break;
+                        case Moon.Dine:             pos = new Vector3(157.60f, -15.11f, -41.07f);   break;
+                        case Moon.Offense:          pos = new Vector3(127.70f, 16.42f, -57.77f);    break;
+                        case Moon.Titan:            pos = new Vector3(-33.79f, 47.75f, 7.48f);      break;
+                        default: return;
+                    }
+
+                    PlayerInfo.CurrentPlayer.gameObject.transform.position = pos;
+                }
+                
+                else if (Keyboard.current.f12Key.wasPressedThisFrame)
+                {
+                    if (StartOfRound.Instance.inShipPhase) return;
+
+                    // Teleport inside
+                    Vector3 pos;
+                    switch ((Moon)RoundManager.Instance.currentLevel.levelID)
+                    {
+                        case Moon.Experimentation:  pos = new Vector3(-14.50f, -219.56f, 65.91f);   break;
+                        case Moon.Assurance:        pos = new Vector3(-5.09f, -219.56f, 65.94f);    break;
+                        case Moon.Vow:              pos = new Vector3(-29.41f, -1.15f, 148.34f);    break;
+                        case Moon.March:            pos = new Vector3(-6.03f, -219.56f, 65.92f);    break;
+                        case Moon.Rend:             pos = new Vector3(-6.70f, -219.54f, 65.83f);    break;
+                        case Moon.Dine:             pos = new Vector3(-7.22f, -219.56f, 65.90f);    break;
+                        case Moon.Offense:          pos = new Vector3(-5.60f, -219.56f, 65.92f);    break;
+                        case Moon.Titan:            pos = new Vector3(-7.22f, -219.56f, 65.90f);    break;
+                        default: return;
+                    }
+
+                    PlayerInfo.CurrentPlayer.gameObject.transform.position = pos;
+                }
+                else
+                    return;
+
+                waitFrames = 5;
 
             }
             catch (Exception e)
