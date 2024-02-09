@@ -12,6 +12,7 @@ namespace LCShrinkRay.comp
     [HarmonyPatch]
     internal class Vents
     {
+        #region Patches
         [HarmonyPostfix, HarmonyPatch(typeof(RoundManager), "FinishGeneratingNewLevelClientRpc")]
         public static void AfterFinishGeneratingNewLevelClient()
         {
@@ -37,6 +38,7 @@ namespace LCShrinkRay.comp
         {
             Vents.UnsussifyAll();
         }
+        #endregion
 
         #region Properties
         private static bool sussification = false;
@@ -185,7 +187,6 @@ namespace LCShrinkRay.comp
             EnableVents(false);
         }
         #endregion
-
 
         internal class SussifiedVent : NetworkBehaviour
         {
