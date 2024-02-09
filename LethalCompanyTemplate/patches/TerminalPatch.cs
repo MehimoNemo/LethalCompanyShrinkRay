@@ -17,6 +17,12 @@ namespace LCShrinkRay.patches
         public static void MovePlayerPos()
         {
             GameObject playerPos = GameObject.Find("Environment/HangarShip/Terminal/TerminalTrigger/playerPos");
+            if(playerPos == null)
+            {
+                Plugin.Log("TerminalPatch.MovePlayerPos: playerPos is null", Plugin.LogType.Warning);
+                return;
+            }
+
             PlayerControllerB playerUsingTerminal = null;
 
             // check which player is using terminal

@@ -26,15 +26,27 @@ namespace LCShrinkRay.coroutines
 
         private IEnumerator Run(float newSize, Action onComplete)
         {
-            var playerTransform = targetPlayer.gameObject.GetComponent<Transform>();
+            if (targetPlayer == null || targetPlayer.gameObject == null)
+            {
+                Plugin.Log("Attempting to shrink non existing player", Plugin.LogType.Warning);
+                yield break;
+            }
+
+            var playerTransform = targetPlayer.gameObject.transform;
 
             Transform armTransform = null, maskTransform = null;
             GrabbableObject heldItem = null;
             Vector3 initialArmScale = Vector3.one;
             if(targetingUs)
             {
-                armTransform = playerTransform.Find("ScavengerModel").Find("metarig").Find("ScavengerModelArmsOnly");
-                maskTransform = GameObject.Find("ScavengerHelmet").GetComponent<Transform>();
+                armTransform = playerTransform.Find("ScavengerModel")?.Find("metarig")?.Find("ScavengerModelArmsOnly");
+                if (armTransform == null)
+                    Plugin.Log("Ray was targeting us, but we don't have arms??", Plugin.LogType.Warning);
+
+                maskTransform = GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+                if (maskTransform == null)
+                    Plugin.Log("Ray was targeting us, but we don't have a helmet??", Plugin.LogType.Warning);
+
                 heldItem = PlayerInfo.HeldItem(targetPlayer);
                 initialArmScale = armTransform.localScale;
             }
@@ -65,10 +77,14 @@ namespace LCShrinkRay.coroutines
 
                 if (targetingUs)
                 {
-                    maskTransform.localScale = CalcMaskScaleVec(currentSize);
-                    maskTransform.localPosition = CalcMaskPosVec(currentSize);
+                    if (maskTransform != null)
+                    {
+                        maskTransform.localScale = CalcMaskScaleVec(currentSize);
+                        maskTransform.localPosition = CalcMaskPosVec(currentSize);
+                    }
                     var newArmScale = CalcArmScale(newSize);
-                    armTransform.localScale = newArmScale;
+                    if(armTransform != null)
+                        armTransform.localScale = newArmScale;
                     if (heldItem != null)
                         ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
                 }
@@ -90,10 +106,14 @@ namespace LCShrinkRay.coroutines
             playerTransform.localScale = new Vector3(newSize, newSize, newSize);
             if (targetingUs)
             {
-                maskTransform.localScale = CalcMaskScaleVec(newSize);
-                maskTransform.localPosition = CalcMaskPosVec(newSize);
+                if (maskTransform != null)
+                {
+                    maskTransform.localScale = CalcMaskScaleVec(newSize);
+                    maskTransform.localPosition = CalcMaskPosVec(newSize);
+                }
                 var newArmScale = CalcArmScale(newSize);
-                armTransform.localScale = newArmScale;
+                if (armTransform != null)
+                    armTransform.localScale = newArmScale;
                 if (heldItem != null)
                 {
                     ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
@@ -142,22 +162,25 @@ namespace LCShrinkRay.coroutines
 
         private IEnumerator AdjustAllPlayerPitches()
         {
-            if (targetingUs) // Change pitch of every other player
-            {
-                foreach (var pcb in StartOfRound.Instance.allPlayerScripts.Where(p => p != null && p.isPlayerControlled && p.playerClientId != targetPlayer.playerClientId))
-                    yield return StartCoroutine(AdjustPlayerPitch(pcb));
-            }
-            else // Only need to change pitch of affected player
+            if (!targetingUs) // Only need to change pitch of affected player
             {
                 yield return StartCoroutine(AdjustPlayerPitch(targetPlayer));
+                yield break;
+            }
+
+            // Change pitch of every other player
+            foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
+            {
+                if (pcb != null && pcb.isPlayerControlled && pcb.playerClientId != targetPlayer.playerClientId)
+                    yield return StartCoroutine(AdjustPlayerPitch(pcb));
             }
         }
 
         private IEnumerator AdjustPlayerPitch(PlayerControllerB pcb)
         {
-            if (pcb.gameObject == null || pcb.gameObject.transform == null)
+            if (pcb == null || pcb.gameObject == null)
             {
-                Plugin.Log("SetPlayerPitch: Unable to get playerObj.transform", Plugin.LogType.Warning);
+                Plugin.Log("SetPlayerPitch: Unable to get player gameObject", Plugin.LogType.Warning);
                 yield break;
             }
 

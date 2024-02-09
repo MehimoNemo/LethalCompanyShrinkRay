@@ -74,13 +74,12 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
             for (int i = 0; i < vents.Length; i++)
             {
                 int siblingIndex = vents.Length - i - 1;
                 if (siblingIndex == i) // maybe "while" instead of "if"?
                 {
-                    System.Random rnd = new System.Random();
+                    var rnd = new System.Random();
                     siblingIndex = rnd.Next(0, vents.Length);
                 }
 
@@ -90,7 +89,10 @@ namespace LCShrinkRay.comp
             }
 
             sussification = true;
-            coroutines.RenderVents.StartRoutine(dungeonEntrance);
+
+            GameObject dungeonEntrance = GameObject.Find("EntranceTeleportA(Clone)");
+            if (dungeonEntrance != null)
+                coroutines.RenderVents.StartRoutine(dungeonEntrance);
 
             if (!PlayerInfo.IsCurrentPlayerShrunk)
                 DisableVents();
@@ -98,12 +100,8 @@ namespace LCShrinkRay.comp
 
         public static void Sussify(EnemyVent enemyVent, EnemyVent siblingVent)
         {
-            GameObject vent;
-            try
-            {
-                vent = enemyVent.gameObject.transform.Find("ventTunnel").gameObject; // Hinge -> VentCover
-            }
-            catch
+            var vent = enemyVent?.gameObject?.transform.Find("ventTunnel")?.gameObject; // Hinge -> VentCover
+            if(vent == null)
             {
                 Plugin.Log("Vent has no cover to sussify");
                 return;
@@ -152,6 +150,8 @@ namespace LCShrinkRay.comp
 
         public static void Unsussify(EnemyVent enemyVent)
         {
+            if (enemyVent == null || enemyVent.gameObject == null) return;
+
             if (enemyVent.gameObject.TryGetComponent(out SussifiedVent sussifiedVent))
                 Object.Destroy(sussifiedVent);
 

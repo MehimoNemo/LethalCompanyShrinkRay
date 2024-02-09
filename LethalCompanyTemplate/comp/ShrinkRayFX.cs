@@ -146,17 +146,27 @@ namespace LCShrinkRay.comp
                     }
                 }
 
-                Transform bezier1 = fxObject.transform.GetChild(0).Find("Pos1");
-                Transform bezier2 = fxObject.transform.GetChild(0).Find("Pos2");
-                Transform bezier3 = fxObject.transform.GetChild(0).Find("Pos3");
-                Transform bezier4 = fxObject.transform.GetChild(0).Find("Pos4");
+                Transform bezier1 = fxObject.transform.GetChild(0)?.Find("Pos1");
+                Transform bezier2 = fxObject.transform.GetChild(0)?.Find("Pos2");
+                Transform bezier3 = fxObject.transform.GetChild(0)?.Find("Pos3");
+                Transform bezier4 = fxObject.transform.GetChild(0)?.Find("Pos4");
 
                 if (!bezier1) Plugin.Log("bezier1 Null", Plugin.LogType.Error);
                 if (!bezier2) Plugin.Log("bezier2 Null", Plugin.LogType.Error);
                 if (!bezier3) Plugin.Log("bezier3 Null", Plugin.LogType.Error);
                 if (!bezier4) Plugin.Log("bezier4 Null", Plugin.LogType.Error);
 
-                Transform targetHeadTransform = target.gameObject.GetComponent<PlayerControllerB>().gameplayCamera.transform.Find("HUDHelmetPosition").transform;
+                if(!target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer) || targetPlayer.gameplayCamera == null)
+                {
+                    Plugin.Log("Failed to get target player for shrink ray vfx", Plugin.LogType.Warning);
+                    return;
+                }
+                Transform targetHeadTransform = targetPlayer.gameplayCamera.transform.Find("HUDHelmetPosition")?.transform;
+                if(targetHeadTransform == null)
+                {
+                    Plugin.Log("Failed to get target players helmet position for shrink ray vfx", Plugin.LogType.Warning);
+                    return;
+                }
 
                 // Stole this from above, minor adjustments to where the beam comes from
                 Vector3 beamStartPos = this.transform.position + (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);

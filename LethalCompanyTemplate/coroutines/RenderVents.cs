@@ -23,7 +23,7 @@ namespace LCShrinkRay.coroutines
             {
                 if(vent == null) continue;
 
-                var ventTunnel = vent.gameObject.transform.Find("ventTunnel").gameObject;
+                var ventTunnel = vent.gameObject?.transform.Find("ventTunnel")?.gameObject;
                 if(ventTunnel == null)
                 {
                     Plugin.Log("A ventTunnel gameObject was null.");

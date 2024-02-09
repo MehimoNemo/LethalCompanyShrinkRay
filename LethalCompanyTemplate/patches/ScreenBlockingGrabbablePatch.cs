@@ -15,7 +15,7 @@ namespace LCShrinkRay.patches
         {
             if (__instance.playerHeldBy == null || __instance is GrabbablePlayerObject)
             {
-                Plugin.Log("adjustItemOffset: object is not held or other player", Plugin.LogType.Warning);
+                Plugin.Log("adjustItemOffset: object is not held or other player");
                 return;
             }
 
@@ -135,6 +135,8 @@ namespace LCShrinkRay.patches
             get
             {
                 var m = new Material(Shader.Find("HDRP/Lit"));
+                if(m == null) return null;
+
                 m.color = new Color(0.5f, 0.5f, 0.6f, 0.6f);
                 m.renderQueue = 3300;
                 m.shaderKeywords = [
