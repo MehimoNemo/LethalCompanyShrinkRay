@@ -210,13 +210,7 @@ namespace LCShrinkRay.comp
         #region Methods
         public void Initialize(PlayerControllerB pcb, bool isCurrentPlayer = false)
         {
-            if(PlayerInfo.CurrentPlayerID == pcb.playerClientId)
-                Plugin.Log("This is us: " + pcb.name);
-
-            this.grabbable = !isCurrentPlayer;
-
             Plugin.Log("GrabbablePlayerObject.Initialize");
-            Plugin.Log("Is current player: " + isCurrentPlayer);
 
             this.grabbedPlayer = pcb;
             this.grabbedPlayerID = pcb.playerClientId;
@@ -225,7 +219,8 @@ namespace LCShrinkRay.comp
             {
                 this.name = "grabbable_" + grabbedPlayer.name;
                 Plugin.Log("parenting grabbable object to player number :[" + grabbedPlayer.playerClientId + "]");
-                this.grabbable = true;
+                Plugin.Log("Is current player: " + isCurrentPlayer);
+                this.grabbable = !isCurrentPlayer;
             }
             else
             {
