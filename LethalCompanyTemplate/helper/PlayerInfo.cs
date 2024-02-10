@@ -74,7 +74,7 @@ namespace LCShrinkRay.helper
         {
             get
             {
-                return StartOfRound.Instance.localPlayerController;
+                return GameNetworkManager.Instance.localPlayerController;
             }
         }
 

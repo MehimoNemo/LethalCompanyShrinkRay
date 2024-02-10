@@ -58,8 +58,6 @@ namespace LCShrinkRay.comp
             var networkObj = instanciatedPrefab.GetComponent<NetworkObject>();
             networkObj.Spawn();
             instance = instanciatedPrefab.GetComponent<GrabbablePlayerList>();
-
-            instance.SyncInstanceServerRpc();
         }
 
         public static void RemoveInstance()
@@ -140,7 +138,7 @@ namespace LCShrinkRay.comp
         {
             SyncInstanceClientRpc();
         }
-        
+
         [ClientRpc]
         public void SyncInstanceClientRpc()
         {
@@ -148,7 +146,7 @@ namespace LCShrinkRay.comp
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SyncGrabbablePlayerListServerRpc()
+        public void SyncGrabbablePlayerListServerRpc(ulong receiver)
         {
             var networkClientMap = new List<(ulong networkId, ulong client)>();
 
@@ -160,12 +158,15 @@ namespace LCShrinkRay.comp
                 ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
                 networkClientMap.Add((networkId, clientId));
             }
-            SyncGrabbablePlayerListClientRpc(TupleListToString(networkClientMap));
+            SyncGrabbablePlayerListClientRpc(TupleListToString(networkClientMap), receiver);
         }
 
         [ClientRpc]
-        public void SyncGrabbablePlayerListClientRpc(string grabbablePlayerListString)
+        public void SyncGrabbablePlayerListClientRpc(string grabbablePlayerListString, ulong receiver)
         {
+            if (receiver != PlayerInfo.CurrentPlayerID) return; // Not meant for us
+            instance = this;
+
             if (grabbablePlayerListString == null || grabbablePlayerListString.Length == 0) return;
 
             var grabbablePlayerList = StringToTupleList(grabbablePlayerListString);
@@ -185,7 +186,7 @@ namespace LCShrinkRay.comp
                     {
                         Plugin.Log("\t" + item.networkId + ", " + item.clientId);
                         PlayerControllerB pcb = PlayerInfo.ControllerFromID(item.clientId).gameObject.GetComponent<PlayerControllerB>();
-                        gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb);
+                        gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb, pcb.playerClientId == receiver);
                     }
                 }
             }
@@ -279,7 +280,7 @@ namespace LCShrinkRay.comp
             }
 
             Plugin.Log("Init new grabbablePlayer.");
-            gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb);
+            gpo.GetComponent<GrabbablePlayerObject>().Initialize(pcb, PlayerInfo.CurrentPlayer != null && pcb.playerClientId == PlayerInfo.CurrentPlayerID);
             Plugin.Log("Add new grabbablePlayer to list.");
             grabbablePlayerObjects.Add(gpo.gameObject);
             Plugin.Log("NEW GRABBALEPLAYER COUNT: " + grabbablePlayerObjects.Count);
