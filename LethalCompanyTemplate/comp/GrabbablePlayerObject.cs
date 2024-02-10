@@ -64,6 +64,7 @@ namespace LCShrinkRay.comp
             base.Start();
             itemProperties.canBeGrabbedBeforeGameStart = true;
             itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
+            //scrapPersistedThroughRounds = true; // missing this might be the cause for GrabbablePlayerObject to get deleted after round ends! todo: test that
         }
         
         public override void LateUpdate()
