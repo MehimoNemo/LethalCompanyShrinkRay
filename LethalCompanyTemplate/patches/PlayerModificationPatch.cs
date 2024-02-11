@@ -78,13 +78,13 @@ namespace LCShrinkRay.patches
             // Single-time changes
             if(wasModifiedLastFrame)
             {
-                ___jumpForce *= ModConfig.Instance.values.jumpHeightMultiplier;
+                ___jumpForce = defaultPlayerValues.Value.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
                 wasModifiedLastFrame = false;
             }
 
             if(wasResetLastFrame)
             {
-                ___jumpForce /= ModConfig.Instance.values.jumpHeightMultiplier;
+                ___jumpForce = defaultPlayerValues.Value.jumpForce;
                 wasResetLastFrame = false;
             }
 

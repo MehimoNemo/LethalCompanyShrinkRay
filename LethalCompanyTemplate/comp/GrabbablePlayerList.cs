@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.helper;
+using LCShrinkRay.patches;
 using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
@@ -324,7 +325,11 @@ namespace LCShrinkRay.comp
 
             var bindingObject = grabbablePlayerObjects[bindingObjectID];
             if (bindingObject.TryGetComponent(out GrabbablePlayerObject gpo) && gpo.grabbedPlayer != null && !PlayerInfo.IsNormalSize(gpo.grabbedPlayer))
+            {
                 gpo.grabbedPlayer.transform.localScale = Vector3.one; // Reset size
+                if(PlayerInfo.CurrentPlayerID == playerID) // that's us!
+                    PlayerModificationPatch.Reset();
+            }
 
             grabbablePlayerObjects.RemoveAt(bindingObjectID);
         }
