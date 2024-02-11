@@ -118,8 +118,8 @@ namespace LCShrinkRay.comp
             {
                 Plugin.Log("Player yeet");
                 base.ItemActivate(used, buttonDown);
-
-                playerHeldBy.DiscardHeldObject(placeObject: true, null, ThrowDestination());
+                playerHeldBy.DiscardHeldObject();
+                //playerHeldBy.DiscardHeldObject(placeObject: true, null, ThrowDestination());
                 grabbedPlayer.playerCollider.enabled = true;
                 SetIsGrabbableToEnemies(true);
             }
@@ -442,7 +442,7 @@ namespace LCShrinkRay.comp
                 HUDManager.Instance.ChangeControlTipMultiple(grabbedPlayerItem.itemProperties.toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
         }
 
-        private Vector3 ThrowDestination()
+        /*private Vector3 ThrowDestination()
         {
             Vector3 position = transform.position;
             var playerThrowRay = new Ray(playerHeldBy.gameplayCamera.transform.position, playerHeldBy.gameplayCamera.transform.forward);
@@ -454,7 +454,7 @@ namespace LCShrinkRay.comp
                 return playerHit.point + Vector3.up * 0.05f;
             }
             return playerThrowRay.GetPoint(30f);
-        }
+        }*/
 
         public void Reinitialize()
         {
