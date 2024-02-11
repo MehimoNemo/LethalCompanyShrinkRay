@@ -248,6 +248,13 @@ namespace LCShrinkRay.comp
             if(targetPlayer.isClimbingLadder)
                 return false;
 
+            var gpo = GrabbablePlayerList.FindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID);
+            if(gpo != null && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId ==  targetPlayer.playerClientId)
+            {
+                Plugin.Log("Attempting to shrink the player who holds us. Bad idea!");
+                return false;
+            }
+
             switch(type)
             {
                 case ModificationType.Normalizing:
