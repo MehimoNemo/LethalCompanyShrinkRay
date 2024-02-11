@@ -184,7 +184,7 @@ namespace LCShrinkRay.comp
                             return false;
 
                         Plugin.Log("Ray has hit an ITEM -> " + item.name);
-                        Plugin.Log("WIP");
+                        //Plugin.Log("WIP");
                         return false;
                     }
                 case Mask.InteractableObject:
@@ -193,7 +193,7 @@ namespace LCShrinkRay.comp
                             return false;
 
                         Plugin.Log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
-                        Plugin.Log("WIP");
+                        //Plugin.Log("WIP");
                         return false;
                     }
                 case Mask.Enemies:
@@ -202,7 +202,7 @@ namespace LCShrinkRay.comp
                             return false;
 
                         Plugin.Log("Ray has hit an ENEMY -> \"" + hit.collider.name);
-                        Plugin.Log("WIP");
+                        //Plugin.Log("WIP");
                         return false;
                     }
                 default:

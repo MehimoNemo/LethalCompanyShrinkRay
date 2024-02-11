@@ -18,6 +18,8 @@ namespace LCShrinkRay.Config
             }
         }
 
+        public static bool DebugLog { get; set; }
+
         public enum ThumperBehaviour
         {
             Default,
@@ -94,6 +96,8 @@ namespace LCShrinkRay.Config
 
             values.hoardingBugSteal         = Plugin.BepInExConfig().Bind("Enemies", "HoardingBugSteal", true, "If true, hoarding/loot bugs can treat a shrunken player like an item.").Value;
             values.thumperBehaviour         = Plugin.BepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Default, "Defines the way Thumpers react on shrunken players.").Value;
+
+            DebugLog                        = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", true, "Additional logging to help identifying issues in the beta version of this mod.").Value;
 
             if (DebugMode)
             {

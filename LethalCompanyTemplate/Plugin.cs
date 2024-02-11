@@ -88,7 +88,7 @@ namespace LCShrinkRay
 
         internal static void Log(string message, LogType type = LogType.Debug)
         {
-            if (type == LogType.Debug && !ModConfig.DebugMode)
+            if (type == LogType.Debug && !(ModConfig.DebugMode || ModConfig.DebugLog))
                 return;
 
             switch(type)
