@@ -19,7 +19,8 @@ namespace LCShrinkRay.patches
 
             Plugin.Log("Player " + clientId + " joined.");
 
-            GrabbablePlayerList.Instance.SyncInstanceServerRpc();
+            if(PlayerInfo.IsHost)
+                GrabbablePlayerList.Instance.SyncInstanceServerRpc();
         }
 
 
@@ -36,7 +37,7 @@ namespace LCShrinkRay.patches
             Plugin.Log("We joined a lobby.");
 
             if (!PlayerInfo.IsHost)
-                GrabbablePlayerList.Instance.SyncGrabbablePlayerListServerRpc(__instance.playerClientId);
+                GrabbablePlayerList.Instance.InitializeGrabbablePlayerObjectsServerRpc(__instance.playerClientId);
         }
 
         // Before client disconnects

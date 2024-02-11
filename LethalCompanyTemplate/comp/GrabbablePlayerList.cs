@@ -146,7 +146,7 @@ namespace LCShrinkRay.comp
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SyncGrabbablePlayerListServerRpc(ulong receiver)
+        public void InitializeGrabbablePlayerObjectsServerRpc(ulong receiver)
         {
             var networkClientMap = new List<(ulong networkId, ulong client)>();
 
@@ -158,14 +158,13 @@ namespace LCShrinkRay.comp
                 ulong clientId = obj.GetComponent<GrabbablePlayerObject>().grabbedPlayer.playerClientId;
                 networkClientMap.Add((networkId, clientId));
             }
-            SyncGrabbablePlayerListClientRpc(TupleListToString(networkClientMap), receiver);
+            InitializeGrabbablePlayerObjectsClientRpc(TupleListToString(networkClientMap), receiver);
         }
 
         [ClientRpc]
-        public void SyncGrabbablePlayerListClientRpc(string grabbablePlayerListString, ulong receiver)
+        public void InitializeGrabbablePlayerObjectsClientRpc(string grabbablePlayerListString, ulong receiver)
         {
             if (receiver != PlayerInfo.CurrentPlayerID) return; // Not meant for us
-            instance = this;
 
             if (grabbablePlayerListString == null || grabbablePlayerListString.Length == 0) return;
 
