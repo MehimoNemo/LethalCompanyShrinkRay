@@ -61,3 +61,5 @@ or write it in our thread on the unofficial lethal companys discord: [Server-Inv
 
 [IceSigil](https://twitter.com/IceSigil)
 
+[NimNom](https://www.twitch.tv/nimnom)
+
