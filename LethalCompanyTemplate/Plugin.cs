@@ -7,6 +7,7 @@ using LCShrinkRay.patches;
 using LCShrinkRay.Config;
 using System.Reflection;
 using LCShrinkRay.comp;
+using LCShrinkRay.compatibility;
 
 namespace LCShrinkRay
 {
@@ -50,6 +51,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
             harmony.PatchAll(typeof(DeskPatch));
             harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
+            harmony.PatchAll(typeof(ModdedDungeonEntrancePatch));
 
             // comp
             harmony.PatchAll(typeof(Vents));

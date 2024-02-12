@@ -24,5 +24,19 @@ namespace LCShrinkRay.helper
             Offense = 7,
             Titan = 8
         }
+
+
+        /*
+        for (int i = 0; i < RoundManager.Instance.dungeonFlowTypes.Length; i++)
+        {
+            Plugin.Log("Dungeon: " + RoundManager.Instance.dungeonFlowTypes[i].name + " = " + i);
+        }
+        */
+        public enum Dungeon
+        {
+            Level1Flow = 0,             // Factory
+            Level2Flow = 1,             // Haunted Mansion
+            Level1FlowExtraLarge = 2    // Large Factory
+        }
     }
 }
