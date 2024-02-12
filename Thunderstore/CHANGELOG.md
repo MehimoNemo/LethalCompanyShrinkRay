@@ -1,3 +1,6 @@
+### 0.1.3 ###
++ avoided bugging through ground on modded dungeons (tested with ScoopysVarietyMod) upon entering as shrunken player
+
 ### 0.1.2 ###
 + Grabbed players are now unable to shrink/enlarge the player holding them
 
