@@ -2,7 +2,6 @@
 using HarmonyLib;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using System;
 using UnityEngine;
 
 namespace LCShrinkRay.patches
@@ -11,13 +10,7 @@ namespace LCShrinkRay.patches
     internal class PlayerModificationPatch
     {
         public static MeshRenderer helmetRenderer;
-        
-        public struct PlayerControllerValues
-        {
-            public float jumpForce { get; set; }
-            public float sprintMultiplier { get; set; }
-        }
-        private static PlayerControllerValues? defaultPlayerValues = null;
+
         private static bool modified = false, wasModifiedLastFrame = false, wasResetLastFrame = false;
         private static float modifiedSprintMultiplier = 0f;
 
@@ -46,45 +39,29 @@ namespace LCShrinkRay.patches
 
             if (helmetRenderer == null)
             {
-                var scavengerHelmet = GameObject.Find("ScavengerHelmet");
-                if(scavengerHelmet != null)
+                var helmetTransform = GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+                if(helmetTransform != null)
                 {
-                    var helmetTransform = scavengerHelmet.GetComponent<Transform>();
+                    helmetRenderer = helmetTransform.gameObject?.GetComponent<MeshRenderer>();
                     helmetTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
-                    Plugin.Log("Player transform got!");
-
-                    Plugin.Log("Finding helmet!");
-                    try
-                    {
-                        helmetRenderer = helmetTransform.gameObject.GetComponent<MeshRenderer>();
-                    }
-                    catch (Exception e)
-                    {
-                        Plugin.Log(e.Message, Plugin.LogType.Warning);
-                    }
                 }
             }
 
-            if (defaultPlayerValues == null)
-            {
-                defaultPlayerValues = new PlayerControllerValues
-                {
-                    jumpForce = ___jumpForce,
-                    sprintMultiplier = ___sprintMultiplier
-                };
-                Plugin.Log("Setting default values: J -> " + ___jumpForce + " / S -> " + ___sprintMultiplier);
-            }
+            if (PlayerDefaultValues.Values == null)
+                return;
+
+            var defaults = PlayerDefaultValues.Values;
 
             // Single-time changes
             if(wasModifiedLastFrame)
             {
-                ___jumpForce = defaultPlayerValues.Value.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
+                ___jumpForce = defaults.Value.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
                 wasModifiedLastFrame = false;
             }
 
             if(wasResetLastFrame)
             {
-                ___jumpForce = defaultPlayerValues.Value.jumpForce;
+                ___jumpForce = defaults.Value.jumpForce;
                 wasResetLastFrame = false;
             }
 
@@ -92,7 +69,7 @@ namespace LCShrinkRay.patches
             if (modified)
             {
                 if (modifiedSprintMultiplier == 0f)
-                    modifiedSprintMultiplier = defaultPlayerValues.Value.sprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
+                    modifiedSprintMultiplier = defaults.Value.sprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
 
                 // Base values taken from PlayerControllerB.Update()
                 var baseModificationSpeed = __instance.isSprinting ? Time.deltaTime : (Time.deltaTime * 10f);

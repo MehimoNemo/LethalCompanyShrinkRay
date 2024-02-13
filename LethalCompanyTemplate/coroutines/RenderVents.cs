@@ -5,12 +5,12 @@ namespace LCShrinkRay.coroutines
 {
     internal class RenderVents : MonoBehaviour
     {
-        public GameObject gameObject { get; private set; }
+        public GameObject bindingObject { get; private set; }
 
-        public static void StartRoutine(GameObject gameObject)
+        public static void StartRoutine(GameObject bindingObject)
         {
-            var routine = gameObject.AddComponent<RenderVents>();
-            routine.gameObject = gameObject;
+            var routine = bindingObject.AddComponent<RenderVents>();
+            routine.bindingObject = bindingObject;
             routine.StartCoroutine(routine.Run());
         }
 

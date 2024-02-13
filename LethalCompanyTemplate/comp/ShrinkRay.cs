@@ -8,8 +8,6 @@ using LCShrinkRay.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using static LCShrinkRay.helper.LayerMasks;
-using static UnityEngine.GraphicsBuffer;
-using UnityEngine.Rendering.HighDefinition;
 
 namespace LCShrinkRay.comp
 {
@@ -136,10 +134,7 @@ namespace LCShrinkRay.comp
             foreach (var hit in raycastHits)
             {
                 if (Vector3.Dot(transform.forward, hit.transform.position - transform.position) < 0f)
-                {
-                    Plugin.Log("Object " + hit.collider.gameObject.name + " is behind us.");
-                    continue;
-                }
+                    continue; // Is behind us
 
                 // Check if in line of sight
                 if (Physics.Linecast(transform.position, hit.transform.position, out RaycastHit hitInfo, StartOfRound.Instance.collidersRoomDefaultAndFoliage, QueryTriggerInteraction.Ignore))
@@ -248,11 +243,18 @@ namespace LCShrinkRay.comp
             if(targetPlayer.isClimbingLadder)
                 return false;
 
-            var gpo = GrabbablePlayerList.FindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID);
-            if(gpo != null && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId ==  targetPlayer.playerClientId)
+            if(GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
             {
-                Plugin.Log("Attempting to shrink the player who holds us. Bad idea!");
-                return false;
+                if(gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == targetPlayer.playerClientId)
+                {
+                    Plugin.Log("Attempting to shrink the player who holds us. Bad idea!");
+                    return false;
+                }
+                if(gpo.IsOnSellCounter.Value)
+                {
+                    Plugin.Log("Attempting to shrink a player who is on the sell counter. Poor soul is already doomed, let's not do this..");
+                    return false;
+                }
             }
 
             switch(type)
@@ -322,7 +324,7 @@ namespace LCShrinkRay.comp
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, normalizedSize, () => IsOnCooldown = false);
 
                         if(PlayerInfo.IsHost)
-                            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
+                            GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
 
                         if (targetingUs)
                             Vents.DisableVents();
@@ -350,7 +352,7 @@ namespace LCShrinkRay.comp
                         if (nextShrunkenSize < 1f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
                         {
                             Plugin.Log("About to call SetPlayerGrabbableServerRpc");
-                            GrabbablePlayerList.Instance.SetPlayerGrabbableServerRpc(targetPlayer.playerClientId);
+                            GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
                         }
                         else
                         {
@@ -371,7 +373,7 @@ namespace LCShrinkRay.comp
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () => IsOnCooldown = false);
 
                         if (nextIncreasedSize >= 1f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(targetPlayer.playerClientId);
+                            GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
 
                         if (targetingUs)
                             Vents.DisableVents();

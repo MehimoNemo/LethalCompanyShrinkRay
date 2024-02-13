@@ -5,7 +5,6 @@ using LCShrinkRay.helper;
 using LCShrinkRay.patches;
 using System;
 using System.Collections;
-using System.Linq;
 using UnityEngine;
 
 namespace LCShrinkRay.coroutines
@@ -79,10 +78,10 @@ namespace LCShrinkRay.coroutines
                 {
                     if (maskTransform != null)
                     {
-                        maskTransform.localScale = CalcMaskScaleVec(currentSize);
-                        maskTransform.localPosition = CalcMaskPosVec(currentSize);
+                        maskTransform.localScale = PlayerInfo.CalcMaskScaleVec(currentSize);
+                        maskTransform.localPosition = PlayerInfo.CalcMaskPosVec(currentSize);
                     }
-                    var newArmScale = CalcArmScale(newSize);
+                    var newArmScale = PlayerInfo.CalcArmScale(currentSize);
                     if(armTransform != null)
                         armTransform.localScale = newArmScale;
                     if (heldItem != null)
@@ -94,7 +93,7 @@ namespace LCShrinkRay.coroutines
                 count = count % 20 + 1;
                 if(count == 1)
                 {
-                    yield return StartCoroutine(AdjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
+                    yield return AdjustAllPlayerPitches(); // Adjust pitch & item every 20 frames
                     //if (targetingUs && heldItem != null)
                         //ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
@@ -108,10 +107,10 @@ namespace LCShrinkRay.coroutines
             {
                 if (maskTransform != null)
                 {
-                    maskTransform.localScale = CalcMaskScaleVec(newSize);
-                    maskTransform.localPosition = CalcMaskPosVec(newSize);
+                    maskTransform.localScale = PlayerInfo.CalcMaskScaleVec(newSize);
+                    maskTransform.localPosition = PlayerInfo.CalcMaskPosVec(newSize);
                 }
-                var newArmScale = CalcArmScale(newSize);
+                var newArmScale = PlayerInfo.CalcArmScale(newSize);
                 if (armTransform != null)
                     armTransform.localScale = newArmScale;
                 if (heldItem != null)
@@ -125,46 +124,17 @@ namespace LCShrinkRay.coroutines
                     PlayerModificationPatch.Reset();
             }
 
-            yield return StartCoroutine(AdjustAllPlayerPitches()); // Adjust pitch & item every 20 frames
+            yield return AdjustAllPlayerPitches(); // Adjust pitch & item every 20 frames
 
             if (onComplete != null)
                 onComplete();
-        }
-        private Vector3 CalcMaskPosVec(float scale)
-        {
-            return new Vector3()
-            {
-                x = 0,
-                y = 0.00375f * scale + 0.05425f,
-                z = 0.005f * scale - 0.279f
-            };
-        }
-
-        private Vector3 CalcMaskScaleVec(float scale)
-        {
-            return new Vector3()
-            {
-                x = 0.277f * scale + 0.2546f,
-                y = 0.2645f * scale + 0.267f,
-                z = 0.177f * scale + 0.3546f
-            };
-        }
-
-        private Vector3 CalcArmScale(float scale)
-        {
-            return new Vector3()
-            {
-                x = 0.35f * scale + 0.58f,
-                y = -0.0625f * scale + 1.0625f,
-                z = -0.125f * scale + 1.15f
-            };
         }
 
         private IEnumerator AdjustAllPlayerPitches()
         {
             if (!targetingUs) // Only need to change pitch of affected player
             {
-                yield return StartCoroutine(AdjustPlayerPitch(targetPlayer));
+                yield return AdjustPlayerPitch(targetPlayer);
                 yield break;
             }
 
@@ -172,7 +142,7 @@ namespace LCShrinkRay.coroutines
             foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
             {
                 if (pcb != null && pcb.isPlayerControlled && pcb.playerClientId != targetPlayer.playerClientId)
-                    yield return StartCoroutine(AdjustPlayerPitch(pcb));
+                    yield return AdjustPlayerPitch(pcb);
             }
         }
 

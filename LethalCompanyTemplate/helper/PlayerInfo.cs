@@ -20,8 +20,10 @@ namespace LCShrinkRay.helper
 
         public static bool IsCurrentPlayerGrabbed()
         {
-            var gpo = GrabbablePlayerList.FindGrabbableObjectForPlayer(CurrentPlayer.playerClientId);
-            return gpo != null && gpo.playerHeldBy != null;
+            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(CurrentPlayerID, out GrabbablePlayerObject gpo))
+                return gpo.playerHeldBy != null;
+
+            return false;
         }
 
         public static float CalculateWeightFor(PlayerControllerB player, bool playerWeightIncluded = false)
@@ -167,6 +169,36 @@ namespace LCShrinkRay.helper
             {
                 return HeldItem(CurrentPlayer);
             }
+        }
+
+        public static Vector3 CalcMaskPosVec(float scale)
+        {
+            return new Vector3()
+            {
+                x = 0,
+                y = 0.00375f * scale + 0.05425f,
+                z = 0.005f * scale - 0.279f
+            };
+        }
+
+        public static Vector3 CalcMaskScaleVec(float scale)
+        {
+            return new Vector3()
+            {
+                x = 0.277f * scale + 0.2546f,
+                y = 0.2645f * scale + 0.267f,
+                z = 0.177f * scale + 0.3546f
+            };
+        }
+
+        public static Vector3 CalcArmScale(float scale)
+        {
+            return new Vector3()
+            {
+                x = 0.35f * scale + 0.58f,
+                y = -0.0625f * scale + 1.0625f,
+                z = -0.125f * scale + 1.15f
+            };
         }
     }
 }

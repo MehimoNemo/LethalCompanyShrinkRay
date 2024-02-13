@@ -1,5 +1,4 @@
-﻿using GameNetcodeStuff;
-using HarmonyLib;
+﻿using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.helper;
 using System.IO;
@@ -26,22 +25,20 @@ namespace LCShrinkRay.patches
         public static void Init()
         {
             LoadAllAssets();
-            GrabbablePlayerList.CreateNetworkPrefab();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
         public static void Initialize()
         {
             IsGameInitialized = true;
-            GrabbablePlayerList.CreateInstance();
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
         public static void Uninitialize()
         {
             IsGameInitialized = false;
-            GrabbablePlayerList.Instance.RemovePlayerGrabbableServerRpc(PlayerInfo.CurrentPlayerID); // remove us from the list, in case we were grabbable
-            GrabbablePlayerList.RemoveInstance();
+            GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
+            GrabbablePlayerList.ClearGrabbablePlayerObjects();
             PlayerModificationPatch.helmetRenderer = null;
         }
 
@@ -49,14 +46,6 @@ namespace LCShrinkRay.patches
         public static void EndRound()
         {
             Plugin.Log("EndOfGame");
-
-            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts) // reset player sizes
-            {
-                if(PlayerInfo.IsShrunk(player))
-                    coroutines.PlayerShrinkAnimation.StartRoutine(player, 1f);
-            }
-
-            GrabbablePlayerList.ClearGrabbablePlayerObjects();
         }
     }
 }

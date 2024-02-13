@@ -1,5 +1,13 @@
+### 0.2.0 ### [Stability update]
++ Major GrabbablePlayerList overhaul (simplified & removed RPC calls as they weren't needed)
++ DeskPatch (Playerselling) overhaul (simplified & bugfixing)
++ Fixed infinite shrink/enlarge bug at end of round if player died from shrinking or was sold
++ Fixed player pitch not working (hopefully, worked in LAN)
+What's new?
++ GrabbablePlayerObjects are now persistent through rounds
+
 ### 0.1.3 ###
-+ avoided bugging through ground on modded dungeons (tested with ScoopysVarietyMod) upon entering as shrunken player
++ Fixed bugging through ground on modded dungeons (tested with [ScoopysVarietyMod](https://thunderstore.io/c/lethal-company/p/scoopy/Scoopys_Variety_Mod)) upon entering as shrunken player
 
 ### 0.1.2 ###
 + Grabbed players are now unable to shrink/enlarge the player holding them
