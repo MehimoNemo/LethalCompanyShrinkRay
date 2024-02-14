@@ -159,42 +159,23 @@ namespace LCShrinkRay.comp
         private IEnumerator ThrowGrabbedPlayer(Vector3 direction)
         {
             Plugin.Log("ThrowGrabbedPlayer");
-            float time = 0f, duration = 0.5f, force = 15f;
+            float time = 0f, duration = 0.5f, force = 10f;
+
+            direction.y = Mathf.Max(direction.y, -1f) + 1f; // Don't throw backwards
+            direction.y = Mathf.Min(direction.y, 1.8f); // Don't throw them high enough to take damage.. that's evil!
+            
             Vector3 startForce = direction * force;
 
-            /*
-                     |          d = duration
-                     ++
-                     | +
-                     |  +
-                     |  +
-                     |   +
-            -------------+---d--
-                     |   +
-                     |    +
-                     |    +
-                     |     +   
-                     |      ++
-                     |
-             */
-            float upwardMultiplier = Mathf.Max(direction.y, -1f) + 1f; // Starting from 0f. Is 1f when looking straight
-            upwardMultiplier *= 1.3f; // Make it a tiny bit stronger
-            Plugin.Log("Upward upwardMultiplier: " + upwardMultiplier);
             while (time < duration)
             {
-                var externalForces = Vector3.Lerp(startForce, Vector3.zero, time / duration);
-                var heightCurveCurrentForce = Mathf.Sin(Mathf.PI / duration * time + Mathf.PI / 2f) * force;
-                externalForces.y = heightCurveCurrentForce;
-                externalForces *= upwardMultiplier; // Throw further if looked upwards
+                var sinusProgress = Mathf.Lerp(Mathf.PI / 2f, 0f, time / duration);
+                grabbedPlayer.externalForces = startForce * sinusProgress * direction.y; // direction.y to throw further when looking up
+                Plugin.Log("ExternalForces: " + grabbedPlayer.externalForces);
 
-                grabbedPlayer.externalForces = externalForces;
-                //Plugin.Log("ExternalForces: " + externalForces + " / height: " + heightCurveCurrentForce);
                 time += Time.deltaTime; 
                 yield return null;
-            }// todo: don't use negative external force downwards
+            }
             grabbedPlayer.externalForces = Vector3.zero;
-
-            yield break;
         }
 
         [ServerRpc(RequireOwnership = false)]

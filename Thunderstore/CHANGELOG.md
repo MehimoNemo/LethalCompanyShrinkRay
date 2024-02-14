@@ -5,6 +5,7 @@
 + Fixed player pitch not working (hopefully, worked in LAN)
 What's new?
 + GrabbablePlayerObjects are now persistent through rounds
++ Shrunken players are now throwable
 
 ### 0.1.3 ###
 + Fixed bugging through ground on modded dungeons (tested with [ScoopysVarietyMod](https://thunderstore.io/c/lethal-company/p/scoopy/Scoopys_Variety_Mod)) upon entering as shrunken player
