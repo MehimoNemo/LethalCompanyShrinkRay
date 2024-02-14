@@ -1,9 +1,11 @@
-### 0.2.0 ### [Stability update]
+### 0.2.0 [Stability update] ###
 + Major GrabbablePlayerList overhaul (simplified & removed RPC calls as they weren't needed)
 + DeskPatch (Playerselling) overhaul (simplified & bugfixing)
 + Fixed infinite shrink/enlarge bug at end of round if player died from shrinking or was sold
 + Fixed player pitch not working (hopefully, worked in LAN)
-What's new?
++ Changed project name from LCShrinkRay.BETA to LittleCompany.BETA. **The config file will reset** due to the folder-change!
+
+**What's new?**
 + GrabbablePlayerObjects are now persistent through rounds
 + Shrunken players are now throwable
 
