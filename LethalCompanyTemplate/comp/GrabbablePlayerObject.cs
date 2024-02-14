@@ -82,6 +82,8 @@ namespace LCShrinkRay.comp
 
             if (grabbedPlayer == null)
             {
+                if (PlayerInfo.CurrentPlayer == null) return; // Needs a few more frames to connect playerController
+
                 if(grabbedPlayerID == null)
                 {
                     Plugin.Log("Unable to get grabbedPlayer.");
@@ -90,12 +92,6 @@ namespace LCShrinkRay.comp
 
                 Plugin.Log("GrabbablePlayerObject.ReInitialize");
                 Initialize();
-            }
-
-            if (grabbedPlayer == null)
-            {
-                Plugin.Log("grabbedPlayer was null in LateUpdate");
-                return;
             }
 
             if (this.isHeld)
@@ -115,7 +111,9 @@ namespace LCShrinkRay.comp
                 grabbedPlayer.transform.position = this.transform.position;
             }
             else
+            {
                 transform.position = grabbedPlayer.transform.position;
+            }
 
             if (PlayerInfo.CurrentPlayerID == grabbedPlayer.playerClientId) // it's us!
             { 
