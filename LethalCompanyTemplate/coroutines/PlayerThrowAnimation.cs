@@ -34,7 +34,7 @@ namespace LCShrinkRay.coroutines
             {
                 var sinusProgress = Mathf.Lerp(Mathf.PI / 2f, 0f, time / duration);
                 targetPlayer.externalForces = startForce * sinusProgress * direction.y; // direction.y to throw further when looking up
-                Plugin.Log("ExternalForces: " + targetPlayer.externalForces);
+                //Plugin.Log("ExternalForces: " + targetPlayer.externalForces);
 
                 time += Time.deltaTime;
                 yield return null;

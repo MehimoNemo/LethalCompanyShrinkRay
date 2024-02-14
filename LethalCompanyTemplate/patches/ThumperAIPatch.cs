@@ -30,7 +30,7 @@ namespace LCShrinkRay.patches
                     pcb.KillPlayer(bodyVelocity: Vector3.zero, spawnBody: false, CauseOfDeath.Mauling);
                     break;
                 case ModConfig.ThumperBehaviour.Bumper:
-                    coroutines.PlayerThrowAnimation.StartRoutine(pcb, __instance.transform.forward + Vector3.up * 0.42f, 20f);
+                    coroutines.PlayerThrowAnimation.StartRoutine(pcb, __instance.transform.forward + Vector3.up * 0.15f, 20f);
                     break;
                 default:
                     break;

@@ -138,12 +138,13 @@ namespace LCShrinkRay.comp
         {
             try
             {
+                var direction = playerHeldBy.gameplayCamera.transform.forward;
                 playerHeldBy.DiscardHeldObject();// placeObject: true, null, ThrowDestination());
                 grabbedPlayer.playerCollider.enabled = true;
                 SetIsGrabbableToEnemies(true);
 
                 if(ModConfig.Instance.values.throwablePlayers)
-                    ThrowPlayerServerRpc(grabbedPlayer.playerClientId, playerHeldBy.gameplayCamera.transform.forward);
+                    ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
             }
             catch (Exception e)
             {
