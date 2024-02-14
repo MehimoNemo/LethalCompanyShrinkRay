@@ -177,20 +177,22 @@ namespace LCShrinkRay.comp
                      |      ++
                      |
              */
-
-            Vector3 lastExternalForces = grabbedPlayer.externalForces;
+            float upwardMultiplier = Mathf.Max(direction.y, -1f) + 1f; // Starting from 0f. Is 1f when looking straight
+            upwardMultiplier *= 1.3f; // Make it a tiny bit stronger
+            Plugin.Log("Upward upwardMultiplier: " + upwardMultiplier);
             while (time < duration)
             {
                 var externalForces = Vector3.Lerp(startForce, Vector3.zero, time / duration);
-                var diff = externalForces - lastExternalForces;
-
                 var heightCurveCurrentForce = Mathf.Sin(Mathf.PI / duration * time + Mathf.PI / 2f) * force;
+                externalForces.y = heightCurveCurrentForce;
+                externalForces *= upwardMultiplier; // Throw further if looked upwards
 
-                grabbedPlayer.externalForces += (diff + Vector3.up * heightCurveCurrentForce);
-                Plugin.Log("ExternalForces: " + externalForces + " / diff: " + diff + " / height: " + heightCurveCurrentForce);
+                grabbedPlayer.externalForces = externalForces;
+                //Plugin.Log("ExternalForces: " + externalForces + " / height: " + heightCurveCurrentForce);
                 time += Time.deltaTime; 
                 yield return null;
-            }
+            }// todo: don't use negative external force downwards
+            grabbedPlayer.externalForces = Vector3.zero;
 
             yield break;
         }
