@@ -25,7 +25,7 @@ namespace LCShrinkRay.patches
                 return;
             }
 
-            placedPlayer.PlaceOnSellCounter();
+            placedPlayer.PlaceOnSellCounterServerRpc();
 
             int scrapValue = 5;
             foreach (var valuableItem in placedPlayer.grabbedPlayer.ItemSlots)
@@ -55,15 +55,18 @@ namespace LCShrinkRay.patches
             }
         }
 
-        [HarmonyPatch(typeof(StartOfRound), "ShipHasLeft")]
+        [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
         [HarmonyPrefix()]
         public static void ShipHasLeftPrefix()
         {
             if (!GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
                 return;
 
-            if(gpo.IsOnSellCounter.Value)
-                gpo.RemoveFromSellCounter(); // left behind
+            if (gpo.IsOnSellCounter.Value)
+            {
+                gpo.RemoveFromSellCounterServerRpc();
+                Plugin.Log("We got left behind :c");
+            }
         }
     }
 }

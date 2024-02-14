@@ -138,15 +138,18 @@ namespace LCShrinkRay.comp
             {
                 targetPlayer.gameObject.transform.localScale = Vector3.one;
 
-                var armTransform = targetPlayer.gameObject.transform.Find("ScavengerModel")?.Find("metarig")?.Find("ScavengerModelArmsOnly");
+                var armTransform = PlayerInfo.GetArmTransform(targetPlayer);
                 if (armTransform != null)
                     armTransform.localScale = PlayerInfo.CalcArmScale(1f);
 
-                var helmetTransform = GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
-                if (helmetTransform != null)
+                if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
                 {
-                    helmetTransform.localScale = PlayerInfo.CalcMaskScaleVec(1f);
-                    helmetTransform.localPosition = PlayerInfo.CalcMaskPosVec(1f);
+                    var maskTransform = PlayerInfo.GetGlobalMaskTransform(targetPlayer);
+                    if (maskTransform != null)
+                    {
+                        maskTransform.localScale = PlayerInfo.CalcMaskScaleVec(1f);
+                        maskTransform.localPosition = PlayerInfo.CalcMaskPosVec(1f);
+                    }
                 }
             }
 

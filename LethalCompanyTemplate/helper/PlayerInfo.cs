@@ -171,6 +171,10 @@ namespace LCShrinkRay.helper
             }
         }
 
+        public static Transform GetArmTransform(PlayerControllerB pcb)
+        {
+            return pcb?.gameObject?.transform.Find("ScavengerModel")?.Find("metarig")?.Find("ScavengerModelArmsOnly");
+        }
         public static Vector3 CalcMaskPosVec(float scale)
         {
             return new Vector3()
@@ -181,6 +185,10 @@ namespace LCShrinkRay.helper
             };
         }
 
+        public static Transform GetGlobalMaskTransform(PlayerControllerB pcb)
+        {
+            return GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+        }
         public static Vector3 CalcMaskScaleVec(float scale)
         {
             return new Vector3()

@@ -36,7 +36,7 @@ namespace LCShrinkRay.patches
                     RoundManager.Instance.currentLevel.Enemies.ForEach(enemyType => { enemyTypes += " " + enemyType.enemyType.name; });
                     Plugin.Log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
 
-                    int enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == "HoarderBug");
+                    int enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == "Centipede");
                     if (enemyIndex != -1)
                     {
                         var location = __instance.transform.position + __instance.transform.forward * 3;

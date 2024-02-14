@@ -76,7 +76,6 @@ namespace LCShrinkRay.comp
             scrapPersistedThroughRounds = true;
         }
 
-        private int counter = 1;
         public override void LateUpdate()
         {
             base.LateUpdate();
@@ -92,10 +91,6 @@ namespace LCShrinkRay.comp
                 Plugin.Log("GrabbablePlayerObject.ReInitialize");
                 Initialize();
             }
-
-            if (counter % 200 == 1)
-                Plugin.Log("GrabbablePlayerObject.LateUpdate for player: " + grabbedPlayerID.Value);
-            counter++;
 
             if (grabbedPlayer == null)
             {
@@ -117,8 +112,6 @@ namespace LCShrinkRay.comp
             }
             else if (IsOnSellCounter.Value)
             {
-                if(StartOfRound.Instance.inShipPhase)
-                    RemoveFromSellCounter(); // Left behind
                 grabbedPlayer.transform.position = this.transform.position;
             }
             else
@@ -455,7 +448,9 @@ namespace LCShrinkRay.comp
 
         private void SetHolderGrabbable(bool isGrabbable = true)
         {
-            if(GrabbablePlayerList.TryFindGrabbableObjectForPlayer(playerHeldBy.playerClientId, out GrabbablePlayerObject gpo ))
+            if (!IsCurrentPlayer) return; // Only do this from the perspective of the currently held player, not the holder himself
+
+            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(playerHeldBy.playerClientId, out GrabbablePlayerObject gpo ))
                 gpo.grabbable = isGrabbable;
         }
 
@@ -511,14 +506,16 @@ namespace LCShrinkRay.comp
                 HUDManager.Instance.ChangeControlTipMultiple(grabbedPlayerItem.itemProperties.toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
         }
 
-        internal void PlaceOnSellCounter()
+        [ServerRpc(RequireOwnership = false)]
+        internal void PlaceOnSellCounterServerRpc()
         {
             IsOnSellCounter.Value = true;
             if (IsCurrentPlayer && PlayerModificationPatch.helmetRenderer != null)
                 PlayerModificationPatch.helmetRenderer.enabled = false;
         }
 
-        internal void RemoveFromSellCounter()
+        [ServerRpc(RequireOwnership = false)]
+        internal void RemoveFromSellCounterServerRpc()
         {
             IsOnSellCounter.Value = false;
 

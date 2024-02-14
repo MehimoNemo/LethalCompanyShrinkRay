@@ -38,11 +38,11 @@ namespace LCShrinkRay.coroutines
             Vector3 initialArmScale = Vector3.one;
             if(targetingUs)
             {
-                armTransform = playerTransform.Find("ScavengerModel")?.Find("metarig")?.Find("ScavengerModelArmsOnly");
+                armTransform = PlayerInfo.GetArmTransform(targetPlayer);
                 if (armTransform == null)
                     Plugin.Log("Ray was targeting us, but we don't have arms??", Plugin.LogType.Warning);
 
-                maskTransform = GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+                maskTransform = PlayerInfo.GetGlobalMaskTransform(targetPlayer);
                 if (maskTransform == null)
                     Plugin.Log("Ray was targeting us, but we don't have a helmet??", Plugin.LogType.Warning);
 

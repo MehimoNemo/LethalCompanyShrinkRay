@@ -41,11 +41,5 @@ namespace LCShrinkRay.patches
             GrabbablePlayerList.ClearGrabbablePlayerObjects();
             PlayerModificationPatch.helmetRenderer = null;
         }
-
-        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
-        public static void EndRound()
-        {
-            Plugin.Log("EndOfGame");
-        }
     }
 }
