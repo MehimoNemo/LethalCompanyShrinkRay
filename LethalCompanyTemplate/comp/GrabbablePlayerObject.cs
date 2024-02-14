@@ -156,18 +156,39 @@ namespace LCShrinkRay.comp
             }
         }
 
-        private IEnumerator ThrowGrabbedPlayer(Vector3 direction, float force)
+        private IEnumerator ThrowGrabbedPlayer(Vector3 direction)
         {
             Plugin.Log("ThrowGrabbedPlayer");
-            float time = 0f, duration = 2f;
+            float time = 0f, duration = 0.5f, force = 15f;
             Vector3 startForce = direction * force;
 
+            /*
+                     |          d = duration
+                     ++
+                     | +
+                     |  +
+                     |  +
+                     |   +
+            -------------+---d--
+                     |   +
+                     |    +
+                     |    +
+                     |     +   
+                     |      ++
+                     |
+             */
+
+            Vector3 lastExternalForces = grabbedPlayer.externalForces;
             while (time < duration)
             {
-                var momentum = Vector3.Lerp(startForce, Vector3.zero, time / duration);
-                Plugin.Log("Momentum: " + momentum);
-                grabbedPlayer.externalForces = momentum;
-                time += Time.deltaTime;
+                var externalForces = Vector3.Lerp(startForce, Vector3.zero, time / duration);
+                var diff = externalForces - lastExternalForces;
+
+                var heightCurveCurrentForce = Mathf.Sin(Mathf.PI / duration * time + Mathf.PI / 2f) * force;
+
+                grabbedPlayer.externalForces += (diff + Vector3.up * heightCurveCurrentForce);
+                Plugin.Log("ExternalForces: " + externalForces + " / diff: " + diff + " / height: " + heightCurveCurrentForce);
+                time += Time.deltaTime; 
                 yield return null;
             }
 
@@ -185,7 +206,7 @@ namespace LCShrinkRay.comp
         {
             if (playerID != PlayerInfo.CurrentPlayerID) return;
 
-            StartCoroutine(ThrowGrabbedPlayer(direction, 42f));
+            StartCoroutine(ThrowGrabbedPlayer(direction));
         }
 
         public override void DiscardItem()
