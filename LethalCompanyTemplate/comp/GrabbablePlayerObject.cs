@@ -147,8 +147,8 @@ namespace LCShrinkRay.comp
                 grabbedPlayer.playerCollider.enabled = true;
                 SetIsGrabbableToEnemies(true);
 
-                Plugin.Log("About to start ThrowGrabbedPlayer");
-                ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
+                if(ModConfig.Instance.values.throwablePlayers)
+                    ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
             }
             catch (Exception e)
             {
