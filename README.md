@@ -17,7 +17,7 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | ThrowablePlayers            | If true, shrunken players can be thrown by normal sized players.                          | true / false                           | true    |
 |              | FriendlyFlight              | If true, held players can grab other players, causing comedic, but game breaking effects. | true / false                           | false   |
 | Enemies      | HoardingBugSteal            | If true, hoarding/loot bugs can treat a shrunken player like an item.                     | true / false                           | true    |
-|              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot                      | Default |
+|              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot, Bumper              | Default |
 > client-sided options are marked with a \*, others will by synced with the host.
 
 ## Known bugs ##
