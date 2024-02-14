@@ -115,7 +115,7 @@ namespace LCShrinkRay.comp
                 transform.position = grabbedPlayer.transform.position;
             }
 
-            if (PlayerInfo.CurrentPlayerID == grabbedPlayer.playerClientId) // it's us!
+            if (IsCurrentPlayer)
             { 
                 CheckForGoomba();
 
