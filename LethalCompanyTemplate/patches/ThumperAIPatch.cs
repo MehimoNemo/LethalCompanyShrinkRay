@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
+using LCShrinkRay.helper;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,46 +17,24 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void OnCollideWithPlayer(CrawlerAI __instance, Collider other)
         {
-            var playerControllerB = __instance.MeetsStandardPlayerCollisionConditions(other);
-            if (!playerControllerB)
-                return;
+            if (!PlayerInfo.IsCurrentPlayerShrunk) return;
+
+            var pcb = __instance.MeetsStandardPlayerCollisionConditions(other);
+            if (!pcb) return;
+
+            if(pcb.playerClientId != PlayerInfo.CurrentPlayerID) return;
 
             switch (ModConfig.Instance.values.thumperBehaviour)
             {
                 case ModConfig.ThumperBehaviour.OneShot:
-                    playerControllerB.KillPlayer(bodyVelocity: default(Vector3), spawnBody: false, CauseOfDeath.Mauling);
+                    pcb.KillPlayer(bodyVelocity: Vector3.zero, spawnBody: false, CauseOfDeath.Mauling);
                     break;
-                /*case ThumperBehaviour.Bumper: // NOT WORKING YET
-                    Plugin.log("Forward: " + __instance.transform.forward.ToString());
-                    var force = __instance.transform.forward * 10000f; // maybe forward is 0?
-                    force.x = 4.2f;
-                    Plugin.log("Forward after adjustments: " + force);
-
-                    var rb = playerControllerB.gameObject.GetComponent<Rigidbody>();
-                    if (!rb)
-                    {
-                        Plugin.log("Adding rigidbody");
-                        rb = playerControllerB.gameObject.AddComponent<Rigidbody>();
-                        if (!rb)
-                        {
-                            Plugin.log("No rigidbody", Plugin.LogType.Error);
-                            return;
-                        }
-                    }
-                    rb.isKinematic = false;
-                    rb.freezeRotation = true;
-                    rb.AddForce(force, ForceMode.Impulse);
-                    resetToKinetic(rb).GetAwaiter();
-                    break;*/
+                case ModConfig.ThumperBehaviour.Bumper:
+                    coroutines.PlayerThrowAnimation.StartRoutine(pcb, __instance.transform.forward + Vector3.up * 0.42f, 20f);
+                    break;
                 default:
                     break;
             }
-        }
-        public static async Task ResetToKinetic(Rigidbody rb)
-        {
-            await Task.Delay(500);
-            rb.isKinematic = true;
-            rb.freezeRotation = false;
         }
     }
 }

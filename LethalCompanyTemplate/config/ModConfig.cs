@@ -24,7 +24,7 @@ namespace LCShrinkRay.Config
         {
             Default,
             OneShot,
-            //Bumper
+            Bumper
         }
 
         public struct ConfigValues

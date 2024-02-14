@@ -138,44 +138,17 @@ namespace LCShrinkRay.comp
         {
             try
             {
-                Plugin.Log("Player yeet");
-                //base.ItemActivate(used, buttonDown);
-
-                var direction = playerHeldBy.gameplayCamera.transform.forward;
-                Plugin.Log("Player yeet direction: " + direction);
                 playerHeldBy.DiscardHeldObject();// placeObject: true, null, ThrowDestination());
                 grabbedPlayer.playerCollider.enabled = true;
                 SetIsGrabbableToEnemies(true);
 
                 if(ModConfig.Instance.values.throwablePlayers)
-                    ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
+                    ThrowPlayerServerRpc(grabbedPlayer.playerClientId, playerHeldBy.gameplayCamera.transform.forward);
             }
             catch (Exception e)
             {
                 Plugin.Log("Error while yeeting player: " + e.Message);
             }
-        }
-
-        private IEnumerator ThrowGrabbedPlayer(Vector3 direction)
-        {
-            Plugin.Log("ThrowGrabbedPlayer");
-            float time = 0f, duration = 0.5f, force = 10f;
-
-            direction.y = Mathf.Max(direction.y, -1f) + 1f; // Don't throw backwards
-            direction.y = Mathf.Min(direction.y, 1.8f); // Don't throw them high enough to take damage.. that's evil!
-            
-            Vector3 startForce = direction * force;
-
-            while (time < duration)
-            {
-                var sinusProgress = Mathf.Lerp(Mathf.PI / 2f, 0f, time / duration);
-                grabbedPlayer.externalForces = startForce * sinusProgress * direction.y; // direction.y to throw further when looking up
-                Plugin.Log("ExternalForces: " + grabbedPlayer.externalForces);
-
-                time += Time.deltaTime; 
-                yield return null;
-            }
-            grabbedPlayer.externalForces = Vector3.zero;
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -189,7 +162,8 @@ namespace LCShrinkRay.comp
         {
             if (playerID != PlayerInfo.CurrentPlayerID) return;
 
-            StartCoroutine(ThrowGrabbedPlayer(direction));
+            Plugin.Log("We got thrown!");
+            coroutines.PlayerThrowAnimation.StartRoutine(grabbedPlayer, direction, 10f);
         }
 
         public override void DiscardItem()

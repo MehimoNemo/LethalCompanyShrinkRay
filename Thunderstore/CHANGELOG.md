@@ -1,3 +1,7 @@
+### 0.2.1 ###
++ Added new ThumperBehaviour: Bumper -> With their immense power, thumpers are unable to grab you. Instead they will send you flying on contact!
++ Fixed bug where ThumperBehaviour.OneShot was throwing errors in multiplayer
+
 ### 0.2.0 [Stability update] ###
 + Major GrabbablePlayerList overhaul (simplified & removed RPC calls as they weren't needed)
 + DeskPatch (Playerselling) overhaul (simplified & bugfixing)
