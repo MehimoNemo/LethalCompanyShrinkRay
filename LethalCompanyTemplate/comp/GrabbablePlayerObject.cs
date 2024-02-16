@@ -26,9 +26,8 @@ namespace LCShrinkRay.comp
         private bool IsGoombaCoroutineRunning = false;
 
         private EnemyAI enemyHeldBy = null;
-
-        // HoarderBug
-        private HoarderBugAI lastHoarderBugGrabbedBy = null;
+        public HoarderBugAI lastHoarderBugGrabbedBy = null;
+        public bool IsTargetableByHoarderBug = true;
         #endregion
 
         #region Networking
@@ -106,8 +105,8 @@ namespace LCShrinkRay.comp
                 Initialize();
             }
 
-            if(lastHoarderBugGrabbedBy != null) // Coming in here after being dropped by a hoarder bug
-                HoarderBugEscapeRoutine();
+            if(lastHoarderBugGrabbedBy != null && IsCurrentPlayer && frameCounter % 100 == 1) // Coming in here after being dropped by a hoarder bug
+                HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
 
             if (IsOnSellCounter.Value || enemyHeldBy != null)
             {
@@ -229,7 +228,10 @@ namespace LCShrinkRay.comp
 
             Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
             if (enemyHeldBy is HoarderBugAI)
+            {
                 lastHoarderBugGrabbedBy = enemyHeldBy as HoarderBugAI;
+                IsTargetableByHoarderBug = false; // Chill hoarding bug.. chill
+            }
 
             PlayerInfo.AdjustArmScale(grabbedPlayer);
             PlayerInfo.AdjustMaskScale(grabbedPlayer);
@@ -550,36 +552,9 @@ namespace LCShrinkRay.comp
             return IsOnSellCounter.Value && IsCurrentPlayer;
         }
 
-        private void HoarderBugEscapeRoutine()
+        private void HoarderBugEscapeRoutineForGrabbablePlayer(GrabbablePlayerObject gpo)
         {
-
-            // Check every 100 frames if we moved too far away from the last nest position. If so, add us back to the grabbableObjectList
-            if (frameCounter % 100 != 1) return;
-
-            if (lastHoarderBugGrabbedBy.nestPosition == null || Vector3.Distance(transform.position, lastHoarderBugGrabbedBy.nestPosition) > 4f)
-            {
-                if (!HoarderBugAI.grabbableObjectsInMap.Contains(gameObject))
-                    HoarderBugAI.grabbableObjectsInMap.Add(gameObject);
-
-                if (isHeld && playerHeldBy != null) // Someone "stole" us
-                {
-                    foreach (var hoarderBugItem in HoarderBugAI.HoarderBugItems)
-                    {
-                        if (hoarderBugItem.itemGrabbableObject != null && hoarderBugItem.itemGrabbableObject.name == name)
-                            hoarderBugItem.status = HoarderBugItemStatus.Stolen;
-                        lastHoarderBugGrabbedBy.angryAtPlayer = playerHeldBy;
-
-                        Plugin.Log("HoarderBug saw that player " + playerHeldBy.name + " stole " + name + ". Is angry now at them!");
-                    }
-                }
-                else // we escaped
-                {
-                    HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject.name == name);
-                    Plugin.Log("Moved too far away from hoarder bug nest and escaped!");
-                }
-
-                lastHoarderBugGrabbedBy = null;
-            }
+            
 
         }
         #endregion
