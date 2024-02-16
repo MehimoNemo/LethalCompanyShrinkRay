@@ -104,6 +104,12 @@ namespace LCShrinkRay.comp
 
         public static void SetPlayerGrabbable(ulong playerID)
         {
+            if(!PlayerInfo.IsHost)
+            {
+                Plugin.Log("SetPlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
+                return;
+            }
+
             if (networkObjects.ContainsKey(playerID))
             {
                 Plugin.Log("Player " + playerID + " already grabbable!");
@@ -138,18 +144,12 @@ namespace LCShrinkRay.comp
             {
                 targetPlayer.gameObject.transform.localScale = Vector3.one;
 
-                var armTransform = PlayerInfo.GetArmTransform(targetPlayer);
-                if (armTransform != null)
-                    armTransform.localScale = PlayerInfo.CalcArmScale(1f);
+                PlayerInfo.AdjustArmScale(targetPlayer, 1f);
 
                 if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
                 {
-                    var maskTransform = PlayerInfo.GetGlobalMaskTransform(targetPlayer);
-                    if (maskTransform != null)
-                    {
-                        maskTransform.localScale = PlayerInfo.CalcMaskScaleVec(1f);
-                        maskTransform.localPosition = PlayerInfo.CalcMaskPosVec(1f);
-                    }
+                    PlayerInfo.AdjustMaskPos(targetPlayer, 1f);
+                    PlayerInfo.AdjustMaskScale(targetPlayer, 1f);
                 }
             }
 

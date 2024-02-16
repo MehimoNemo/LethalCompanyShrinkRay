@@ -284,8 +284,17 @@ namespace LCShrinkRay.comp
         public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
         {
             Plugin.Log("debugOnPlayerModificationWorkaround");
-            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer) : NextIncreasedSizeOf(targetPlayer));
-            Vents.EnableVents(type == ModificationType.Shrinking);
+            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer) : NextIncreasedSizeOf(targetPlayer), () =>
+            {
+                Vents.EnableVents(type == ModificationType.Shrinking);
+                if (PlayerInfo.IsHost)
+                {
+                    if (type == ModificationType.Shrinking)
+                        GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
+                    else
+                        GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
+                }
+            });
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -321,13 +330,17 @@ namespace LCShrinkRay.comp
                         var normalizedSize = 1f;
                         Plugin.Log("Raytype: " + type.ToString() + ". New size: " + normalizedSize);
                         IsOnCooldown = true;
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, normalizedSize, () => IsOnCooldown = false);
+                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, normalizedSize, () =>
+                        {
+                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
+                            if (PlayerInfo.IsHost)
+                                GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
 
-                        if(PlayerInfo.IsHost)
-                            GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
+                            if (targetingUs)
+                                Vents.DisableVents();
 
-                        if (targetingUs)
-                            Vents.DisableVents();
+                            IsOnCooldown = false;
+                        });
                         break;
                     }
 
@@ -338,29 +351,26 @@ namespace LCShrinkRay.comp
                         IsOnCooldown = true;
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextShrunkenSize, () =>
                         {
-                            IsOnCooldown = false;
-                            if (targetingUs && nextShrunkenSize <= 0f)
+                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
+                            if (targetingUs)
                             {
-                                // Poof Target to death because they are too small to exist
-                                if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
-                                    Destroy(deathPoof, 4f);
+                                if (nextShrunkenSize <= 0f)
+                                {
+                                    // Poof Target to death because they are too small to exist
+                                    if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
+                                        Destroy(deathPoof, 4f);
 
-                                targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
-							}
+                                    targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
+                                }
+                                else if (PlayerInfo.IsShrunk(nextShrunkenSize))
+                                    Vents.EnableVents();
+                            }
+
+                            if (nextShrunkenSize < 1f && nextShrunkenSize > 0f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
+                                GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
+
+                            IsOnCooldown = false;
                         });
-
-                        if (nextShrunkenSize < 1f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
-                        {
-                            Plugin.Log("About to call SetPlayerGrabbableServerRpc");
-                            GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
-                        }
-                        else
-                        {
-                            Plugin.Log("Not calling SetPlayerGrabbableServerRpc: Not host.");
-                        }
-
-                        if (targetingUs)
-                            Vents.EnableVents();
 
                         break;
                     }
@@ -370,13 +380,20 @@ namespace LCShrinkRay.comp
                         var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
                         Plugin.Log("Raytype: " + type.ToString() + ". New size: " + nextIncreasedSize);
                         IsOnCooldown = true;
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () => IsOnCooldown = false);
+                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () =>
+                        {
+                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
+                            if (nextIncreasedSize >= 1f)
+                            {
+                                if(PlayerInfo.IsHost)
+                                    GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
 
-                        if (nextIncreasedSize >= 1f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
-                            GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
+                                if (targetingUs)
+                                    Vents.DisableVents();
+                            }
 
-                        if (targetingUs)
-                            Vents.DisableVents();
+                            IsOnCooldown = false;
+                        });
 
                         break;
                     }

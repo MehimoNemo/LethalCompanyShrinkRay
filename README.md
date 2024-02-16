@@ -26,29 +26,23 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 + Shrinkray floats above the ground when dropped
 + Weight of held players not updating
 + Jetpack offset for shrunken players
-+ Clients are sometimes unable to shrinking host when shooting
 + Collision detection when holding players not accurate enough
-+ Held players mask (visor) is in the view
 
 
 ## Planned features ##
-- [ ] Throw players further
-- [ ] Animations for holding / throwing players
-- [ ] Improved ray sfx & fx
-- [ ] Item slot icon for held player
-- [ ] Make sandworms unlikely targeting shrunken players
+- Animations for holding / throwing players
+- Improved ray sfx
+- Item slot icon for held player
+- Make sandworms unlikely targeting shrunken players
 
 ## Got more ideas? ##
 Send us a message on discord
 + big_nemo
 + niro1996
-+ sakiskid
 
 or write it in our thread on the unofficial lethal companys discord: [Server-Invite](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1169792572382773318/1190100786357743646)
 
 ## Special Thanks To
-[Niro](https://github.com/NiroDev) for development help 
-
 [@peppermint_2859](https://twitter.com/ItsJOEYthe) on discord for modeling!
 
 

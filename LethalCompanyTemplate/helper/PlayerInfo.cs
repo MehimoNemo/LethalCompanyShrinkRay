@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -175,6 +176,36 @@ namespace LCShrinkRay.helper
         {
             return pcb?.gameObject?.transform.Find("ScavengerModel")?.Find("metarig")?.Find("ScavengerModelArmsOnly");
         }
+
+        public static void AdjustArmScale(PlayerControllerB pcb = null, Nullable<float> toSize = null)
+        {
+            var armTransform = GetArmTransform(pcb ?? CurrentPlayer);
+            if(armTransform != null )
+                armTransform.localScale = CalcArmScale(toSize ?? SizeOf(pcb ?? CurrentPlayer));
+        }
+
+        public static Vector3 CalcArmScale(float scale)
+        {
+            return new Vector3()
+            {
+                x = 0.35f * scale + 0.58f,
+                y = -0.0625f * scale + 1.0625f,
+                z = -0.125f * scale + 1.15f
+            };
+        }
+
+        public static Transform GetGlobalMaskTransform(PlayerControllerB pcb)
+        {
+            return GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+        }
+
+        public static void AdjustMaskPos(PlayerControllerB pcb = null, Nullable<float> toSize = null)
+        {
+            var maskTransform = GetGlobalMaskTransform(pcb ?? CurrentPlayer);
+            if (maskTransform != null)
+                maskTransform.position = CalcMaskPosVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
+        }
+
         public static Vector3 CalcMaskPosVec(float scale)
         {
             return new Vector3()
@@ -185,10 +216,13 @@ namespace LCShrinkRay.helper
             };
         }
 
-        public static Transform GetGlobalMaskTransform(PlayerControllerB pcb)
+        public static void AdjustMaskScale(PlayerControllerB pcb = null, Nullable<float> toSize = null)
         {
-            return GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+            var maskTransform = GetGlobalMaskTransform(pcb ?? CurrentPlayer);
+            if (maskTransform != null)
+                maskTransform.localScale = CalcMaskScaleVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
         }
+
         public static Vector3 CalcMaskScaleVec(float scale)
         {
             return new Vector3()
@@ -196,16 +230,6 @@ namespace LCShrinkRay.helper
                 x = 0.277f * scale + 0.2546f,
                 y = 0.2645f * scale + 0.267f,
                 z = 0.177f * scale + 0.3546f
-            };
-        }
-
-        public static Vector3 CalcArmScale(float scale)
-        {
-            return new Vector3()
-            {
-                x = 0.35f * scale + 0.58f,
-                y = -0.0625f * scale + 1.0625f,
-                z = -0.125f * scale + 1.15f
             };
         }
     }
