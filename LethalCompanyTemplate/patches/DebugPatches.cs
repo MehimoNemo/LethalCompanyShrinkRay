@@ -58,6 +58,60 @@ namespace LCShrinkRay.patches
                     ShrinkRay.debugOnPlayerModificationWorkaround(PlayerInfo.CurrentPlayer, ModificationType.Enlarging);
                 }
 
+                // /spawnenemy Hoarding bug a=1 p=@me
+                else if (Keyboard.current.f5Key.wasPressedThisFrame)
+                {
+                    if (HoarderBugAI.grabbableObjectsInMap == null)
+                    {
+                        Plugin.Log("No grabbable hoarder bug objects.");
+                        return;
+                    }
+
+                    var output = "Grabbable hoarder bug objects:";
+                    foreach (var item in HoarderBugAI.grabbableObjectsInMap)
+                        output += item.name + "\n";
+                    Plugin.Log(output);
+                }
+
+                else if (Keyboard.current.f6Key.wasPressedThisFrame)
+                {
+                    if (HoarderBugAI.HoarderBugItems == null)
+                    {
+                        Plugin.Log("No hoarder bug items.");
+                        return;
+                    }
+
+                    var output = "Grabbable hoarder bug items:";
+                    foreach (var item in HoarderBugAI.HoarderBugItems)
+                        output += item.itemGrabbableObject.name + ": " + item.status.ToString() + "\n";
+                    Plugin.Log(output);
+                }
+
+                else if (Keyboard.current.f7Key.wasPressedThisFrame)
+                {
+                    if (HoarderBugAIPatch.latestNestPosition != Vector3.zero)
+                    {
+                        Plugin.Log("Teleporting to latest hoarder bug nest position.");
+                        PlayerInfo.CurrentPlayer.transform.position = HoarderBugAIPatch.latestNestPosition;
+                    }
+                    else
+                        Plugin.Log("No hoarder bug nest yet..");
+                }
+
+                else if (Keyboard.current.f8Key.wasPressedThisFrame)
+                {
+                    var gpoList = UnityEngine.Object.FindObjectsOfType<GrabbablePlayerObject>();
+                    foreach (var gpo in gpoList)
+                    {
+                        if (gpo.grabbableToEnemies)
+                        {
+                            Plugin.Log("Added as stolen hoarding bug item");
+                            HoarderBugAI.HoarderBugItems.Add(new HoarderBugItem(gpo, HoarderBugItemStatus.Stolen, gpo.transform.position));
+                        }
+                    }
+                }
+
+
                 else if (Keyboard.current.f9Key.wasPressedThisFrame)
                 {
                     // Print position to log

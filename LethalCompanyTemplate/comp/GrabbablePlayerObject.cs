@@ -24,6 +24,11 @@ namespace LCShrinkRay.comp
         public NetworkVariable<bool> IsOnSellCounter = new NetworkVariable<bool>(false);
 
         private bool IsGoombaCoroutineRunning = false;
+
+        private EnemyAI enemyHeldBy = null;
+
+        // HoarderBug
+        private HoarderBugAI lastHoarderBugGrabbedBy = null;
         #endregion
 
         #region Networking
@@ -101,7 +106,16 @@ namespace LCShrinkRay.comp
                 Initialize();
             }
 
-            if (this.isHeld)
+            if(lastHoarderBugGrabbedBy != null) // Coming in here after being dropped by a hoarder bug
+                HoarderBugEscapeRoutine();
+
+            if (IsOnSellCounter.Value || enemyHeldBy != null)
+            {
+                if(frameCounter % 30 == 1)
+                    Plugin.Log("Held by enemy");
+                grabbedPlayer.transform.position = this.transform.position;
+            }
+            else if (this.isHeld)
             {
                 //this looks like trash unfortunately
                 grabbedPlayer.transform.position = this.transform.position;
@@ -111,10 +125,6 @@ namespace LCShrinkRay.comp
                 Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
                 grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                 grabbedPlayer.playerCollider.enabled = false;
-            }
-            else if (IsOnSellCounter.Value)
-            {
-                grabbedPlayer.transform.position = this.transform.position;
             }
             else
             {
@@ -202,7 +212,33 @@ namespace LCShrinkRay.comp
             SetIsGrabbableToEnemies(true);
             ResetControlTips();
         }
-        
+
+        public override void GrabItemFromEnemy(EnemyAI enemyAI)
+        {
+            Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
+            enemyHeldBy = enemyAI;
+        }
+
+        public override void DiscardItemFromEnemy()
+        {
+            if(enemyHeldBy == null)
+            {
+                Plugin.Log("Lost enemyHeldBy on grabbable player " + grabbedPlayerID.Value, Plugin.LogType.Warning);
+                return;
+            }
+
+            Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
+            if (enemyHeldBy is HoarderBugAI)
+                lastHoarderBugGrabbedBy = enemyHeldBy as HoarderBugAI;
+
+            PlayerInfo.AdjustArmScale(grabbedPlayer);
+            PlayerInfo.AdjustMaskScale(grabbedPlayer);
+            PlayerInfo.AdjustMaskPos(grabbedPlayer);
+
+            enemyHeldBy = null;
+        }
+
+
         public override void GrabItem()
         {
             Plugin.Log("Okay, let's grab!");
@@ -325,23 +361,12 @@ namespace LCShrinkRay.comp
             if (!PlayerInfo.IsShrunk(grabbedPlayer))
                 isGrabbable = false;
 
-            this.grabbableToEnemies = isGrabbable;
+            grabbableToEnemies = isGrabbable;
 
             Plugin.Log("GrabbablePlayer - Allow enemy grab: " + isGrabbable);
 
             if (ModConfig.Instance.values.hoardingBugSteal)
-            {
-                if(isGrabbable)
-                {
-                    if (HoarderBugAI.grabbableObjectsInMap != null && !HoarderBugAI.grabbableObjectsInMap.Contains(grabbedPlayer.gameObject))
-                        HoarderBugAI.grabbableObjectsInMap.Add(grabbedPlayer.gameObject);
-                }
-                else
-                {
-                    if (HoarderBugAI.grabbableObjectsInMap != null && HoarderBugAI.grabbableObjectsInMap.Contains(grabbedPlayer.gameObject))
-                        HoarderBugAI.grabbableObjectsInMap.Remove(grabbedPlayer.gameObject);
-                }
-            }
+                HoarderBugAI.RefreshGrabbableObjectsInMapList();
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -523,6 +548,39 @@ namespace LCShrinkRay.comp
         internal bool CanSellKill()
         {
             return IsOnSellCounter.Value && IsCurrentPlayer;
+        }
+
+        private void HoarderBugEscapeRoutine()
+        {
+
+            // Check every 100 frames if we moved too far away from the last nest position. If so, add us back to the grabbableObjectList
+            if (frameCounter % 100 != 1) return;
+
+            if (lastHoarderBugGrabbedBy.nestPosition == null || Vector3.Distance(transform.position, lastHoarderBugGrabbedBy.nestPosition) > 4f)
+            {
+                if (!HoarderBugAI.grabbableObjectsInMap.Contains(gameObject))
+                    HoarderBugAI.grabbableObjectsInMap.Add(gameObject);
+
+                if (isHeld && playerHeldBy != null) // Someone "stole" us
+                {
+                    foreach (var hoarderBugItem in HoarderBugAI.HoarderBugItems)
+                    {
+                        if (hoarderBugItem.itemGrabbableObject != null && hoarderBugItem.itemGrabbableObject.name == name)
+                            hoarderBugItem.status = HoarderBugItemStatus.Stolen;
+                        lastHoarderBugGrabbedBy.angryAtPlayer = playerHeldBy;
+
+                        Plugin.Log("HoarderBug saw that player " + playerHeldBy.name + " stole " + name + ". Is angry now at them!");
+                    }
+                }
+                else // we escaped
+                {
+                    HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject.name == name);
+                    Plugin.Log("Moved too far away from hoarder bug nest and escaped!");
+                }
+
+                lastHoarderBugGrabbedBy = null;
+            }
+
         }
         #endregion
     }
