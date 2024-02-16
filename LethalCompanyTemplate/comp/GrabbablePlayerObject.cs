@@ -18,6 +18,8 @@ namespace LCShrinkRay.comp
         public PlayerControllerB grabbedPlayer { get; set; }
 
         private static GameObject networkPrefab { get; set; }
+
+        private int frameCounter = 1;
         private bool IsCurrentPlayer { get; set; }
         public NetworkVariable<bool> IsOnSellCounter = new NetworkVariable<bool>(false);
 
@@ -43,6 +45,8 @@ namespace LCShrinkRay.comp
 
         public override void OnNetworkDespawn()
         {
+            SetIsGrabbableToEnemies(false);
+
             Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
             base.OnNetworkDespawn();
         }
@@ -73,12 +77,15 @@ namespace LCShrinkRay.comp
             base.Start();
             itemProperties.canBeGrabbedBeforeGameStart = true;
             itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
-            scrapPersistedThroughRounds = true;
         }
 
         public override void LateUpdate()
         {
             base.LateUpdate();
+
+            // Do several things only every x frames to save performance
+            frameCounter++;
+            if (frameCounter >= 1000) frameCounter = 0;
 
             if (grabbedPlayer == null)
             {
@@ -102,7 +109,6 @@ namespace LCShrinkRay.comp
                 Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
                 Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
                 Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
-                //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp);
                 grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                 grabbedPlayer.playerCollider.enabled = false;
             }
@@ -117,7 +123,8 @@ namespace LCShrinkRay.comp
 
             if (IsCurrentPlayer)
             { 
-                CheckForGoomba();
+                if(frameCounter % 5 == 1)
+                    CheckForGoomba();
 
                 if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
@@ -266,10 +273,23 @@ namespace LCShrinkRay.comp
             Plugin.Log("parenting grabbable object to player number :[" + grabbedPlayer.playerClientId + "]");
             IsCurrentPlayer = PlayerInfo.CurrentPlayerID == grabbedPlayerID.Value;
             Plugin.Log("Is current player: " + IsCurrentPlayer);
-            this.grabbable = !IsCurrentPlayer;
+            this.grabbable = true;
+            EnableInteractTrigger(!IsCurrentPlayer);
 
             CalculateScrapValue();
             SetIsGrabbableToEnemies(true);
+        }
+
+        private void EnableInteractTrigger(bool enable = true)
+        {
+            Plugin.Log((enable ? "Enabling" : "Disabling") + " trigger for grabbable player " + grabbedPlayerID.Value);
+            tag = enable ? "PhysicsProp" : "InteractTrigger"; // Bit wacky code, but it is what it is. Easier than adding custom InteractTrigger as of now
+            //gameObject.layer = (int)(enable ? LayerMasks.Mask.InteractableObject : LayerMasks.Mask.Props);
+        }
+
+        private void DisableInteractTrigger(bool disable = true)
+        {
+            EnableInteractTrigger(!disable);
         }
 
         public void AddNode() {} // WIP
