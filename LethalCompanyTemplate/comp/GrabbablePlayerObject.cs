@@ -180,6 +180,8 @@ namespace LCShrinkRay.comp
         {
             try
             {
+                resetFallDamage();
+
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
                 playerHeldBy.DiscardHeldObject();// placeObject: true, null, ThrowDestination());
                 grabbedPlayer.playerCollider.enabled = true;
@@ -213,6 +215,8 @@ namespace LCShrinkRay.comp
         {
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
+
+            resetFallDamage();
 
             base.DiscardItem();
             grabbedPlayer.playerCollider.enabled = true;
@@ -262,6 +266,8 @@ namespace LCShrinkRay.comp
             PlayerInfo.AdjustMaskScale(grabbedPlayer);
             PlayerInfo.AdjustMaskPos(grabbedPlayer);
 
+            resetFallDamage();
+
             enemyHeldBy = null;
         }
 
@@ -309,6 +315,8 @@ namespace LCShrinkRay.comp
         
         public override void OnPlaceObject()
         {
+            resetFallDamage();
+
             base.OnPlaceObject();
 
             ResetControlTips();
@@ -355,6 +363,12 @@ namespace LCShrinkRay.comp
         }
 
         public void AddNode() {} // WIP
+
+        private void resetFallDamage()
+        {
+            grabbedPlayer.averageVelocity = 0f;
+            grabbedPlayer.velocityLastFrame = Vector3.zero;
+        }
 
         public void CalculateScrapValue()
         {

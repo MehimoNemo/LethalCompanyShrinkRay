@@ -77,8 +77,7 @@ namespace LCShrinkRay.comp
                     {
                         Plugin.Log("They were held by us! Let's follow them!");
                         var posWithDiff = pos + (gpo.playerHeldBy.transform.position - gpo.grabbedPlayer.transform.position);
-                        PlayerInfo.CurrentPlayer.isInsideFactory = __instance.isInsideFactory;
-                        PlayerInfo.CurrentPlayer.TeleportPlayer(posWithDiff); // calls the if() statement above!
+                        TeleportPlayer(PlayerInfo.CurrentPlayer, posWithDiff, __instance.isInsideFactory);
                     }
                 }
                 else if (TryFindGrabbableObjectByHolder(__instance.playerClientId, out GrabbablePlayerObject grabbedPlayerGpo))
@@ -89,8 +88,7 @@ namespace LCShrinkRay.comp
                     {
                         Plugin.Log("They were holding us! Let's follow them!");
                         var posWithDiff = pos + (grabbedPlayerGpo.grabbedPlayer.transform.position - grabbedPlayerGpo.playerHeldBy.transform.position);
-                        PlayerInfo.CurrentPlayer.isInsideFactory = __instance.isInsideFactory;
-                        PlayerInfo.CurrentPlayer.TeleportPlayer(posWithDiff); // calls the if() statement above!
+                        TeleportPlayer(PlayerInfo.CurrentPlayer, posWithDiff, __instance.isInsideFactory);
                     }
                 }
             }
@@ -128,6 +126,16 @@ namespace LCShrinkRay.comp
 
                 return output;
             }
+        }
+
+        private static void TeleportPlayer(PlayerControllerB targetPlayer, Vector3 pos, bool insideFactory)
+        {
+           targetPlayer.isInsideFactory = insideFactory;
+           targetPlayer.isInElevator = !insideFactory;
+           targetPlayer.isInHangarShipRoom = !insideFactory;
+           targetPlayer.averageVelocity = 0f;
+           targetPlayer.velocityLastFrame = Vector3.zero;
+           targetPlayer.TeleportPlayer(pos); // calls the if() statement above!
         }
 
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)
