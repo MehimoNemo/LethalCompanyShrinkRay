@@ -8,13 +8,15 @@ using LCShrinkRay.helper;
 using Unity.Netcode;
 using LCShrinkRay.patches;
 using System.Collections;
+using System.IO;
+using System.Reflection;
 
 namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {
         #region Properties
-        public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>();
+        public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>(ulong.MaxValue);
         public PlayerControllerB grabbedPlayer { get; set; }
 
         private static GameObject networkPrefab { get; set; }
@@ -28,6 +30,32 @@ namespace LCShrinkRay.comp
         private EnemyAI enemyHeldBy = null;
         public HoarderBugAI lastHoarderBugGrabbedBy = null;
         public bool IsTargetableByHoarderBug = true;
+
+        private static Sprite Icon
+        {
+            get
+            {
+                string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                if (string.IsNullOrEmpty(assetDir))
+                {
+                    Plugin.Log("GrabbablePlayerIcon not found!", Plugin.LogType.Error);
+                    return null;
+                }
+
+                var imagePath = Path.Combine(assetDir, "GrabbablePlayerIcon.png");
+                if (File.Exists(imagePath))
+                {
+                    var width = 223;
+                    var height = 213;
+                    byte[] bytes = File.ReadAllBytes(imagePath);
+                    var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
+                    texture.LoadImage(bytes);
+                    Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                    return sprite;
+                }
+                return null;
+            }
+        }
         #endregion
 
         #region Networking
@@ -43,6 +71,7 @@ namespace LCShrinkRay.comp
 
             component.itemProperties = assetItem;
             component.itemProperties.isConductiveMetal = false;
+            component.itemProperties.itemIcon = Icon;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
@@ -138,7 +167,6 @@ namespace LCShrinkRay.comp
                 if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
             }
-
         }
         
         public override void PocketItem()
@@ -239,7 +267,6 @@ namespace LCShrinkRay.comp
 
             enemyHeldBy = null;
         }
-
 
         public override void GrabItem()
         {
@@ -552,10 +579,12 @@ namespace LCShrinkRay.comp
             return IsOnSellCounter.Value && IsCurrentPlayer;
         }
 
-        private void HoarderBugEscapeRoutineForGrabbablePlayer(GrabbablePlayerObject gpo)
+        public void TeleportTo(Vector3 pos, bool isEntranceToBuilding)
         {
-            
-
+            transform.position = pos;
+            startFallingPosition = pos;
+            targetFloorPosition = pos;
+            isInFactory = isEntranceToBuilding;
         }
         #endregion
     }
