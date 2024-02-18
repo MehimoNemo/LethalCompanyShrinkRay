@@ -7,7 +7,6 @@ using UnityEngine.InputSystem;
 using LCShrinkRay.helper;
 using Unity.Netcode;
 using LCShrinkRay.patches;
-using System.Collections;
 using System.IO;
 using System.Reflection;
 
@@ -29,7 +28,6 @@ namespace LCShrinkRay.comp
 
         private EnemyAI enemyHeldBy = null;
         public HoarderBugAI lastHoarderBugGrabbedBy = null;
-        public bool IsTargetableByHoarderBug = true;
 
         private static Sprite Icon
         {
@@ -258,7 +256,6 @@ namespace LCShrinkRay.comp
             if (enemyHeldBy is HoarderBugAI)
             {
                 lastHoarderBugGrabbedBy = enemyHeldBy as HoarderBugAI;
-                IsTargetableByHoarderBug = false; // Chill hoarding bug.. chill
             }
 
             PlayerInfo.AdjustArmScale(grabbedPlayer);

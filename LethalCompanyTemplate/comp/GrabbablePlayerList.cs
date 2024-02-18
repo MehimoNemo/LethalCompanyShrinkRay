@@ -47,6 +47,54 @@ namespace LCShrinkRay.comp
             foreach (var gpo in gpoList)
                 gpo.hideFlags = HideFlags.None;
         }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "TeleportPlayer")]
+        [HarmonyPostfix]
+        public static void TeleportPlayer(PlayerControllerB __instance, Vector3 pos, bool withRotation = false, float rot = 0f, bool allowInteractTrigger = false, bool enableController = true)
+        {
+            if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase) return;
+
+            // Handles the adjustment of our own GrabbablePlayerObject, aswell as follow someone who teleported (to adjust lighting, weather, items, etc)
+            Plugin.Log("GrabbablePlayerList.TeleportPlayer " + __instance.playerClientId + " -> " + pos);
+            Plugin.Log(Log);
+            if (__instance.playerClientId == PlayerInfo.CurrentPlayerID)
+            {
+                Plugin.Log("We teleported");
+
+                if (TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
+                {
+                    Plugin.Log("We're grabbable");
+                    gpo.TeleportTo(pos, __instance.isInsideFactory);
+                }
+                return;
+            }
+            else
+            {
+                if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
+                {
+                    Plugin.Log("The teleporting person is held by someone.");
+                    if(gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                    {
+                        Plugin.Log("They were held by us! Let's follow them!");
+                        var posWithDiff = pos + (gpo.playerHeldBy.transform.position - gpo.grabbedPlayer.transform.position);
+                        PlayerInfo.CurrentPlayer.isInsideFactory = __instance.isInsideFactory;
+                        PlayerInfo.CurrentPlayer.TeleportPlayer(posWithDiff); // calls the if() statement above!
+                    }
+                }
+                else if (TryFindGrabbableObjectByHolder(__instance.playerClientId, out GrabbablePlayerObject grabbedPlayerGpo))
+                {
+                    Plugin.Log("The teleporting person is holding someone.");
+
+                    if (grabbedPlayerGpo.grabbedPlayerID.Value == PlayerInfo.CurrentPlayerID)
+                    {
+                        Plugin.Log("They were holding us! Let's follow them!");
+                        var posWithDiff = pos + (grabbedPlayerGpo.grabbedPlayer.transform.position - grabbedPlayerGpo.playerHeldBy.transform.position);
+                        PlayerInfo.CurrentPlayer.isInsideFactory = __instance.isInsideFactory;
+                        PlayerInfo.CurrentPlayer.TeleportPlayer(posWithDiff); // calls the if() statement above!
+                    }
+                }
+            }
+        }
         #endregion
 
         #region Helper
@@ -54,26 +102,34 @@ namespace LCShrinkRay.comp
         {
             get
             {
-                if (!PlayerInfo.IsHost)
-                    return "GrabbablePlayerList is saved on host only";
-
                 string output = "GrabbablePlayerList:\n";
                 output += "------------------------------\n";
-                foreach (var networkObjectPair in networkObjects)
+                foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+                    output += ("[" + gpo.name + "] with player " + gpo.grabbedPlayerID.Value + ".\n");
+
+                if (PlayerInfo.IsHost)
                 {
-                    output += ("PlayerID: " + networkObjectPair.Key + ".\n");
-                    if (networkObjectPair.Value != null)
+                    output += "------------------------------\n";
+                    output += "Network List:\n";
+                    output += "------------------------------\n";
+                    foreach (var networkObjectPair in networkObjects)
                     {
-                        if (networkObjectPair.Value.TryGetComponent(out NetworkObject networkObject))
-                            output += ("NetworkID: " + networkObject.NetworkObjectId + ".\n");
-                        if (TryFindGrabbableObjectForPlayer(networkObjectPair.Key, out GrabbablePlayerObject gpo))
-                            output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
+                        output += ("PlayerID: " + networkObjectPair.Key + ".\n");
+                        if (networkObjectPair.Value != null)
+                        {
+                            if (networkObjectPair.Value.TryGetComponent(out NetworkObject networkObject))
+                                output += ("NetworkID: " + networkObject.NetworkObjectId + ".\n");
+                            if (TryFindGrabbableObjectForPlayer(networkObjectPair.Key, out GrabbablePlayerObject gpo))
+                                output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
+                        }
+                        output += ("------------------------------\n");
                     }
-                    output += ("------------------------------\n");
                 }
+
                 return output;
             }
         }
+
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)
         {
             foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
@@ -88,11 +144,24 @@ namespace LCShrinkRay.comp
             result = null;
             return false;
         }
+
+        public static bool TryFindGrabbableObjectByHolder(ulong playerHeldByID, out GrabbablePlayerObject result)
+        {
+            foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+            {
+                if (gpo != null && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == playerHeldByID)
+                {
+                    result = gpo;
+                    return true;
+                }
+            }
+
+            result = null;
+            return false;
+        }
         #endregion
 
         #region Methods
-
-
         public static void ClearGrabbablePlayerObjects()
         {
             Plugin.Log("ClearGrabbablePlayerObjects");

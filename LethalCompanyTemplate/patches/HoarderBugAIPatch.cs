@@ -10,6 +10,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.XR;
 
@@ -58,34 +59,9 @@ namespace LCShrinkRay.patches
                 if (!IsGrabbablePlayerTargetable(gpo)) return;
 
                 __instance.targetItem = gpo;
-                //__instance.SwitchToBehaviourState(0); // Go get us!
 
                 Plugin.Log("Forget everything else.. we found a grabbable player! Let's goooo..!");
             }
-        }
-
-        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
-        [HarmonyPrefix]
-        public static void SetGoTowardsTargetObjectPrefix(GameObject foundObject, HoarderBugAI __instance)
-        {
-            if (!ModConfig.Instance.values.hoardingBugSteal) return; // Not our job
-            if (!PlayerInfo.IsCurrentPlayerShrunk || !foundObject.TryGetComponent(out GrabbablePlayerObject gpo) || gpo.lastHoarderBugGrabbedBy != null) return; // Not targetable
-
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(gpo.grabbedPlayerID.Value, out GrabbablePlayerObject realGpo))
-            {
-                Plugin.Log("1");
-                foundObject = realGpo.gameObject;
-            }
-
-            Plugin.Log("HoarderBug found grabbable player " + gpo.grabbedPlayerID.Value);
-            //Plugin.Log("HoarderBug found [" + foundObject.name + "]" + (__instance.targetItem != null ? (" and set target to [" + __instance.targetItem.name + "].") : ". No target found."));
-        }
-
-        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
-        [HarmonyPostfix]
-        public static void SetGoTowardsTargetObjectPostfix(GameObject foundObject, HoarderBugAI __instance)
-        {
-            Plugin.Log("HoarderBug found [" + foundObject.name + "]" + (__instance.targetItem != null ? (" and set target to [" + __instance.targetItem.name + "].") : ". No target found."));
         }
 
         public static bool IsGrabbablePlayerTargetable(GrabbablePlayerObject gpo)
@@ -149,6 +125,45 @@ namespace LCShrinkRay.patches
             if (!ModConfig.DebugMode) return;
 
             latestNestPosition = newNestPosition;
+        }
+
+        public static bool SetDestinationToPosition(Vector3 position, bool checkForPath = false, HoarderBugAI enemyAI = null)
+        {
+            Plugin.Log("SetDestinationToPosition -> " + position);
+            if (checkForPath)
+            {
+                position = RoundManager.Instance.GetNavMeshPosition(position, RoundManager.Instance.navHit, 1.75f);
+                Plugin.Log("1 -> " + position);
+                var path1 = new NavMeshPath();
+                if (!enemyAI.agent.CalculatePath(position, path1))
+                {
+                    Plugin.Log("2");
+                    return false;
+                }
+
+                var path1Pos = path1.corners[path1.corners.Length - 1];
+                var navMeshPos = RoundManager.Instance.GetNavMeshPosition(position, RoundManager.Instance.navHit, 2.7f);
+                var distance = Vector3.Distance(path1Pos, navMeshPos);
+                Plugin.Log("3 -> " + path1Pos + " | " + navMeshPos + " | " + distance);
+                if (distance > 1.55f)
+                {
+                    Plugin.Log("3");
+                    return false;
+                }
+            }
+
+            enemyAI.moveTowardsDestination = true;
+            enemyAI.movingTowardsTargetPlayer = false;
+            enemyAI.destination = RoundManager.Instance.GetNavMeshPosition(position, RoundManager.Instance.navHit, -1f);
+            Plugin.Log("4 -> " + enemyAI.destination);
+            return true;
+        }
+
+        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
+        [HarmonyPostfix]
+        public static void SetGoTowardsTargetObjectPostfix(GameObject foundObject, HoarderBugAI __instance)
+        {
+            Plugin.Log("HoarderBug found [" + foundObject.name + "]" + (__instance.targetItem != null ? (" and set target to [" + __instance.targetItem.name + "].") : ". No target found."));
         }
     }
 }

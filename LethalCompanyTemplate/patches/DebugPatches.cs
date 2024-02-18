@@ -67,9 +67,11 @@ namespace LCShrinkRay.patches
                         return;
                     }
 
-                    var output = "Grabbable hoarder bug objects:";
+                    var output = "Grabbable hoarder bug objects:\n";
+                    output += "------------------------------\n";
                     foreach (var item in HoarderBugAI.grabbableObjectsInMap)
                         output += item.name + "\n";
+                    output += "------------------------------\n";
                     Plugin.Log(output);
                 }
 
@@ -81,9 +83,11 @@ namespace LCShrinkRay.patches
                         return;
                     }
 
-                    var output = "Grabbable hoarder bug items:";
+                    var output = "Grabbable hoarder bug items:\n";
+                    output += "------------------------------\n";
                     foreach (var item in HoarderBugAI.HoarderBugItems)
                         output += item.itemGrabbableObject.name + ": " + item.status.ToString() + "\n";
+                    output += "------------------------------\n";
                     Plugin.Log(output);
                 }
 
@@ -92,7 +96,7 @@ namespace LCShrinkRay.patches
                     if (HoarderBugAIPatch.latestNestPosition != Vector3.zero)
                     {
                         Plugin.Log("Teleporting to latest hoarder bug nest position.");
-                        PlayerInfo.CurrentPlayer.transform.position = HoarderBugAIPatch.latestNestPosition;
+                        PlayerInfo.CurrentPlayer.TeleportPlayer(HoarderBugAIPatch.latestNestPosition);
                     }
                     else
                         Plugin.Log("No hoarder bug nest yet..");
