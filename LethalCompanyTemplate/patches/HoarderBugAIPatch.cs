@@ -79,6 +79,7 @@ namespace LCShrinkRay.patches
                 Plugin.Log("The hoarder bug who grabbed us died or lost their nest. Poor bug.");
                 gpo.lastHoarderBugGrabbedBy = null;
 
+                HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject == gpo);
                 if (!HoarderBugAI.grabbableObjectsInMap.Contains(gpo.gameObject))
                     HoarderBugAI.grabbableObjectsInMap.Add(gpo.gameObject);
                 return;
@@ -110,6 +111,8 @@ namespace LCShrinkRay.patches
                 gpo.lastHoarderBugGrabbedBy.targetItem = gpo;
                 gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(0);
                 HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject == gpo);
+                if (!HoarderBugAI.grabbableObjectsInMap.Contains(gpo.gameObject))
+                    HoarderBugAI.grabbableObjectsInMap.Add(gpo.gameObject);
                 Plugin.Log("Moved too far away from hoarder bug nest. Bug tries to get you back!");
             }
 

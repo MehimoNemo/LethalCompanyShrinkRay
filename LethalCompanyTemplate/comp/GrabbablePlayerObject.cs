@@ -642,6 +642,12 @@ namespace LCShrinkRay.comp
                 return;
             }
 
+            if(playerHeldBy.isInsideFactory == grabbedPlayer.isInsideFactory)
+            {
+                Plugin.Log("Syncing of region info between holder and grabbed player not required. Both at same region.");
+                return;
+            }
+
             if (teleportingPlayer == TargetPlayer.GrabbedPlayer)
             {
                 Plugin.Log("Syncing for holder. isInsideFactory changing from " + playerHeldBy.isInsideFactory + " to " + grabbedPlayer.isInsideFactory);
