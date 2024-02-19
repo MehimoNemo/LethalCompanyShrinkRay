@@ -55,41 +55,18 @@ namespace LCShrinkRay.comp
             if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase) return;
 
             // Handles the adjustment of our own GrabbablePlayerObject, aswell as follow someone who teleported (to adjust lighting, weather, items, etc)
-            Plugin.Log("GrabbablePlayerList.TeleportPlayer " + __instance.playerClientId + " -> " + pos);
-            Plugin.Log(Log);
             if (__instance.playerClientId == PlayerInfo.CurrentPlayerID)
             {
-                Plugin.Log("We teleported");
-
                 if (TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
                 {
-                    Plugin.Log("We're grabbable");
-                    gpo.TeleportTo(pos, __instance.isInsideFactory);
+                    if(gpo.playerHeldBy != null) // We're grabbable and someone holds us
+                        gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.GrabbedPlayer));
                 }
-                return;
-            }
-            else
-            {
-                if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
-                {
-                    Plugin.Log("The teleporting person is held by someone.");
-                    if(gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
-                    {
-                        Plugin.Log("They were held by us! Let's follow them!");
-                        var posWithDiff = pos + (gpo.playerHeldBy.transform.position - gpo.grabbedPlayer.transform.position);
-                        TeleportPlayer(PlayerInfo.CurrentPlayer, posWithDiff, __instance.isInsideFactory);
-                    }
-                }
-                else if (TryFindGrabbableObjectByHolder(__instance.playerClientId, out GrabbablePlayerObject grabbedPlayerGpo))
-                {
-                    Plugin.Log("The teleporting person is holding someone.");
 
-                    if (grabbedPlayerGpo.grabbedPlayerID.Value == PlayerInfo.CurrentPlayerID)
-                    {
-                        Plugin.Log("They were holding us! Let's follow them!");
-                        var posWithDiff = pos + (grabbedPlayerGpo.grabbedPlayer.transform.position - grabbedPlayerGpo.playerHeldBy.transform.position);
-                        TeleportPlayer(PlayerInfo.CurrentPlayer, posWithDiff, __instance.isInsideFactory);
-                    }
+                if (TryFindGrabbableObjectByHolder(PlayerInfo.CurrentPlayerID, out gpo))
+                {
+                    // We're holding someone
+                    gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.Holder));
                 }
             }
         }
@@ -126,16 +103,6 @@ namespace LCShrinkRay.comp
 
                 return output;
             }
-        }
-
-        private static void TeleportPlayer(PlayerControllerB targetPlayer, Vector3 pos, bool insideFactory)
-        {
-           targetPlayer.isInsideFactory = insideFactory;
-           targetPlayer.isInElevator = !insideFactory;
-           targetPlayer.isInHangarShipRoom = !insideFactory;
-           targetPlayer.averageVelocity = 0f;
-           targetPlayer.velocityLastFrame = Vector3.zero;
-           targetPlayer.TeleportPlayer(pos); // calls the if() statement above!
         }
 
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)

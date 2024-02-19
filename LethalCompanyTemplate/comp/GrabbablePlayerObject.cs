@@ -9,6 +9,9 @@ using Unity.Netcode;
 using LCShrinkRay.patches;
 using System.IO;
 using System.Reflection;
+using UnityEngine.InputSystem.XR;
+using System.Collections;
+using LethalLib.Modules;
 
 namespace LCShrinkRay.comp
 {
@@ -28,6 +31,12 @@ namespace LCShrinkRay.comp
 
         private EnemyAI enemyHeldBy = null;
         public HoarderBugAI lastHoarderBugGrabbedBy = null;
+
+        public enum TargetPlayer
+        {
+            GrabbedPlayer = 0,
+            Holder
+        }
 
         private static Sprite Icon
         {
@@ -180,7 +189,7 @@ namespace LCShrinkRay.comp
         {
             try
             {
-                resetFallDamage();
+                OnPlayerDiscarded();
 
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
                 playerHeldBy.DiscardHeldObject();// placeObject: true, null, ThrowDestination());
@@ -216,7 +225,7 @@ namespace LCShrinkRay.comp
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
 
-            resetFallDamage();
+            OnPlayerDiscarded();
 
             base.DiscardItem();
             grabbedPlayer.playerCollider.enabled = true;
@@ -266,7 +275,7 @@ namespace LCShrinkRay.comp
             PlayerInfo.AdjustMaskScale(grabbedPlayer);
             PlayerInfo.AdjustMaskPos(grabbedPlayer);
 
-            resetFallDamage();
+            OnPlayerDiscarded();
 
             enemyHeldBy = null;
         }
@@ -315,7 +324,7 @@ namespace LCShrinkRay.comp
         
         public override void OnPlaceObject()
         {
-            resetFallDamage();
+            OnPlayerDiscarded();
 
             base.OnPlaceObject();
 
@@ -364,10 +373,9 @@ namespace LCShrinkRay.comp
 
         public void AddNode() {} // WIP
 
-        private void resetFallDamage()
+        private void OnPlayerDiscarded()
         {
-            grabbedPlayer.averageVelocity = 0f;
-            grabbedPlayer.velocityLastFrame = Vector3.zero;
+            grabbedPlayer.ResetFallGravity();
         }
 
         public void CalculateScrapValue()
@@ -590,12 +598,71 @@ namespace LCShrinkRay.comp
             return IsOnSellCounter.Value && IsCurrentPlayer;
         }
 
-        public void TeleportTo(Vector3 pos, bool isEntranceToBuilding)
+        // --- Player holding us / Player we're holding teleported ---
+
+        [ServerRpc(RequireOwnership = false)]
+        private void UpdateAfterTeleportServerRpc(TargetPlayer teleportingPlayer)
         {
-            transform.position = pos;
-            startFallingPosition = pos;
-            targetFloorPosition = pos;
-            isInFactory = isEntranceToBuilding;
+            UpdateAfterTeleportClientRpc(teleportingPlayer);
+        }
+
+        internal IEnumerator UpdateAfterTeleportEnsured(TargetPlayer teleportingPlayer)
+        {
+            yield return null; // Wait for next frame
+            if (grabbedPlayer != null && playerHeldBy != null)
+                UpdateAfterTeleportServerRpc(teleportingPlayer); // Let the other person of this holder/grabbed connection know that they teleported with us
+            else
+                UpdateAdditionalPositioning();
+        }
+
+        [ClientRpc]
+        private void UpdateAfterTeleportClientRpc(TargetPlayer teleportingPlayer)
+        {
+            Plugin.Log("UpdateRegionClientRpc -> " + teleportingPlayer.ToString());
+
+            if (grabbedPlayer == null || playerHeldBy == null)
+            {
+                Plugin.Log("Tried syncing region info between holder and grabbed player, but one was null.", Plugin.LogType.Error);
+                return;
+            }
+
+            if (teleportingPlayer == TargetPlayer.GrabbedPlayer)
+            {
+                Plugin.Log("Syncing for holder. isInsideFactory changing from " + playerHeldBy.isInsideFactory + " to " + grabbedPlayer.isInsideFactory);
+                UpdateLocationDataFromPlayerTo(grabbedPlayer, playerHeldBy);
+            }
+            else
+            {
+                Plugin.Log("Syncing for grabbed player. isInsideFactory changing from " + grabbedPlayer.isInsideFactory + " to " + playerHeldBy.isInsideFactory);
+                UpdateLocationDataFromPlayerTo(playerHeldBy, grabbedPlayer);
+            }
+
+            UpdateAdditionalPositioning();
+        }
+
+        internal void UpdateLocationDataFromPlayerTo(PlayerControllerB playerFrom, PlayerControllerB playerTo)
+        {
+            bool locationChanged = playerTo.isInsideFactory != playerFrom.isInsideFactory;
+            if (!locationChanged) return;
+
+            playerTo.isInsideFactory = playerFrom.isInsideFactory;
+            playerTo.isInElevator = playerFrom.isInElevator;
+            playerTo.isInHangarShipRoom = playerFrom.isInHangarShipRoom;
+
+            foreach(var item in playerTo.ItemSlots)
+            {
+                if(item == null) continue;
+                item.isInFactory = playerTo.isInsideFactory;
+            }
+
+            PlayerInfo.UpdateWeatherForPlayer(playerTo);
+        }
+
+        internal void UpdateAdditionalPositioning()
+        {
+            // Required for enemies to find us after teleporting in the factory
+            startFallingPosition = transform.position;
+            targetFloorPosition = transform.position;
         }
         #endregion
     }
