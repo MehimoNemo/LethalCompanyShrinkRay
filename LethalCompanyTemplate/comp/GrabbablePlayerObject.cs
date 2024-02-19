@@ -19,7 +19,27 @@ namespace LCShrinkRay.comp
     {
         #region Properties
         public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>(ulong.MaxValue);
-        public PlayerControllerB grabbedPlayer { get; set; }
+        private PlayerControllerB grabbedPlayerController { get; set; }
+        public PlayerControllerB grabbedPlayer
+        {
+            get
+            {
+                if (grabbedPlayerController == null)
+                {
+                    if (PlayerInfo.CurrentPlayer == null) return null; // Needs a few more frames to connect playerController
+
+                    if (grabbedPlayerID == null)
+                    {
+                        Plugin.Log("Unable to get grabbedPlayer.");
+                        return null;
+                    }
+
+                    Initialize();
+                }
+
+                return grabbedPlayerController;
+            }
+        }
 
         private static GameObject networkPrefab { get; set; }
 
@@ -86,6 +106,13 @@ namespace LCShrinkRay.comp
         public override void OnNetworkDespawn()
         {
             SetIsGrabbableToEnemies(false);
+            if (enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
+            {
+                var hoarderBug = enemyHeldBy as HoarderBugAI;
+                hoarderBug.heldItem = null;
+                hoarderBug.targetItem = null;
+                hoarderBug.SwitchToBehaviourState(0);
+            }
 
             Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
             base.OnNetworkDespawn();
@@ -128,18 +155,7 @@ namespace LCShrinkRay.comp
             if (frameCounter >= 1000) frameCounter = 0;
 
             if (grabbedPlayer == null)
-            {
-                if (PlayerInfo.CurrentPlayer == null) return; // Needs a few more frames to connect playerController
-
-                if(grabbedPlayerID == null)
-                {
-                    Plugin.Log("Unable to get grabbedPlayer.");
-                    return;
-                }
-
-                Plugin.Log("GrabbablePlayerObject.ReInitialize");
-                Initialize();
-            }
+                return;
 
             if(lastHoarderBugGrabbedBy != null && IsCurrentPlayer && frameCounter % 100 == 1) // Coming in here after being dropped by a hoarder bug
                 HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
@@ -340,7 +356,7 @@ namespace LCShrinkRay.comp
             if(playerID != null)
                 grabbedPlayerID.Value = playerID.Value;
 
-            grabbedPlayer = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
+            grabbedPlayerController = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
             if (grabbedPlayer == null)
             {
                 Plugin.Log("grabbedPlayer is null");

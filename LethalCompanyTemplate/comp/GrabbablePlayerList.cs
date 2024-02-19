@@ -20,7 +20,7 @@ namespace LCShrinkRay.comp
         [HarmonyPostfix]
         public static void KillPlayerServerRpc(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
         {
-            Plugin.Log("KillPlayerServerRpc");
+            Plugin.Log("KillPlayerServerRpc. Cause: " + (CauseOfDeath)causeOfDeath + " / Velocity: " + bodyVelocity);
             RemovePlayerGrabbable((ulong)playerId);
         }
 
@@ -50,7 +50,7 @@ namespace LCShrinkRay.comp
 
         [HarmonyPatch(typeof(PlayerControllerB), "TeleportPlayer")]
         [HarmonyPostfix]
-        public static void TeleportPlayer(PlayerControllerB __instance, Vector3 pos, bool withRotation = false, float rot = 0f, bool allowInteractTrigger = false, bool enableController = true)
+        public static void TeleportPlayer(PlayerControllerB __instance)
         {
             if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase) return;
 
@@ -70,6 +70,8 @@ namespace LCShrinkRay.comp
                 }
             }
         }
+
+
         #endregion
 
         #region Helper
