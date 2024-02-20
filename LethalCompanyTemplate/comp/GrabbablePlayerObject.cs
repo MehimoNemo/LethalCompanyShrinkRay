@@ -150,32 +150,22 @@ namespace LCShrinkRay.comp
         {
             base.Update();
 
-            // Do several things only every x frames to save performance
-            frameCounter++;
-            if (frameCounter >= 1000) frameCounter = 0;
-
             if (grabbedPlayer == null)
                 return;
 
-            // Manual positioning
-            //base.transform.localPosition = Vector3.zero; // Yeah, don't override that in the original Update..
+            if (IsOnSellCounter.Value || enemyHeldBy != null || this.isHeld)
+            {
+                grabbedPlayer.transform.position = this.transform.position;
 
-            if (IsOnSellCounter.Value || enemyHeldBy != null)
-            {
-                if (frameCounter % 30 == 1)
-                    Plugin.Log("Held by enemy");
-                grabbedPlayer.transform.position = this.transform.position;
-            }
-            else if (this.isHeld)
-            {
-                //this looks like trash unfortunately
-                grabbedPlayer.transform.position = this.transform.position;
-                //change this
-                Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
-                Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
-                Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
-                grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
-                grabbedPlayer.playerCollider.enabled = false;
+                if(this.isHeld)
+                {
+                    //this looks like trash unfortunately .. change this
+                    Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
+                    Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
+                    Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
+                    grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
+                    grabbedPlayer.playerCollider.enabled = false;
+                }
             }
             else
             {
@@ -187,20 +177,25 @@ namespace LCShrinkRay.comp
         {
             base.LateUpdate();
 
+            if (!IsCurrentPlayer) return;
+
             if (grabbedPlayer == null)
                 return;
 
-            if(lastHoarderBugGrabbedBy != null)
-                HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
+            // Do several things only every x frames to save performance
+            frameCounter++;
+            if (frameCounter >= 1000) frameCounter = 0;
 
-            if (IsCurrentPlayer)
-            { 
-                if(frameCounter % 5 == 1)
-                    CheckForGoomba();
+            if (frameCounter % 5 == 1)
+            {
+                CheckForGoomba();
 
-                if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
-                    DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
+                if (lastHoarderBugGrabbedBy != null)
+                    HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
             }
+
+            if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
+                DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
         }
         
         public override void PocketItem()
@@ -626,11 +621,11 @@ namespace LCShrinkRay.comp
 
         internal IEnumerator UpdateAfterTeleportEnsured(TargetPlayer teleportingPlayer)
         {
+            if (grabbedPlayer == null || playerHeldBy == null)
+                yield break;
+
             yield return null; // Wait for next frame
-            if (grabbedPlayer != null && playerHeldBy != null)
-                UpdateAfterTeleportServerRpc(teleportingPlayer); // Let the other person of this holder/grabbed connection know that they teleported with us
-            else
-                UpdateAdditionalPositioning();
+            UpdateAfterTeleportServerRpc(teleportingPlayer); // Let the other person of this holder/grabbed connection know that they teleported with us
         }
 
         [ClientRpc]
@@ -660,8 +655,6 @@ namespace LCShrinkRay.comp
                 Plugin.Log("Syncing for grabbed player. isInsideFactory changing from " + grabbedPlayer.isInsideFactory + " to " + playerHeldBy.isInsideFactory);
                 UpdateLocationDataFromPlayerTo(playerHeldBy, grabbedPlayer);
             }
-
-            UpdateAdditionalPositioning();
         }
 
         internal void UpdateLocationDataFromPlayerTo(PlayerControllerB playerFrom, PlayerControllerB playerTo)
@@ -681,32 +674,6 @@ namespace LCShrinkRay.comp
 
             PlayerInfo.UpdateWeatherForPlayer(playerTo);
         }
-
-        internal void UpdateAdditionalPositioning()
-        {
-            // Required for enemies to find us after teleporting in the factory
-            //startFallingPosition = transform.position;
-            //targetFloorPosition = transform.position;
-
-            if (ModConfig.Instance.values.hoardingBugSteal)
-            {
-                Plugin.Log("Refreshing grabbable hoardingbug objects");
-                HoarderBugAI.RefreshGrabbableObjectsInMapList();
-            }
-        }
-
-        /*private int counterPos = 0;
-        internal void LogPosition()
-        {
-            counterPos++;
-            counterPos %= 100;
-            if (counterPos == 1)
-                Plugin.Log("player pos: " + grabbedPlayer.transform.position + 
-                    "\tpos: " + transform.position +
-                    "\tlocalPos: " + transform.localPosition +
-                    "\ttargetFloorPos: " + targetFloorPosition +
-                    "\tstartFallingPos: " + startFallingPosition);
-        }*/
         #endregion
     }
 }

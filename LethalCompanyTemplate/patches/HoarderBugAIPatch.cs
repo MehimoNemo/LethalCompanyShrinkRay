@@ -104,7 +104,7 @@ namespace LCShrinkRay.patches
             else
             {
                 // try to get it back!
-                if (distanceToNest < (maxAllowedNestDistance + 5f))
+                if (distanceToNest < (maxAllowedNestDistance + 10f))
                 {
                     gpo.lastHoarderBugGrabbedBy.targetItem = gpo;
                     gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(0);

@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LCShrinkRay.Config;
 using LCShrinkRay.helper;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -61,8 +62,6 @@ namespace LCShrinkRay.comp
                 {
                     if (gpo.playerHeldBy != null) // We're grabbable and someone holds us
                         gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.GrabbedPlayer));
-                    else
-                        gpo.UpdateAdditionalPositioning();
                 }
 
                 if (TryFindGrabbableObjectByHolder(PlayerInfo.CurrentPlayerID, out gpo))
