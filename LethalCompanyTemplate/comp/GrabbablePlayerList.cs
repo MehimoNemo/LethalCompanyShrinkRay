@@ -20,7 +20,7 @@ namespace LCShrinkRay.comp
         [HarmonyPostfix]
         public static void KillPlayerServerRpc(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
         {
-            Plugin.Log("KillPlayerServerRpc");
+            Plugin.Log("KillPlayerServerRpc. Cause: " + (CauseOfDeath)causeOfDeath + " / Velocity: " + bodyVelocity);
             RemovePlayerGrabbable((ulong)playerId);
         }
 
@@ -47,6 +47,33 @@ namespace LCShrinkRay.comp
             foreach (var gpo in gpoList)
                 gpo.hideFlags = HideFlags.None;
         }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "TeleportPlayer")]
+        [HarmonyPostfix]
+        public static void TeleportPlayer(PlayerControllerB __instance)
+        {
+            if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase) return;
+
+            // Handles the adjustment of our own GrabbablePlayerObject, aswell as follow someone who teleported (to adjust lighting, weather, items, etc)
+            if (__instance.playerClientId == PlayerInfo.CurrentPlayerID)
+            {
+                if (TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
+                {
+                    if (gpo.playerHeldBy != null) // We're grabbable and someone holds us
+                        gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.GrabbedPlayer));
+                    else
+                        gpo.UpdateAdditionalPositioning();
+                }
+
+                if (TryFindGrabbableObjectByHolder(PlayerInfo.CurrentPlayerID, out gpo))
+                {
+                    // We're holding someone
+                    gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.Holder));
+                }
+            }
+        }
+
+
         #endregion
 
         #region Helper
@@ -54,26 +81,34 @@ namespace LCShrinkRay.comp
         {
             get
             {
-                if (!PlayerInfo.IsHost)
-                    return "GrabbablePlayerList is saved on host only";
-
                 string output = "GrabbablePlayerList:\n";
                 output += "------------------------------\n";
-                foreach (var networkObjectPair in networkObjects)
+                foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+                    output += ("[" + gpo.name + "] with player " + gpo.grabbedPlayerID.Value + ".\n");
+
+                if (PlayerInfo.IsHost)
                 {
-                    output += ("PlayerID: " + networkObjectPair.Key + ".\n");
-                    if (networkObjectPair.Value != null)
+                    output += "------------------------------\n";
+                    output += "Network List:\n";
+                    output += "------------------------------\n";
+                    foreach (var networkObjectPair in networkObjects)
                     {
-                        if (networkObjectPair.Value.TryGetComponent(out NetworkObject networkObject))
-                            output += ("NetworkID: " + networkObject.NetworkObjectId + ".\n");
-                        if (TryFindGrabbableObjectForPlayer(networkObjectPair.Key, out GrabbablePlayerObject gpo))
-                            output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
+                        output += ("PlayerID: " + networkObjectPair.Key + ".\n");
+                        if (networkObjectPair.Value != null)
+                        {
+                            if (networkObjectPair.Value.TryGetComponent(out NetworkObject networkObject))
+                                output += ("NetworkID: " + networkObject.NetworkObjectId + ".\n");
+                            if (TryFindGrabbableObjectForPlayer(networkObjectPair.Key, out GrabbablePlayerObject gpo))
+                                output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
+                        }
+                        output += ("------------------------------\n");
                     }
-                    output += ("------------------------------\n");
                 }
+
                 return output;
             }
         }
+
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)
         {
             foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
@@ -88,11 +123,24 @@ namespace LCShrinkRay.comp
             result = null;
             return false;
         }
+
+        public static bool TryFindGrabbableObjectByHolder(ulong playerHeldByID, out GrabbablePlayerObject result)
+        {
+            foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+            {
+                if (gpo != null && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == playerHeldByID)
+                {
+                    result = gpo;
+                    return true;
+                }
+            }
+
+            result = null;
+            return false;
+        }
         #endregion
 
         #region Methods
-
-
         public static void ClearGrabbablePlayerObjects()
         {
             Plugin.Log("ClearGrabbablePlayerObjects");

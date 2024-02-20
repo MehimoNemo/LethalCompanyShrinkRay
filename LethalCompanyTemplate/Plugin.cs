@@ -52,7 +52,7 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
             harmony.PatchAll(typeof(DeskPatch));
             harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
-            //harmony.PatchAll(typeof(CentipedeAIPatch));
+            harmony.PatchAll(typeof(CentipedeAIPatch));
             harmony.PatchAll(typeof(ModdedDungeonEntrancePatch));
 
             // comp

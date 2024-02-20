@@ -232,5 +232,16 @@ namespace LCShrinkRay.helper
                 z = 0.177f * scale + 0.3546f
             };
         }
+
+        public static void UpdateWeatherForPlayer(PlayerControllerB targetPlayer)
+        {
+            var audioPresetIndex = targetPlayer.isInsideFactory ? 2 : 3;
+            var audioReverbPresets = UnityEngine.Object.FindObjectOfType<AudioReverbPresets>();
+            if (audioReverbPresets != null && audioReverbPresets.audioPresets.Length > audioPresetIndex)
+            {
+                Plugin.Log("Change audio reverb preset (to affect weather)");
+                audioReverbPresets.audioPresets[audioPresetIndex].ChangeAudioReverbForPlayer(targetPlayer);
+            }
+        }
     }
 }
