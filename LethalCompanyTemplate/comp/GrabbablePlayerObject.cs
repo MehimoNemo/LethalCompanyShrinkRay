@@ -7,15 +7,39 @@ using UnityEngine.InputSystem;
 using LCShrinkRay.helper;
 using Unity.Netcode;
 using LCShrinkRay.patches;
+using System.IO;
+using System.Reflection;
+using UnityEngine.InputSystem.XR;
 using System.Collections;
+using LethalLib.Modules;
 
 namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {
         #region Properties
-        public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>();
-        public PlayerControllerB grabbedPlayer { get; set; }
+        public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>(ulong.MaxValue);
+        private PlayerControllerB grabbedPlayerController { get; set; }
+        public PlayerControllerB grabbedPlayer
+        {
+            get
+            {
+                if (grabbedPlayerController == null)
+                {
+                    if (PlayerInfo.CurrentPlayer == null) return null; // Needs a few more frames to connect playerController
+
+                    if (grabbedPlayerID == null)
+                    {
+                        Plugin.Log("Unable to get grabbedPlayer.");
+                        return null;
+                    }
+
+                    Initialize();
+                }
+
+                return grabbedPlayerController;
+            }
+        }
 
         private static GameObject networkPrefab { get; set; }
 
@@ -24,6 +48,41 @@ namespace LCShrinkRay.comp
         public NetworkVariable<bool> IsOnSellCounter = new NetworkVariable<bool>(false);
 
         private bool IsGoombaCoroutineRunning = false;
+
+        private EnemyAI enemyHeldBy = null;
+        public HoarderBugAI lastHoarderBugGrabbedBy = null;
+
+        public enum TargetPlayer
+        {
+            GrabbedPlayer = 0,
+            Holder
+        }
+
+        private static Sprite Icon
+        {
+            get
+            {
+                string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                if (string.IsNullOrEmpty(assetDir))
+                {
+                    Plugin.Log("GrabbablePlayerIcon not found!", Plugin.LogType.Error);
+                    return null;
+                }
+
+                var imagePath = Path.Combine(assetDir, "GrabbablePlayerIcon.png");
+                if (File.Exists(imagePath))
+                {
+                    var width = 223;
+                    var height = 213;
+                    byte[] bytes = File.ReadAllBytes(imagePath);
+                    var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
+                    texture.LoadImage(bytes);
+                    Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                    return sprite;
+                }
+                return null;
+            }
+        }
         #endregion
 
         #region Networking
@@ -39,6 +98,7 @@ namespace LCShrinkRay.comp
 
             component.itemProperties = assetItem;
             component.itemProperties.isConductiveMetal = false;
+            component.itemProperties.itemIcon = Icon;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
@@ -46,6 +106,13 @@ namespace LCShrinkRay.comp
         public override void OnNetworkDespawn()
         {
             SetIsGrabbableToEnemies(false);
+            if (enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
+            {
+                var hoarderBug = enemyHeldBy as HoarderBugAI;
+                hoarderBug.heldItem = null;
+                hoarderBug.targetItem = null;
+                hoarderBug.SwitchToBehaviourState(0);
+            }
 
             Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
             base.OnNetworkDespawn();
@@ -79,29 +146,27 @@ namespace LCShrinkRay.comp
             itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
         }
 
-        public override void LateUpdate()
+        public override void Update()
         {
-            base.LateUpdate();
+            base.Update();
 
             // Do several things only every x frames to save performance
             frameCounter++;
             if (frameCounter >= 1000) frameCounter = 0;
 
             if (grabbedPlayer == null)
+                return;
+
+            // Manual positioning
+            //base.transform.localPosition = Vector3.zero; // Yeah, don't override that in the original Update..
+
+            if (IsOnSellCounter.Value || enemyHeldBy != null)
             {
-                if (PlayerInfo.CurrentPlayer == null) return; // Needs a few more frames to connect playerController
-
-                if(grabbedPlayerID == null)
-                {
-                    Plugin.Log("Unable to get grabbedPlayer.");
-                    return;
-                }
-
-                Plugin.Log("GrabbablePlayerObject.ReInitialize");
-                Initialize();
+                if (frameCounter % 30 == 1)
+                    Plugin.Log("Held by enemy");
+                grabbedPlayer.transform.position = this.transform.position;
             }
-
-            if (this.isHeld)
+            else if (this.isHeld)
             {
                 //this looks like trash unfortunately
                 grabbedPlayer.transform.position = this.transform.position;
@@ -112,14 +177,21 @@ namespace LCShrinkRay.comp
                 grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                 grabbedPlayer.playerCollider.enabled = false;
             }
-            else if (IsOnSellCounter.Value)
-            {
-                grabbedPlayer.transform.position = this.transform.position;
-            }
             else
             {
                 transform.position = grabbedPlayer.transform.position;
             }
+        }
+
+        public override void LateUpdate()
+        {
+            base.LateUpdate();
+
+            if (grabbedPlayer == null)
+                return;
+
+            if(lastHoarderBugGrabbedBy != null)
+                HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
 
             if (IsCurrentPlayer)
             { 
@@ -129,7 +201,6 @@ namespace LCShrinkRay.comp
                 if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
             }
-
         }
         
         public override void PocketItem()
@@ -146,16 +217,14 @@ namespace LCShrinkRay.comp
             try
             {
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
-                playerHeldBy.DiscardHeldObject();// placeObject: true, null, ThrowDestination());
-                grabbedPlayer.playerCollider.enabled = true;
-                SetIsGrabbableToEnemies(true);
+                playerHeldBy.DiscardHeldObject();
 
                 if(ModConfig.Instance.values.throwablePlayers)
                     ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
             }
             catch (Exception e)
             {
-                Plugin.Log("Error while yeeting player: " + e.Message);
+                Plugin.Log("Error while throwing player: " + e.Message);
             }
         }
 
@@ -178,6 +247,8 @@ namespace LCShrinkRay.comp
         {
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
+
+            grabbedPlayer.ResetFallGravity();
 
             base.DiscardItem();
             grabbedPlayer.playerCollider.enabled = true;
@@ -202,7 +273,36 @@ namespace LCShrinkRay.comp
             SetIsGrabbableToEnemies(true);
             ResetControlTips();
         }
-        
+
+        public override void GrabItemFromEnemy(EnemyAI enemyAI)
+        {
+            Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
+            enemyHeldBy = enemyAI;
+        }
+
+        public override void DiscardItemFromEnemy()
+        {
+            if(enemyHeldBy == null)
+            {
+                Plugin.Log("Lost enemyHeldBy on grabbable player " + grabbedPlayerID.Value, Plugin.LogType.Warning);
+                return;
+            }
+
+            Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
+            if (enemyHeldBy is HoarderBugAI)
+            {
+                lastHoarderBugGrabbedBy = enemyHeldBy as HoarderBugAI;
+            }
+
+            PlayerInfo.AdjustArmScale(grabbedPlayer);
+            PlayerInfo.AdjustMaskScale(grabbedPlayer);
+            PlayerInfo.AdjustMaskPos(grabbedPlayer);
+
+            grabbedPlayer.ResetFallGravity();
+
+            enemyHeldBy = null;
+        }
+
         public override void GrabItem()
         {
             Plugin.Log("Okay, let's grab!");
@@ -247,6 +347,8 @@ namespace LCShrinkRay.comp
         
         public override void OnPlaceObject()
         {
+            grabbedPlayer.ResetFallGravity();
+
             base.OnPlaceObject();
 
             ResetControlTips();
@@ -261,7 +363,7 @@ namespace LCShrinkRay.comp
             if(playerID != null)
                 grabbedPlayerID.Value = playerID.Value;
 
-            grabbedPlayer = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
+            grabbedPlayerController = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
             if (grabbedPlayer == null)
             {
                 Plugin.Log("grabbedPlayer is null");
@@ -325,23 +427,12 @@ namespace LCShrinkRay.comp
             if (!PlayerInfo.IsShrunk(grabbedPlayer))
                 isGrabbable = false;
 
-            this.grabbableToEnemies = isGrabbable;
+            grabbableToEnemies = isGrabbable;
 
             Plugin.Log("GrabbablePlayer - Allow enemy grab: " + isGrabbable);
 
             if (ModConfig.Instance.values.hoardingBugSteal)
-            {
-                if(isGrabbable)
-                {
-                    if (HoarderBugAI.grabbableObjectsInMap != null && !HoarderBugAI.grabbableObjectsInMap.Contains(grabbedPlayer.gameObject))
-                        HoarderBugAI.grabbableObjectsInMap.Add(grabbedPlayer.gameObject);
-                }
-                else
-                {
-                    if (HoarderBugAI.grabbableObjectsInMap != null && HoarderBugAI.grabbableObjectsInMap.Contains(grabbedPlayer.gameObject))
-                        HoarderBugAI.grabbableObjectsInMap.Remove(grabbedPlayer.gameObject);
-                }
-            }
+                HoarderBugAI.RefreshGrabbableObjectsInMapList();
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -524,6 +615,98 @@ namespace LCShrinkRay.comp
         {
             return IsOnSellCounter.Value && IsCurrentPlayer;
         }
+
+        // --- Player holding us / Player we're holding teleported ---
+
+        [ServerRpc(RequireOwnership = false)]
+        private void UpdateAfterTeleportServerRpc(TargetPlayer teleportingPlayer)
+        {
+            UpdateAfterTeleportClientRpc(teleportingPlayer);
+        }
+
+        internal IEnumerator UpdateAfterTeleportEnsured(TargetPlayer teleportingPlayer)
+        {
+            yield return null; // Wait for next frame
+            if (grabbedPlayer != null && playerHeldBy != null)
+                UpdateAfterTeleportServerRpc(teleportingPlayer); // Let the other person of this holder/grabbed connection know that they teleported with us
+            else
+                UpdateAdditionalPositioning();
+        }
+
+        [ClientRpc]
+        private void UpdateAfterTeleportClientRpc(TargetPlayer teleportingPlayer)
+        {
+            Plugin.Log("UpdateRegionClientRpc -> " + teleportingPlayer.ToString());
+
+            if (grabbedPlayer == null || playerHeldBy == null)
+            {
+                Plugin.Log("Tried syncing region info between holder and grabbed player, but one was null.", Plugin.LogType.Error);
+                return;
+            }
+
+            if(playerHeldBy.isInsideFactory == grabbedPlayer.isInsideFactory)
+            {
+                Plugin.Log("Syncing of region info between holder and grabbed player not required. Both at same region.");
+                return;
+            }
+
+            if (teleportingPlayer == TargetPlayer.GrabbedPlayer)
+            {
+                Plugin.Log("Syncing for holder. isInsideFactory changing from " + playerHeldBy.isInsideFactory + " to " + grabbedPlayer.isInsideFactory);
+                UpdateLocationDataFromPlayerTo(grabbedPlayer, playerHeldBy);
+            }
+            else
+            {
+                Plugin.Log("Syncing for grabbed player. isInsideFactory changing from " + grabbedPlayer.isInsideFactory + " to " + playerHeldBy.isInsideFactory);
+                UpdateLocationDataFromPlayerTo(playerHeldBy, grabbedPlayer);
+            }
+
+            UpdateAdditionalPositioning();
+        }
+
+        internal void UpdateLocationDataFromPlayerTo(PlayerControllerB playerFrom, PlayerControllerB playerTo)
+        {
+            bool locationChanged = playerTo.isInsideFactory != playerFrom.isInsideFactory;
+            if (!locationChanged) return;
+
+            playerTo.isInsideFactory = playerFrom.isInsideFactory;
+            playerTo.isInElevator = playerFrom.isInElevator;
+            playerTo.isInHangarShipRoom = playerFrom.isInHangarShipRoom;
+
+            foreach(var item in playerTo.ItemSlots)
+            {
+                if(item == null) continue;
+                item.isInFactory = playerTo.isInsideFactory;
+            }
+
+            PlayerInfo.UpdateWeatherForPlayer(playerTo);
+        }
+
+        internal void UpdateAdditionalPositioning()
+        {
+            // Required for enemies to find us after teleporting in the factory
+            //startFallingPosition = transform.position;
+            //targetFloorPosition = transform.position;
+
+            if (ModConfig.Instance.values.hoardingBugSteal)
+            {
+                Plugin.Log("Refreshing grabbable hoardingbug objects");
+                HoarderBugAI.RefreshGrabbableObjectsInMapList();
+            }
+        }
+
+        /*private int counterPos = 0;
+        internal void LogPosition()
+        {
+            counterPos++;
+            counterPos %= 100;
+            if (counterPos == 1)
+                Plugin.Log("player pos: " + grabbedPlayer.transform.position + 
+                    "\tpos: " + transform.position +
+                    "\tlocalPos: " + transform.localPosition +
+                    "\ttargetFloorPos: " + targetFloorPosition +
+                    "\tstartFallingPos: " + startFallingPosition);
+        }*/
         #endregion
     }
 }

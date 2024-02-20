@@ -58,6 +58,64 @@ namespace LCShrinkRay.patches
                     ShrinkRay.debugOnPlayerModificationWorkaround(PlayerInfo.CurrentPlayer, ModificationType.Enlarging);
                 }
 
+                // /spawnenemy Hoarding bug a=1 p=@me
+                else if (Keyboard.current.f5Key.wasPressedThisFrame)
+                {
+                    if (HoarderBugAI.grabbableObjectsInMap == null)
+                    {
+                        Plugin.Log("No grabbable hoarder bug objects.");
+                        return;
+                    }
+
+                    var output = "Grabbable hoarder bug objects:\n";
+                    output += "------------------------------\n";
+                    foreach (var item in HoarderBugAI.grabbableObjectsInMap)
+                        output += item.name + "\n";
+                    output += "------------------------------\n";
+                    Plugin.Log(output);
+                }
+
+                else if (Keyboard.current.f6Key.wasPressedThisFrame)
+                {
+                    if (HoarderBugAI.HoarderBugItems == null)
+                    {
+                        Plugin.Log("No hoarder bug items.");
+                        return;
+                    }
+
+                    var output = "Grabbable hoarder bug items:\n";
+                    output += "------------------------------\n";
+                    foreach (var item in HoarderBugAI.HoarderBugItems)
+                        output += item.itemGrabbableObject.name + ": " + item.status.ToString() + "\n";
+                    output += "------------------------------\n";
+                    Plugin.Log(output);
+                }
+
+                else if (Keyboard.current.f7Key.wasPressedThisFrame)
+                {
+                    if (HoarderBugAIPatch.latestNestPosition != Vector3.zero)
+                    {
+                        Plugin.Log("Teleporting to latest hoarder bug nest position.");
+                        PlayerInfo.CurrentPlayer.TeleportPlayer(HoarderBugAIPatch.latestNestPosition);
+                    }
+                    else
+                        Plugin.Log("No hoarder bug nest yet..");
+                }
+
+                else if (Keyboard.current.f8Key.wasPressedThisFrame)
+                {
+                    var gpoList = UnityEngine.Object.FindObjectsOfType<GrabbablePlayerObject>();
+                    foreach (var gpo in gpoList)
+                    {
+                        if (gpo.grabbableToEnemies)
+                        {
+                            Plugin.Log("Added as stolen hoarding bug item");
+                            HoarderBugAI.HoarderBugItems.Add(new HoarderBugItem(gpo, HoarderBugItemStatus.Stolen, gpo.transform.position));
+                        }
+                    }
+                }
+
+
                 else if (Keyboard.current.f9Key.wasPressedThisFrame)
                 {
                     // Print position to log
@@ -125,6 +183,24 @@ namespace LCShrinkRay.patches
             {
                 Plugin.Log("Error in Update() [DebugKeys]: " + e.Message);
             }
+        }
+
+        public static GameObject CreateCube(Transform parent, Color color)
+        {
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            //cube.transform.SetParent(parent);
+            if (cube.TryGetComponent(out BoxCollider boxCollider))
+                boxCollider.enabled = false;
+
+            if (cube.TryGetComponent(out MeshRenderer meshRenderer))
+            {
+                Plugin.Log("Has mesh renderer");
+                meshRenderer.sharedMaterial = new Material(Shader.Find("HDRP/Lit"));
+                meshRenderer.sharedMaterial.color = color;
+                meshRenderer.enabled = true;
+            }
+
+            return cube;
         }
     }
 }
