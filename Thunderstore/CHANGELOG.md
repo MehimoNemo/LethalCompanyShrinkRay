@@ -1,3 +1,14 @@
+### 0.3.0 [Yippie]###
+**What's new?**
++ Shrunken players are now grabbable by Hoarding Bugs, and they loooove to grab them. More than anything else! Yippie!!
++ Icon for grabbed players
+
+**Fixes**
++ fixed lighting & weather not updating for person who didn't actively joined the dungeon (e.g when being held)
++ fixed fall damage applying in relation to the position a player was grabbed, rather than the position they got dropped
++ fixed a bug where shrinking someone to death while they got a centipede on their head caused a lot of errors
++ fixed a bug where host was seen as grabbable internally from the start of the game
+
 ### 0.2.1 ###
 + Added new ThumperBehaviour: Bumper -> With their immense power, thumpers are unable to grab shrunken players. Instead they will send them flying on contact!
 + Fixed bug where ThumperBehaviour.OneShot was throwing errors in multiplayer
