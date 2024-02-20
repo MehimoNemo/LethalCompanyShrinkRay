@@ -206,18 +206,17 @@ namespace LCShrinkRay.comp
                     return;
                 }
 
-                Transform transform = player.gameObject.transform;
                 //teleport da playa to dis vent
                 if (thisVent != null && siblingVent != null)
                 {
                     Plugin.Log("\n⠀⠀⠀⠀⢀⣴⣶⠿⠟⠻⠿⢷⣦⣄⠀⠀⠀\r\n⠀⠀⠀⠀⣾⠏⠀⠀⣠⣤⣤⣤⣬⣿⣷⣄⡀\r\n⠀⢀⣀⣸⡿⠀⠀⣼⡟⠁⠀⠀⠀⠀⠀⠙⣷\r\n⢸⡟⠉⣽⡇⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⣿\r\n⣾⠇⠀⣿⡇⠀⠀⠘⠿⢶⣶⣤⣤⣶⡶⣿⠋\r\n⣿⠂⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠃\r\n⣿⡆⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀\r\n⢿⡇⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠀\r\n⠘⠻⠷⢿⡇⠀⠀⠀⣴⣶⣶⠶⠖⠀⢸⡟⠀\r\n⠀⠀⠀⢸⣇⠀⠀⠀⣿⡇⣿⡄⠀⢀⣿⠇⠀\r\n⠀⠀⠀⠘⣿⣤⣤⣴⡿⠃⠙⠛⠛⠛⠋⠀⠀");
                     if(!thisVent.ventIsOpen || !siblingVent.ventIsOpen)
                         StartCoroutine(OccupyVent());
-                    transform.position = siblingVent.floorNode.transform.position;
+                    player.TeleportPlayer(siblingVent.floorNode.transform.position);
                 }
                 else
                 {
-                    transform.position = new Vector3(7.9186f, 0.286f, -14.1901f);
+                    player.TeleportPlayer(new Vector3(7.9186f, 0.286f, -14.1901f));
                 }
             }
 

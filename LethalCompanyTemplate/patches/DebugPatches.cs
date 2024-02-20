@@ -184,5 +184,23 @@ namespace LCShrinkRay.patches
                 Plugin.Log("Error in Update() [DebugKeys]: " + e.Message);
             }
         }
+
+        public static GameObject CreateCube(Transform parent, Color color)
+        {
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            //cube.transform.SetParent(parent);
+            if (cube.TryGetComponent(out BoxCollider boxCollider))
+                boxCollider.enabled = false;
+
+            if (cube.TryGetComponent(out MeshRenderer meshRenderer))
+            {
+                Plugin.Log("Has mesh renderer");
+                meshRenderer.sharedMaterial = new Material(Shader.Find("HDRP/Lit"));
+                meshRenderer.sharedMaterial.color = color;
+                meshRenderer.enabled = true;
+            }
+
+            return cube;
+        }
     }
 }

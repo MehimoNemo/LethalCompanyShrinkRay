@@ -3,22 +3,15 @@ using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using LethalLib.Modules;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Xml.Linq;
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.InputSystem.HID;
-using UnityEngine.InputSystem.XR;
 
 namespace LCShrinkRay.patches
 {
     [HarmonyPatch]
     internal class HoarderBugAIPatch
     {
+        private const float maxAllowedNestDistance = 10f;
+
         [HarmonyPatch(typeof(EnemyAI), "PlayerIsTargetable")]
         [HarmonyPostfix]
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, EnemyAI __instance)
@@ -33,7 +26,11 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void RefreshGrabbableObjectsInMapList()
         {
-            if (ModConfig.Instance.values.hoardingBugSteal) return;
+            if (ModConfig.Instance.values.hoardingBugSteal)
+            {
+                HoarderBugAI.grabbableObjectsInMap.RemoveAll(go => go.TryGetComponent(out GrabbablePlayerObject gpo) && gpo.lastHoarderBugGrabbedBy != null); // remove still grabbed ones
+                return;
+            }
 
             // Remove all GrabbablePlayerObjects from the list
             Plugin.Log("Previously grabbable hoarder bug objects: " + HoarderBugAI.grabbableObjectsInMap.Count.ToString());
@@ -51,16 +48,15 @@ namespace LCShrinkRay.patches
 
             var inLineOfSight = __instance.HasLineOfSightToPosition(PlayerInfo.CurrentPlayer.transform.position);
             if (!inLineOfSight) return;
-            Plugin.Log("Aiming for us.");
+            Plugin.Log("HoarderBug aiming for us.");
 
             if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
             {
-                Plugin.Log("Found gpo.");
+                Plugin.Log("Found gpo. May it be targetable?");
                 if (!IsGrabbablePlayerTargetable(gpo)) return;
 
-                __instance.targetItem = gpo;
-
                 Plugin.Log("Forget everything else.. we found a grabbable player! Let's goooo..!");
+                __instance.targetItem = gpo;
             }
         }
 
@@ -86,8 +82,8 @@ namespace LCShrinkRay.patches
             }
 
             var distanceToNest = Vector3.Distance(gpo.lastHoarderBugGrabbedBy.nestPosition, PlayerInfo.CurrentPlayer.transform.position);
-            Plugin.Log("Distance nest->player: " + distanceToNest);
-            if (distanceToNest < 10f)
+            Plugin.Log("Difference between nest pos (" + gpo.lastHoarderBugGrabbedBy.nestPosition + ") and current pos (" + PlayerInfo.CurrentPlayer.transform.position + ") is " + distanceToNest);
+            if (distanceToNest < maxAllowedNestDistance)
                 return;
 
             Plugin.Log("Overly attached hoarding bug feels that the grabbed player is too far away. Following!");
@@ -108,15 +104,34 @@ namespace LCShrinkRay.patches
             else
             {
                 // try to get it back!
-                gpo.lastHoarderBugGrabbedBy.targetItem = gpo;
-                gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(0);
+                if (distanceToNest < (maxAllowedNestDistance + 5f))
+                {
+                    gpo.lastHoarderBugGrabbedBy.targetItem = gpo;
+                    gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(0);
+                    Plugin.Log("Moved too far away from hoarder bug nest. Bug tries to get you back!");
+                }
+                else
+                    Plugin.Log("Escaped from the hoarding bug!"); // Very likely we teleported (by using vent, shipTeleporter, ..)
+
                 HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject == gpo);
                 if (!HoarderBugAI.grabbableObjectsInMap.Contains(gpo.gameObject))
                     HoarderBugAI.grabbableObjectsInMap.Add(gpo.gameObject);
-                Plugin.Log("Moved too far away from hoarder bug nest. Bug tries to get you back!");
             }
 
             gpo.lastHoarderBugGrabbedBy = null; // Forget about it after that
+        }
+
+        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
+        [HarmonyPrefix]
+        public static void SetGoTowardsTargetObjectPrefix(ref GameObject foundObject, HoarderBugAI __instance)
+        {
+            if (!foundObject.TryGetComponent(out GrabbablePlayerObject gpo))
+                return;
+
+            if (!IsGrabbablePlayerTargetable(gpo))
+                HoarderBugAI.grabbableObjectsInMap.Remove(foundObject);
+
+            //Plugin.Log("SetGoTowardsTargetObject -> foundObject position: " + foundObject.transform.position + ". gpo position: " + gpo.transform.position);
         }
 
         // ------------------ DEBUG FROM HERE ON ------------------
@@ -128,45 +143,6 @@ namespace LCShrinkRay.patches
             if (!ModConfig.DebugMode) return;
 
             latestNestPosition = newNestPosition;
-        }
-
-        public static bool SetDestinationToPosition(Vector3 position, bool checkForPath = false, HoarderBugAI enemyAI = null)
-        {
-            Plugin.Log("SetDestinationToPosition -> " + position);
-            if (checkForPath)
-            {
-                position = RoundManager.Instance.GetNavMeshPosition(position, RoundManager.Instance.navHit, 1.75f);
-                Plugin.Log("1 -> " + position);
-                var path1 = new NavMeshPath();
-                if (!enemyAI.agent.CalculatePath(position, path1))
-                {
-                    Plugin.Log("2");
-                    return false;
-                }
-
-                var path1Pos = path1.corners[path1.corners.Length - 1];
-                var navMeshPos = RoundManager.Instance.GetNavMeshPosition(position, RoundManager.Instance.navHit, 2.7f);
-                var distance = Vector3.Distance(path1Pos, navMeshPos);
-                Plugin.Log("3 -> " + path1Pos + " | " + navMeshPos + " | " + distance);
-                if (distance > 1.55f)
-                {
-                    Plugin.Log("3");
-                    return false;
-                }
-            }
-
-            enemyAI.moveTowardsDestination = true;
-            enemyAI.movingTowardsTargetPlayer = false;
-            enemyAI.destination = RoundManager.Instance.GetNavMeshPosition(position, RoundManager.Instance.navHit, -1f);
-            Plugin.Log("4 -> " + enemyAI.destination);
-            return true;
-        }
-
-        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
-        [HarmonyPostfix]
-        public static void SetGoTowardsTargetObjectPostfix(GameObject foundObject, HoarderBugAI __instance)
-        {
-            Plugin.Log("HoarderBug found [" + foundObject.name + "]" + (__instance.targetItem != null ? (" and set target to [" + __instance.targetItem.name + "].") : ". No target found."));
         }
     }
 }

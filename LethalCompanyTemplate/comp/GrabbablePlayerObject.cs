@@ -146,9 +146,9 @@ namespace LCShrinkRay.comp
             itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
         }
 
-        public override void LateUpdate()
+        public override void Update()
         {
-            base.LateUpdate();
+            base.Update();
 
             // Do several things only every x frames to save performance
             frameCounter++;
@@ -157,12 +157,12 @@ namespace LCShrinkRay.comp
             if (grabbedPlayer == null)
                 return;
 
-            if(lastHoarderBugGrabbedBy != null && IsCurrentPlayer && frameCounter % 100 == 1) // Coming in here after being dropped by a hoarder bug
-                HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
+            // Manual positioning
+            //base.transform.localPosition = Vector3.zero; // Yeah, don't override that in the original Update..
 
             if (IsOnSellCounter.Value || enemyHeldBy != null)
             {
-                if(frameCounter % 30 == 1)
+                if (frameCounter % 30 == 1)
                     Plugin.Log("Held by enemy");
                 grabbedPlayer.transform.position = this.transform.position;
             }
@@ -181,6 +181,17 @@ namespace LCShrinkRay.comp
             {
                 transform.position = grabbedPlayer.transform.position;
             }
+        }
+
+        public override void LateUpdate()
+        {
+            base.LateUpdate();
+
+            if (grabbedPlayer == null)
+                return;
+
+            if(lastHoarderBugGrabbedBy != null)
+                HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
 
             if (IsCurrentPlayer)
             { 
@@ -205,19 +216,15 @@ namespace LCShrinkRay.comp
         {
             try
             {
-                OnPlayerDiscarded();
-
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
-                playerHeldBy.DiscardHeldObject();// placeObject: true, null, ThrowDestination());
-                grabbedPlayer.playerCollider.enabled = true;
-                SetIsGrabbableToEnemies(true);
+                playerHeldBy.DiscardHeldObject();
 
                 if(ModConfig.Instance.values.throwablePlayers)
                     ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
             }
             catch (Exception e)
             {
-                Plugin.Log("Error while yeeting player: " + e.Message);
+                Plugin.Log("Error while throwing player: " + e.Message);
             }
         }
 
@@ -241,7 +248,7 @@ namespace LCShrinkRay.comp
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
 
-            OnPlayerDiscarded();
+            grabbedPlayer.ResetFallGravity();
 
             base.DiscardItem();
             grabbedPlayer.playerCollider.enabled = true;
@@ -291,7 +298,7 @@ namespace LCShrinkRay.comp
             PlayerInfo.AdjustMaskScale(grabbedPlayer);
             PlayerInfo.AdjustMaskPos(grabbedPlayer);
 
-            OnPlayerDiscarded();
+            grabbedPlayer.ResetFallGravity();
 
             enemyHeldBy = null;
         }
@@ -340,7 +347,7 @@ namespace LCShrinkRay.comp
         
         public override void OnPlaceObject()
         {
-            OnPlayerDiscarded();
+            grabbedPlayer.ResetFallGravity();
 
             base.OnPlaceObject();
 
@@ -388,11 +395,6 @@ namespace LCShrinkRay.comp
         }
 
         public void AddNode() {} // WIP
-
-        private void OnPlayerDiscarded()
-        {
-            grabbedPlayer.ResetFallGravity();
-        }
 
         public void CalculateScrapValue()
         {
@@ -683,9 +685,28 @@ namespace LCShrinkRay.comp
         internal void UpdateAdditionalPositioning()
         {
             // Required for enemies to find us after teleporting in the factory
-            startFallingPosition = transform.position;
-            targetFloorPosition = transform.position;
+            //startFallingPosition = transform.position;
+            //targetFloorPosition = transform.position;
+
+            if (ModConfig.Instance.values.hoardingBugSteal)
+            {
+                Plugin.Log("Refreshing grabbable hoardingbug objects");
+                HoarderBugAI.RefreshGrabbableObjectsInMapList();
+            }
         }
+
+        /*private int counterPos = 0;
+        internal void LogPosition()
+        {
+            counterPos++;
+            counterPos %= 100;
+            if (counterPos == 1)
+                Plugin.Log("player pos: " + grabbedPlayer.transform.position + 
+                    "\tpos: " + transform.position +
+                    "\tlocalPos: " + transform.localPosition +
+                    "\ttargetFloorPos: " + targetFloorPosition +
+                    "\tstartFallingPos: " + startFallingPosition);
+        }*/
         #endregion
     }
 }

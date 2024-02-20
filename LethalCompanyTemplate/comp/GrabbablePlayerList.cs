@@ -59,8 +59,10 @@ namespace LCShrinkRay.comp
             {
                 if (TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
                 {
-                    if(gpo.playerHeldBy != null) // We're grabbable and someone holds us
+                    if (gpo.playerHeldBy != null) // We're grabbable and someone holds us
                         gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.GrabbedPlayer));
+                    else
+                        gpo.UpdateAdditionalPositioning();
                 }
 
                 if (TryFindGrabbableObjectByHolder(PlayerInfo.CurrentPlayerID, out gpo))
