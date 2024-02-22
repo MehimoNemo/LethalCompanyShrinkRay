@@ -138,16 +138,20 @@ namespace LCShrinkRay.patches
                 gpo.lastHoarderBugGrabbedBy.angryAtPlayer = gpo.playerHeldBy;
                 gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(2);
                 shouldDropItems = true;
-                Plugin.Log("HoarderBug saw that player " + gpo.playerHeldBy.name + " stole " + gpo.name + ". Is angry now at them!");
+                Plugin.Log("HoarderBug saw that " + gpo.playerHeldBy.name + " stole " + gpo.name + ". Is angry now at them!");
             }
             else
             {
                 var distanceToNest = Vector3.Distance(gpo.lastHoarderBugGrabbedBy.nestPosition, gpo.grabbedPlayer.transform.position);
                 if (distanceToNest < (maxAllowedNestDistance + 5f))
                 {
-                    Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " moved too far away from hoarder bug nest. Bug tries to get them back!");
-                    HoardingBugTargetUs(gpo.lastHoarderBugGrabbedBy, gpo);
-                    shouldDropItems = true;
+                    Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " moved too far away from hoarder bug nest.");
+                    if (ModConfig.Instance.values.hoarderBugBehaviour == ModConfig.HoarderBugBehaviour.Addicted)
+                    {
+                        Plugin.Log(" Bug tries to get them back!");
+                        HoardingBugTargetUs(gpo.lastHoarderBugGrabbedBy, gpo);
+                        shouldDropItems = true;
+                    }
                 }
                 else
                     Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " escaped from the hoarding bug!"); // Very likely we teleported (by using vent, shipTeleporter, ..)
@@ -155,8 +159,6 @@ namespace LCShrinkRay.patches
 
             if(shouldDropItems && gpo.lastHoarderBugGrabbedBy.heldItem != null && gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject != null)
                 gpo.lastHoarderBugGrabbedBy.DropItemServerRpc(gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject.NetworkObject, gpo.lastHoarderBugGrabbedBy.transform.position, false);
-
-            return;
         }
 
         [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
