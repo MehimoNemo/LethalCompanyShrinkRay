@@ -5,6 +5,7 @@ using LCShrinkRay.helper;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using static LCShrinkRay.comp.GrabbablePlayerObject;
 
 namespace LCShrinkRay.comp
 {
@@ -30,7 +31,10 @@ namespace LCShrinkRay.comp
         public static void KillPlayerClientRpc(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
         {
             Plugin.Log("KillPlayerClientRpc");
-            ResetAnyPlayerModificationsFor(PlayerInfo.ControllerFromID((ulong)playerId));
+            var targetPlayer = PlayerInfo.ControllerFromID((ulong)playerId);
+            if (targetPlayer == null) return;
+
+            ResetAnyPlayerModificationsFor(targetPlayer);
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
@@ -205,7 +209,7 @@ namespace LCShrinkRay.comp
 
         public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)
         {
-            return; // WIP
+            return;
             Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
             if(targetPlayer == null) return;
 
@@ -222,7 +226,7 @@ namespace LCShrinkRay.comp
 
                 foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
                 {
-                    if (gpo == null) continue;
+                    if (gpo == null || gpo.grabbedPlayerID.Value == ulong.MaxValue) continue;
                     gpo.EnableInteractTrigger(PlayerInfo.SizeOf(gpo.grabbedPlayer) < currentSize);
                 }
             }

@@ -1,3 +1,6 @@
+### 0.3.1 ###
++ fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime
+
 ### 0.3.0 [Yippie]###
 **What's new?**
 + Shrunken players are now grabbable by Hoarding Bugs! There are 3 modes available:

@@ -115,6 +115,9 @@ namespace LCShrinkRay.comp
                 hoarderBug.SwitchToBehaviourState(0);
             }
 
+            if(playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                playerHeldBy.DiscardHeldObject();
+
             Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
             base.OnNetworkDespawn();
         }

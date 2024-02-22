@@ -1,6 +1,6 @@
 {
     "name": "LittleCompany",
-    "version_number": "0.3.0",
+    "version_number": "0.3.1",
     "website_url": "https://github.com/MehimoNemo/LethalCompanyShrinkRay",
     "description": "A Lethal Company mod for a functioning shrink ray!",
     "dependencies": [
