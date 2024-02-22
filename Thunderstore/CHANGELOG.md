@@ -1,6 +1,6 @@
 ### 0.3.0 [Yippie]###
 **What's new?**
-+ Shrunken players are now grabbable by Hoarding Bugs! There are 3 modes available:, and they loooove to grab them. More than anything else! Yippie!!
++ Shrunken players are now grabbable by Hoarding Bugs! There are 3 modes available:
   + **Default:** Hoarding bugs grab you occasionally, like any other item.
   + **NoGrab:** Hoarding bugs treat you as a normal player.
   + **Addicted:** Hoarding bugs looove to grab you, more than anything else! Yippie!! <3 (They won't let you go, if they have the chance to)
