@@ -107,7 +107,7 @@ namespace LCShrinkRay.comp
         public override void OnNetworkDespawn()
         {
             SetIsGrabbableToEnemies(false);
-            if (enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
+            if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
             {
                 var hoarderBug = enemyHeldBy as HoarderBugAI;
                 hoarderBug.heldItem = null;
@@ -257,13 +257,7 @@ namespace LCShrinkRay.comp
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if (grabbedPlayer != player)
-                {
-                    Collider thisPlayerCollider = grabbedPlayer.playerCollider;
-                    Collider thisCollider = this.propColliders[0];
-                    Collider thatCollider = player.playerCollider;
-                    Physics.IgnoreCollision(thisPlayerCollider, thatCollider, false);
-                    Physics.IgnoreCollision(thisCollider, thatCollider, false);
-                }
+                    IgnoreColliderWith(player.playerCollider, false);
             }
 
             SetIsGrabbableToEnemies(true);
@@ -277,6 +271,9 @@ namespace LCShrinkRay.comp
 
             if(IsCurrentPlayer)
                 grabbedPlayer.DropAllHeldItemsAndSync();
+
+            foreach (var collider in enemyHeldBy.gameObject.GetComponentsInChildren<Collider>())
+                IgnoreColliderWith(collider, false);
         }
 
         public override void DiscardItemFromEnemy()
@@ -289,11 +286,16 @@ namespace LCShrinkRay.comp
 
             Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
 
+            foreach(var collider in enemyHeldBy.gameObject.GetComponentsInChildren<Collider>())
+                IgnoreColliderWith(collider);
+
             if (enemyHeldBy is HoarderBugAI)
             {
                 lastHoarderBugGrabbedBy = enemyHeldBy as HoarderBugAI;
                 if (PlayerInfo.IsHost)
                     InLastHoardingBugNestRange.Value = true;
+
+                grabbedPlayer.TeleportPlayer(lastHoarderBugGrabbedBy.transform.position); // To avoid glitching through walls
             }
 
             PlayerInfo.AdjustArmScale(grabbedPlayer);
@@ -323,13 +325,7 @@ namespace LCShrinkRay.comp
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
                 if (grabbedPlayer != player)
-                {
-                    Collider thisPlayerCollider = grabbedPlayer.playerCollider;
-                    Collider thisCollider = this.propColliders[0];
-                    Collider thatCollider = player.playerCollider;
-                    Physics.IgnoreCollision(thisPlayerCollider, thatCollider);
-                    Physics.IgnoreCollision(thisCollider, thatCollider);
-                }
+                    IgnoreColliderWith(player.playerCollider);
             }
 
             /*
@@ -382,6 +378,19 @@ namespace LCShrinkRay.comp
 
             CalculateScrapValue();
             SetIsGrabbableToEnemies(true);
+        }
+
+        public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)
+        {
+            if (otherCollider == null) return;
+
+            //Plugin.Log((ignore ? "Ignoring" : "Allowing") + " collide with " + otherCollider.name);
+
+            Collider thisPlayerCollider = grabbedPlayer.playerCollider;
+            Collider thisCollider = this.propColliders[0];
+
+            Physics.IgnoreCollision(thisPlayerCollider, otherCollider, ignore);
+            Physics.IgnoreCollision(thisCollider, otherCollider, ignore);
         }
 
         public void EnableInteractTrigger(bool enable = true)
