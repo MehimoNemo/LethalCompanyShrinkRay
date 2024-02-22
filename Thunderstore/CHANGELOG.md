@@ -1,7 +1,10 @@
 ### 0.3.0 [Yippie]###
 **What's new?**
-+ Shrunken players are now grabbable by Hoarding Bugs, and they loooove to grab them. More than anything else! Yippie!!
-+ Icon for grabbed players
++ Shrunken players are now grabbable by Hoarding Bugs! There are 3 modes available:, and they loooove to grab them. More than anything else! Yippie!!
+  + **Default:** Hoarding bugs grab you occasionally, like any other item.
+  + **NoGrab:** Hoarding bugs treat you as a normal player.
+  + **Addicted:** Hoarding bugs looove to grab you, more than anything else! Yippie!! <3 (They won't let you go, if they have the chance to)
++ Icon for grabbed players (Special thanks to Ellethwen [swubbelbubbel]!)
 
 **Fixes**
 + fixed lighting & weather not updating for person who didn't actively joined the dungeon (e.g when being held)

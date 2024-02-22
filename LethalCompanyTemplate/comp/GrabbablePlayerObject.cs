@@ -442,7 +442,7 @@ namespace LCShrinkRay.comp
 
             Plugin.Log("GrabbablePlayer - Allow enemy grab: " + isGrabbable);
 
-            if (ModConfig.Instance.values.hoarderBugBehaviour != ModConfig.HoarderBugBehaviour.NoGrab)
+            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.NoGrab)
                 HoarderBugAI.RefreshGrabbableObjectsInMapList();
         }
 

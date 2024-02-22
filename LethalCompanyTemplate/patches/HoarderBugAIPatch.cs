@@ -16,8 +16,8 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, EnemyAI __instance)
         {
-            if (ModConfig.Instance.values.hoarderBugBehaviour == ModConfig.HoarderBugBehaviour.NoGrab)
-                return true;
+            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab)
+                return __result;
 
             if (__result && __instance is HoarderBugAI)
                 return !PlayerInfo.IsShrunk(playerScript);
@@ -29,7 +29,7 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void RefreshGrabbableObjectsInMapList()
         {
-            if (ModConfig.Instance.values.hoarderBugBehaviour != ModConfig.HoarderBugBehaviour.NoGrab)
+            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.NoGrab)
             {
                 HoarderBugAI.grabbableObjectsInMap.RemoveAll(go => go.TryGetComponent(out GrabbablePlayerObject gpo) && (gpo.InLastHoardingBugNestRange.Value || !gpo.grabbableToEnemies)); // remove still grabbed ones
                 return;
@@ -42,7 +42,7 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void DetectNoise(HoarderBugAI __instance, ref float ___timeSinceLookingTowardsNoise)
         {
-            if (ModConfig.Instance.values.hoarderBugBehaviour != ModConfig.HoarderBugBehaviour.Addicted || !PlayerInfo.IsCurrentPlayerShrunk) return; // Not targetable
+            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.Addicted || !PlayerInfo.IsCurrentPlayerShrunk) return; // Not targetable
 
             if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
                 return; // Chill, you already got one..
@@ -90,7 +90,7 @@ namespace LCShrinkRay.patches
 
         public static void HoardingBugTargetUs(HoarderBugAI hoarderBug, GrabbablePlayerObject gpo)
         {
-            if (gpo.playerHeldBy != null && ModConfig.Instance.values.hoarderBugBehaviour == ModConfig.HoarderBugBehaviour.Addicted)
+            if (gpo.playerHeldBy != null && ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.Addicted)
             {
                 Plugin.Log("Oh you better drop that beautiful player, my friend!");
                 hoarderBug.targetItem = gpo;
@@ -146,7 +146,7 @@ namespace LCShrinkRay.patches
                 if (distanceToNest < (maxAllowedNestDistance + 5f))
                 {
                     Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " moved too far away from hoarder bug nest.");
-                    if (ModConfig.Instance.values.hoarderBugBehaviour == ModConfig.HoarderBugBehaviour.Addicted)
+                    if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.Addicted)
                     {
                         Plugin.Log(" Bug tries to get them back!");
                         HoardingBugTargetUs(gpo.lastHoarderBugGrabbedBy, gpo);
@@ -193,13 +193,13 @@ namespace LCShrinkRay.patches
             DebugPatches.hoarderBugNestPosition = newNestPosition;
         }
 
-        [HarmonyPatch(typeof(HoarderBugAI), "DoAIInterval")]
+        /*[HarmonyPatch(typeof(HoarderBugAI), "DoAIInterval")]
         [HarmonyPostfix]
         public static void DoAIInterval(HoarderBugAI __instance)
         {
             if (!ModConfig.DebugMode) return;
 
             Plugin.Log("behaviourState: " + __instance.currentBehaviourStateIndex + " | targetItem: " + __instance.targetItem);
-        }
+        }*/
     }
 }
