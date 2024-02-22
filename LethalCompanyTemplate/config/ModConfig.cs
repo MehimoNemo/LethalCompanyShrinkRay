@@ -27,6 +27,13 @@ namespace LCShrinkRay.Config
             Bumper
         }
 
+        public enum HoarderBugBehaviour
+        {
+            Default,
+            NoGrab,
+            Addicted
+        }
+
         public struct ConfigValues
         {
             // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
@@ -49,8 +56,6 @@ namespace LCShrinkRay.Config
 
             public bool jumpOnShrunkenPlayers { get; set; }
 
-            public bool hoardingBugSteal { get; set; }
-
             public bool throwablePlayers { get; set; }
 
             public bool CanEscapeGrab { get; set; }
@@ -58,6 +63,8 @@ namespace LCShrinkRay.Config
             public bool multipleShrinking { get; set; }
 
             public ThumperBehaviour thumperBehaviour { get; set; }
+
+            public HoarderBugBehaviour hoarderBugBehaviour { get; set; }
         }
 
         public ConfigValues values = new ConfigValues();
@@ -94,7 +101,7 @@ namespace LCShrinkRay.Config
             values.sellablePlayers          = Plugin.BepInExConfig().Bind("Interactions", "sellablePlayers", true, "If true, held players can sell other players, causing comedic").Value;
 
 
-            values.hoardingBugSteal         = Plugin.BepInExConfig().Bind("Enemies", "HoardingBugSteal", true, "If true, hoarding/loot bugs can treat a shrunken player like an item.").Value;
+            values.hoarderBugBehaviour      = Plugin.BepInExConfig().Bind("Enemies", "HoarderBugBehaviour", HoarderBugBehaviour.Default, "Defines if hoarding bugs should be able to grab you and how likely that is,").Value;
             values.thumperBehaviour         = Plugin.BepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Default, "Defines the way Thumpers react on shrunken players.").Value;
 
             DebugLog                        = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", true, "Additional logging to help identifying issues in the beta version of this mod.").Value;

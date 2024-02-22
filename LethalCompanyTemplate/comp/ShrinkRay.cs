@@ -339,6 +339,8 @@ namespace LCShrinkRay.comp
                             if (targetingUs)
                                 Vents.DisableVents();
 
+                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
+
                             IsOnCooldown = false;
                         });
                         break;
@@ -369,6 +371,8 @@ namespace LCShrinkRay.comp
                             if (nextShrunkenSize < 1f && nextShrunkenSize > 0f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
                                 GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
 
+                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
+
                             IsOnCooldown = false;
                         });
 
@@ -391,6 +395,8 @@ namespace LCShrinkRay.comp
                                 if (targetingUs)
                                     Vents.DisableVents();
                             }
+
+                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
 
                             IsOnCooldown = false;
                         });

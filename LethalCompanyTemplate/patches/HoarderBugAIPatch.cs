@@ -16,7 +16,10 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, EnemyAI __instance)
         {
-            if (__result && ModConfig.Instance.values.hoardingBugSteal && __instance is HoarderBugAI)
+            if (ModConfig.Instance.values.hoarderBugBehaviour == ModConfig.HoarderBugBehaviour.NoGrab)
+                return true;
+
+            if (__result && __instance is HoarderBugAI)
                 return !PlayerInfo.IsShrunk(playerScript);
 
             return __result;
@@ -26,123 +29,175 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void RefreshGrabbableObjectsInMapList()
         {
-            if (ModConfig.Instance.values.hoardingBugSteal)
+            if (ModConfig.Instance.values.hoarderBugBehaviour != ModConfig.HoarderBugBehaviour.NoGrab)
             {
-                HoarderBugAI.grabbableObjectsInMap.RemoveAll(go => go.TryGetComponent(out GrabbablePlayerObject gpo) && gpo.lastHoarderBugGrabbedBy != null); // remove still grabbed ones
+                HoarderBugAI.grabbableObjectsInMap.RemoveAll(go => go.TryGetComponent(out GrabbablePlayerObject gpo) && (gpo.InLastHoardingBugNestRange.Value || !gpo.grabbableToEnemies)); // remove still grabbed ones
                 return;
             }
 
-            // Remove all GrabbablePlayerObjects from the list
-            Plugin.Log("Previously grabbable hoarder bug objects: " + HoarderBugAI.grabbableObjectsInMap.Count.ToString());
             HoarderBugAI.grabbableObjectsInMap.RemoveAll(go => go.TryGetComponent(out GrabbablePlayerObject _));
-            Plugin.Log("Grabbable hoarder bug objects after change: " + HoarderBugAI.grabbableObjectsInMap.Count.ToString());
         }
 
         [HarmonyPatch(typeof(HoarderBugAI), "DetectNoise")]
         [HarmonyPostfix]
-        public static void DetectNoise(HoarderBugAI __instance)
+        public static void DetectNoise(HoarderBugAI __instance, ref float ___timeSinceLookingTowardsNoise)
         {
-            if (!ModConfig.Instance.values.hoardingBugSteal || !PlayerInfo.IsCurrentPlayerShrunk) return; // Not targetable
+            if (ModConfig.Instance.values.hoarderBugBehaviour != ModConfig.HoarderBugBehaviour.Addicted || !PlayerInfo.IsCurrentPlayerShrunk) return; // Not targetable
 
-            if (__instance.targetItem != null && __instance.targetItem is GrabbablePlayerObject) return; // Already targeting a player
+            if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
+                return; // Chill, you already got one..
+
+            if (__instance.targetItem != null)
+            {
+                Plugin.Log("DetectNoise. Target item: " + __instance.targetItem.name + " with position: " + __instance.targetItem.transform.position);
+                if (__instance.targetItem is GrabbablePlayerObject)
+                {
+                    ___timeSinceLookingTowardsNoise = 0f; // Set this to avoid switching to behaviour 1 (which is "return to nest")
+                    Plugin.Log("targetItem: player position -> " + (__instance.targetItem as GrabbablePlayerObject).grabbedPlayer.transform.position);
+                    return; // Already targeting a player
+                }
+            }
 
             var inLineOfSight = __instance.HasLineOfSightToPosition(PlayerInfo.CurrentPlayer.transform.position);
             if (!inLineOfSight) return;
-            Plugin.Log("HoarderBug aiming for us.");
 
             if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
             {
-                Plugin.Log("Found gpo. May it be targetable?");
-                if (!IsGrabbablePlayerTargetable(gpo)) return;
+                if (!IsGrabbablePlayerTargetable(gpo))
+                {
+                    Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " not targetable.");
+                    return;
+                }
 
                 Plugin.Log("Forget everything else.. we found a grabbable player! Let's goooo..!");
-                __instance.targetItem = gpo;
+                gpo.HoardingBugTargetUsServerRpc(__instance.NetworkObjectId);
+                ___timeSinceLookingTowardsNoise = 0f; // Set this to avoid switching to behaviour 1 (which is "return to nest")
+                return;
             }
         }
 
         public static bool IsGrabbablePlayerTargetable(GrabbablePlayerObject gpo)
         {
-            if (gpo.lastHoarderBugGrabbedBy != null)
-                return false;
+            return !gpo.InLastHoardingBugNestRange.Value;
+        }
 
-            return !gpo.isHeld || Random.Range(0, 100) < 25;
+        public static void AddToGrabbables(GrabbablePlayerObject gpo)
+        {
+            if (!HoarderBugAI.grabbableObjectsInMap.Contains(gpo.gameObject))
+                HoarderBugAI.grabbableObjectsInMap.Add(gpo.gameObject);
+            HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject.NetworkObjectId == gpo.NetworkObjectId);
+        }
+
+        public static void HoardingBugTargetUs(HoarderBugAI hoarderBug, GrabbablePlayerObject gpo)
+        {
+            if (gpo.playerHeldBy != null && ModConfig.Instance.values.hoarderBugBehaviour == ModConfig.HoarderBugBehaviour.Addicted)
+            {
+                Plugin.Log("Oh you better drop that beautiful player, my friend!");
+                hoarderBug.targetItem = gpo;
+                hoarderBug.StopSearch(hoarderBug.searchForItems, clear: false);
+                gpo.lastHoarderBugGrabbedBy.angryAtPlayer = gpo.playerHeldBy;
+                gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(2);
+                return;
+            }
+
+            if (hoarderBug.heldItem != null && hoarderBug.heldItem.itemGrabbableObject != null)
+                hoarderBug.DropItemServerRpc(hoarderBug.heldItem.itemGrabbableObject.NetworkObject, hoarderBug.transform.position, false);
+            hoarderBug.targetItem = gpo;
+            hoarderBug.StopSearch(hoarderBug.searchForItems, clear: false);
+            hoarderBug.SwitchToBehaviourState(0);
         }
 
         public static void HoarderBugEscapeRoutineForGrabbablePlayer(GrabbablePlayerObject gpo)
         {
             if (gpo.lastHoarderBugGrabbedBy.isEnemyDead || gpo.lastHoarderBugGrabbedBy.nestPosition == null)
             {
-                Plugin.Log("The hoarder bug who grabbed us died or lost their nest. Poor bug.");
-                gpo.lastHoarderBugGrabbedBy = null;
-
-                HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject == gpo);
-                if (!HoarderBugAI.grabbableObjectsInMap.Contains(gpo.gameObject))
-                    HoarderBugAI.grabbableObjectsInMap.Add(gpo.gameObject);
-                return;
+                gpo.MovedOutOfHoardingBugNestRangeServerRpc(true);
             }
 
-            var distanceToNest = Vector3.Distance(gpo.lastHoarderBugGrabbedBy.nestPosition, PlayerInfo.CurrentPlayer.transform.position);
-            Plugin.Log("Difference between nest pos (" + gpo.lastHoarderBugGrabbedBy.nestPosition + ") and current pos (" + PlayerInfo.CurrentPlayer.transform.position + ") is " + distanceToNest);
+            var distanceToNest = Vector3.Distance(gpo.lastHoarderBugGrabbedBy.nestPosition, gpo.grabbedPlayer.transform.position);
+            //Plugin.Log("Difference between nest pos (" + gpo.lastHoarderBugGrabbedBy.nestPosition + ") and current pos (" + PlayerInfo.CurrentPlayer.transform.position + ") is " + distanceToNest);
             if (distanceToNest < maxAllowedNestDistance)
                 return;
 
             Plugin.Log("Overly attached hoarding bug feels that the grabbed player is too far away. Following!");
+            gpo.MovedOutOfHoardingBugNestRangeServerRpc(false);
+        }
 
-            if (gpo.isHeld && gpo.playerHeldBy != null)
+        public static void MovedOutOfHoardingBugNestRange(GrabbablePlayerObject gpo)
+        {
+            bool shouldDropItems = false;
+            if (gpo.playerHeldBy != null)
             {
-                // angry mode
                 foreach (var hoarderBugItem in HoarderBugAI.HoarderBugItems)
                 {
                     if (hoarderBugItem.itemGrabbableObject != null && hoarderBugItem.itemGrabbableObject.name == gpo.name)
                         hoarderBugItem.status = HoarderBugItemStatus.Stolen;
                 }
-
-                gpo.lastHoarderBugGrabbedBy.targetPlayer = gpo.playerHeldBy;
+                gpo.lastHoarderBugGrabbedBy.targetItem = gpo;
+                gpo.lastHoarderBugGrabbedBy.StopSearch(gpo.lastHoarderBugGrabbedBy.searchForItems, clear: false);
+                gpo.lastHoarderBugGrabbedBy.angryAtPlayer = gpo.playerHeldBy;
                 gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(2);
+                shouldDropItems = true;
                 Plugin.Log("HoarderBug saw that player " + gpo.playerHeldBy.name + " stole " + gpo.name + ". Is angry now at them!");
             }
             else
             {
-                // try to get it back!
-                if (distanceToNest < (maxAllowedNestDistance + 10f))
+                var distanceToNest = Vector3.Distance(gpo.lastHoarderBugGrabbedBy.nestPosition, gpo.grabbedPlayer.transform.position);
+                if (distanceToNest < (maxAllowedNestDistance + 5f))
                 {
-                    gpo.lastHoarderBugGrabbedBy.targetItem = gpo;
-                    gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(0);
-                    Plugin.Log("Moved too far away from hoarder bug nest. Bug tries to get you back!");
+                    Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " moved too far away from hoarder bug nest. Bug tries to get them back!");
+                    HoardingBugTargetUs(gpo.lastHoarderBugGrabbedBy, gpo);
+                    shouldDropItems = true;
                 }
                 else
-                    Plugin.Log("Escaped from the hoarding bug!"); // Very likely we teleported (by using vent, shipTeleporter, ..)
-
-                HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject == gpo);
-                if (!HoarderBugAI.grabbableObjectsInMap.Contains(gpo.gameObject))
-                    HoarderBugAI.grabbableObjectsInMap.Add(gpo.gameObject);
+                    Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " escaped from the hoarding bug!"); // Very likely we teleported (by using vent, shipTeleporter, ..)
             }
 
-            gpo.lastHoarderBugGrabbedBy = null; // Forget about it after that
+            if(shouldDropItems && gpo.lastHoarderBugGrabbedBy.heldItem != null && gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject != null)
+                gpo.lastHoarderBugGrabbedBy.DropItemServerRpc(gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject.NetworkObject, gpo.lastHoarderBugGrabbedBy.transform.position, false);
+
+            return;
         }
 
         [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
         [HarmonyPrefix]
         public static void SetGoTowardsTargetObjectPrefix(ref GameObject foundObject, HoarderBugAI __instance)
         {
+            if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
+            {
+                Plugin.Log("Ayy?! Still holding a player, you forgot?! Nononono..");
+                foundObject = __instance.heldItem.itemGrabbableObject.gameObject; // Hopefully this won't break stuff..
+                __instance.SwitchToBehaviourState(1);
+            }
+
             if (!foundObject.TryGetComponent(out GrabbablePlayerObject gpo))
                 return;
 
             if (!IsGrabbablePlayerTargetable(gpo))
+            {
+                Plugin.Log("SetGoTowardsTargetObject: Player not targetable for hoarding bug");
                 HoarderBugAI.grabbableObjectsInMap.Remove(foundObject);
-
-            //Plugin.Log("SetGoTowardsTargetObject -> foundObject position: " + foundObject.transform.position + ". gpo position: " + gpo.transform.position);
+                return;
+            }
         }
 
         // ------------------ DEBUG FROM HERE ON ------------------
-        public static Vector3 latestNestPosition = Vector3.zero;
         [HarmonyPatch(typeof(HoarderBugAI), "SyncNestPositionClientRpc")]
         [HarmonyPostfix]
         public static void SyncNestPositionClientRpc(Vector3 newNestPosition)
         {
             if (!ModConfig.DebugMode) return;
 
-            latestNestPosition = newNestPosition;
+            DebugPatches.hoarderBugNestPosition = newNestPosition;
+        }
+
+        [HarmonyPatch(typeof(HoarderBugAI), "DoAIInterval")]
+        [HarmonyPostfix]
+        public static void DoAIInterval(HoarderBugAI __instance)
+        {
+            if (!ModConfig.DebugMode) return;
+
+            Plugin.Log("behaviourState: " + __instance.currentBehaviourStateIndex + " | targetItem: " + __instance.targetItem);
         }
     }
 }

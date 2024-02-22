@@ -202,6 +202,31 @@ namespace LCShrinkRay.comp
 
             SoundManager.Instance.SetPlayerPitch(1f, (int)targetPlayer.playerClientId);
         }
+
+        public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)
+        {
+            return; // WIP
+            Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
+            if(targetPlayer == null) return;
+
+            if(targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID)
+            {
+                // Someone else's size changed
+                if(TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
+                    gpo.EnableInteractTrigger(PlayerInfo.SizeOf(targetPlayer) < PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer));
+            }
+            else
+            {
+                // We changed size
+                var currentSize = PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer);
+
+                foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+                {
+                    if (gpo == null) continue;
+                    gpo.EnableInteractTrigger(PlayerInfo.SizeOf(gpo.grabbedPlayer) < currentSize);
+                }
+            }
+        }
         #endregion
     }
 }

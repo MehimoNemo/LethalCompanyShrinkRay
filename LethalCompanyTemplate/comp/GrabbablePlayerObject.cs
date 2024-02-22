@@ -51,6 +51,7 @@ namespace LCShrinkRay.comp
 
         private EnemyAI enemyHeldBy = null;
         public HoarderBugAI lastHoarderBugGrabbedBy = null;
+        public NetworkVariable<bool> InLastHoardingBugNestRange = new NetworkVariable<bool>(false);
 
         public enum TargetPlayer
         {
@@ -273,6 +274,9 @@ namespace LCShrinkRay.comp
         {
             Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
             enemyHeldBy = enemyAI;
+
+            if(IsCurrentPlayer)
+                grabbedPlayer.DropAllHeldItemsAndSync();
         }
 
         public override void DiscardItemFromEnemy()
@@ -284,9 +288,12 @@ namespace LCShrinkRay.comp
             }
 
             Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
+
             if (enemyHeldBy is HoarderBugAI)
             {
                 lastHoarderBugGrabbedBy = enemyHeldBy as HoarderBugAI;
+                if (PlayerInfo.IsHost)
+                    InLastHoardingBugNestRange.Value = true;
             }
 
             PlayerInfo.AdjustArmScale(grabbedPlayer);
@@ -377,14 +384,14 @@ namespace LCShrinkRay.comp
             SetIsGrabbableToEnemies(true);
         }
 
-        private void EnableInteractTrigger(bool enable = true)
+        public void EnableInteractTrigger(bool enable = true)
         {
             Plugin.Log((enable ? "Enabling" : "Disabling") + " trigger for grabbable player " + grabbedPlayerID.Value);
             tag = enable ? "PhysicsProp" : "InteractTrigger"; // Bit wacky code, but it is what it is. Easier than adding custom InteractTrigger as of now
             //gameObject.layer = (int)(enable ? LayerMasks.Mask.InteractableObject : LayerMasks.Mask.Props);
         }
 
-        private void DisableInteractTrigger(bool disable = true)
+        public void DisableInteractTrigger(bool disable = true)
         {
             EnableInteractTrigger(!disable);
         }
@@ -426,7 +433,7 @@ namespace LCShrinkRay.comp
 
             Plugin.Log("GrabbablePlayer - Allow enemy grab: " + isGrabbable);
 
-            if (ModConfig.Instance.values.hoardingBugSteal)
+            if (ModConfig.Instance.values.hoarderBugBehaviour != ModConfig.HoarderBugBehaviour.NoGrab)
                 HoarderBugAI.RefreshGrabbableObjectsInMapList();
         }
 
@@ -673,6 +680,52 @@ namespace LCShrinkRay.comp
             }
 
             PlayerInfo.UpdateWeatherForPlayer(playerTo);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        internal void HoardingBugTargetUsServerRpc(ulong networkObjectID)
+        {
+            var hoardingBugs = FindObjectsOfType<HoarderBugAI>();
+            foreach (var hoardingBug in hoardingBugs)
+            {
+                if (hoardingBug.NetworkObjectId == networkObjectID)
+                {
+                    HoarderBugAIPatch.HoardingBugTargetUs(hoardingBug, this);
+                    return;
+                }
+            }
+
+            Plugin.Log("Unable to find hoarder bug that should target us");
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        internal void MovedOutOfHoardingBugNestRangeServerRpc(bool hoardingBugDied = false)
+        {
+            Plugin.Log("MovedOutOfHoardingBugNestRangeServerRpc");
+            InLastHoardingBugNestRange.Value = false;
+
+            if (lastHoarderBugGrabbedBy == null)
+            {
+                Plugin.Log("lastHoarderBugGrabbedBy is null, but shouldn't be", Plugin.LogType.Warning);
+                MovedOutOfHoardingBugNestRangeClientRpc();
+                return;
+            }
+
+            if (playerHeldBy == null)
+                HoarderBugAIPatch.AddToGrabbables(this);
+
+            if (hoardingBugDied)
+                Plugin.Log("The hoarder bug who grabbed us died or lost their nest. Poor bug.");
+            else
+                HoarderBugAIPatch.MovedOutOfHoardingBugNestRange(this);
+
+            MovedOutOfHoardingBugNestRangeClientRpc();
+        }
+
+        [ClientRpc]
+        internal void MovedOutOfHoardingBugNestRangeClientRpc()
+        {
+            lastHoarderBugGrabbedBy = null;
         }
         #endregion
     }

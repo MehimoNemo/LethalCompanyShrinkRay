@@ -14,6 +14,9 @@ namespace LCShrinkRay.patches
     internal class DebugPatches
     {
         private static int waitFrames = 0;
+
+        public static Vector3 hoarderBugNestPosition = Vector3.zero;
+
         public static bool throwRoutineRunning = false;
 
         public static void UnsetThrowRoutine() { throwRoutineRunning = false; }
@@ -93,10 +96,10 @@ namespace LCShrinkRay.patches
 
                 else if (Keyboard.current.f7Key.wasPressedThisFrame)
                 {
-                    if (HoarderBugAIPatch.latestNestPosition != Vector3.zero)
+                    if (hoarderBugNestPosition != Vector3.zero)
                     {
                         Plugin.Log("Teleporting to latest hoarder bug nest position.");
-                        PlayerInfo.CurrentPlayer.TeleportPlayer(HoarderBugAIPatch.latestNestPosition);
+                        PlayerInfo.CurrentPlayer.TeleportPlayer(hoarderBugNestPosition);
                     }
                     else
                         Plugin.Log("No hoarder bug nest yet..");
