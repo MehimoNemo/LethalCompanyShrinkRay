@@ -53,23 +53,16 @@ namespace LCShrinkRay.coroutines
             float elapsedTime = 0f;
             float currentSize = targetPlayer.gameObject.transform.localScale.x;
 
-            var modificationType = newSize < currentSize ? ShrinkRay.ModificationType.Shrinking : ShrinkRay.ModificationType.Enlarging;
-            float directionalForce, offset;
-            if (modificationType == ShrinkRay.ModificationType.Shrinking)
-            {
-                directionalForce = 0.58f;
-                offset = currentSize - 0.42f;
-            }
-            else
-            {
-                directionalForce = -0.58f;
-                offset = currentSize + 0.42f;
-            }
+            var direction = newSize < currentSize ? -1 : 1;
+            float a = Mathf.Abs(currentSize - newSize); // difference
+            const float b = -0.5f;
+            float c = currentSize;
 
-            int count = 0;
-            while (elapsedTime < ShrinkRayFX.beamDuration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
+            while (elapsedTime < ShrinkRayFX.beamDuration)
             {
-                currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / ShrinkRayFX.beamDuration) + 0.81) + offset);
+                // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
+                var x = elapsedTime;
+                currentSize = direction * (a + 1f) * Mathf.Pow(x / 2, 2) + (x * b * direction) + c;
 
                 var currentScale = new Vector3(currentSize, currentSize, currentSize);
                 playerTransform.localScale = currentScale;
@@ -89,16 +82,9 @@ namespace LCShrinkRay.coroutines
                 }
 
                 elapsedTime += Time.deltaTime;
+                Plugin.Log("elapsed: " + elapsedTime);
 
-                count = count % 20 + 1;
-                if(count == 1)
-                {
-                    yield return AdjustAllPlayerPitches(); // Adjust pitch & item every 20 frames
-                    //if (targetingUs && heldItem != null)
-                        //ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
-                }
-                else
-                    yield return null; // Wait for the next frame 
+                yield return null; // Wait for the next frame 
             }
 
             // Ensure final scale is set to the desired value
@@ -124,57 +110,8 @@ namespace LCShrinkRay.coroutines
                     PlayerModificationPatch.Reset();
             }
 
-            yield return AdjustAllPlayerPitches(); // Adjust pitch & item every 20 frames
-
             if (onComplete != null)
                 onComplete();
-        }
-
-        private IEnumerator AdjustAllPlayerPitches()
-        {
-            if (!targetingUs) // Only need to change pitch of affected player
-            {
-                yield return AdjustPlayerPitch(targetPlayer);
-                yield break;
-            }
-
-            // Change pitch of every other player
-            foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
-            {
-                if (pcb != null && pcb.isPlayerControlled && pcb.playerClientId != targetPlayer.playerClientId)
-                    yield return AdjustPlayerPitch(pcb);
-            }
-        }
-
-        private IEnumerator AdjustPlayerPitch(PlayerControllerB pcb)
-        {
-            if (pcb == null || pcb.gameObject == null)
-            {
-                Plugin.Log("SetPlayerPitch: Unable to get player gameObject", Plugin.LogType.Warning);
-                yield break;
-            }
-
-            if (SoundManager.Instance == null)
-            {
-                Plugin.Log("SetPlayerPitch: SoundManager is null", Plugin.LogType.Warning);
-                yield break;
-            }
-
-            float playerScale = pcb.gameObject.transform.localScale.x;
-            float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
-
-            float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
-
-            try
-            {
-                SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
-                Plugin.Log("Pitch from player " + pcb.playerClientId + " adjusted to " + modifiedPitch + ". currentPlayerScale: " + PlayerInfo.CurrentPlayerScale + " / playerScale: " + playerScale + " / intensity: " + intensity);
-            }
-            catch (NullReferenceException e)
-            {
-                Plugin.Log("Hey! So, there's a null reference exception in SetPlayerPitch ... and here's why: " + e.ToString() + "\n" + e.StackTrace.ToString(), Plugin.LogType.Warning);
-            }
-            yield return null; // Wait for the next frame
         }
     }
 }

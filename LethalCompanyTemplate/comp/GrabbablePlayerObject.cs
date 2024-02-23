@@ -51,6 +51,8 @@ namespace LCShrinkRay.comp
         public HoarderBugAI lastHoarderBugGrabbedBy = null;
         public NetworkVariable<bool> InLastHoardingBugNestRange = new NetworkVariable<bool>(false);
 
+        private DashHandler? dashHandler = null;
+
         public enum TargetPlayer
         {
             GrabbedPlayer = 0,
@@ -198,6 +200,9 @@ namespace LCShrinkRay.comp
 
             if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                 DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
+
+            if(dashHandler != null)
+                dashHandler.OnUpdate();
         }
         
         public override void PocketItem()
@@ -216,8 +221,11 @@ namespace LCShrinkRay.comp
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
                 playerHeldBy.DiscardHeldObject();
 
-                if(ModConfig.Instance.values.throwablePlayers)
+                if (ModConfig.Instance.values.throwablePlayers)
+                {
+                    Plugin.Log("Throw grabbed player");
                     ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
+                }
             }
             catch (Exception e)
             {
@@ -379,6 +387,9 @@ namespace LCShrinkRay.comp
 
             CalculateScrapValue();
             SetIsGrabbableToEnemies(true);
+
+            if(IsCurrentPlayer)
+                dashHandler = new DashHandler();
         }
 
         public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)
