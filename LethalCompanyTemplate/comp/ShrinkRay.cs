@@ -30,7 +30,7 @@ namespace LCShrinkRay.comp
             Enlarging
         }
 
-        internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.4f, 1f, 1.3f, 1.6f };
+        internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.4f, 1f, 1.3f, 1.7f };
 
         private bool IsOnCooldown = false;
         #endregion
@@ -279,22 +279,6 @@ namespace LCShrinkRay.comp
                 default:
                     return true;
             }
-        }
-
-        public static void debugOnPlayerModificationWorkaround(PlayerControllerB targetPlayer, ModificationType type)
-        {
-            Plugin.Log("debugOnPlayerModificationWorkaround");
-            coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, type == ModificationType.Shrinking ? NextShrunkenSizeOf(targetPlayer) : NextIncreasedSizeOf(targetPlayer), () =>
-            {
-                Vents.EnableVents(type == ModificationType.Shrinking);
-                if (PlayerInfo.IsHost)
-                {
-                    if (type == ModificationType.Shrinking)
-                        GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
-                    else
-                        GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
-                }
-            });
         }
 
         [ServerRpc(RequireOwnership = false)]
