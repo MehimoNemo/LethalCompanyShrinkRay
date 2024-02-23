@@ -157,7 +157,7 @@ namespace LCShrinkRay.patches
                     Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " escaped from the hoarding bug!"); // Very likely we teleported (by using vent, shipTeleporter, ..)
             }
 
-            if(shouldDropItems && gpo.lastHoarderBugGrabbedBy.heldItem != null && gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject != null)
+            if (shouldDropItems && gpo.lastHoarderBugGrabbedBy.heldItem != null && gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject != null)
                 gpo.lastHoarderBugGrabbedBy.DropItemServerRpc(gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject.NetworkObject, gpo.lastHoarderBugGrabbedBy.transform.position, false);
         }
 
@@ -184,22 +184,78 @@ namespace LCShrinkRay.patches
         }
 
         // ------------------ DEBUG FROM HERE ON ------------------
+
+        // ChatCommands mod line -> /spawnenemy Hoarding bug a=1 p=@me
+
+        /*private static Vector3 hoarderBugNestPosition;
         [HarmonyPatch(typeof(HoarderBugAI), "SyncNestPositionClientRpc")]
         [HarmonyPostfix]
         public static void SyncNestPositionClientRpc(Vector3 newNestPosition)
         {
             if (!ModConfig.DebugMode) return;
 
-            DebugPatches.hoarderBugNestPosition = newNestPosition;
+            hoarderBugNestPosition = newNestPosition;
         }
 
-        /*[HarmonyPatch(typeof(HoarderBugAI), "DoAIInterval")]
+        [HarmonyPatch(typeof(HoarderBugAI), "DoAIInterval")]
         [HarmonyPostfix]
         public static void DoAIInterval(HoarderBugAI __instance)
         {
             if (!ModConfig.DebugMode) return;
 
             Plugin.Log("behaviourState: " + __instance.currentBehaviourStateIndex + " | targetItem: " + __instance.targetItem);
+        }
+
+        public static void SetUsAsStolen()
+        {
+            if(GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
+            {
+                Plugin.Log("Added as stolen hoarding bug item");
+                HoarderBugAI.HoarderBugItems.Add(new HoarderBugItem(gpo, HoarderBugItemStatus.Stolen, gpo.transform.position));
+            }
+        }
+
+        public static void TeleportToLatestNest()
+        {
+            if (hoarderBugNestPosition != Vector3.zero)
+            {
+                Plugin.Log("Teleporting to latest hoarder bug nest position.");
+                PlayerInfo.CurrentPlayer.TeleportPlayer(hoarderBugNestPosition);
+            }
+            else
+                Plugin.Log("No hoarder bug nest yet..");
+        }
+
+        public static string HoarderBugItemsLog
+        {
+            get
+            {
+                if (HoarderBugAI.HoarderBugItems == null)
+                    return "No hoarder bug items.";
+
+                var output = "Grabbable hoarder bug items:\n";
+                output += "------------------------------\n";
+                foreach (var item in HoarderBugAI.HoarderBugItems)
+                    output += item.itemGrabbableObject.name + ": " + item.status.ToString() + "\n";
+                output += "------------------------------\n";
+                return output;
+            }
+        }
+
+        public static string GrabbableObjectsLog
+        {
+            get
+            {
+                if (HoarderBugAI.grabbableObjectsInMap == null)
+                    return "No grabbable hoarder bug objects.";
+
+                var output = "Grabbable hoarder bug objects:\n";
+                output += "------------------------------\n";
+                foreach (var item in HoarderBugAI.grabbableObjectsInMap)
+                    output += item.name + "\n";
+                output += "------------------------------\n";
+                return output;
+            }
         }*/
     }
 }
