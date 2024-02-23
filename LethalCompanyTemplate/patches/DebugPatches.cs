@@ -89,6 +89,7 @@ namespace LCShrinkRay.patches
                 {
                     TeleportInsideDungeon();
                 }
+
                 else
                     return;
 
@@ -97,20 +98,21 @@ namespace LCShrinkRay.patches
             }
             catch (Exception e)
             {
-                Plugin.Log("Error in Update() [DebugKeys]: " + e.Message);
+                Plugin.Log("[DebugPatches] Error: " + e.Message, Plugin.LogType.Error);
             }
         }
 
+        #region Methods
         public static GameObject CreateCube(Transform parent, Color color)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            //cube.transform.SetParent(parent);
+            cube.transform.SetParent(parent);
+
             if (cube.TryGetComponent(out BoxCollider boxCollider))
                 boxCollider.enabled = false;
 
             if (cube.TryGetComponent(out MeshRenderer meshRenderer))
             {
-                Plugin.Log("Has mesh renderer");
                 meshRenderer.sharedMaterial = new Material(Shader.Find("HDRP/Lit"));
                 meshRenderer.sharedMaterial.color = color;
                 meshRenderer.enabled = true;
@@ -220,5 +222,6 @@ namespace LCShrinkRay.patches
 
             PlayerInfo.CurrentPlayer.TeleportPlayer(pos);
         }
+        #endregion
     }
 }
