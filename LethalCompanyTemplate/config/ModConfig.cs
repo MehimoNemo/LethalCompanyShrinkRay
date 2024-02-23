@@ -12,12 +12,6 @@ namespace LCShrinkRay.Config
     public sealed class ModConfig
     {
         #region Properties
-        public static bool DebugMode {
-            get {
-                return false; // Change this to false for release
-            }
-        }
-
         public static bool DebugLog { get; set; }
 
         public enum ThumperBehaviour
@@ -106,11 +100,9 @@ namespace LCShrinkRay.Config
 
             DebugLog                        = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", true, "Additional logging to help identifying issues in the beta version of this mod.").Value;
 
-            if (DebugMode)
-            {
-                string json = JsonConvert.SerializeObject(Instance.values);
-                Plugin.Log("Using config:" + json);
-            }
+#if DEBUG
+            Plugin.Log("Initial config: " + JsonConvert.SerializeObject(Instance.values));
+#endif
         }
 
         public void Updated()

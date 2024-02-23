@@ -8,7 +8,6 @@ using LCShrinkRay.Config;
 using System.Reflection;
 using LCShrinkRay.comp;
 using LCShrinkRay.compatibility;
-using LCShrinkRay.helper;
 
 namespace LCShrinkRay
 {
@@ -59,8 +58,9 @@ namespace LCShrinkRay
             harmony.PatchAll(typeof(Vents));
             harmony.PatchAll(typeof(GrabbablePlayerList));
 
-            if (ModConfig.DebugMode)
-                harmony.PatchAll(typeof(DebugPatches));
+#if DEBUG
+            harmony.PatchAll(typeof(DebugPatches));
+#endif
         }
 
         private void NetcodePatching()
@@ -93,8 +93,10 @@ namespace LCShrinkRay
 
         internal static void Log(string message, LogType type = LogType.Debug)
         {
-            if (type == LogType.Debug && !(ModConfig.DebugMode || ModConfig.DebugLog))
+#if !DEBUG
+            if (type == LogType.Debug && !ModConfig.DebugLog)
                 return;
+#endif
 
             switch(type)
             {
@@ -104,6 +106,6 @@ namespace LCShrinkRay
                 default: mls.LogMessage(message); break;
             }
         }
-        #endregion
+#endregion
     }
 }

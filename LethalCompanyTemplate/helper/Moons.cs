@@ -25,7 +25,7 @@ namespace LCShrinkRay.helper
             Titan = 8
         }
 
-
+#if DEBUG
         /*
         for (int i = 0; i < RoundManager.Instance.dungeonFlowTypes.Length; i++)
         {
@@ -38,5 +38,6 @@ namespace LCShrinkRay.helper
             Level2Flow = 1,             // Haunted Mansion
             Level1FlowExtraLarge = 2    // Large Factory
         }
+#endif
     }
 }

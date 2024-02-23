@@ -184,16 +184,14 @@ namespace LCShrinkRay.patches
         }
 
         // ------------------ DEBUG FROM HERE ON ------------------
-
+#if DEBUG
         // ChatCommands mod line -> /spawnenemy Hoarding bug a=1 p=@me
 
-        /*private static Vector3 hoarderBugNestPosition;
+        private static Vector3 hoarderBugNestPosition;
         [HarmonyPatch(typeof(HoarderBugAI), "SyncNestPositionClientRpc")]
         [HarmonyPostfix]
         public static void SyncNestPositionClientRpc(Vector3 newNestPosition)
         {
-            if (!ModConfig.DebugMode) return;
-
             hoarderBugNestPosition = newNestPosition;
         }
 
@@ -201,9 +199,7 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix]
         public static void DoAIInterval(HoarderBugAI __instance)
         {
-            if (!ModConfig.DebugMode) return;
-
-            Plugin.Log("behaviourState: " + __instance.currentBehaviourStateIndex + " | targetItem: " + __instance.targetItem);
+            //Plugin.Log("behaviourState: " + __instance.currentBehaviourStateIndex + " | targetItem: " + __instance.targetItem);
         }
 
         public static void SetUsAsStolen()
@@ -256,6 +252,7 @@ namespace LCShrinkRay.patches
                 output += "------------------------------\n";
                 return output;
             }
-        }*/
+        }
+#endif
     }
 }

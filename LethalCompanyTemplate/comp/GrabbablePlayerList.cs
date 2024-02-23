@@ -20,17 +20,35 @@ namespace LCShrinkRay.comp
 
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerServerRpc")]
         [HarmonyPostfix]
-        public static void KillPlayerServerRpc(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
+        public static void KillPlayerServerRpc(int playerId,/* bool spawnBody,*/ Vector3 bodyVelocity, int causeOfDeath/*, int deathAnimation*/)
         {
             Plugin.Log("KillPlayerServerRpc. Cause: " + (CauseOfDeath)causeOfDeath + " / Velocity: " + bodyVelocity);
             RemovePlayerGrabbable((ulong)playerId);
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
-        [HarmonyPostfix]
-        public static void KillPlayerClientRpc(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
+        [HarmonyPrefix]
+        public static void KillPlayerClientRpcPrefix(int playerId/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
         {
-            Plugin.Log("KillPlayerClientRpc");
+            Plugin.Log("KillPlayerClientRpcPrefix");
+
+            if ((ulong)playerId != PlayerInfo.CurrentPlayerID) return;
+
+            // We died while holding someone
+            if ((ulong)playerId == PlayerInfo.CurrentPlayerID && TryFindGrabbableObjectByHolder((ulong)playerId, out _))
+                PlayerInfo.CurrentPlayer.DiscardHeldObject();
+
+            // The person we held died
+            else if (TryFindGrabbableObjectForPlayer((ulong)playerId, out GrabbablePlayerObject gpo) && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                PlayerInfo.CurrentPlayer.DiscardHeldObject();
+
+        }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
+        [HarmonyPostfix]
+        public static void KillPlayerClientRpcPostfix(int playerId/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
+        {
+            Plugin.Log("KillPlayerClientRpcPostfix");
             var targetPlayer = PlayerInfo.ControllerFromID((ulong)playerId);
             if (targetPlayer == null) return;
 
@@ -65,21 +83,52 @@ namespace LCShrinkRay.comp
                 if (TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
                 {
                     if (gpo.playerHeldBy != null) // We're grabbable and someone holds us
-                        gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.GrabbedPlayer));
+                        gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(TargetPlayer.GrabbedPlayer));
                 }
 
                 if (TryFindGrabbableObjectByHolder(PlayerInfo.CurrentPlayerID, out gpo))
                 {
                     // We're holding someone
-                    gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.Holder));
+                    gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(TargetPlayer.Holder));
                 }
             }
         }
-
-
         #endregion
 
+#if DEBUG // todo: test this
+        [HarmonyPatch(typeof(SoundManager), "SetPlayerPitch")]
+        [HarmonyPostfix]
+        public static void SetPlayerPitch(int playerObjNum)
+        {
+            Plugin.Log("SetPlayerVoiceFilters");
+            AdjustPlayerPitch(PlayerInfo.ControllerFromID((ulong)playerObjNum));
+        }
+
+        [HarmonyPatch(typeof(SoundManager), "SetPlayerVoiceFilters")]
+        [HarmonyPostfix]
+        public static void SetPlayerVoiceFilters()
+        {
+            Plugin.Log("SetPlayerVoiceFilters");
+            foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
+                AdjustPlayerPitch(pcb);
+        }
+
+        public static void AdjustPlayerPitch(PlayerControllerB targetPlayer)
+        {
+            if (targetPlayer == null) return;
+
+            float playerScale = PlayerInfo.SizeOf(targetPlayer);
+            float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
+
+            float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
+
+            SoundManager.Instance.playerVoicePitchTargets[targetPlayer.playerClientId] = modifiedPitch;
+            SoundManager.Instance.playerVoicePitches[targetPlayer.playerClientId] = modifiedPitch;
+        }
+#endif
+
         #region Helper
+#if DEBUG
         public static string Log
         {
             get
@@ -111,6 +160,7 @@ namespace LCShrinkRay.comp
                 return output;
             }
         }
+#endif
 
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)
         {
@@ -209,8 +259,7 @@ namespace LCShrinkRay.comp
 
         public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)
         {
-            return;
-            Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
+            /*Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
             if(targetPlayer == null) return;
 
             if(targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID)
@@ -229,7 +278,7 @@ namespace LCShrinkRay.comp
                     if (gpo == null || gpo.grabbedPlayerID.Value == ulong.MaxValue) continue;
                     gpo.EnableInteractTrigger(PlayerInfo.SizeOf(gpo.grabbedPlayer) < currentSize);
                 }
-            }
+            }*/
         }
         #endregion
     }

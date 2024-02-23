@@ -14,6 +14,7 @@ namespace LCShrinkRay.patches
     [HarmonyPatch]
     internal class DebugPatches
     {
+#if DEBUG
         private static int waitFrames = 0;
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
@@ -223,5 +224,6 @@ namespace LCShrinkRay.patches
             PlayerInfo.CurrentPlayer.TeleportPlayer(pos);
         }
         #endregion
+#endif
     }
 }

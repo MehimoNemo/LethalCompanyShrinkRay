@@ -9,9 +9,7 @@ using Unity.Netcode;
 using LCShrinkRay.patches;
 using System.IO;
 using System.Reflection;
-using UnityEngine.InputSystem.XR;
 using System.Collections;
-using LethalLib.Modules;
 
 namespace LCShrinkRay.comp
 {
@@ -629,9 +627,9 @@ namespace LCShrinkRay.comp
         {
             return IsOnSellCounter.Value && IsCurrentPlayer;
         }
+        #endregion
 
-        // --- Player holding us / Player we're holding teleported ---
-
+        #region EntranceTeleportFix
         [ServerRpc(RequireOwnership = false)]
         private void UpdateAfterTeleportServerRpc(TargetPlayer teleportingPlayer)
         {
@@ -693,7 +691,9 @@ namespace LCShrinkRay.comp
 
             PlayerInfo.UpdateWeatherForPlayer(playerTo);
         }
+        #endregion
 
+        #region HoardingBugGrab
         [ServerRpc(RequireOwnership = false)]
         internal void HoardingBugTargetUsServerRpc(ulong networkObjectID)
         {
