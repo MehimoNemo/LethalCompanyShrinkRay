@@ -1,0 +1,19 @@
+[1] Build the project as Release
+
+[2] Copy the LCShrinkRay.dll / ShrinkRay.dll from \LethalCompanyTemplate\bin\Release\netstandard2.1\ to this directory
+
+[3] Copy all assets and images to here (at the point of writing this: fxasset, shrinkasset & GrabbablePlayerIcon.png)
+
+[4] Increase version in manifest.json and put it in here
+
+[5] Add a quick description of what changed to the start of CHANGELOG.md in the main folder. Copy it to here afterwards
+
+[6] Copy the most recent README.md from the main folder to here
+
+[7] Create a new .zip file and copy anything in this folder in there. Ensure it doesn't have any subfolders!
+
+[8] Go to https://thunderstore.io/ and login on top right. Click "Upload" on top left
+
+[9] Drag'n'drop the .zip file in the "Choose or drag here" field. Select Toybox as team. Choose "Lethal Company" as game. Use the tags "Server-side", "Equipment" and "Mods".
+
+[10] Click upload
