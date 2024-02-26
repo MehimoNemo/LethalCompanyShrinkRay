@@ -2,6 +2,7 @@
 using HarmonyLib;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
+using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -94,36 +95,29 @@ namespace LCShrinkRay.comp
             }
         }
 
-        [HarmonyPatch(typeof(SoundManager), "SetPlayerPitch")]
-        [HarmonyPostfix]
-        public static void SetPlayerPitch(int playerObjNum)
-        {
-            AdjustPlayerPitch(PlayerInfo.ControllerFromID((ulong)playerObjNum));
-        }
-
-        [HarmonyPatch(typeof(SoundManager), "SetPlayerVoiceFilters")]
+        [HarmonyPatch(typeof(StartOfRound), "UpdatePlayerVoiceEffects")]
         [HarmonyPostfix]
         public static void SetPlayerVoiceFilters()
         {
+            if (SoundManager.Instance == null) return;
+
             foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
-                AdjustPlayerPitch(pcb);
+            {
+                if(pcb != null && pcb.isPlayerControlled && !pcb.isPlayerDead)
+                {
+                    float playerScale = PlayerInfo.SizeOf(pcb);
+                    float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
+
+                    float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
+
+                    SoundManager.Instance.playerVoicePitchTargets[pcb.playerClientId] = modifiedPitch;
+                    SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
+                }
+            }
         }
         #endregion
 
         #region Helper
-        public static void AdjustPlayerPitch(PlayerControllerB targetPlayer)
-        {
-            if (targetPlayer == null) return;
-
-            float playerScale = PlayerInfo.SizeOf(targetPlayer);
-            float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
-
-            float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
-
-            SoundManager.Instance.playerVoicePitchTargets[targetPlayer.playerClientId] = modifiedPitch;
-            SoundManager.Instance.playerVoicePitches[targetPlayer.playerClientId] = modifiedPitch;
-        }
-
 #if DEBUG
         public static string Log
         {

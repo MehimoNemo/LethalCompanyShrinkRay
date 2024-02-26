@@ -4,12 +4,16 @@ using LCShrinkRay.comp;
 using LCShrinkRay.helper;
 using LethalLib.Modules;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
 
 namespace LCShrinkRay.patches
 {
     internal class ScreenBlockingGrabbablePatch
     {
+        
+
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
         {
@@ -33,18 +37,8 @@ namespace LCShrinkRay.patches
         {
             if (item == null || item.playerHeldBy == null || PlayerInfo.IsNormalSize(item.playerHeldBy)) return;
 
-            //Plugin.log("CheckForGlassify - Item layer: " + item.gameObject.layer.ToString());
-            //var camera = item.playerHeldBy.gameplayCamera;
-            //var ray = new Ray(camera.transform.position, camera.transform.position + camera.transform.forward);
-            // all vanilla items are on mask 6. may cause issues with other mods
-            //if (Physics.Raycast(ray, out RaycastHit raycastHit, 2f, 6, QueryTriggerInteraction.Collide))
             if(item.itemProperties.twoHanded)
-            {
-                //Plugin.log("Ray has hit an item! Object: " + raycastHit.collider.name);
-
-                //Plugin.log("Held item is visible in the center of the screen");
                 GlassifyItem(item);
-            }
             else
                 UnGlassifyItem(item);
         }
@@ -83,9 +77,7 @@ namespace LCShrinkRay.patches
 
         public static void UnGlassifyItem(GrabbableObject item, ScaledGrabbableObjectData scaledItemData = null)
         {
-            if (item == null) return;
-
-            if (scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
+            if (item == null || scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
                 return;
 
             var meshRenderer = item.gameObject.GetComponentsInChildren<MeshRenderer>();
@@ -122,32 +114,9 @@ namespace LCShrinkRay.patches
                     r.rendererPriority = 0;
 
                     var materials = new Material[r.sharedMaterials.Length];
-                    System.Array.Fill(materials, Glass);
+                    System.Array.Fill(materials, Materials.Glass);
                     r.sharedMaterials = materials;
                 }
-            }
-        }
-
-        private static string GlassMaterialName { get { return "LCGlass"; } }
-
-        public static Material Glass
-        {
-            get
-            {
-                var m = new Material(Shader.Find("HDRP/Lit"));
-                if(m == null) return null;
-
-                m.color = new Color(0.5f, 0.5f, 0.6f, 0.6f);
-                m.renderQueue = 3300;
-                m.shaderKeywords = [
-                    "_SURFACE_TYPE_TRANSPARENT",
-                    "_DISABLE_SSR_TRANSPARENT",
-                    "_REFRACTION_THIN",
-                    "_NORMALMAP_TANGENT_SPACE",
-                    "_ENABLE_FOG_ON_TRANSPARENT"
-                ];
-                m.name = GlassMaterialName;
-                return m;
             }
         }
     }

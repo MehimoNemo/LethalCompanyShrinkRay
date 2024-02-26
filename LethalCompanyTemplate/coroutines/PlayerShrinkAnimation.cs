@@ -82,7 +82,6 @@ namespace LCShrinkRay.coroutines
                 }
 
                 elapsedTime += Time.deltaTime;
-                Plugin.Log("elapsed: " + elapsedTime);
 
                 yield return null; // Wait for the next frame 
             }
