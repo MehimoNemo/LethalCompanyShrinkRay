@@ -22,7 +22,6 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 
 ## Known bugs ##
 + Shrunken players sometimes face the wrong direction when climbing ladders
-+ HoardingBug not grabbing players
 + Shrinkray floats above the ground when dropped
 + Weight of held players not updating
 + Jetpack offset for shrunken players
@@ -32,7 +31,6 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 ## Planned features ##
 - Animations for holding / throwing players
 - Improved ray sfx
-- Item slot icon for held player
 - Make sandworms unlikely targeting shrunken players
 
 ## Got more ideas? ##
@@ -44,6 +42,7 @@ or write it in our thread on the unofficial lethal companys discord: [Server-Inv
 
 ## Special Thanks To
 [@peppermint_2859](https://twitter.com/ItsJOEYthe) on discord for modeling!
+[sakiskid](https://github.com/Sakiskid) for the shrink ray vfx!
 
 
 ## And the testers too (sorry for making you join and leave the lobby a billion times)!
