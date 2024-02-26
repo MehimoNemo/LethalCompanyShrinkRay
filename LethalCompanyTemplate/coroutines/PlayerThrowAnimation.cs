@@ -8,7 +8,7 @@ namespace LCShrinkRay.coroutines
 {
     internal class PlayerThrowAnimation : MonoBehaviour
     {
-        public static void StartRoutine(PlayerControllerB targetPlayer, Vector3 direction, float force, Action onComplete = null)
+        public static void StartRoutine(PlayerControllerB targetPlayer, Vector3 direction, float force, float duration = 0.5f, Action onComplete = null)
         {
             if (targetPlayer?.gameObject == null )
             {
@@ -17,23 +17,29 @@ namespace LCShrinkRay.coroutines
             }
 
             var routine = targetPlayer.gameObject.AddComponent<PlayerThrowAnimation>();
-            routine.StartCoroutine(routine.Run(targetPlayer, direction, force, onComplete));
+            routine.StartCoroutine(routine.Run(targetPlayer, direction, force, duration, onComplete));
         }
 
-        private IEnumerator Run(PlayerControllerB targetPlayer, Vector3 direction, float force, Action onComplete = null)
+        private IEnumerator Run(PlayerControllerB targetPlayer, Vector3 direction, float force, float duration, Action onComplete = null)
         {
-            Plugin.Log("ThrowGrabbedPlayer");
-            float time = 0f, duration = 0.5f;
+            float time = 0f;
 
-            direction.y = Mathf.Max(direction.y, -1f) + 1f; // Don't throw backwards
-            direction.y = Mathf.Min(direction.y, 1.8f); // Don't throw them high enough to take damage.. that's evil!
+            if (direction.y != 0f)
+            {
+                direction.y = Mathf.Max(direction.y, -1f) + 1f; // Don't throw backwards
+                direction.y = Mathf.Min(direction.y, 1.8f); // Don't throw them high enough to take damage.. that's evil!
+            }
 
             Vector3 startForce = direction * force;
 
             while (time < duration)
             {
                 var sinusProgress = Mathf.Lerp(Mathf.PI / 2f, 0f, time / duration);
-                targetPlayer.externalForces = startForce * sinusProgress * direction.y; // direction.y to throw further when looking up
+                var externalForce = startForce * sinusProgress;
+                if (direction.y != 0f)
+                    externalForce *= direction.y; // direction.y to throw further when looking up
+
+                targetPlayer.externalForces = externalForce;
                 //Plugin.Log("ExternalForces: " + targetPlayer.externalForces);
 
                 time += Time.deltaTime;

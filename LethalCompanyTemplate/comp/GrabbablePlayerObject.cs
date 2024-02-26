@@ -216,8 +216,11 @@ namespace LCShrinkRay.comp
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
                 playerHeldBy.DiscardHeldObject();
 
-                if(ModConfig.Instance.values.throwablePlayers)
+                if (ModConfig.Instance.values.throwablePlayers)
+                {
+                    Plugin.Log("Throw grabbed player");
                     ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
+                }
             }
             catch (Exception e)
             {

@@ -93,14 +93,11 @@ namespace LCShrinkRay.comp
                 }
             }
         }
-        #endregion
 
-#if DEBUG // todo: test this
         [HarmonyPatch(typeof(SoundManager), "SetPlayerPitch")]
         [HarmonyPostfix]
         public static void SetPlayerPitch(int playerObjNum)
         {
-            Plugin.Log("SetPlayerVoiceFilters");
             AdjustPlayerPitch(PlayerInfo.ControllerFromID((ulong)playerObjNum));
         }
 
@@ -108,11 +105,12 @@ namespace LCShrinkRay.comp
         [HarmonyPostfix]
         public static void SetPlayerVoiceFilters()
         {
-            Plugin.Log("SetPlayerVoiceFilters");
             foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
                 AdjustPlayerPitch(pcb);
         }
+        #endregion
 
+        #region Helper
         public static void AdjustPlayerPitch(PlayerControllerB targetPlayer)
         {
             if (targetPlayer == null) return;
@@ -125,9 +123,7 @@ namespace LCShrinkRay.comp
             SoundManager.Instance.playerVoicePitchTargets[targetPlayer.playerClientId] = modifiedPitch;
             SoundManager.Instance.playerVoicePitches[targetPlayer.playerClientId] = modifiedPitch;
         }
-#endif
 
-        #region Helper
 #if DEBUG
         public static string Log
         {
