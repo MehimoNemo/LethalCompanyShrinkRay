@@ -35,6 +35,7 @@ namespace LCShrinkRay.comp
         private bool IsOnCooldown = false;
         #endregion
 
+        #region Networking
         public static void LoadAsset(AssetBundle assetBundle)
         {
             if (networkPrefab != null) return; // Already loaded
@@ -79,7 +80,9 @@ namespace LCShrinkRay.comp
             terminalNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
             Items.RegisterShopItem(assetItem, null, null, terminalNode, assetItem.creditsWorth);
         }
+        #endregion
 
+        #region Base Methods
         public override void Start()
         {
             base.Start();
@@ -114,6 +117,27 @@ namespace LCShrinkRay.comp
                 ShootRay(ModificationType.Enlarging);
         }
 
+        public override void EquipItem()
+        {
+            // idea: play a fading-in sound, like energy of gun is loading
+            base.EquipItem();
+            previousPlayerHeldBy = playerHeldBy;
+            previousPlayerHeldBy.equippedUsableItemQE = true;
+        }
+
+        public override void PocketItem()
+        {
+            // idea: play a fading-out sound
+            base.PocketItem();
+        }
+
+        public override void DiscardItem()
+        {
+            base.DiscardItem();
+        }
+        #endregion
+
+        #region Shooting
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(ModificationType type)
         {
@@ -206,7 +230,9 @@ namespace LCShrinkRay.comp
             };
 
         }
+        #endregion
 
+        #region PlayerTargeting
         // ------ Ray hitting Player ------
 
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
@@ -398,32 +424,14 @@ namespace LCShrinkRay.comp
             if (transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) && shrinkRayFX != null)
                 shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type);
         }
+        #endregion
 
+        #region ObjectTargeting
         // ------ Ray hitting Object ------
         public static void OnObjectModification(GameObject targetObject)
         {
             // wip
         }
-
-        public override void EquipItem()
-        {
-            // idea: play a fading-in sound, like energy of gun is loading
-            base.EquipItem();
-            previousPlayerHeldBy = playerHeldBy;
-            previousPlayerHeldBy.equippedUsableItemQE = true;
-        }
-
-        public override void PocketItem()
-        {
-            // idea: play a fading-out sound
-            base.PocketItem();
-        }
-
-        public override void DiscardItem()
-        {
-            Plugin.Log("Discarding");
-            base.DiscardItem();
-        }
+        #endregion
     }
-
 }
