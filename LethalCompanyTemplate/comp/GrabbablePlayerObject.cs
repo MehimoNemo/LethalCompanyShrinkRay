@@ -383,7 +383,7 @@ namespace LCShrinkRay.comp
             CalculateScrapValue();
             SetIsGrabbableToEnemies(true);
 
-            gameObject.layer = LayerMasks.Mask.Props;
+            gameObject.layer = (int)LayerMasks.Mask.Props;
         }
 
         public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)
