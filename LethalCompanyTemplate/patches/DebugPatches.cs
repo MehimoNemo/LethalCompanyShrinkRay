@@ -32,17 +32,17 @@ namespace LCShrinkRay.patches
                 if (Keyboard.current.f1Key.wasPressedThisFrame)
                 {
                     LogInsideEnemyNames();
-                    SpawnEnemyInFrontOfPlayer("Centipede", __instance);
+                    SpawnEnemyInFrontOfPlayer("Centipede", PlayerInfo.CurrentPlayer);
                 }
 
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
-                    ModifyPlayerLocally(ModificationType.Shrinking);
+                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Shrinking);
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
-                    ModifyPlayerLocally(ModificationType.Enlarging);
+                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Enlarging);
                 }
 
                 else if (Keyboard.current.f4Key.wasPressedThisFrame)
@@ -138,35 +138,6 @@ namespace LCShrinkRay.patches
                 RoundManager.Instance.SpawnEnemyOnServer(location, 0f, enemyIndex);
 
                 // I tried so hard and got so far, but in the end... there's still an errooooorrrrr
-            }
-        }
-
-        public static void ModifyPlayerLocally(ModificationType type)
-        {
-            switch(type)
-            {
-                case ModificationType.Shrinking:
-                    {
-                        coroutines.PlayerShrinkAnimation.StartRoutine(PlayerInfo.CurrentPlayer, NextShrunkenSizeOf(PlayerInfo.CurrentPlayer), () =>
-                        {
-                            Vents.EnableVents();
-                            if (PlayerInfo.IsHost)
-                                GrabbablePlayerList.SetPlayerGrabbable(PlayerInfo.CurrentPlayerID);
-                        });
-                        break;
-                    }
-                case ModificationType.Enlarging:
-                    {
-                        coroutines.PlayerShrinkAnimation.StartRoutine(PlayerInfo.CurrentPlayer, NextIncreasedSizeOf(PlayerInfo.CurrentPlayer), () =>
-                        {
-                            Vents.DisableVents();
-                            if (PlayerInfo.IsHost)
-                                GrabbablePlayerList.RemovePlayerGrabbable(PlayerInfo.CurrentPlayerID);
-                        });
-                        break;
-                    }
-                default:
-                    break; // Not implemented as debug method
             }
         }
 

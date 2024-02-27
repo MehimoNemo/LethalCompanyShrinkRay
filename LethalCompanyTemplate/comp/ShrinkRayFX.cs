@@ -1,9 +1,11 @@
 using GameNetcodeStuff;
+using LCShrinkRay.helper;
 using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.VFX;
+using static LCShrinkRay.helper.PlayerModification;
 
 namespace LCShrinkRay.comp
 {
@@ -112,7 +114,7 @@ namespace LCShrinkRay.comp
             //    Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
         }
 
-        public void RenderRayBeam(Transform holderCamera, Transform target, ShrinkRay.ModificationType type)
+        public void RenderRayBeam(Transform holderCamera, Transform target, PlayerModification.ModificationType type)
         {
             try
             {
@@ -131,15 +133,15 @@ namespace LCShrinkRay.comp
                 {
                     switch (type)
                     {
-                        case ShrinkRay.ModificationType.Shrinking:
+                        case ModificationType.Shrinking:
                             colorPrimary = new Color(0.61f, 0.04f, 0.04f); // red like shrinkray
                             colorSecondary = new Color(1f, 1f, 0f); // yellow
                             break;
-                        case ShrinkRay.ModificationType.Enlarging:
+                        case ModificationType.Enlarging:
                             colorPrimary = new Color(0f, 0.3f, 0f); // darkgreen
                             colorSecondary = new Color(1f, 1f, 0f); // yellow
                             break;
-                        case ShrinkRay.ModificationType.Normalizing:
+                        case ModificationType.Normalizing:
                             colorPrimary = Color.white;
                             colorSecondary = Color.gray;
                             break;

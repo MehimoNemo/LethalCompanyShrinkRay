@@ -382,6 +382,8 @@ namespace LCShrinkRay.comp
 
             CalculateScrapValue();
             SetIsGrabbableToEnemies(true);
+
+            gameObject.layer = LayerMasks.Mask.Props;
         }
 
         public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)
@@ -401,7 +403,7 @@ namespace LCShrinkRay.comp
         {
             Plugin.Log((enable ? "Enabling" : "Disabling") + " trigger for grabbable player " + grabbedPlayerID.Value);
             tag = enable ? "PhysicsProp" : "InteractTrigger"; // Bit wacky code, but it is what it is. Easier than adding custom InteractTrigger as of now
-            //gameObject.layer = (int)(enable ? LayerMasks.Mask.InteractableObject : LayerMasks.Mask.Props);
+            gameObject.layer = (int)(enable ? LayerMasks.Mask.Props : LayerMasks.Mask.Room);
         }
 
         public void DisableInteractTrigger(bool disable = true)
@@ -554,7 +556,7 @@ namespace LCShrinkRay.comp
             if (!IsCurrentPlayer) return; // Only do this from the perspective of the currently held player, not the holder himself
 
             if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(playerHeldBy.playerClientId, out GrabbablePlayerObject gpo ))
-                gpo.grabbable = isGrabbable;
+                gpo.EnableInteractTrigger(isGrabbable);
         }
 
         private void SetControlTips()

@@ -1,7 +1,7 @@
-﻿using LCShrinkRay.comp;
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
+using static LCShrinkRay.helper.PlayerModification;
 
 namespace LCShrinkRay.coroutines
 {
@@ -27,9 +27,9 @@ namespace LCShrinkRay.coroutines
             if (currentSize == newSize)
                 yield break;
 
-            var modificationType = newSize < currentSize ? ShrinkRay.ModificationType.Shrinking : ShrinkRay.ModificationType.Enlarging;
+            var modificationType = newSize < currentSize ? ModificationType.Shrinking : ModificationType.Enlarging;
             float directionalForce, offset;
-            if (modificationType == ShrinkRay.ModificationType.Shrinking)
+            if (modificationType == ModificationType.Shrinking)
             {
                 directionalForce = 0.58f;
                 offset = currentSize - 0.42f;
@@ -40,7 +40,7 @@ namespace LCShrinkRay.coroutines
                 offset = currentSize + 0.42f;
             }
 
-            while (elapsedTime < duration && modificationType == ShrinkRay.ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
+            while (elapsedTime < duration && modificationType == ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
             {
                 currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
                 objectTransform.localScale = new Vector3(currentSize, currentSize, currentSize);

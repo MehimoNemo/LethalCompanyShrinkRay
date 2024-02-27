@@ -8,6 +8,7 @@ using LCShrinkRay.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using static LCShrinkRay.helper.LayerMasks;
+using static LCShrinkRay.helper.PlayerModification;
 
 namespace LCShrinkRay.comp
 {
@@ -22,15 +23,6 @@ namespace LCShrinkRay.comp
         private List<ulong> handledRayHits = new List<ulong>();
 
         private static GameObject networkPrefab { get; set; }
-
-        public enum ModificationType
-        {
-            Normalizing,
-            Shrinking,
-            Enlarging
-        }
-
-        internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.4f, 1f, 1.3f, 1.7f };
 
         private bool IsOnCooldown = false;
         #endregion
@@ -73,6 +65,7 @@ namespace LCShrinkRay.comp
             visScript.useCooldown = 0.5f;
             visScript.grabbableToEnemies = true;
             visScript.itemProperties.syncUseFunction = true;
+            visScript.fallTime = 0f;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
@@ -185,7 +178,7 @@ namespace LCShrinkRay.comp
 
                         handledRayHits.Add(targetPlayer.playerClientId);
                         Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(!CanApplyModificationTo(targetPlayer, type))
+                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, type))
                         {
                             Plugin.Log("... but would do nothing.");
                             return false;
@@ -234,79 +227,6 @@ namespace LCShrinkRay.comp
 
         #region PlayerTargeting
         // ------ Ray hitting Player ------
-
-        public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
-        {
-            if (!ModConfig.Instance.values.multipleShrinking)
-                return possiblePlayerSizes[1];
-
-            var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var currentSizeIndex = possiblePlayerSizes.IndexOf(playerSize);
-            if (currentSizeIndex <= 0)
-                return playerSize;
-
-            return possiblePlayerSizes[currentSizeIndex-1];
-        }
-
-        public static float NextIncreasedSizeOf(PlayerControllerB targetPlayer)
-        {
-            var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var currentSizeIndex = possiblePlayerSizes.IndexOf(playerSize);
-            if (currentSizeIndex == -1 || playerSize == possiblePlayerSizes.Count - 1)
-                return playerSize;
-
-            if(currentSizeIndex >= 2) // remove this if() once we think about growing
-                return possiblePlayerSizes[2];
-
-            return possiblePlayerSizes[currentSizeIndex + 1];
-        }
-
-        public bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
-        {
-            if (targetPlayer.playerClientId == playerHeldBy.playerClientId)
-                return false;
-
-            if(targetPlayer.isClimbingLadder)
-                return false;
-
-            if(GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
-            {
-                if(gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == targetPlayer.playerClientId)
-                {
-                    Plugin.Log("Attempting to shrink the player who holds us. Bad idea!");
-                    return false;
-                }
-                if(gpo.IsOnSellCounter.Value)
-                {
-                    Plugin.Log("Attempting to shrink a player who is on the sell counter. Poor soul is already doomed, let's not do this..");
-                    return false;
-                }
-            }
-
-            switch(type)
-            {
-                case ModificationType.Normalizing:
-                    if (PlayerInfo.IsNormalSize(targetPlayer))
-                        return false;
-                    return true;
-
-                case ModificationType.Shrinking:
-                    var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
-                    if (nextShrunkenSize == PlayerInfo.SizeOf(targetPlayer) || (nextShrunkenSize == 0f && !targetPlayer.AllowPlayerDeath()))
-                        return false;
-                    return true;
-
-                case ModificationType.Enlarging:
-                    var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
-                    if (nextIncreasedSize == PlayerInfo.SizeOf(targetPlayer))
-                        return false;
-                    return true;
-
-                default:
-                    return true;
-            }
-        }
-
         [ServerRpc(RequireOwnership = false)]
         public void OnPlayerModificationServerRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
         {
@@ -328,101 +248,30 @@ namespace LCShrinkRay.comp
             }
 
             // For other clients
-            var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
 
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
-            Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
 
-            switch (type)
+            IsOnCooldown = true;
+            bool appliedModification = ApplyModificationTo(targetPlayer, type, () =>
             {
-                case ModificationType.Normalizing:
-                    {
-                        var normalizedSize = 1f;
-                        Plugin.Log("Raytype: " + type.ToString() + ". New size: " + normalizedSize);
-                        IsOnCooldown = true;
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, normalizedSize, () =>
-                        {
-                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
-                            if (PlayerInfo.IsHost)
-                                GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
+                Plugin.Log("Finished ray shoot with type: " + type.ToString());
+                IsOnCooldown = false;
+            });
 
-                            if (targetingUs)
-                                Vents.DisableVents();
+            if (appliedModification)
+            {
+                Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
 
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
-                            IsOnCooldown = false;
-                        });
-                        break;
-                    }
-
-                case ModificationType.Shrinking:
-                    {
-                        var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
-                        Plugin.Log("Raytype: " + type.ToString() + ". New size: " + nextShrunkenSize);
-                        IsOnCooldown = true;
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextShrunkenSize, () =>
-                        {
-                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
-                            if (targetingUs)
-                            {
-                                if (nextShrunkenSize <= 0f)
-                                {
-                                    // Poof Target to death because they are too small to exist
-                                    if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
-                                        Destroy(deathPoof, 4f);
-
-                                    targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
-                                }
-                                else if (PlayerInfo.IsShrunk(nextShrunkenSize))
-                                    Vents.EnableVents();
-                            }
-
-                            if (nextShrunkenSize < 1f && nextShrunkenSize > 0f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
-                                GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
-                            IsOnCooldown = false;
-                        });
-
-                        break;
-                    }
-
-                case ModificationType.Enlarging:
-                    {
-                        var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
-                        Plugin.Log("Raytype: " + type.ToString() + ". New size: " + nextIncreasedSize);
-                        IsOnCooldown = true;
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () =>
-                        {
-                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
-                            if (nextIncreasedSize >= 1f)
-                            {
-                                if(PlayerInfo.IsHost)
-                                    GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
-
-                                if (targetingUs)
-                                    Vents.DisableVents();
-                            }
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
-                            IsOnCooldown = false;
-                        });
-
-                        break;
-                    }
-                default:
-                    return;
+                // Shoot ray
+                if (transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) && shrinkRayFX != null)
+                {
+                    var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
+                    if(holder != null)
+                        shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type);
+                    else
+                        Plugin.Log("Unable to determine holder of shrink ray.", Plugin.LogType.Error);
+                }
             }
-
-            // --- If we came here then a modification was done ---
-
-            // Shoot ray
-            Plugin.Log("trying to render cool beam. parent is: " + parentObject.gameObject.name);
-            if (transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) && shrinkRayFX != null)
-                shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type);
         }
         #endregion
 

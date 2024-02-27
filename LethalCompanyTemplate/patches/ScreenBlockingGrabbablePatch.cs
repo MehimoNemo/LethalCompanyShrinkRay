@@ -12,8 +12,6 @@ namespace LCShrinkRay.patches
 {
     internal class ScreenBlockingGrabbablePatch
     {
-        
-
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
         {
@@ -22,6 +20,9 @@ namespace LCShrinkRay.patches
                 Plugin.Log("adjustItemOffset: object is not held or other player");
                 return;
             }
+
+            if (__instance.playerHeldBy.playerClientId != PlayerInfo.CurrentPlayerID)
+                return;
 
             TransformItemRelativeTo(__instance, __instance.playerHeldBy.transform.localScale.x);
             CheckForGlassify(__instance);
@@ -37,7 +38,10 @@ namespace LCShrinkRay.patches
         {
             if (item == null || item.playerHeldBy == null || PlayerInfo.IsNormalSize(item.playerHeldBy)) return;
 
-            if(item.itemProperties.twoHanded)
+            if (item.playerHeldBy.playerClientId != PlayerInfo.CurrentPlayerID)
+                return;
+
+            if (item.itemProperties.twoHanded)
                 GlassifyItem(item);
             else
                 UnGlassifyItem(item);

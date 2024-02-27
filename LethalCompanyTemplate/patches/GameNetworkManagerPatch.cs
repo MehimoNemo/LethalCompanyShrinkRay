@@ -19,6 +19,7 @@ namespace LCShrinkRay.patches
             var shrinkAssets = AssetBundle.LoadFromFile(Path.Combine(assetDir, "shrinkasset"));
             GrabbablePlayerObject.LoadAsset(shrinkAssets);
             ShrinkRay.LoadAsset(shrinkAssets);
+            LittlePotion.LoadAsset();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
