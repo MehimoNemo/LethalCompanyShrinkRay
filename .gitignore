@@ -73,4 +73,5 @@ crashlytics-build.properties
 LethalCompanyTemplate/bin/
 LethalCompanyTemplate/obj/
 LethalCompanyTemplate/LCShrinkRay.csproj
+UnityPackage/UnityProject/
 *.csproj

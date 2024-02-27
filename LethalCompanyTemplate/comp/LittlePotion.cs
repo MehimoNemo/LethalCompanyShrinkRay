@@ -6,14 +6,58 @@ using LCShrinkRay.helper;
 using static LCShrinkRay.helper.PlayerModification;
 using System.IO;
 using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LCShrinkRay.comp
 {
-    public class LittlePotion : GrabbableObject
+    public class LittleShrinkPotion : LittlePotion
     {
-        #region Properties
-        public const string itemname = "Little Potion";
+        internal override string ItemName { get => "Little Shrink Potion"; }
+        internal override string TerminalDescription { get => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a negative way. Lightweight and tastes like potato.."; }
+        internal override int Rarity => 10;
+        internal override Color potionColor => new Color(0.61f, 0.04f, 0.04f);
 
+        public override void OnNetworkSpawn()
+        {
+            modificationType = ModificationType.Shrinking;
+        }
+
+        internal override void SetProperties()
+        {
+            base.SetProperties();
+        }
+    }
+    public class LittleEnlargingPotion : LittlePotion
+    {
+        internal override string ItemName => "Little Enlarging Potion";
+        internal override string TerminalDescription => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a positive way. Heavy and tastes like cheesecake..";
+        internal override int Rarity => 5;
+        internal override Color potionColor => new Color(0f, 0.3f, 0f);
+
+        public override void OnNetworkSpawn()
+        {
+            modificationType = ModificationType.Enlarging;
+        }
+
+        internal override void SetProperties()
+        {
+            base.SetProperties();
+        }
+    }
+
+    public abstract class LittlePotion : GrabbableObject
+    {
+        #region Abstracts
+        internal abstract string ItemName { get; }
+
+        internal abstract string TerminalDescription { get; }
+
+        internal abstract int Rarity { get; }
+
+        internal abstract Color potionColor { get; }
+        #endregion
+
+        #region Properties
         private static GameObject networkPrefab { get; set; }
 
         public ModificationType modificationType = ModificationType.Shrinking;
@@ -46,51 +90,56 @@ namespace LCShrinkRay.comp
         #endregion
 
         #region Networking
-        public static void LoadAsset()
+        public static void LoadAllPotionAssets()
         {
             if (networkPrefab != null) return; // Already loaded
 
             string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             AssetBundle assetBundle = AssetBundle.LoadFromFile(Path.Combine(assetDir, "littlecompanyasset"));
             Item assetItem = null;
-            if(assetBundle != null)
+            if (assetBundle != null)
                 assetItem = assetBundle.LoadAsset<Item>("Assets/ShrinkRay/Potion/PotionItem.asset");
 
-            if(assetItem == null )
+            if (assetItem == null)
             {
                 Plugin.Log("PotionItem.asset not found!", Plugin.LogType.Error);
                 return;
             }
 
             networkPrefab = assetItem.spawnPrefab;
-            assetItem.canBeGrabbedBeforeGameStart = true;
 
-            LittlePotion visScript = networkPrefab.AddComponent<LittlePotion>();
+            LittlePotion potion = networkPrefab.AddComponent<LittleShrinkPotion>();
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
-            visScript.grabbable = true;
-            visScript.grabbableToEnemies = true;
-            visScript.fallTime = 0f;
-
-            visScript.itemProperties = assetItem;
-            visScript.itemProperties.itemIcon = Icon;
-            visScript.itemProperties.itemName = itemname;
-            visScript.itemProperties.name = itemname;
-            visScript.itemProperties.toolTips = ["Consume: LMB"];
-            visScript.itemProperties.syncUseFunction = true;
-            visScript.itemProperties.requiresBattery = false;
-            visScript.itemProperties.rotationOffset = new Vector3(0, 0, -90);
-            visScript.itemProperties.positionOffset = new Vector3(-0.1f, 0f, 0f);
+            potion.itemProperties = assetItem;
+            potion.SetProperties();
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
             var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
-            terminalNode.displayText = itemname + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer. Lightweight and tastes like potato..";
-            Items.RegisterShopItem(assetItem, null, null, terminalNode, assetItem.creditsWorth);
-            Items.RegisterScrap(assetItem, 10, Levels.LevelTypes.All);
+            terminalNode.displayText = potion.TerminalDescription;
+            Items.RegisterShopItem(potion.itemProperties, null, null, terminalNode, potion.itemProperties.creditsWorth);
+            Items.RegisterScrap(potion.itemProperties, 10, Levels.LevelTypes.All);
 
-            Plugin.Log("Added ShrinkPotion.");
+            Plugin.Log("Adding ShrinkPotion asset.");
+        }
+
+        internal virtual void SetProperties()
+        {
+            grabbable = true;
+            grabbableToEnemies = true;
+            fallTime = 0f;
+
+            itemProperties.itemName = ItemName;
+            itemProperties.name = ItemName;
+            itemProperties.itemIcon = Icon;
+            itemProperties.toolTips = ["Consume: LMB"];
+            itemProperties.syncUseFunction = true;
+            itemProperties.requiresBattery = false;
+            itemProperties.rotationOffset = new Vector3(0, 0, -90);
+            itemProperties.positionOffset = new Vector3(-0.1f, 0f, 0f);
+            itemProperties.canBeGrabbedBeforeGameStart = true;
         }
         #endregion
 
@@ -99,9 +148,10 @@ namespace LCShrinkRay.comp
         {
             base.Start();
 
-            if(isInFactory)
+            if(itemProperties.minValue > itemProperties.maxValue) // todo: solve this later in unity
             {
-                // Spawned as scrap -> choose modificationType randomly
+                itemProperties.minValue = itemProperties.maxValue;
+                itemProperties.maxValue++;
             }
 
             // Add emission
@@ -114,8 +164,8 @@ namespace LCShrinkRay.comp
                 {
                     Plugin.Log("Add emission3");
                     var m = new Material(liquidRenderer.sharedMaterial);
-                    m.color = Color.red;
-                    m.SetColor("_EmissionColor", new Color(1f, 0f, 0f, 20f));
+                    m.color = potionColor;
+                    m.SetColor("_EmissionColor", new Color(potionColor.r, potionColor.g, potionColor.b, 20f));
                     m.SetFloat("_Metallic", 1f);
                     m.SetFloat("_Glossiness", 1f);
                     m.EnableKeyword("_EMISSION");
@@ -130,7 +180,7 @@ namespace LCShrinkRay.comp
         {
             try
             {
-                Plugin.Log("Consuming " + itemname);
+                Plugin.Log("Consuming " + ItemName);
                 base.ItemActivate(used, buttonDown);
 
                 Consume();
@@ -171,6 +221,7 @@ namespace LCShrinkRay.comp
                 return;
 
             Plugin.Log("Consuming.");
+            // todo: animation & sound
             ApplyModificationTo(playerHeldBy, modificationType);
 
             DestroyObjectInHand(playerHeldBy);

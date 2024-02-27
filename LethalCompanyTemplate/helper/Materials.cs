@@ -1,14 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace LCShrinkRay.helper
 {
     internal class Materials
     {
+        // Wireframe
+        /*private static Material wireframeMaterial = null;
+        public static Material Wireframe
+        {
+            get
+            {
+                if (wireframeMaterial == null)
+                {
+                    string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    AssetBundle shaderBundle = AssetBundle.LoadFromFile(Path.Combine(assetDir, "littlecompanyasset"));
+                    if (shaderBundle != null)
+                    {
+                        Shader shader = shaderBundle.LoadAsset<Shader>("Assets/shrinkRay/Shader/wireframe.shader");
+
+                        // Create a material from the loaded shader
+                        wireframeMaterial = new Material(shader);
+                        wireframeMaterial.SetColor("Edge color", new Color(0f, .969f, .969f, .5f));
+                        wireframeMaterial.SetColor("Main Color", new Color(.3f, .3f, .3f, .3f));
+                        wireframeMaterial.SetFloat("Edge width", 0.005f);
+                    }
+                }
+                return wireframeMaterial;
+            }
+        }*/
+
         // Glass
         private static Material glassMaterial = null;
         public static Material Glass
