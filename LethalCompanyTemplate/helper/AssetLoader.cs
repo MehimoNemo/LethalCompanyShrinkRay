@@ -21,7 +21,6 @@ namespace LCShrinkRay.helper
         public static Sprite LoadIcon(string filename)
         {
             var iconPath = Path.Combine(Path.Combine(AssetDir, "icons"), filename);
-            Plugin.Log("icon path: " + iconPath);
             if (!File.Exists(iconPath))
             {
                 Plugin.Log("Icon \"" +  iconPath + "\" not found in plugin directory!", Plugin.LogType.Error);
@@ -49,7 +48,7 @@ namespace LCShrinkRay.helper
                 }
 
                 AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
-                Plugin.Log("Loaded audio \"" + filename + "\" -> " + clip);
+                Plugin.Log("Loaded audio \"" + filename);
                 onComplete(clip);
             }
         }

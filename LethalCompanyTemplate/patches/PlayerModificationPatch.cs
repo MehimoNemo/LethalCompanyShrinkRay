@@ -39,7 +39,7 @@ namespace LCShrinkRay.patches
 
             if (helmetRenderer == null)
             {
-                var helmetTransform = GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+                var helmetTransform = PlayerInfo.GetGlobalMaskTransform(__instance);
                 if(helmetTransform != null)
                 {
                     helmetRenderer = helmetTransform.gameObject?.GetComponent<MeshRenderer>();

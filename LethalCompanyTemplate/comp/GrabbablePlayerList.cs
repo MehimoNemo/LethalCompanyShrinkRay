@@ -33,6 +33,11 @@ namespace LCShrinkRay.comp
         {
             Plugin.Log("KillPlayerClientRpcPrefix");
 
+            var targetPlayer = PlayerInfo.ControllerFromID((ulong)playerId);
+            if (targetPlayer == null) return;
+
+            ResetAnyPlayerModificationsFor(targetPlayer);
+
             if ((ulong)playerId != PlayerInfo.CurrentPlayerID) return;
 
             // We died while holding someone
@@ -43,17 +48,6 @@ namespace LCShrinkRay.comp
             else if (TryFindGrabbableObjectForPlayer((ulong)playerId, out GrabbablePlayerObject gpo) && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
                 PlayerInfo.CurrentPlayer.DiscardHeldObject();
 
-        }
-
-        [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
-        [HarmonyPostfix]
-        public static void KillPlayerClientRpcPostfix(int playerId/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
-        {
-            Plugin.Log("KillPlayerClientRpcPostfix");
-            var targetPlayer = PlayerInfo.ControllerFromID((ulong)playerId);
-            if (targetPlayer == null) return;
-
-            ResetAnyPlayerModificationsFor(targetPlayer);
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
@@ -235,12 +229,12 @@ namespace LCShrinkRay.comp
             {
                 targetPlayer.gameObject.transform.localScale = Vector3.one;
 
-                PlayerInfo.AdjustArmScale(targetPlayer, 1f);
+                PlayerInfo.AdjustArmScale(targetPlayer);
 
                 if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
                 {
-                    PlayerInfo.AdjustMaskPos(targetPlayer, 1f);
-                    PlayerInfo.AdjustMaskScale(targetPlayer, 1f);
+                    PlayerInfo.AdjustMaskPos();
+                    PlayerInfo.AdjustMaskScale();
                 }
             }
 

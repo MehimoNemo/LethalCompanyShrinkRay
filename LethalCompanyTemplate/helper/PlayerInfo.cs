@@ -203,7 +203,7 @@ namespace LCShrinkRay.helper
         {
             var maskTransform = GetGlobalMaskTransform(pcb ?? CurrentPlayer);
             if (maskTransform != null)
-                maskTransform.position = CalcMaskPosVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
+                maskTransform.localPosition = CalcMaskPosVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
         }
 
         public static Vector3 CalcMaskPosVec(float scale)

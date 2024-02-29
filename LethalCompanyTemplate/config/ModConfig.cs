@@ -7,6 +7,7 @@ using Unity.Netcode;
 using GameNetcodeStuff;
 using LCShrinkRay.helper;
 using Newtonsoft.Json.Linq;
+using LCShrinkRay.comp;
 
 namespace LCShrinkRay.Config
 {
@@ -119,9 +120,9 @@ namespace LCShrinkRay.Config
 #endif
         }
 
-        public void Updated()
+        public void Synced()
         {
-            // TODO: reload things if needed
+            LittlePotion.ConfigSynced(); // Add or remove potions from store / as scrap
         }
         #endregion
 
@@ -186,7 +187,7 @@ namespace LCShrinkRay.Config
                 hostValues.pitchDistortionIntensity = Instance.values.pitchDistortionIntensity;
 
                 Instance.values = hostValues;
-                Instance.Updated();
+                Instance.Synced();
             }
             #endregion
         }

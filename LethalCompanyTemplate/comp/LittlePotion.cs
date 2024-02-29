@@ -36,6 +36,12 @@ namespace LCShrinkRay.comp
             potion.SetProperties();
             potion.RegisterPotion();
         }
+
+        public static void Sync()
+        {
+            if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleShrinkingPotion potion))
+                potion.RegisterPotion();
+        }
     }
 
     public class LittleEnlargingPotion : LittlePotion
@@ -46,6 +52,7 @@ namespace LCShrinkRay.comp
         internal override int Rarity => ModConfig.Instance.values.EnlargePotionScrapRarity;
         internal override ModificationType modificationType => ModificationType.Enlarging;
         public static GameObject networkPrefab { get; private set; }
+        internal static bool AddedAsScrap = false;
 
         internal static void LoadAsset()
         {
@@ -59,6 +66,12 @@ namespace LCShrinkRay.comp
             potion.itemProperties = item;
             potion.SetProperties();
             potion.RegisterPotion();
+        }
+
+        public static void Sync()
+        {
+            if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleEnlargingPotion potion))
+                potion.RegisterPotion();
         }
     }
 
@@ -90,6 +103,10 @@ namespace LCShrinkRay.comp
         internal static AudioClip noConsumeSFX;
 
         internal static Sprite Icon = AssetLoader.LoadIcon("Potion.png");
+
+        internal bool IsStoreItem = false;
+
+        internal bool IsScrapItem = false;
         #endregion
 
         #region Networking
@@ -103,6 +120,12 @@ namespace LCShrinkRay.comp
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionDrop.wav", (item) => dropSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionConsume.wav", (item) => consumeSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionNoConsume.wav", (item) => noConsumeSFX = item));
+        }
+
+        public static void ConfigSynced()
+        {
+            LittleShrinkingPotion.Sync();
+            LittleEnlargingPotion.Sync();
         }
         #endregion
 
@@ -126,12 +149,18 @@ namespace LCShrinkRay.comp
 
         internal void RegisterPotion()
         {
-            if (Rarity > 0)
+            if (Rarity > 0 && !IsScrapItem) // Add as scrap
             {
                 Items.RegisterScrap(itemProperties, Rarity, Levels.LevelTypes.All);
+                IsScrapItem = true;
+            }
+            else if (IsScrapItem) // Remove from scrap
+            {
+                Items.RemoveScrapFromLevels(itemProperties, Levels.LevelTypes.All);
+                IsScrapItem = false;
             }
 
-            if (StorePrice > 0)
+            if (StorePrice > 0 && !IsStoreItem) // Add to store
             {
                 itemProperties.creditsWorth = Math.Max(StorePrice - 5, 0);
                 itemProperties.minValue = Math.Max(StorePrice / 2, 0);
@@ -139,6 +168,12 @@ namespace LCShrinkRay.comp
                 var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
                 terminalNode.displayText = TerminalDescription;
                 Items.RegisterShopItem(itemProperties, null, null, terminalNode, itemProperties.creditsWorth);
+                IsStoreItem = true;
+            }
+            else if(IsStoreItem) // Remove from store
+            {
+                Items.RemoveShopItem(itemProperties);
+                IsStoreItem = false;
             }
         }
 
