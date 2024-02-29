@@ -18,9 +18,12 @@ namespace LCShrinkRay.helper
         }
 
         internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.4f, 1f, 1.3f, 1.7f };
+
+        internal static AudioClip deathPoofSFX = AssetLoader.LoadAudio("deathPoof.wav");
         #endregion
 
         #region Methods
+
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             if (!ModConfig.Instance.values.multipleShrinking)
@@ -128,19 +131,20 @@ namespace LCShrinkRay.helper
                         Plugin.Log("Shrinking player [" + targetPlayer.playerClientId + "] to size: " + nextShrunkenSize);
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextShrunkenSize, () =>
                         {
-                            if (targetingUs)
+                            if (nextShrunkenSize <= 0f)
                             {
-                                if (nextShrunkenSize <= 0f)
-                                {
-                                    // Poof Target to death because they are too small to exist
-                                    if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
-                                        UnityEngine.Object.Destroy(deathPoof, 4f);
+                                // Poof Target to death because they are too small to exist
+                                if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
+                                    UnityEngine.Object.Destroy(deathPoof, 4f);
 
+                                targetPlayer.movementAudio.PlayOneShot(deathPoofSFX);
+
+                                if (targetingUs)
                                     targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
-                                }
-                                else if (PlayerInfo.IsShrunk(nextShrunkenSize))
-                                    Vents.EnableVents();
                             }
+
+                            if (targetingUs && PlayerInfo.IsShrunk(nextShrunkenSize))
+                                    Vents.EnableVents();
 
                             if (nextShrunkenSize < 1f && nextShrunkenSize > 0f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
                                 GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);

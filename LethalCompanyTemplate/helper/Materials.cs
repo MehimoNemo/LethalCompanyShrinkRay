@@ -14,18 +14,18 @@ namespace LCShrinkRay.helper
             {
                 if (wireframeMaterial == null)
                 {
-                    string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    AssetBundle shaderBundle = AssetBundle.LoadFromFile(Path.Combine(assetDir, "littlecompanyasset"));
-                    if (shaderBundle != null)
+                    Shader wireframeShader = AssetLoader.littleCompanyAsset?.LoadAsset<Shader>("Assets/shrinkRay/Shader/wireframe.shader");
+                    if(wireframeShader == null)
                     {
-                        Shader shader = shaderBundle.LoadAsset<Shader>("Assets/shrinkRay/Shader/wireframe.shader");
-
-                        // Create a material from the loaded shader
-                        wireframeMaterial = new Material(shader);
-                        wireframeMaterial.SetColor("Edge color", new Color(0f, .969f, .969f, .5f));
-                        wireframeMaterial.SetColor("Main Color", new Color(.3f, .3f, .3f, .3f));
-                        wireframeMaterial.SetFloat("Edge width", 0.005f);
+                        Plugin.Log("Unable to load wireframe shader!", Plugin.LogType.Error);
+                        return null;
                     }
+
+                    // Create a material from the loaded shader
+                    wireframeMaterial = new Material(wireframeShader);
+                    wireframeMaterial.SetColor("Edge color", new Color(0f, .969f, .969f, .5f));
+                    wireframeMaterial.SetColor("Main Color", new Color(.3f, .3f, .3f, .3f));
+                    wireframeMaterial.SetFloat("Edge width", 0.005f);
                 }
                 return wireframeMaterial;
             }

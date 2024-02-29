@@ -1,6 +1,7 @@
 using GameNetcodeStuff;
 using LCShrinkRay.helper;
 using System;
+using System.Collections;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -73,8 +74,9 @@ namespace LCShrinkRay.comp
         private const float bezier3YOffset = 1.5f; // Height offset
 
         public static float beamDuration = 2f; // If changed then adjust PlayerShrinkAnimation formula!!!
-        //private const Color beamColor = Color.blue;
+                                               //private const Color beamColor = Color.blue;
 
+        internal static AudioClip beamSFX = AssetLoader.LoadAudio("shrinkRayBeam.wav");
         #endregion
 
         ShrinkRayFX()
@@ -82,11 +84,9 @@ namespace LCShrinkRay.comp
             if (shrinkRayFX != null) return;
 
             Plugin.Log("Adding ShrinRayFX asset.");
-            var assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fxasset");
-            var fxAssets = AssetBundle.LoadFromFile(assetDir);
 
             // The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
-            shrinkRayFX = fxAssets.LoadAsset<GameObject>("Shrink Ray VFX");
+            shrinkRayFX = AssetLoader.fxAsset?.LoadAsset<GameObject>("Shrink Ray VFX");
             if (shrinkRayFX == null)
             {
                 Plugin.Log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
@@ -109,7 +109,7 @@ namespace LCShrinkRay.comp
             thickness = 0.1f;
 
             // Load death poof asset (WIP)
-            //deathPoofFX = fxAssets.LoadAsset<GameObject>("Poof FX");
+            //deathPoofFX = AssetLoader.fxAsset?.LoadAsset<GameObject>("Poof FX");
             //if (deathPoofFX == null)
             //    Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
         }
@@ -196,6 +196,8 @@ namespace LCShrinkRay.comp
                 Destroy(bezier3.gameObject, beamDuration - 0.05f);
                 Destroy(bezier4.gameObject, beamDuration - 0.05f);
                 Destroy(fxObject, beamDuration);
+
+                StartCoroutine(playBeamSFXOn(targetPlayer));
             }
             catch (Exception e)
             {
@@ -203,6 +205,25 @@ namespace LCShrinkRay.comp
                 Plugin.Log("error source: " + e.Source);
                 Plugin.Log("error stack: " + e.StackTrace);
             }
+        }
+
+        private IEnumerator playBeamSFXOn(PlayerControllerB targetPlayer)
+        {
+            if (targetPlayer == null || targetPlayer.itemAudio == null)
+                yield break;
+
+            targetPlayer.itemAudio.clip = beamSFX;
+            targetPlayer.itemAudio.loop = true;
+            targetPlayer.itemAudio.Play();
+
+            var time = 0f;
+            while (time < beamDuration)
+            {
+                time += Time.deltaTime;
+                yield return null;
+            }
+
+            targetPlayer.itemAudio.Stop();
         }
 
         public static bool TryCreateNewBeam(out GameObject beam)

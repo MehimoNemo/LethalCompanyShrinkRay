@@ -1,7 +1,24 @@
+### 0.4.0 [Singleplayer update] ###
+**What's new**
++ Added two potions: Light & Heavy
+  + Buyable in store including terminal notes & available as rare scrap in the dungeons!
+  + Fully configurable in the config after first startup.
+  + *This was wished by the community as a way to shrink yourself in singleplayer, as the shrink ray can only target others. Enjoy a drink!*
++ Added sounds for the following interactions:
+  + Grabbing, dropping and throwing players
+  + Grabbing, dropping and consuming potions
+  + Shrink ray beam
+  + Death through shrinking
++ Added ScanNodes for potions, shrink ray & grabbable players (value not updating yet)
+
+**Fixes**
++ fixed "Grab" trigger blocking view while doing third person emotes
++ fixed being unable to grab anything after grabbed player grew to normal size or died
+
 ### 0.3.1 ###
 + fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime
 
-### 0.3.0 [Yippie]###
+### 0.3.0 [Yippie] ###
 **What's new?**
 + Shrunken players are now grabbable by Hoarding Bugs! There are 3 modes available:
   + **Default:** Hoarding bugs grab you occasionally, like any other item.

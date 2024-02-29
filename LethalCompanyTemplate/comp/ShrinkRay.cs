@@ -9,6 +9,7 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using static LCShrinkRay.helper.LayerMasks;
 using static LCShrinkRay.helper.PlayerModification;
+using System.IO;
 
 namespace LCShrinkRay.comp
 {
@@ -16,23 +17,24 @@ namespace LCShrinkRay.comp
     {
         #region Properties
         public const string itemname = "Shrink Ray";
+        internal static string BaseAssetPath = "Assets/ShrinkRay/Shrink";
 
         private const float beamSearchDistance = 10f;
 
         private PlayerControllerB previousPlayerHeldBy;
         private List<ulong> handledRayHits = new List<ulong>();
 
-        private static GameObject networkPrefab { get; set; }
+        public static GameObject networkPrefab { get; set; }
 
         private bool IsOnCooldown = false;
         #endregion
 
         #region Networking
-        public static void LoadAsset(AssetBundle assetBundle)
+        public static void LoadAsset()
         {
             if (networkPrefab != null) return; // Already loaded
 
-            var assetItem = assetBundle.LoadAsset<Item>("ShrinkRayItem.asset");
+            var assetItem = AssetLoader.littleCompanyAsset?.LoadAsset<Item>(Path.Combine(BaseAssetPath, "ShrinkRayItem.asset"));
             if(assetItem == null )
             {
                 Plugin.Log("ShrinkRayItem.asset not found!", Plugin.LogType.Error);

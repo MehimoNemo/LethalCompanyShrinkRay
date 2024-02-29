@@ -3,11 +3,10 @@ using System;
 using UnityEngine.InputSystem;
 using GameNetcodeStuff;
 using LCShrinkRay.helper;
-using static LCShrinkRay.comp.ShrinkRay;
 using LCShrinkRay.comp;
 using UnityEngine;
 using static LCShrinkRay.helper.Moons;
-using static LCShrinkRay.comp.GrabbablePlayerObject;
+using Unity.Netcode;
 
 namespace LCShrinkRay.patches
 {
@@ -16,6 +15,8 @@ namespace LCShrinkRay.patches
     {
 #if DEBUG
         private static int waitFrames = 0;
+
+        internal static AudioClip consumeSFX = AssetLoader.LoadAudio("potionConsume.wav");
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
@@ -31,18 +32,18 @@ namespace LCShrinkRay.patches
             {
                 if (Keyboard.current.f1Key.wasPressedThisFrame)
                 {
-                    LogInsideEnemyNames();
-                    SpawnEnemyInFrontOfPlayer("Centipede", PlayerInfo.CurrentPlayer);
+                    //LogInsideEnemyNames();
+                    //SpawnEnemyInFrontOfPlayer("Centipede", PlayerInfo.CurrentPlayer);
+                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Shrinking);
                 }
 
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
-                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Shrinking);
+                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Enlarging);
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
-                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Enlarging);
                 }
 
                 else if (Keyboard.current.f4Key.wasPressedThisFrame)
@@ -52,22 +53,21 @@ namespace LCShrinkRay.patches
 
                 else if (Keyboard.current.f5Key.wasPressedThisFrame)
                 {
-
+                    SpawnItemInFront(LittleShrinkingPotion.networkPrefab);
                 }
 
                 else if (Keyboard.current.f6Key.wasPressedThisFrame)
                 {
-                    
+                    SpawnItemInFront(LittleEnlargingPotion.networkPrefab);
                 }
 
                 else if (Keyboard.current.f7Key.wasPressedThisFrame)
                 {
-                    
+                    SpawnItemInFront(ShrinkRay.networkPrefab);
                 }
 
                 else if (Keyboard.current.f8Key.wasPressedThisFrame)
                 {
-
                 }
 
                 else if (Keyboard.current.f9Key.wasPressedThisFrame)
@@ -120,6 +120,26 @@ namespace LCShrinkRay.patches
             }
 
             return cube;
+        }
+
+        public static void SpawnItemInFront(GameObject networkPrefab)
+        {
+            if (!PlayerInfo.IsHost)
+            {
+                Plugin.Log("That's a host-only debug feature.", Plugin.LogType.Error);
+                return;
+            }
+
+            if (networkPrefab == null)
+            {
+                Plugin.Log("Unable to spawn item. networkPrefab was null.", Plugin.LogType.Error);
+                return;
+            }
+
+            var item = UnityEngine.Object.Instantiate(networkPrefab);
+            UnityEngine.Object.DontDestroyOnLoad(item);
+            item.GetComponent<NetworkObject>().Spawn();
+            item.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 1.5f;
         }
 
         public static void LogInsideEnemyNames()

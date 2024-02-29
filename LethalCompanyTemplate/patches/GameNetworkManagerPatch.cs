@@ -11,21 +11,10 @@ namespace LCShrinkRay.patches
     {
         public static bool IsGameInitialized = false;
 
-        public static void LoadAllAssets()
-        {
-            string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            // shrinkassets
-            var shrinkAssets = AssetBundle.LoadFromFile(Path.Combine(assetDir, "shrinkasset"));
-            GrabbablePlayerObject.LoadAsset(shrinkAssets);
-            ShrinkRay.LoadAsset(shrinkAssets);
-            LittlePotion.LoadAllPotionAssets();
-        }
-
         [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
         public static void Init()
         {
-            LoadAllAssets();
+            AssetLoader.LoadAllAssets();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]

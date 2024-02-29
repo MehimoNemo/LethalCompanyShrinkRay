@@ -15,7 +15,10 @@ namespace LCShrinkRay.comp
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {
+        
         #region Properties
+        internal static string BaseAssetPath = "Assets/ShrinkRay/grabbable";
+
         public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>(ulong.MaxValue);
         private PlayerControllerB grabbedPlayerController { get; set; }
         public PlayerControllerB grabbedPlayer
@@ -57,39 +60,23 @@ namespace LCShrinkRay.comp
             Holder
         }
 
-        private static Sprite Icon
-        {
-            get
-            {
-                string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                if (string.IsNullOrEmpty(assetDir))
-                {
-                    Plugin.Log("GrabbablePlayerIcon not found!", Plugin.LogType.Error);
-                    return null;
-                }
-
-                var imagePath = Path.Combine(assetDir, "GrabbablePlayerIcon.png");
-                if (File.Exists(imagePath))
-                {
-                    var width = 223;
-                    var height = 213;
-                    byte[] bytes = File.ReadAllBytes(imagePath);
-                    var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
-                    texture.LoadImage(bytes);
-                    Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-                    return sprite;
-                }
-                return null;
-            }
-        }
+        internal static AudioClip grabSFX = AssetLoader.LoadAudio("playerGrab.wav");
+        internal static AudioClip dropSFX = AssetLoader.LoadAudio("playerDrop.wav");
+        internal static AudioClip throwSFX = AssetLoader.LoadAudio("playerThrow.wav");
         #endregion
 
         #region Networking
-        public static void LoadAsset(AssetBundle assetBundle)
+        public static void LoadAsset()
         {
             if (networkPrefab != null) return; // Already loaded
 
-            var assetItem = assetBundle.LoadAsset<Item>("grabbablePlayerItem.asset");
+            var assetItem = AssetLoader.littleCompanyAsset?.LoadAsset<Item>(Path.Combine(BaseAssetPath, "grabbablePlayerItem.asset"));
+            if(assetItem == null)
+            {
+                Plugin.Log("Unable to load GrabbablePlayer asset!", Plugin.LogType.Error);
+                return;
+            }
+
             networkPrefab = assetItem.spawnPrefab;
 
             var component = networkPrefab.AddComponent<GrabbablePlayerObject>();
@@ -97,7 +84,12 @@ namespace LCShrinkRay.comp
 
             component.itemProperties = assetItem;
             component.itemProperties.isConductiveMetal = false;
-            component.itemProperties.itemIcon = Icon;
+            component.itemProperties.itemIcon = AssetLoader.LoadIcon("GrabbablePlayerIcon.png");
+
+            // Audio
+            component.itemProperties.grabSFX = grabSFX;
+            component.itemProperties.dropSFX = dropSFX;
+            component.itemProperties.throwSFX = throwSFX;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
@@ -411,8 +403,6 @@ namespace LCShrinkRay.comp
             EnableInteractTrigger(!disable);
         }
 
-        public void AddNode() {} // WIP
-
         public void CalculateScrapValue()
         {
             // todo: change scrap value when grabbed player grabs something
@@ -425,9 +415,9 @@ namespace LCShrinkRay.comp
                         value += item.scrapValue;
             }
 
-            var scanNode = base.gameObject.GetComponentInChildren<ScanNodeProperties>();
+            var scanNode = gameObject.GetComponentInChildren<ScanNodeProperties>();
             if (scanNode == null)
-                AddNode();
+                return;
 
             SetScrapValue(value);
             Plugin.Log("Scrap value: " + value);

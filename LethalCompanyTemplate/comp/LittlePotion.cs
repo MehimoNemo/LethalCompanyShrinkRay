@@ -1,47 +1,64 @@
-﻿using System;
-using UnityEngine;
-using Unity.Netcode;
-using LethalLib.Modules;
+﻿using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using static LCShrinkRay.helper.PlayerModification;
+using LethalLib.Modules;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using Unity.Netcode;
+using UnityEngine;
+using static LCShrinkRay.helper.PlayerModification;
 
 namespace LCShrinkRay.comp
 {
-    public class LittleShrinkPotion : LittlePotion
+    public class LittleShrinkingPotion : LittlePotion
     {
-        internal override string ItemName { get => "Little Shrink Potion"; }
-        internal override string TerminalDescription { get => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a negative way. Lightweight and tastes like potato.."; }
-        internal override int Rarity => 10;
-        internal override Color potionColor => new Color(0.61f, 0.04f, 0.04f);
+        internal override string ItemName => "Light Potion";
+        internal override string TerminalDescription => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a negative way. Lightweight and tastes like potato..";
+        internal override int StorePrice => ModConfig.Instance.values.ShrinkPotionStorePrice;
+        internal override int Rarity => ModConfig.Instance.values.ShrinkPotionScrapRarity;
+        internal override ModificationType modificationType => ModificationType.Shrinking;
+        public static GameObject networkPrefab { get; private set; }
 
-        public override void OnNetworkSpawn()
+        internal static void LoadAsset()
         {
-            modificationType = ModificationType.Shrinking;
-        }
+            if(networkPrefab != null || !TryLoadItem(AssetLoader.littleCompanyAsset, "ShrinkingPotionItem.asset", out Item item) || item.spawnPrefab == null)
+                return;
 
-        internal override void SetProperties()
-        {
-            base.SetProperties();
+            var potion = item.spawnPrefab.AddComponent<LittleShrinkingPotion>();
+            networkPrefab = item.spawnPrefab;
+            networkPrefab = item.spawnPrefab;
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+            Destroy(networkPrefab.GetComponent<PhysicsProp>());
+            potion.itemProperties = item;
+            potion.SetProperties();
+            potion.RegisterPotion();
         }
     }
+
     public class LittleEnlargingPotion : LittlePotion
     {
-        internal override string ItemName => "Little Enlarging Potion";
+        internal override string ItemName => "Heavy Potion";
         internal override string TerminalDescription => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a positive way. Heavy and tastes like cheesecake..";
-        internal override int Rarity => 5;
-        internal override Color potionColor => new Color(0f, 0.3f, 0f);
+        internal override int StorePrice => ModConfig.Instance.values.EnlargePotionStorePrice;
+        internal override int Rarity => ModConfig.Instance.values.EnlargePotionScrapRarity;
+        internal override ModificationType modificationType => ModificationType.Enlarging;
+        public static GameObject networkPrefab { get; private set; }
 
-        public override void OnNetworkSpawn()
+        internal static void LoadAsset()
         {
-            modificationType = ModificationType.Enlarging;
-        }
+            if (networkPrefab != null || !TryLoadItem(AssetLoader.littleCompanyAsset, "EnlargingPotionItem.asset", out Item item) || item.spawnPrefab == null)
+                return;
 
-        internal override void SetProperties()
-        {
-            base.SetProperties();
+            var potion = item.spawnPrefab.AddComponent<LittleEnlargingPotion>();
+            networkPrefab = item.spawnPrefab;
+            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+            Destroy(networkPrefab.GetComponent<PhysicsProp>());
+            potion.itemProperties = item;
+            potion.SetProperties();
+            potion.RegisterPotion();
         }
     }
 
@@ -52,77 +69,68 @@ namespace LCShrinkRay.comp
 
         internal abstract string TerminalDescription { get; }
 
+        internal abstract int StorePrice { get; }
+
         internal abstract int Rarity { get; }
 
-        internal abstract Color potionColor { get; }
+        internal abstract ModificationType modificationType { get; }
         #endregion
 
         #region Properties
-        private static GameObject networkPrefab { get; set; }
+        internal static string BaseAssetPath = "Assets/ShrinkRay/Potion";
 
-        public ModificationType modificationType = ModificationType.Shrinking;
+        internal static AudioClip grabSFX = AssetLoader.LoadAudio("potionGrab.wav");
 
-        private static Sprite Icon
-        {
-            get
-            {
-                string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                if (string.IsNullOrEmpty(assetDir))
-                {
-                    Plugin.Log("LittlePotionIcon not found!", Plugin.LogType.Error);
-                    return null;
-                }
+        internal static AudioClip dropSFX = AssetLoader.LoadAudio("potionDrop.wav");
 
-                var imagePath = Path.Combine(assetDir, "Potion.png");
-                if (File.Exists(imagePath))
-                {
-                    var width = 223;
-                    var height = 213;
-                    byte[] bytes = File.ReadAllBytes(imagePath);
-                    var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
-                    texture.LoadImage(bytes);
-                    Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-                    return sprite;
-                }
-                return null;
-            }
-        }
+        internal static AudioClip consumeSFX = AssetLoader.LoadAudio("potionConsume.wav");
+
+        internal static AudioClip noConsumeSFX = AssetLoader.LoadAudio("potionNoConsume.wav");
         #endregion
 
         #region Networking
-        public static void LoadAllPotionAssets()
+        public static void LoadPotionAssets()
         {
-            if (networkPrefab != null) return; // Already loaded
+            Plugin.Log("Adding potion assets.");
+            LittleShrinkingPotion.LoadAsset();
+            LittleEnlargingPotion.LoadAsset();
+        }
+        #endregion
 
-            string assetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            AssetBundle assetBundle = AssetBundle.LoadFromFile(Path.Combine(assetDir, "littlecompanyasset"));
+        #region Abstract Methods
+        internal static bool TryLoadItem(AssetBundle assetBundle, string assetName, out Item item)
+        {
             Item assetItem = null;
             if (assetBundle != null)
-                assetItem = assetBundle.LoadAsset<Item>("Assets/ShrinkRay/Potion/PotionItem.asset");
+                assetItem = assetBundle.LoadAsset<Item>(Path.Combine(BaseAssetPath, assetName));
 
             if (assetItem == null)
             {
-                Plugin.Log("PotionItem.asset not found!", Plugin.LogType.Error);
-                return;
+                Plugin.Log(assetName + " not found!", Plugin.LogType.Error);
+                item = null;
+                return false;
             }
 
-            networkPrefab = assetItem.spawnPrefab;
+            item = assetItem;
+            return true;
+        }
 
-            LittlePotion potion = networkPrefab.AddComponent<LittleShrinkPotion>();
+        internal void RegisterPotion()
+        {
+            if (StorePrice > 0)
+            {
+                itemProperties.creditsWorth = Math.Max(StorePrice - 5, 0);
+                itemProperties.minValue = Math.Max(StorePrice / 2, 0);
+                itemProperties.maxValue = Math.Max(StorePrice, 0);
+                var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
+                terminalNode.displayText = TerminalDescription;
+                Items.RegisterShopItem(itemProperties, null, null, terminalNode, itemProperties.creditsWorth);
+            }
 
-            Destroy(networkPrefab.GetComponent<PhysicsProp>());
-
-            potion.itemProperties = assetItem;
-            potion.SetProperties();
-
-            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
-
-            var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
-            terminalNode.displayText = potion.TerminalDescription;
-            Items.RegisterShopItem(potion.itemProperties, null, null, terminalNode, potion.itemProperties.creditsWorth);
-            Items.RegisterScrap(potion.itemProperties, 10, Levels.LevelTypes.All);
-
-            Plugin.Log("Adding ShrinkPotion asset.");
+            if(Rarity > 0)
+            {
+                Items.RegisterScrap(itemProperties, Rarity, Levels.LevelTypes.All);
+            }
         }
 
         internal virtual void SetProperties()
@@ -131,15 +139,20 @@ namespace LCShrinkRay.comp
             grabbableToEnemies = true;
             fallTime = 0f;
 
+            itemProperties.itemIcon = AssetLoader.LoadIcon("Potion.png"); ;
             itemProperties.itemName = ItemName;
             itemProperties.name = ItemName;
-            itemProperties.itemIcon = Icon;
             itemProperties.toolTips = ["Consume: LMB"];
             itemProperties.syncUseFunction = true;
             itemProperties.requiresBattery = false;
             itemProperties.rotationOffset = new Vector3(0, 0, -90);
-            itemProperties.positionOffset = new Vector3(-0.1f, 0f, 0f);
+            //itemProperties.positionOffset = new Vector3(-0.1f, 0f, 0f);
             itemProperties.canBeGrabbedBeforeGameStart = true;
+
+
+            // Audio
+            itemProperties.grabSFX = grabSFX;
+            itemProperties.dropSFX = dropSFX;
         }
         #endregion
 
@@ -148,31 +161,13 @@ namespace LCShrinkRay.comp
         {
             base.Start();
 
-            if(itemProperties.minValue > itemProperties.maxValue) // todo: solve this later in unity
-            {
-                itemProperties.minValue = itemProperties.maxValue;
-                itemProperties.maxValue++;
-            }
+            Plugin.Log("Potion network spawn");
 
-            // Add emission
-            Plugin.Log("Add emission");
-            var liquidRenderer = gameObject?.transform?.Find("PotionSettings")?.Find("Liquid")?.GetComponent<MeshRenderer>();
-            if (liquidRenderer != null)
+            var scanNodeProperties = GetComponentInChildren<ScanNodeProperties>();
+            if (scanNodeProperties != null)
             {
-                Plugin.Log("Add emission2");
-                if (liquidRenderer.sharedMaterial != null)
-                {
-                    Plugin.Log("Add emission3");
-                    var m = new Material(liquidRenderer.sharedMaterial);
-                    m.color = potionColor;
-                    m.SetColor("_EmissionColor", new Color(potionColor.r, potionColor.g, potionColor.b, 20f));
-                    m.SetFloat("_Metallic", 1f);
-                    m.SetFloat("_Glossiness", 1f);
-                    m.EnableKeyword("_EMISSION");
-                    m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-
-                    liquidRenderer.sharedMaterial = m;
-                }
+                scanNodeProperties.headerText += " [" + modificationType.ToString() + "]";
+                scanNodeProperties.scrapValue = itemProperties.creditsWorth;
             }
         }
 
@@ -221,9 +216,14 @@ namespace LCShrinkRay.comp
                 return;
 
             Plugin.Log("Consuming.");
-            // todo: animation & sound
-            ApplyModificationTo(playerHeldBy, modificationType);
+            if(!CanApplyModificationTo(playerHeldBy, modificationType) || !ApplyModificationTo(playerHeldBy, modificationType))
+            {
+                Plugin.Log("That wouldn't do anything..");
+                playerHeldBy.itemAudio?.PlayOneShot(noConsumeSFX);
+                return;
+            }
 
+            playerHeldBy.itemAudio?.PlayOneShot(consumeSFX);
             DestroyObjectInHand(playerHeldBy);
         }
         #endregion
