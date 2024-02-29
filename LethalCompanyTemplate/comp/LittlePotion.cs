@@ -77,7 +77,7 @@ namespace LCShrinkRay.comp
         #endregion
 
         #region Properties
-        internal static string BaseAssetPath = "Assets/ShrinkRay/Potion";
+        internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "Potion");
 
         internal static AudioClip grabSFX = AssetLoader.LoadAudio("potionGrab.wav");
 

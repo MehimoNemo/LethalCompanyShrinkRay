@@ -17,7 +17,7 @@ namespace LCShrinkRay.comp
     {
         #region Properties
         public const string itemname = "Shrink Ray";
-        internal static string BaseAssetPath = "Assets/ShrinkRay/Shrink";
+        internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "Shrink");
 
         private const float beamSearchDistance = 10f;
 

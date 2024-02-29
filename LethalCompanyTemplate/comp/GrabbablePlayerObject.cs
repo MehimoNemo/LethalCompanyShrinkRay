@@ -17,7 +17,7 @@ namespace LCShrinkRay.comp
     {
         
         #region Properties
-        internal static string BaseAssetPath = "Assets/ShrinkRay/grabbable";
+        internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "grabbable");
 
         public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>(ulong.MaxValue);
         private PlayerControllerB grabbedPlayerController { get; set; }

@@ -14,7 +14,7 @@ namespace LCShrinkRay.helper
             {
                 if (wireframeMaterial == null)
                 {
-                    Shader wireframeShader = AssetLoader.littleCompanyAsset?.LoadAsset<Shader>("Assets/shrinkRay/Shader/wireframe.shader");
+                    Shader wireframeShader = AssetLoader.littleCompanyAsset?.LoadAsset<Shader>(Path.Combine(AssetLoader.BaseAssetPath, "Shader/wireframe.shader");
                     if(wireframeShader == null)
                     {
                         Plugin.Log("Unable to load wireframe shader!", Plugin.LogType.Error);

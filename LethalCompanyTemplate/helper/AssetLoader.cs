@@ -8,16 +8,16 @@ namespace LCShrinkRay.helper
     internal class AssetLoader
     {
         internal static readonly string AssetDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        internal static readonly string BaseAssetPath = "Assets/ShrinkRay";
         internal static readonly int IconWidth = 223;
         internal static readonly int IconHeight = 213;
 
-        public static readonly AssetBundle shrinkAsset = AssetBundle.LoadFromFile(Path.Combine(AssetDir, "shrinkasset"));
         public static readonly AssetBundle fxAsset = AssetBundle.LoadFromFile(Path.Combine(AssetDir, "fxasset"));
         public static readonly AssetBundle littleCompanyAsset = AssetBundle.LoadFromFile(Path.Combine(AssetDir, "littlecompanyasset"));
 
         public static Sprite LoadIcon(string filename)
         {
-            var iconPath = Path.Combine(AssetDir, filename);
+            var iconPath = Path.Combine(Path.Combine(AssetDir, "icons"), filename);
             if (!File.Exists(iconPath))
             {
                 Plugin.Log("Icon \"" +  iconPath + "\" not found in plugin directory!", Plugin.LogType.Error);
