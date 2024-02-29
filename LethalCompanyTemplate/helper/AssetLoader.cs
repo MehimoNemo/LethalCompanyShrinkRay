@@ -1,7 +1,10 @@
 ﻿using LCShrinkRay.comp;
+using System;
+using System.Collections;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace LCShrinkRay.helper
 {
@@ -18,6 +21,7 @@ namespace LCShrinkRay.helper
         public static Sprite LoadIcon(string filename)
         {
             var iconPath = Path.Combine(Path.Combine(AssetDir, "icons"), filename);
+            Plugin.Log("icon path: " + iconPath);
             if (!File.Exists(iconPath))
             {
                 Plugin.Log("Icon \"" +  iconPath + "\" not found in plugin directory!", Plugin.LogType.Error);
@@ -31,15 +35,23 @@ namespace LCShrinkRay.helper
             return sprite;
         }
 
-        public static AudioClip LoadAudio(string filename)
+        public static IEnumerator LoadAudioAsync(string filename, Action<AudioClip> onComplete, AudioType type = AudioType.WAV)
         {
-            Plugin.Log("Loading audio for " + filename);
             var audioPath = Path.Combine(Path.Combine(AssetDir, "audio"), filename);
-            var audioRequest = new WWW(audioPath);
-            var audioClip = audioRequest.GetAudioClip();
-            if (audioClip != null)
-                Plugin.Log("Loaded audio for " + filename);
-            return audioRequest.GetAudioClip();
+            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(audioPath, type))
+            {
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.ConnectionError)
+                {
+                    Plugin.Log(www.error, Plugin.LogType.Error);
+                    yield break;
+                }
+
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+                Plugin.Log("Loaded audio \"" + filename + "\" -> " + clip);
+                onComplete(clip);
+            }
         }
 
         public static void LoadAllAssets()

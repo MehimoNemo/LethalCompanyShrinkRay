@@ -19,7 +19,7 @@ namespace LCShrinkRay.helper
 
         internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.4f, 1f, 1.3f, 1.7f };
 
-        internal static AudioClip deathPoofSFX = AssetLoader.LoadAudio("deathPoof.wav");
+        internal static AudioClip deathPoofSFX;
         #endregion
 
         #region Methods

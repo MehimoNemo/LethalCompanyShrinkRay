@@ -79,13 +79,17 @@ namespace LCShrinkRay.comp
         #region Properties
         internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "Potion");
 
-        internal static AudioClip grabSFX = AssetLoader.LoadAudio("potionGrab.wav");
+        internal static bool AudioLoaded = false;
 
-        internal static AudioClip dropSFX = AssetLoader.LoadAudio("potionDrop.wav");
+        internal static AudioClip grabSFX;
 
-        internal static AudioClip consumeSFX = AssetLoader.LoadAudio("potionConsume.wav");
+        internal static AudioClip dropSFX;
 
-        internal static AudioClip noConsumeSFX = AssetLoader.LoadAudio("potionNoConsume.wav");
+        internal static AudioClip consumeSFX;
+
+        internal static AudioClip noConsumeSFX;
+
+        internal static Sprite Icon = AssetLoader.LoadIcon("Potion.png");
         #endregion
 
         #region Networking
@@ -94,6 +98,11 @@ namespace LCShrinkRay.comp
             Plugin.Log("Adding potion assets.");
             LittleShrinkingPotion.LoadAsset();
             LittleEnlargingPotion.LoadAsset();
+
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionGrab.wav", (item) => grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionDrop.wav", (item) => dropSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionConsume.wav", (item) => consumeSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionNoConsume.wav", (item) => noConsumeSFX = item));
         }
         #endregion
 
@@ -117,6 +126,11 @@ namespace LCShrinkRay.comp
 
         internal void RegisterPotion()
         {
+            if (Rarity > 0)
+            {
+                Items.RegisterScrap(itemProperties, Rarity, Levels.LevelTypes.All);
+            }
+
             if (StorePrice > 0)
             {
                 itemProperties.creditsWorth = Math.Max(StorePrice - 5, 0);
@@ -126,11 +140,6 @@ namespace LCShrinkRay.comp
                 terminalNode.displayText = TerminalDescription;
                 Items.RegisterShopItem(itemProperties, null, null, terminalNode, itemProperties.creditsWorth);
             }
-
-            if(Rarity > 0)
-            {
-                Items.RegisterScrap(itemProperties, Rarity, Levels.LevelTypes.All);
-            }
         }
 
         internal virtual void SetProperties()
@@ -139,7 +148,7 @@ namespace LCShrinkRay.comp
             grabbableToEnemies = true;
             fallTime = 0f;
 
-            itemProperties.itemIcon = AssetLoader.LoadIcon("Potion.png"); ;
+            itemProperties.itemIcon = Icon;
             itemProperties.itemName = ItemName;
             itemProperties.name = ItemName;
             itemProperties.toolTips = ["Consume: LMB"];
@@ -148,11 +157,6 @@ namespace LCShrinkRay.comp
             itemProperties.rotationOffset = new Vector3(0, 0, -90);
             //itemProperties.positionOffset = new Vector3(-0.1f, 0f, 0f);
             itemProperties.canBeGrabbedBeforeGameStart = true;
-
-
-            // Audio
-            itemProperties.grabSFX = grabSFX;
-            itemProperties.dropSFX = dropSFX;
         }
         #endregion
 
@@ -166,9 +170,12 @@ namespace LCShrinkRay.comp
             var scanNodeProperties = GetComponentInChildren<ScanNodeProperties>();
             if (scanNodeProperties != null)
             {
-                scanNodeProperties.headerText += " [" + modificationType.ToString() + "]";
+                scanNodeProperties.headerText = ItemName;
                 scanNodeProperties.scrapValue = itemProperties.creditsWorth;
             }
+
+            itemProperties.grabSFX = grabSFX;
+            itemProperties.dropSFX = dropSFX;
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)

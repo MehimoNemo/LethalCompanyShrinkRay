@@ -76,7 +76,7 @@ namespace LCShrinkRay.comp
         public static float beamDuration = 2f; // If changed then adjust PlayerShrinkAnimation formula!!!
                                                //private const Color beamColor = Color.blue;
 
-        internal static AudioClip beamSFX = AssetLoader.LoadAudio("shrinkRayBeam.wav");
+        public static AudioClip beamSFX;
         #endregion
 
         ShrinkRayFX()
@@ -212,6 +212,7 @@ namespace LCShrinkRay.comp
             if (targetPlayer == null || targetPlayer.itemAudio == null)
                 yield break;
 
+            Plugin.Log("Playing shrink ray beam audio.");
             targetPlayer.itemAudio.clip = beamSFX;
             targetPlayer.itemAudio.loop = true;
             targetPlayer.itemAudio.Play();
@@ -223,6 +224,7 @@ namespace LCShrinkRay.comp
                 yield return null;
             }
 
+            Plugin.Log("Stopping shrink ray beam audio.");
             targetPlayer.itemAudio.Stop();
         }
 

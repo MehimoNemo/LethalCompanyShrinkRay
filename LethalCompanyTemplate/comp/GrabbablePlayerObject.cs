@@ -10,6 +10,7 @@ using LCShrinkRay.patches;
 using System.IO;
 using System.Reflection;
 using System.Collections;
+using System.ComponentModel;
 
 namespace LCShrinkRay.comp
 {
@@ -53,6 +54,7 @@ namespace LCShrinkRay.comp
         private EnemyAI enemyHeldBy = null;
         public HoarderBugAI lastHoarderBugGrabbedBy = null;
         public NetworkVariable<bool> InLastHoardingBugNestRange = new NetworkVariable<bool>(false);
+        private bool Thrown = false;
 
         public enum TargetPlayer
         {
@@ -60,9 +62,10 @@ namespace LCShrinkRay.comp
             Holder
         }
 
-        internal static AudioClip grabSFX = AssetLoader.LoadAudio("playerGrab.wav");
-        internal static AudioClip dropSFX = AssetLoader.LoadAudio("playerDrop.wav");
-        internal static AudioClip throwSFX = AssetLoader.LoadAudio("playerThrow.wav");
+        internal static AudioClip grabSFX;
+        internal static AudioClip dropSFX;
+        internal static AudioClip throwSFX;
+        internal static Sprite Icon = AssetLoader.LoadIcon("GrabbablePlayerIcon.png");
         #endregion
 
         #region Networking
@@ -80,16 +83,18 @@ namespace LCShrinkRay.comp
             networkPrefab = assetItem.spawnPrefab;
 
             var component = networkPrefab.AddComponent<GrabbablePlayerObject>();
+
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerGrab.wav", (item) => grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerDrop.wav", (item) => dropSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerThrow.wav", (item) => throwSFX = item));
+
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
             component.itemProperties = assetItem;
             component.itemProperties.isConductiveMetal = false;
-            component.itemProperties.itemIcon = AssetLoader.LoadIcon("GrabbablePlayerIcon.png");
-
-            // Audio
-            component.itemProperties.grabSFX = grabSFX;
-            component.itemProperties.dropSFX = dropSFX;
-            component.itemProperties.throwSFX = throwSFX;
+            component.itemProperties.itemIcon = Icon;
+            component.itemProperties.canBeGrabbedBeforeGameStart = true;
+            component.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
@@ -136,8 +141,8 @@ namespace LCShrinkRay.comp
         public override void Start()
         {
             base.Start();
-            itemProperties.canBeGrabbedBeforeGameStart = true;
-            itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
+
+            itemProperties.grabSFX = grabSFX;
         }
 
         public override void Update()
@@ -206,12 +211,11 @@ namespace LCShrinkRay.comp
             try
             {
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
-                playerHeldBy.DiscardHeldObject();
 
                 if (ModConfig.Instance.values.throwablePlayers)
                 {
                     Plugin.Log("Throw grabbed player");
-                    ThrowPlayerServerRpc(grabbedPlayer.playerClientId, direction);
+                    ThrowPlayerServerRpc(direction);
                 }
             }
             catch (Exception e)
@@ -221,22 +225,40 @@ namespace LCShrinkRay.comp
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void ThrowPlayerServerRpc(ulong playerID, Vector3 direction)
+        public void ThrowPlayerServerRpc(Vector3 direction)
         {
-            ThrowPlayerClientRpc(playerID, direction);
+            ThrowPlayerClientRpc(direction);
         }
 
         [ClientRpc]
-        public void ThrowPlayerClientRpc(ulong playerID, Vector3 direction)
+        public void ThrowPlayerClientRpc(Vector3 direction)
         {
-            if (playerID != PlayerInfo.CurrentPlayerID) return;
+            Thrown = true;
 
-            Plugin.Log("We got thrown!");
-            coroutines.PlayerThrowAnimation.StartRoutine(grabbedPlayer, direction, 10f);
+            if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                playerHeldBy.DiscardHeldObject();
+
+            if (grabbedPlayer == null) return;
+
+            grabbedPlayer.movementAudio.PlayOneShot(throwSFX);
+
+            if (grabbedPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
+            {
+                Plugin.Log("We got thrown!");
+                coroutines.PlayerThrowAnimation.StartRoutine(grabbedPlayer, direction, 10f);
+            }
         }
 
         public override void DiscardItem()
         {
+            if (Thrown)
+            {
+                Thrown = false;
+                grabbedPlayer.itemAudio.PlayOneShot(throwSFX);
+            }
+            else
+                grabbedPlayer.itemAudio.PlayOneShot(dropSFX);
+
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
 

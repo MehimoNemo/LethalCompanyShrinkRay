@@ -27,6 +27,9 @@ namespace LCShrinkRay.comp
         public static GameObject networkPrefab { get; set; }
 
         private bool IsOnCooldown = false;
+
+        internal static AudioClip grabSFX;
+        internal static AudioClip dropSFX;
         #endregion
 
         #region Networking
@@ -47,33 +50,37 @@ namespace LCShrinkRay.comp
             assetItem.canBeGrabbedBeforeGameStart = true;
             networkPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
 
-            ShrinkRay visScript = networkPrefab.AddComponent<ShrinkRay>();
+            ShrinkRay shrinkRay = networkPrefab.AddComponent<ShrinkRay>();
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayGrab.wav", (item) => grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayDrop.wav", (item) => dropSFX = item));
 
             // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("deathPoof.wav", (item) => deathPoofSFX = item));
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 
-            visScript.itemProperties = assetItem;
+            shrinkRay.grabbable = true;
+            shrinkRay.useCooldown = 0.5f;
+            shrinkRay.grabbableToEnemies = true;
+            shrinkRay.fallTime = 0f;
 
             //-0.115 0.56 0.02
-            visScript.itemProperties = assetItem;
-            visScript.itemProperties.itemName = itemname;
-            visScript.itemProperties.name = itemname;
-            visScript.itemProperties.rotationOffset = new Vector3(90, 90, 0);
-            visScript.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
-            visScript.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
-            visScript.grabbable = true;
-            visScript.useCooldown = 0.5f;
-            visScript.grabbableToEnemies = true;
-            visScript.itemProperties.syncUseFunction = true;
-            visScript.fallTime = 0f;
+            shrinkRay.itemProperties = assetItem;
+            shrinkRay.itemProperties.itemName = itemname;
+            shrinkRay.itemProperties.name = itemname;
+            shrinkRay.itemProperties.rotationOffset = new Vector3(90, 90, 0);
+            shrinkRay.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
+            shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
+            shrinkRay.itemProperties.syncUseFunction = true;
+            shrinkRay.itemProperties.requiresBattery = false;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
             var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
             terminalNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
-            Items.RegisterShopItem(assetItem, null, null, terminalNode, assetItem.creditsWorth);
+            Items.RegisterShopItem(shrinkRay.itemProperties, null, null, terminalNode, shrinkRay.itemProperties.creditsWorth);
         }
         #endregion
 
@@ -81,7 +88,8 @@ namespace LCShrinkRay.comp
         public override void Start()
         {
             base.Start();
-            this.itemProperties.requiresBattery = false;
+            itemProperties.grabSFX = grabSFX;
+            itemProperties.dropSFX = dropSFX;
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)

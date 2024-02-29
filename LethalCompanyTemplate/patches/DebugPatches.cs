@@ -16,8 +16,6 @@ namespace LCShrinkRay.patches
 #if DEBUG
         private static int waitFrames = 0;
 
-        internal static AudioClip consumeSFX = AssetLoader.LoadAudio("potionConsume.wav");
-
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
         public static void OnUpdate(PlayerControllerB __instance)
