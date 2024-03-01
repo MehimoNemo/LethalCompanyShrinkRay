@@ -2,6 +2,7 @@
 using HarmonyLib;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
+using LethalLib.Modules;
 using System;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -214,8 +215,31 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            if (PlayerInfo.IsHost && networkObject.IsSpawned)
-                networkObject.Despawn();
+            if (!TryFindGrabbableObjectForPlayer(playerID, out GrabbablePlayerObject gpo)) // todo: make it so the tryFind is not needed
+            {
+                Plugin.Log("Player " + playerID + " didn't had a grabbableObject!");
+                return;
+            }
+
+            try
+            {
+                gpo.StartCoroutine(gpo.CleanUp(() =>
+                {
+                    DespawnGrabbablePlayer(playerID);
+                }));
+            }
+            catch(Exception ex)
+            {
+                Plugin.Log("Error cleaning up grabbablePlayer: " + ex.Message, Plugin.LogType.Error);
+                DespawnGrabbablePlayer(playerID);
+            }
+
+        }
+
+        public static void DespawnGrabbablePlayer(ulong playerID)
+        {
+            if (PlayerInfo.IsHost && networkObjects[playerID].IsSpawned)
+                networkObjects[playerID].Despawn();
 
             networkObjects.Remove(playerID);
         }

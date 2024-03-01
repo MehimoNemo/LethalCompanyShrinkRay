@@ -114,16 +114,16 @@ namespace LCShrinkRay.comp
             //    Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
         }
 
-        public void RenderRayBeam(Transform holderCamera, Transform target, PlayerModification.ModificationType type)
+        public IEnumerator RenderRayBeam(Transform holderCamera, Transform target, PlayerModification.ModificationType type, AudioSource shrinkRayAudio, Action onComplete = null)
         {
+            if (!TryCreateNewBeam(out GameObject fxObject))
+            {
+                Plugin.Log("FX Object Null", Plugin.LogType.Error);
+                yield break;
+            }
+
             try
             {
-                if(!TryCreateNewBeam(out GameObject fxObject))
-                {
-                    Plugin.Log("FX Object Null", Plugin.LogType.Error);
-                    return;
-                }
-
                 activeVisualEffect = fxObject.GetComponentInChildren<VisualEffect>();
                 if (!activeVisualEffect)
                 {
@@ -161,13 +161,13 @@ namespace LCShrinkRay.comp
                 if(!target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer) || targetPlayer.gameplayCamera == null)
                 {
                     Plugin.Log("Failed to get target player for shrink ray vfx", Plugin.LogType.Warning);
-                    return;
+                    yield break;
                 }
                 Transform targetHeadTransform = targetPlayer.gameplayCamera.transform.Find("HUDHelmetPosition")?.transform;
                 if(targetHeadTransform == null)
                 {
                     Plugin.Log("Failed to get target players helmet position for shrink ray vfx", Plugin.LogType.Warning);
-                    return;
+                    yield break;
                 }
 
                 // Stole this from above, minor adjustments to where the beam comes from
@@ -191,41 +191,30 @@ namespace LCShrinkRay.comp
                 bezier4.transform.SetParent(targetHeadTransform, true);
 
                 // Destroy the beziers before the fxObject, just barely
-                Destroy(bezier1.gameObject, beamDuration - 0.05f);
-                Destroy(bezier2.gameObject, beamDuration - 0.05f);
-                Destroy(bezier3.gameObject, beamDuration - 0.05f);
-                Destroy(bezier4.gameObject, beamDuration - 0.05f);
-                Destroy(fxObject, beamDuration);
-
-                StartCoroutine(playBeamSFXOn(targetPlayer));
             }
             catch (Exception e)
             {
                 Plugin.Log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
                 Plugin.Log("error source: " + e.Source);
                 Plugin.Log("error stack: " + e.StackTrace);
-            }
-        }
-
-        private IEnumerator playBeamSFXOn(PlayerControllerB targetPlayer)
-        {
-            if (targetPlayer == null || targetPlayer.itemAudio == null)
                 yield break;
-
-            Plugin.Log("Playing shrink ray beam audio.");
-            targetPlayer.itemAudio.clip = beamSFX;
-            targetPlayer.itemAudio.loop = true;
-            targetPlayer.itemAudio.Play();
-
-            var time = 0f;
-            while (time < beamDuration)
-            {
-                time += Time.deltaTime;
-                yield return null;
             }
 
-            Plugin.Log("Stopping shrink ray beam audio.");
-            targetPlayer.itemAudio.Stop();
+            Plugin.Log("beamSFX", Plugin.LogType.Warning);
+            shrinkRayAudio.PlayOneShot(beamSFX);
+
+            yield return new WaitWhile(() => shrinkRayAudio.isPlaying);
+            Plugin.Log("beamSFX -> Stop", Plugin.LogType.Warning);
+            //yield return new WaitForSeconds(beamDuration);
+
+            Destroy(fxObject.transform.GetChild(0)?.Find("Pos1")?.gameObject);
+            Destroy(fxObject.transform.GetChild(0)?.Find("Pos2")?.gameObject);
+            Destroy(fxObject.transform.GetChild(0)?.Find("Pos3")?.gameObject);
+            Destroy(fxObject.transform.GetChild(0)?.Find("Pos4")?.gameObject);
+            Destroy(fxObject);
+
+            if (onComplete != null)
+                onComplete();
         }
 
         public static bool TryCreateNewBeam(out GameObject beam)

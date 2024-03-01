@@ -38,11 +38,15 @@ Send us a message on discord
 + big_nemo
 + niro1996
 
-or write it in our thread on the unofficial lethal companys discord: [Server-Invite](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1169792572382773318/1190100786357743646)
+or write it in our threads on the unofficial lethal companys mod discords:
+[Unofficial Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1169792572382773318/1190100786357743646)
+[Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1168655651455639582/1206337352608256010)
 
 ## Special Thanks To
-[@peppermint_2859](https://twitter.com/ItsJOEYthe) on discord for modeling!
-[sakiskid](https://github.com/Sakiskid) for the shrink ray vfx!
+[@peppermint_2859](https://twitter.com/ItsJOEYthe) on discord for the ShrinkRay model!
+[Sakiskid](https://github.com/Sakiskid) for the ShrinkRay beam!
+Ellethwen for the potion & player item icons!
+Spinmaster for creating all the sounds this mod includes!
 
 
 ## And the testers too (sorry for making you join and leave the lobby a billion times)!

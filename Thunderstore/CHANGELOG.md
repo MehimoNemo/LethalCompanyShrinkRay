@@ -14,6 +14,7 @@
 **Fixes**
 + fixed "Grab" trigger blocking view while doing third person emotes
 + fixed being unable to grab anything after grabbed player grew to normal size or died
++ fixed player mask being off after revive
 
 ### 0.3.1 ###
 + fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime

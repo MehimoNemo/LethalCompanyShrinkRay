@@ -62,6 +62,7 @@ namespace LCShrinkRay.comp
             Holder
         }
 
+        internal static AudioSource audioSource;
         internal static AudioClip grabSFX;
         internal static AudioClip dropSFX;
         internal static AudioClip throwSFX;
@@ -101,6 +102,12 @@ namespace LCShrinkRay.comp
 
         public override void OnNetworkDespawn()
         {
+            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
+            base.OnNetworkDespawn();
+        }
+
+        public IEnumerator CleanUp(Action onComplete = null)
+        {
             SetIsGrabbableToEnemies(false);
             if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
             {
@@ -110,11 +117,16 @@ namespace LCShrinkRay.comp
                 hoarderBug.SwitchToBehaviourState(0);
             }
 
-            if(playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
-                playerHeldBy.DiscardHeldObject();
+            if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                playerHeldBy.DiscardHeldObject(); // Can lead to problems
 
-            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
-            base.OnNetworkDespawn();
+            if (audioSource.isPlaying)
+                audioSource.Stop();
+
+            if(onComplete != null)
+                onComplete();
+
+            yield break;
         }
 
         public override void OnNetworkSpawn()
@@ -135,14 +147,15 @@ namespace LCShrinkRay.comp
 
             return networkObj;
         }
-        #endregion
+#endregion
 
         #region Base Methods
         public override void Start()
         {
             base.Start();
 
-            itemProperties.grabSFX = grabSFX;
+            audioSource = GetComponent<AudioSource>();
+            //itemProperties.grabSFX = grabSFX;
         }
 
         public override void Update()
@@ -254,10 +267,10 @@ namespace LCShrinkRay.comp
             if (Thrown)
             {
                 Thrown = false;
-                grabbedPlayer.itemAudio.PlayOneShot(throwSFX);
+                audioSource.PlayOneShot(throwSFX);
             }
             else
-                grabbedPlayer.itemAudio.PlayOneShot(dropSFX);
+                audioSource.PlayOneShot(dropSFX);
 
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
@@ -287,7 +300,9 @@ namespace LCShrinkRay.comp
             Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
             enemyHeldBy = enemyAI;
 
-            if(IsCurrentPlayer)
+            audioSource.PlayOneShot(grabSFX);
+
+            if (IsCurrentPlayer)
                 grabbedPlayer.DropAllHeldItemsAndSync();
 
             foreach (var collider in enemyHeldBy.gameObject.GetComponentsInChildren<Collider>())
@@ -301,6 +316,8 @@ namespace LCShrinkRay.comp
                 Plugin.Log("Lost enemyHeldBy on grabbable player " + grabbedPlayerID.Value, Plugin.LogType.Warning);
                 return;
             }
+
+            audioSource.PlayOneShot(dropSFX);
 
             Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
 
@@ -323,6 +340,13 @@ namespace LCShrinkRay.comp
             grabbedPlayer.ResetFallGravity();
 
             enemyHeldBy = null;
+        }
+
+        public override void EquipItem()
+        {
+            base.EquipItem();
+
+            audioSource.PlayOneShot(grabSFX);
         }
 
         public override void GrabItem()
@@ -393,6 +417,13 @@ namespace LCShrinkRay.comp
             Plugin.Log("Is current player: " + IsCurrentPlayer);
             this.grabbable = true;
             EnableInteractTrigger(!IsCurrentPlayer);
+
+            var scanNode = gameObject.GetComponentInChildren<ScanNodeProperties>();
+            if (scanNode != null)
+            {
+                if(scanNode.TryGetComponent(out BoxCollider collider))
+                    collider.enabled = false;
+            } // Remove in unity todo
 
             CalculateScrapValue();
             SetIsGrabbableToEnemies(true);

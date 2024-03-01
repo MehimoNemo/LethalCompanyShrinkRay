@@ -22,6 +22,10 @@ namespace LCShrinkRay.comp
         internal override ModificationType modificationType => ModificationType.Shrinking;
         public static GameObject networkPrefab { get; private set; }
 
+        internal static bool IsStoreItem = false;
+
+        internal static bool IsScrapItem = false;
+
         internal static void LoadAsset()
         {
             if(networkPrefab != null || !TryLoadItem(AssetLoader.littleCompanyAsset, "ShrinkingPotionItem.asset", out Item item) || item.spawnPrefab == null)
@@ -34,13 +38,13 @@ namespace LCShrinkRay.comp
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
             potion.itemProperties = item;
             potion.SetProperties();
-            potion.RegisterPotion();
+            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
         }
 
         public static void Sync()
         {
             if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleShrinkingPotion potion))
-                potion.RegisterPotion();
+                potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
         }
     }
 
@@ -52,7 +56,10 @@ namespace LCShrinkRay.comp
         internal override int Rarity => ModConfig.Instance.values.EnlargePotionScrapRarity;
         internal override ModificationType modificationType => ModificationType.Enlarging;
         public static GameObject networkPrefab { get; private set; }
-        internal static bool AddedAsScrap = false;
+
+        internal static bool IsStoreItem = false;
+
+        internal static bool IsScrapItem = false;
 
         internal static void LoadAsset()
         {
@@ -65,13 +72,13 @@ namespace LCShrinkRay.comp
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
             potion.itemProperties = item;
             potion.SetProperties();
-            potion.RegisterPotion();
+            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
         }
 
         public static void Sync()
         {
             if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleEnlargingPotion potion))
-                potion.RegisterPotion();
+                potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
         }
     }
 
@@ -94,6 +101,8 @@ namespace LCShrinkRay.comp
 
         internal static bool AudioLoaded = false;
 
+        internal static AudioSource audioSource;
+
         internal static AudioClip grabSFX;
 
         internal static AudioClip dropSFX;
@@ -103,10 +112,6 @@ namespace LCShrinkRay.comp
         internal static AudioClip noConsumeSFX;
 
         internal static Sprite Icon = AssetLoader.LoadIcon("Potion.png");
-
-        internal bool IsStoreItem = false;
-
-        internal bool IsScrapItem = false;
         #endregion
 
         #region Networking
@@ -147,7 +152,7 @@ namespace LCShrinkRay.comp
             return true;
         }
 
-        internal void RegisterPotion()
+        internal void RegisterPotion(ref bool IsScrapItem, ref bool IsStoreItem)
         {
             if (Rarity > 0 && !IsScrapItem) // Add as scrap
             {
@@ -177,21 +182,14 @@ namespace LCShrinkRay.comp
             }
         }
 
-        internal virtual void SetProperties()
+        internal void SetProperties()
         {
             grabbable = true;
             grabbableToEnemies = true;
             fallTime = 0f;
 
             itemProperties.itemIcon = Icon;
-            itemProperties.itemName = ItemName;
-            itemProperties.name = ItemName;
             itemProperties.toolTips = ["Consume: LMB"];
-            itemProperties.syncUseFunction = true;
-            itemProperties.requiresBattery = false;
-            itemProperties.rotationOffset = new Vector3(0, 0, -90);
-            //itemProperties.positionOffset = new Vector3(-0.1f, 0f, 0f);
-            itemProperties.canBeGrabbedBeforeGameStart = true;
         }
         #endregion
 
@@ -209,8 +207,7 @@ namespace LCShrinkRay.comp
                 scanNodeProperties.scrapValue = itemProperties.creditsWorth;
             }
 
-            itemProperties.grabSFX = grabSFX;
-            itemProperties.dropSFX = dropSFX;
+            audioSource = GetComponent<AudioSource>();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -233,39 +230,57 @@ namespace LCShrinkRay.comp
             base.Update();
         }
 
+        public override void PocketItem()
+        {
+            base.PocketItem();
+        }
+
         public override void EquipItem()
         {
-            // idea: play a fading-in sound
+            audioSource.PlayOneShot(grabSFX);
             base.EquipItem();
         }
 
-        public override void PocketItem()
+        public override void GrabItem()
         {
-            // idea: play a fading-out sound
-            base.PocketItem();
+            transform.localScale = Vector3.one * 0.05f;
+            base.GrabItem();
         }
 
         public override void DiscardItem()
         {
+            transform.localScale = Vector3.one * 0.1f;
+            audioSource.PlayOneShot(dropSFX);
             base.DiscardItem();
+        }
+
+        public override void GrabItemFromEnemy(EnemyAI enemyAI)
+        {
+            audioSource.PlayOneShot(grabSFX);
+            base.GrabItemFromEnemy(enemyAI);
+        }
+
+        public override void DiscardItemFromEnemy()
+        {
+            audioSource.PlayOneShot(dropSFX);
+            base.DiscardItemFromEnemy();
         }
         #endregion
 
-        #region Consumption
+        #region Methods
         private void Consume()
         {
            if (playerHeldBy == null || playerHeldBy.isClimbingLadder)
                 return;
 
-            Plugin.Log("Consuming.");
             if(!CanApplyModificationTo(playerHeldBy, modificationType) || !ApplyModificationTo(playerHeldBy, modificationType))
             {
                 Plugin.Log("That wouldn't do anything..");
-                playerHeldBy.itemAudio?.PlayOneShot(noConsumeSFX);
+                audioSource?.PlayOneShot(noConsumeSFX);
                 return;
             }
 
-            playerHeldBy.itemAudio?.PlayOneShot(consumeSFX);
+            audioSource?.PlayOneShot(consumeSFX);
             DestroyObjectInHand(playerHeldBy);
         }
         #endregion

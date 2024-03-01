@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -39,7 +40,8 @@ namespace LCShrinkRay.helper
             var audioPath = Path.Combine(Path.Combine(AssetDir, "audio"), filename);
             using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(audioPath, type))
             {
-                yield return www.SendWebRequest();
+                var request = www.SendWebRequest();
+                yield return new WaitUntil(() => request.isDone);
 
                 if (www.result == UnityWebRequest.Result.ConnectionError)
                 {
@@ -48,6 +50,7 @@ namespace LCShrinkRay.helper
                 }
 
                 AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+                yield return new WaitUntil(() => clip.loadState == AudioDataLoadState.Loaded);
                 Plugin.Log("Loaded audio \"" + filename);
                 onComplete(clip);
             }

@@ -10,26 +10,33 @@ using System.Collections.Generic;
 using static LCShrinkRay.helper.LayerMasks;
 using static LCShrinkRay.helper.PlayerModification;
 using System.IO;
+using System.Collections;
 
 namespace LCShrinkRay.comp
 {
     public class ShrinkRay : GrabbableObject
     {
         #region Properties
-        public const string itemname = "Shrink Ray";
         internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "Shrink");
 
         private const float beamSearchDistance = 10f;
 
-        private PlayerControllerB previousPlayerHeldBy;
         private List<ulong> handledRayHits = new List<ulong>();
+
+        private PlayerControllerB lastPlayerHeldBy = null;
 
         public static GameObject networkPrefab { get; set; }
 
-        private bool IsOnCooldown = false;
+        private bool IsInUse = false;
+
+        internal AudioSource audioSource;
 
         internal static AudioClip grabSFX;
         internal static AudioClip dropSFX;
+
+        internal static AudioClip loadSFX;
+        internal static AudioClip unloadSFX;
+        internal static AudioClip noTargetSFX;
         #endregion
 
         #region Networking
@@ -54,32 +61,27 @@ namespace LCShrinkRay.comp
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayGrab.wav", (item) => grabSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayDrop.wav", (item) => dropSFX = item));
 
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayLoad.wav", (item) => loadSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayUnload.wav", (item) => unloadSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayNoTarget.wav", (item) => noTargetSFX = item));
+
             // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("deathPoof.wav", (item) => deathPoofSFX = item));
 
-            Destroy(networkPrefab.GetComponent<PhysicsProp>());
+            Destroy(networkPrefab.GetComponent<PhysicsProp>()); // todo: make this not needed
 
+            shrinkRay.itemProperties = assetItem;
+            shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
             shrinkRay.grabbable = true;
-            shrinkRay.useCooldown = 0.5f;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
-
-            //-0.115 0.56 0.02
-            shrinkRay.itemProperties = assetItem;
-            shrinkRay.itemProperties.itemName = itemname;
-            shrinkRay.itemProperties.name = itemname;
-            shrinkRay.itemProperties.rotationOffset = new Vector3(90, 90, 0);
-            shrinkRay.itemProperties.positionOffset = new Vector3(-0.115f, 0.56f, 0.02f);
-            shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
-            shrinkRay.itemProperties.syncUseFunction = true;
-            shrinkRay.itemProperties.requiresBattery = false;
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
             var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
-            terminalNode.displayText = itemname + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
+            terminalNode.displayText = shrinkRay.name + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
             Items.RegisterShopItem(shrinkRay.itemProperties, null, null, terminalNode, shrinkRay.itemProperties.creditsWorth);
         }
         #endregion
@@ -88,44 +90,38 @@ namespace LCShrinkRay.comp
         public override void Start()
         {
             base.Start();
-            itemProperties.grabSFX = grabSFX;
-            itemProperties.dropSFX = dropSFX;
+            //itemProperties.grabSFX = grabSFX;
+            //itemProperties.dropSFX = dropSFX;
+
+            audioSource = GetComponent<AudioSource>();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
         {
-            if (IsOnCooldown) return;
+            if (IsInUse) return;
 
-            try
-            {
-                Plugin.Log("Triggering " + itemname);
-                base.ItemActivate(used, buttonDown);
+            Plugin.Log("Triggering " + name);
+            base.ItemActivate(used, buttonDown);
+            lastPlayerHeldBy = playerHeldBy;
 
-                ShootRay(ModificationType.Shrinking);
-            }
-            catch (Exception e) {
-                Plugin.Log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
-                Plugin.Log($"Stack Trace: {e.StackTrace}");
-            }
+            StartCoroutine(LoadRay(() => ShootRay(ModificationType.Shrinking)));
         }
 
         public override void Update()
         {
             base.Update();
 
-            if (isPocketed || IsOnCooldown)
+            if (isPocketed || IsInUse)
                 return;
 
             if(Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
-                ShootRay(ModificationType.Enlarging);
+                StartCoroutine(LoadRay(() => ShootRay(ModificationType.Enlarging)));
         }
 
         public override void EquipItem()
         {
-            // idea: play a fading-in sound, like energy of gun is loading
+            audioSource?.PlayOneShot(grabSFX);
             base.EquipItem();
-            previousPlayerHeldBy = playerHeldBy;
-            previousPlayerHeldBy.equippedUsableItemQE = true;
         }
 
         public override void PocketItem()
@@ -136,28 +132,81 @@ namespace LCShrinkRay.comp
 
         public override void DiscardItem()
         {
+            audioSource?.PlayOneShot(dropSFX);
             base.DiscardItem();
+        }
+
+        public override void GrabItem()
+        {
+            base.GrabItem();
         }
         #endregion
 
         #region Shooting
+        private IEnumerator LoadRay(Action onComplete = null)
+        {
+            Plugin.Log("LoadRay", Plugin.LogType.Warning);
+            IsInUse = true;
+
+            if (audioSource != null && loadSFX != null)
+            {
+                audioSource.PlayOneShot(loadSFX);
+                yield return new WaitWhile(() => audioSource.isPlaying);
+            }
+            else
+                Plugin.Log("AudioSource or AudioClip for loading ShrinkRay was null!", Plugin.LogType.Warning);
+
+            if (onComplete != null)
+                onComplete();
+        }
+
+        private IEnumerator UnloadRay()
+        {
+            Plugin.Log("UnloadRay", Plugin.LogType.Warning);
+            if (audioSource != null && unloadSFX != null)
+            {
+                audioSource.PlayOneShot(unloadSFX);
+                yield return new WaitWhile(() => audioSource.isPlaying);
+            }
+            else
+                Plugin.Log("AudioSource or AudioClip for unloading ShrinkRay was null!", Plugin.LogType.Warning);
+
+            yield return new WaitForSeconds(useCooldown);
+            IsInUse = false;
+        }
+
+        private IEnumerator NoTargetForRay()
+        {
+            if (audioSource != null && noTargetSFX != null)
+            {
+                audioSource.PlayOneShot(noTargetSFX);
+                yield return new WaitWhile(() => audioSource.isPlaying);
+            }
+            else
+                Plugin.Log("AudioSource or AudioClip for unloading ShrinkRay was null!", Plugin.LogType.Warning);
+
+            yield return new WaitForSeconds(useCooldown);
+            IsInUse = false;
+        }
+
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(ModificationType type)
         {
-           if (playerHeldBy == null || PlayerInfo.CurrentPlayerID != playerHeldBy.playerClientId || playerHeldBy.isClimbingLadder)
+           if (lastPlayerHeldBy == null || lastPlayerHeldBy.isClimbingLadder)
                 return;
 
-            Plugin.Log("shootingggggg");
+            if (IsOwner)
+                Plugin.Log("Shooting ray gun!");
 
             handledRayHits.Clear();
 
-            var transform = this.playerHeldBy.gameplayCamera.transform;
+            var transform = lastPlayerHeldBy.gameplayCamera.transform;
             var ray = new Ray(transform.position, transform.position + transform.forward * beamSearchDistance);
-            
-            handledRayHits.Clear();
-            Plugin.Log("playersMask: " + StartOfRound.Instance.playersMask);
+
+            bool rayHasHit = false;
+
             var layers = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies]);
-            var raycastHits = Physics.SphereCastAll(ray, 5f, beamSearchDistance, layers, QueryTriggerInteraction.Collide);
+            var raycastHits = Physics.SphereCastAll(ray, 5f, beamSearchDistance, layers, QueryTriggerInteraction.Collide); // todo: linecast instead!
             foreach (var hit in raycastHits)
             {
                 if (Vector3.Dot(transform.forward, hit.transform.position - transform.position) < 0f)
@@ -166,19 +215,23 @@ namespace LCShrinkRay.comp
                 // Check if in line of sight
                 if (Physics.Linecast(transform.position, hit.transform.position, out RaycastHit hitInfo, StartOfRound.Instance.collidersRoomDefaultAndFoliage, QueryTriggerInteraction.Ignore))
                 {
-                    Plugin.Log("\"" + hitInfo.collider.name + "\" [Layer " + hitInfo.collider.gameObject.layer + "] is between us and \"" + hit.collider.name + "\" [Layer " + hit.collider.gameObject.layer + "]");
+                    if(IsOwner)
+                        Plugin.Log("\"" + hitInfo.collider.name + "\" [Layer " + hitInfo.collider.gameObject.layer + "] is between us and \"" + hit.collider.name + "\" [Layer " + hit.collider.gameObject.layer + "]");
                     continue;
                 }
 
-                if (OnRayHit(hit, type)) // Only single hits for now
+                rayHasHit = OnRayHit(hit, type);
+                if(rayHasHit) // Only single hits for now
                     break;
             }
+
+            if (!rayHasHit)
+                StartCoroutine(NoTargetForRay());
         }
         
         private bool OnRayHit(RaycastHit hit, ModificationType type)
         {
             var layer = hit.collider.gameObject.layer;
-
             switch ((Mask)layer)
             {
                 case Mask.Player:
@@ -187,14 +240,17 @@ namespace LCShrinkRay.comp
                             return false;
 
                         handledRayHits.Add(targetPlayer.playerClientId);
-                        Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, type))
+                        if(IsOwner)
+                            Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
+                        if(targetPlayer.playerClientId == lastPlayerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, type))
                         {
-                            Plugin.Log("... but would do nothing.");
+                            if (IsOwner)
+                                Plugin.Log("... but would do nothing.");
                             return false;
                         }
 
-                        OnPlayerModificationServerRpc(this.playerHeldBy.playerClientId, targetPlayer.playerClientId, type);
+                        if (IsOwner)
+                            OnPlayerModificationServerRpc(lastPlayerHeldBy.playerClientId, targetPlayer.playerClientId, type);
                         return true;
                     }
                 case Mask.Props:
@@ -205,7 +261,8 @@ namespace LCShrinkRay.comp
                         if(item is GrabbablePlayerObject)
                             return false;
 
-                        Plugin.Log("Ray has hit an ITEM -> " + item.name);
+                        if (IsOwner)
+                            Plugin.Log("Ray has hit an ITEM -> " + item.name);
                         //Plugin.Log("WIP");
                         return false;
                     }
@@ -214,7 +271,8 @@ namespace LCShrinkRay.comp
                         if (!hit.transform.TryGetComponent(out Item item))
                             return false;
 
-                        Plugin.Log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
+                        if (IsOwner)
+                            Plugin.Log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
                         //Plugin.Log("WIP");
                         return false;
                     }
@@ -223,12 +281,14 @@ namespace LCShrinkRay.comp
                         if (!hit.transform.TryGetComponent(out EnemyAI enemyAI))
                             return false;
 
-                        Plugin.Log("Ray has hit an ENEMY -> \"" + hit.collider.name);
+                        if (IsOwner)
+                            Plugin.Log("Ray has hit an ENEMY -> \"" + hit.collider.name);
                         //Plugin.Log("WIP");
                         return false;
                     }
                 default:
-                    Plugin.Log("Ray has hit an unhandled object named \"" + hit.collider.name + "\" [Layer " + layer + "]");
+                    if (IsOwner)
+                        Plugin.Log("Ray has hit an unhandled object named \"" + hit.collider.name + "\" [Layer " + layer + "]");
                     return false;
             };
 
@@ -258,14 +318,11 @@ namespace LCShrinkRay.comp
             }
 
             // For other clients
-
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
-            IsOnCooldown = true;
             bool appliedModification = ApplyModificationTo(targetPlayer, type, () =>
             {
-                Plugin.Log("Finished ray shoot with type: " + type.ToString());
-                IsOnCooldown = false;
+                Plugin.Log("Finished player modification with type: " + type.ToString());
             });
 
             if (appliedModification)
@@ -275,11 +332,23 @@ namespace LCShrinkRay.comp
                 // Shoot ray
                 if (transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) && shrinkRayFX != null)
                 {
-                    var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
-                    if(holder != null)
-                        shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type);
+                    var holder = lastPlayerHeldBy != null ? lastPlayerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
+                    if (holder != null)
+                        StartCoroutine(shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type, audioSource, () =>
+                        {
+                            Plugin.Log("Ray beam, has finished.");
+                            StartCoroutine(UnloadRay());
+                        }));
                     else
+                    {
                         Plugin.Log("Unable to determine holder of shrink ray.", Plugin.LogType.Error);
+                        StartCoroutine(UnloadRay());
+                    }
+                }
+                else
+                {
+                    Plugin.Log("Unable to render ray beam.", Plugin.LogType.Error);
+                    StartCoroutine(UnloadRay());
                 }
             }
         }
