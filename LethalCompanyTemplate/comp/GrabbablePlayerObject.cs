@@ -11,6 +11,7 @@ using System.IO;
 using System.Reflection;
 using System.Collections;
 using System.ComponentModel;
+using static LCShrinkRay.helper.Moons;
 
 namespace LCShrinkRay.comp
 {
@@ -46,7 +47,7 @@ namespace LCShrinkRay.comp
         private static GameObject networkPrefab { get; set; }
 
         private int frameCounter = 1;
-        private bool IsCurrentPlayer { get; set; }
+        public bool IsCurrentPlayer { get; set; }
         public NetworkVariable<bool> IsOnSellCounter = new NetworkVariable<bool>(false);
 
         private bool IsGoombaCoroutineRunning = false;
@@ -418,17 +419,37 @@ namespace LCShrinkRay.comp
             this.grabbable = true;
             EnableInteractTrigger(!IsCurrentPlayer);
 
-            var scanNode = gameObject.GetComponentInChildren<ScanNodeProperties>();
-            if (scanNode != null)
-            {
-                if(scanNode.TryGetComponent(out BoxCollider collider))
-                    collider.enabled = false;
-            } // Remove in unity todo
-
             CalculateScrapValue();
             SetIsGrabbableToEnemies(true);
 
-            gameObject.layer = (int)LayerMasks.Mask.Props;
+            UpdateScanNode();
+        }
+
+        public void UpdateScanNode()
+        {
+            if (RoundManager.Instance?.currentLevel == null)
+            {
+                EnableScanNode(false);
+                return;
+            }
+
+            bool IsCompanyMoon = Enum.TryParse(RoundManager.Instance.currentLevel.levelID.ToString(), out Moon level) && level == Moon.CompanyBuilding;
+            EnableScanNode(IsCompanyMoon && !IsCurrentPlayer);
+        }
+
+        public void EnableScanNode(bool enable = true)
+        {
+            var scanNode = GetComponentInChildren<ScanNodeProperties>();
+            if (scanNode == null)
+            {
+                Plugin.Log("No scan node for " + name, Plugin.LogType.Warning);
+                return;
+            }
+
+            scanNode.enabled = enable;
+
+            if(scanNode.TryGetComponent(out BoxCollider collider))
+                collider.enabled = enable;
         }
 
         public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)

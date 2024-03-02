@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using static LCShrinkRay.comp.GrabbablePlayerObject;
+using static LCShrinkRay.helper.Moons;
 
 namespace LCShrinkRay.comp
 {
@@ -108,6 +109,17 @@ namespace LCShrinkRay.comp
                     SoundManager.Instance.playerVoicePitchTargets[pcb.playerClientId] = modifiedPitch;
                     SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
                 }
+            }
+        }
+
+        [HarmonyPatch(typeof(RoundManager), "GenerateNewLevelClientRpc")]
+        [HarmonyPostfix]
+        public static void GenerateNewLevelClientRpc()
+        {
+            foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+            {
+                if (gpo != null && gpo.grabbedPlayerID != null)
+                    gpo.UpdateScanNode();
             }
         }
         #endregion

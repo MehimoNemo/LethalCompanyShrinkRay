@@ -2,6 +2,7 @@
 using LCShrinkRay.helper;
 using LethalLib.Modules;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -46,6 +47,13 @@ namespace LCShrinkRay.comp
             if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleShrinkingPotion potion))
                 potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
         }
+
+        public override void Start()
+        {
+            base.Start();
+
+            Liquid = transform.Find("ShrinkingPotionSettings")?.Find("Liquid")?.GetComponent<MeshRenderer>();
+        }
     }
 
     public class LittleEnlargingPotion : LittlePotion
@@ -80,6 +88,13 @@ namespace LCShrinkRay.comp
             if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleEnlargingPotion potion))
                 potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
         }
+
+        public override void Start()
+        {
+            base.Start();
+
+            Liquid = transform.Find("EnlargingPotionSettings")?.Find("Liquid")?.GetComponent<MeshRenderer>();
+        }
     }
 
     public abstract class LittlePotion : GrabbableObject
@@ -112,6 +127,10 @@ namespace LCShrinkRay.comp
         internal static AudioClip noConsumeSFX;
 
         internal static Sprite Icon = AssetLoader.LoadIcon("Potion.png");
+
+        internal MeshRenderer Liquid = null;
+
+        internal bool Consumed = false;
         #endregion
 
         #region Networking
@@ -217,7 +236,7 @@ namespace LCShrinkRay.comp
                 Plugin.Log("Consuming " + ItemName);
                 base.ItemActivate(used, buttonDown);
 
-                Consume();
+                StartCoroutine(Consume());
             }
             catch (Exception e) {
                 Plugin.Log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
@@ -249,8 +268,11 @@ namespace LCShrinkRay.comp
 
         public override void DiscardItem()
         {
-            transform.localScale = Vector3.one * 0.1f;
-            audioSource.PlayOneShot(dropSFX);
+            if(!Consumed)
+            {
+                transform.localScale = Vector3.one * 0.1f;
+                audioSource.PlayOneShot(dropSFX);
+            }
             base.DiscardItem();
         }
 
@@ -268,19 +290,40 @@ namespace LCShrinkRay.comp
         #endregion
 
         #region Methods
-        private void Consume()
+        private IEnumerator Consume()
         {
-           if (playerHeldBy == null || playerHeldBy.isClimbingLadder)
-                return;
+            if (playerHeldBy == null || playerHeldBy.isClimbingLadder)
+                yield break;
 
             if(!CanApplyModificationTo(playerHeldBy, modificationType) || !ApplyModificationTo(playerHeldBy, modificationType))
             {
-                Plugin.Log("That wouldn't do anything..");
-                audioSource?.PlayOneShot(noConsumeSFX);
-                return;
+                if (IsOwner)
+                    audioSource?.PlayOneShot(noConsumeSFX);
+                yield break;
             }
 
-            audioSource?.PlayOneShot(consumeSFX);
+            if (IsOwner && audioSource != null)
+            {
+                audioSource.PlayOneShot(consumeSFX);
+
+                /*if (Liquid != null) // drink that!
+                {
+                    var time = 0f;
+                    var length = consumeSFX.length;
+                    Plugin.Log("length: " + length);
+
+                    var initialLiquidScale = Liquid != null ? Liquid.transform.localScale.y : 0.70f;
+                    while (time < length)
+                    {
+                        Liquid.transform.localScale = new Vector3(Liquid.transform.localScale.x, Liquid.transform.localScale.y, Mathf.Lerp(initialLiquidScale, 0f, time / length));
+                        time += Time.deltaTime;
+                    };
+                }*/
+
+                yield return new WaitWhile(() => audioSource.isPlaying); // In case the audio clip length didn't match..
+            }
+
+            Consumed = true;
             DestroyObjectInHand(playerHeldBy);
         }
         #endregion
