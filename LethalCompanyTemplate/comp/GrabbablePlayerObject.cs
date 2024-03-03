@@ -468,8 +468,8 @@ namespace LCShrinkRay.comp
         public void EnableInteractTrigger(bool enable = true)
         {
             Plugin.Log((enable ? "Enabling" : "Disabling") + " trigger for grabbable player " + grabbedPlayerID.Value);
-            tag = enable ? "PhysicsProp" : "InteractTrigger"; // Bit wacky code, but it is what it is. Easier than adding custom InteractTrigger as of now
-            gameObject.layer = (int)(enable ? LayerMasks.Mask.Props : LayerMasks.Mask.Room);
+            if (TryGetComponent(out CapsuleCollider collider))
+                collider.enabled = enable;
         }
 
         public void DisableInteractTrigger(bool disable = true)

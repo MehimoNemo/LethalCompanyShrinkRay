@@ -23,8 +23,6 @@ namespace LCShrinkRay.comp
 
         private List<ulong> handledRayHits = new List<ulong>();
 
-        private PlayerControllerB lastPlayerHeldBy = null;
-
         public static GameObject networkPrefab { get; set; }
 
         private bool IsInUse = false;
@@ -102,7 +100,6 @@ namespace LCShrinkRay.comp
 
             Plugin.Log("Triggering " + name);
             base.ItemActivate(used, buttonDown);
-            lastPlayerHeldBy = playerHeldBy;
 
             StartCoroutine(LoadRay(() => ShootRay(ModificationType.Shrinking)));
         }
@@ -192,15 +189,18 @@ namespace LCShrinkRay.comp
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRay(ModificationType type)
         {
-           if (lastPlayerHeldBy == null || lastPlayerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || playerHeldBy.isClimbingLadder)
+            {
+                StartCoroutine(NoTargetForRay());
                 return;
+            }
 
             if (IsOwner)
                 Plugin.Log("Shooting ray gun!");
 
             handledRayHits.Clear();
 
-            var transform = lastPlayerHeldBy.gameplayCamera.transform;
+            var transform = playerHeldBy.gameplayCamera.transform;
             var ray = new Ray(transform.position, transform.position + transform.forward * beamSearchDistance);
 
             bool rayHasHit = false;
@@ -242,7 +242,7 @@ namespace LCShrinkRay.comp
                         handledRayHits.Add(targetPlayer.playerClientId);
                         if(IsOwner)
                             Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == lastPlayerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, type))
+                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, type))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -250,7 +250,7 @@ namespace LCShrinkRay.comp
                         }
 
                         if (IsOwner)
-                            OnPlayerModificationServerRpc(lastPlayerHeldBy.playerClientId, targetPlayer.playerClientId, type);
+                            OnPlayerModificationServerRpc(playerHeldBy.playerClientId, targetPlayer.playerClientId, type);
                         return true;
                     }
                 case Mask.Props:
@@ -332,24 +332,20 @@ namespace LCShrinkRay.comp
                 // Shoot ray
                 if (transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) && shrinkRayFX != null)
                 {
-                    var holder = lastPlayerHeldBy != null ? lastPlayerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
+                    var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
                     if (holder != null)
+                    {
                         StartCoroutine(shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type, audioSource, () =>
                         {
                             Plugin.Log("Ray beam, has finished.");
                             StartCoroutine(UnloadRay());
                         }));
-                    else
-                    {
-                        Plugin.Log("Unable to determine holder of shrink ray.", Plugin.LogType.Error);
-                        StartCoroutine(UnloadRay());
+                        return;
                     }
                 }
-                else
-                {
-                    Plugin.Log("Unable to render ray beam.", Plugin.LogType.Error);
-                    StartCoroutine(UnloadRay());
-                }
+
+                Plugin.Log("Unable to shoot ray beam.", Plugin.LogType.Error);
+                StartCoroutine(UnloadRay());
             }
         }
         #endregion
