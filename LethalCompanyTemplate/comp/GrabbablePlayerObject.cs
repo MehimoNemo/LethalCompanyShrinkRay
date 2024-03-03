@@ -178,6 +178,7 @@ namespace LCShrinkRay.comp
                     Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
                     grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
+                    grabbedPlayer.ResetFallGravity();
                 }
             }
             else
