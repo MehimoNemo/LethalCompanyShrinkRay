@@ -44,8 +44,11 @@ namespace LCShrinkRay.comp
 
         public static void Sync()
         {
-            if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleShrinkingPotion potion))
-                potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
+            if (networkPrefab == null || networkPrefab.TryGetComponent(out LittleShrinkingPotion potion)) return;
+
+            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
+            if(IsScrapItem || IsStoreItem)
+                potion.AdjustStoreAndScrapValues();
         }
 
         public override void Start()
@@ -85,8 +88,12 @@ namespace LCShrinkRay.comp
 
         public static void Sync()
         {
-            if (networkPrefab != null && networkPrefab.TryGetComponent(out LittleEnlargingPotion potion))
-                potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
+            if (networkPrefab == null || networkPrefab.TryGetComponent(out LittleEnlargingPotion potion)) return;
+
+            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
+
+            if (IsScrapItem || IsStoreItem)
+                potion.AdjustStoreAndScrapValues();
         }
 
         public override void Start()
@@ -186,9 +193,7 @@ namespace LCShrinkRay.comp
 
             if (StorePrice > 0 && !IsStoreItem) // Add to store
             {
-                itemProperties.creditsWorth = Math.Max(StorePrice - 5, 0);
-                itemProperties.minValue = Math.Max(StorePrice / 2, 0);
-                itemProperties.maxValue = Math.Max(StorePrice, 0);
+                AdjustStoreAndScrapValues();
                 var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
                 terminalNode.displayText = TerminalDescription;
                 Items.RegisterShopItem(itemProperties, null, null, terminalNode, itemProperties.creditsWorth);
@@ -209,6 +214,15 @@ namespace LCShrinkRay.comp
 
             itemProperties.itemIcon = Icon;
             itemProperties.toolTips = ["Consume: LMB"];
+        }
+
+        internal void AdjustStoreAndScrapValues()
+        {
+            itemProperties.creditsWorth = StorePrice;
+            itemProperties.minValue = Math.Max(StorePrice / 2, 0);
+            itemProperties.maxValue = Math.Max(StorePrice, 0);
+            System.Random rnd = new System.Random();
+            SetScrapValue(rnd.Next(StorePrice / 2, StorePrice + 1));
         }
         #endregion
 

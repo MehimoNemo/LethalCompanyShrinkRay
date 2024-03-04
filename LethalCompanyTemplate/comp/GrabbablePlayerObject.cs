@@ -699,26 +699,19 @@ namespace LCShrinkRay.comp
         }
         #endregion
 
-        #region EntranceTeleportFix
-        [ServerRpc(RequireOwnership = false)]
-        private void UpdateAfterTeleportServerRpc(TargetPlayer teleportingPlayer)
-        {
-            UpdateAfterTeleportClientRpc(teleportingPlayer);
-        }
-
-        internal IEnumerator UpdateAfterTeleportEnsured(TargetPlayer teleportingPlayer)
+        #region TeleportFix
+        internal IEnumerator UpdateRegionAfterTeleportEnsured(TargetPlayer teleportingPlayer)
         {
             if (grabbedPlayer == null || playerHeldBy == null)
                 yield break;
 
             yield return null; // Wait for next frame
-            UpdateAfterTeleportServerRpc(teleportingPlayer); // Let the other person of this holder/grabbed connection know that they teleported with us
+            UpdateRegionAfterTeleport(teleportingPlayer); // Let the other person of this holder/grabbed connection know that they teleported with us
         }
 
-        [ClientRpc]
-        private void UpdateAfterTeleportClientRpc(TargetPlayer teleportingPlayer)
+        private void UpdateRegionAfterTeleport(TargetPlayer teleportingPlayer)
         {
-            Plugin.Log("UpdateRegionClientRpc -> " + teleportingPlayer.ToString());
+            Plugin.Log("UpdateRegionAfterTeleport -> " + teleportingPlayer.ToString());
 
             if (grabbedPlayer == null || playerHeldBy == null)
             {

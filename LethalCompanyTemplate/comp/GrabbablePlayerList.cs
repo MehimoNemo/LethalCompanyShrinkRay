@@ -17,6 +17,11 @@ namespace LCShrinkRay.comp
     {
         #region Properties
         public static Dictionary<ulong, NetworkObject> networkObjects = new Dictionary<ulong, NetworkObject>();
+        internal struct FoundGrabbables
+        {
+            internal GrabbablePlayerObject holderGPO { get; set; }
+            internal GrabbablePlayerObject grabbedGPO { get; set; }
+        }
         #endregion
 
         #region Patches
@@ -31,7 +36,7 @@ namespace LCShrinkRay.comp
 
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
         [HarmonyPrefix]
-        public static void KillPlayerClientRpcPrefix(int playerId/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
+        public static void KillPlayerClientRpcPrefix(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
         {
             Plugin.Log("KillPlayerClientRpcPrefix");
 
@@ -40,16 +45,38 @@ namespace LCShrinkRay.comp
 
             ResetAnyPlayerModificationsFor(targetPlayer);
 
-            if ((ulong)playerId != PlayerInfo.CurrentPlayerID) return;
+            bool weDied = (ulong)playerId == PlayerInfo.CurrentPlayerID;
+            var grabbables = FindGrabbableObjectsFor((ulong)playerId);
+            if(grabbables.grabbedGPO) // Player who dies is grabbed
+            {
+                if(weDied)
+                {
+                    Plugin.Log("We are grabbed and dying."); // Handled below!
+                }
+                if(grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                {
+                    Plugin.Log("The person we are grabbing is dying -> dropping.");
+                    PlayerInfo.CurrentPlayer.DiscardHeldObject();
+                }
+            }
 
-            // We died while holding someone
-            if ((ulong)playerId == PlayerInfo.CurrentPlayerID && TryFindGrabbableObjectByHolder((ulong)playerId, out _))
-                PlayerInfo.CurrentPlayer.DiscardHeldObject();
+            if(grabbables.holderGPO) // Player who dies is holding someone
+            {
+                if (weDied) // We die while holding someone
+                {
+                    Plugin.Log("We die while holding someone -> dropping.");
+                    PlayerInfo.CurrentPlayer.DiscardHeldObject();
+                }
+                else if(grabbables.holderGPO.grabbedPlayerID.Value == PlayerInfo.CurrentPlayerID)
+                {
+                    Plugin.Log("The person who died is holding us.");
+                    grabbables.holderGPO.DiscardItemOnClient();
+                    grabbables.holderGPO.playerHeldBy = null;
 
-            // The person we held died
-            else if (TryFindGrabbableObjectForPlayer((ulong)playerId, out GrabbablePlayerObject gpo) && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
-                PlayerInfo.CurrentPlayer.DiscardHeldObject();
-
+                    /*if ((CauseOfDeath)causeOfDeath == CauseOfDeath.Gravity)
+                        PlayerInfo.CurrentPlayer.KillPlayer(bodyVelocity, spawnBody, (CauseOfDeath)causeOfDeath, deathAnimation);*/
+                }
+            }
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
@@ -75,18 +102,23 @@ namespace LCShrinkRay.comp
             if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase) return;
 
             // Handles the adjustment of our own GrabbablePlayerObject, aswell as follow someone who teleported (to adjust lighting, weather, items, etc)
-            if (__instance.playerClientId == PlayerInfo.CurrentPlayerID)
-            {
-                if (TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
-                {
-                    if (gpo.playerHeldBy != null) // We're grabbable and someone holds us
-                        gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(TargetPlayer.GrabbedPlayer));
-                }
+            var grabbables = FindGrabbableObjectsFor(__instance.playerClientId);
 
-                if (TryFindGrabbableObjectByHolder(PlayerInfo.CurrentPlayerID, out gpo))
+            if (grabbables.grabbedGPO) // Player who teleports is grabbed
+            {
+                if (grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
                 {
-                    // We're holding someone
-                    gpo.StartCoroutine(gpo.UpdateAfterTeleportEnsured(TargetPlayer.Holder));
+                    Plugin.Log("We're holding the person who teleported.");
+                    grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.GrabbedPlayer));
+                }
+            }
+
+            if (grabbables.holderGPO) // Player who teleports is holding someone
+            {
+                if (grabbables.holderGPO.grabbedPlayerID.Value == PlayerInfo.CurrentPlayerID)
+                {
+                    Plugin.Log("We're held by person who teleported.");
+                    grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.Holder));
                 }
             }
         }
@@ -161,32 +193,32 @@ namespace LCShrinkRay.comp
 
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)
         {
-            foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
-            {
-                if (gpo != null && gpo.grabbedPlayerID.Value == playerID)
-                {
-                    result = gpo;
-                    return true;
-                }
-            }
-
-            result = null;
-            return false;
+            var grabbables = FindGrabbableObjectsFor(playerID);
+            result = grabbables.grabbedGPO;
+            return result != null;
         }
 
         public static bool TryFindGrabbableObjectByHolder(ulong playerHeldByID, out GrabbablePlayerObject result)
         {
+            var grabbables = FindGrabbableObjectsFor(playerHeldByID);
+            result = grabbables.holderGPO;
+            return result != null;
+        }
+
+        public static FoundGrabbables FindGrabbableObjectsFor(ulong playerID)
+        {
+            var grabbables = new FoundGrabbables();
             foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
             {
-                if (gpo != null && gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == playerHeldByID)
+                if (gpo != null)
                 {
-                    result = gpo;
-                    return true;
+                    if (gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == playerID)
+                        grabbables.holderGPO = gpo;
+                    if (gpo.grabbedPlayerID.Value == playerID)
+                        grabbables.grabbedGPO = gpo;
                 }
             }
-
-            result = null;
-            return false;
+            return grabbables;
         }
         #endregion
 

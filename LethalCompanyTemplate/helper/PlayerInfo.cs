@@ -172,9 +172,43 @@ namespace LCShrinkRay.helper
             }
         }
 
+        public static Transform BodyTransformOf(PlayerControllerB pcb)
+        {
+            return pcb?.gameObject?.transform.Find("ScavengerModel/metarig");
+        }
+
+        public static void ScalePlayerBodyPartsRelativeTo(float size, PlayerControllerB pcb = null)
+        {
+            if (pcb == null) pcb = CurrentPlayer;
+
+            AdjustArmScale(pcb, size);
+            if (pcb.playerClientId == CurrentPlayerID)
+            {
+                AdjustMaskPos(pcb, size);
+                AdjustMaskScale(pcb, size);
+            }
+
+            // MoreCompany support
+            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/spine.004"), size); // head
+            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003"), size); // chest
+            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/shoulder.R/arm.R_upper/arm.R_lower"), size); // lowerArmRight
+            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine"), size); // hip
+            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/thigh.L/shin.L"), size); // shinLeft
+            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/thigh.R/shin.R"), size); // shinRight
+        }
+
+        public static void AdjustAllChilds(Transform transform, float size)
+        {
+            if (transform == null) return;
+            Plugin.Log("AdjustAllChilds of " + transform.name);
+
+            for (int i = 0; i < transform.childCount; i++)
+                transform.GetChild(i).localScale = Vector3.one * size;
+        }
+
         public static Transform GetArmTransform(PlayerControllerB pcb)
         {
-            return pcb?.gameObject?.transform.Find("ScavengerModel")?.Find("metarig")?.Find("ScavengerModelArmsOnly");
+            return BodyTransformOf(pcb)?.Find("ScavengerModelArmsOnly");
         }
 
         public static void AdjustArmScale(PlayerControllerB pcb = null, Nullable<float> toSize = null)

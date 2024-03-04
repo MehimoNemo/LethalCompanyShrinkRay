@@ -33,25 +33,17 @@ namespace LCShrinkRay.coroutines
 
             var playerTransform = targetPlayer.gameObject.transform;
 
-            Transform armTransform = null, maskTransform = null;
             GrabbableObject heldItem = null;
             Vector3 initialArmScale = Vector3.one;
-            if(targetingUs)
+            float currentSize = targetPlayer.gameObject.transform.localScale.x;
+
+            if (targetingUs)
             {
-                armTransform = PlayerInfo.GetArmTransform(targetPlayer);
-                if (armTransform == null)
-                    Plugin.Log("Ray was targeting us, but we don't have arms??", Plugin.LogType.Warning);
-
-                maskTransform = PlayerInfo.GetGlobalMaskTransform(targetPlayer);
-                if (maskTransform == null)
-                    Plugin.Log("Ray was targeting us, but we don't have a helmet??", Plugin.LogType.Warning);
-
                 heldItem = PlayerInfo.HeldItem(targetPlayer);
-                initialArmScale = armTransform.localScale;
+                initialArmScale = PlayerInfo.CalcArmScale(currentSize);
             }
 
             float elapsedTime = 0f;
-            float currentSize = targetPlayer.gameObject.transform.localScale.x;
 
             var direction = newSize < currentSize ? -1 : 1;
             float a = Mathf.Abs(currentSize - newSize); // difference
@@ -69,16 +61,12 @@ namespace LCShrinkRay.coroutines
 
                 if (targetingUs)
                 {
-                    if (maskTransform != null)
-                    {
-                        maskTransform.localScale = PlayerInfo.CalcMaskScaleVec(currentSize);
-                        maskTransform.localPosition = PlayerInfo.CalcMaskPosVec(currentSize);
-                    }
-                    var newArmScale = PlayerInfo.CalcArmScale(currentSize);
-                    if(armTransform != null)
-                        armTransform.localScale = newArmScale;
+                    PlayerInfo.ScalePlayerBodyPartsRelativeTo(newSize, targetPlayer);
                     if (heldItem != null)
+                    {
+                        var newArmScale = PlayerInfo.CalcArmScale(currentSize);
                         ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
+                    }
                 }
 
                 elapsedTime += Time.deltaTime;
@@ -90,16 +78,10 @@ namespace LCShrinkRay.coroutines
             playerTransform.localScale = new Vector3(newSize, newSize, newSize);
             if (targetingUs)
             {
-                if (maskTransform != null)
-                {
-                    maskTransform.localScale = PlayerInfo.CalcMaskScaleVec(newSize);
-                    maskTransform.localPosition = PlayerInfo.CalcMaskPosVec(newSize);
-                }
-                var newArmScale = PlayerInfo.CalcArmScale(newSize);
-                if (armTransform != null)
-                    armTransform.localScale = newArmScale;
+                PlayerInfo.ScalePlayerBodyPartsRelativeTo(newSize, targetPlayer);
                 if (heldItem != null)
                 {
+                    var newArmScale = PlayerInfo.CalcArmScale(newSize);
                     ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
                     ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
