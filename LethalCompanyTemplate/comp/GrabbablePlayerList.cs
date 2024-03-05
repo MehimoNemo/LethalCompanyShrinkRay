@@ -25,7 +25,6 @@ namespace LCShrinkRay.comp
         #endregion
 
         #region Patches
-
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerServerRpc")]
         [HarmonyPostfix]
         public static void KillPlayerServerRpc(int playerId,/* bool spawnBody,*/ Vector3 bodyVelocity, int causeOfDeath/*, int deathAnimation*/)
@@ -47,7 +46,14 @@ namespace LCShrinkRay.comp
 
             bool weDied = (ulong)playerId == PlayerInfo.CurrentPlayerID;
             var grabbables = FindGrabbableObjectsFor((ulong)playerId);
-            if(grabbables.grabbedGPO) // Player who dies is grabbed
+
+            if (grabbables.grabbedGPO == null && grabbables.holderGPO == null)
+            {
+                Plugin.Log("We aren't in a connection with anyone while dying.");
+                return;
+            }
+
+            if (grabbables.grabbedGPO) // Player who dies is grabbed
             {
                 if(weDied)
                 {
@@ -99,16 +105,13 @@ namespace LCShrinkRay.comp
         [HarmonyPostfix]
         public static void TeleportPlayer(PlayerControllerB __instance)
         {
-            if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase) return;
+            if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase || __instance.isInHangarShipRoom || __instance.isPlayerDead) return;
 
             // Handles the adjustment of our own GrabbablePlayerObject, aswell as follow someone who teleported (to adjust lighting, weather, items, etc)
             var grabbables = FindGrabbableObjectsFor(__instance.playerClientId);
 
             if(grabbables.grabbedGPO == null && grabbables.holderGPO == null)
-            {
-                Plugin.Log("We aren't in a connection with anyone while dying.");
-                return;
-            }
+                return; // Teleporting person was in no connection with any other player
 
             if (grabbables.grabbedGPO) // Player who teleports is grabbed
             {
@@ -124,7 +127,7 @@ namespace LCShrinkRay.comp
                 if (grabbables.holderGPO.grabbedPlayerID.Value == PlayerInfo.CurrentPlayerID)
                 {
                     Plugin.Log("We're held by person who teleported.");
-                    grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.Holder));
+                    grabbables.holderGPO.StartCoroutine(grabbables.holderGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.Holder));
                 }
             }
         }
@@ -173,8 +176,6 @@ namespace LCShrinkRay.comp
                 dropObject.EnableItemMeshes(!isCurrentPlayer);
             }
 
-            if (__instance.playerClientId != PlayerInfo.CurrentPlayerID) return;
-
             if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
                 gpo.CalculateScrapValue();
         }
@@ -183,8 +184,6 @@ namespace LCShrinkRay.comp
         [HarmonyPostfix]
         public static void GrabObjectClientRpc(PlayerControllerB __instance)
         {
-            if (__instance.playerClientId != PlayerInfo.CurrentPlayerID) return;
-
             if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
                 gpo.CalculateScrapValue();
         }

@@ -132,7 +132,9 @@ namespace LCShrinkRay.comp
         {
             base.Start();
 
-            audioSource = GetComponent<AudioSource>();
+            if(!TryGetComponent(out audioSource))
+                audioSource = gameObject.AddComponent<AudioSource>();
+
             //itemProperties.grabSFX = grabSFX;
         }
 

@@ -91,7 +91,8 @@ namespace LCShrinkRay.comp
             //itemProperties.grabSFX = grabSFX;
             //itemProperties.dropSFX = dropSFX;
 
-            audioSource = GetComponent<AudioSource>();
+            if (!TryGetComponent(out audioSource))
+                audioSource = gameObject.AddComponent<AudioSource>();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -101,7 +102,6 @@ namespace LCShrinkRay.comp
             Plugin.Log("Triggering " + name);
             base.ItemActivate(used, buttonDown);
 
-            if (playerHeldBy == null) return; // Shouldn't happen, just for safety
             ShootRayServerRpc(playerHeldBy.playerClientId, ModificationType.Shrinking);
         }
 
@@ -113,10 +113,7 @@ namespace LCShrinkRay.comp
                 return;
 
             if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
-            {
-                if (playerHeldBy == null) return; // Shouldn't happen, just for safety
-                ShootRayClientRpc(playerHeldBy.playerClientId, ModificationType.Enlarging);
-            }
+                ShootRayServerRpc(playerHeldBy.playerClientId, ModificationType.Enlarging);
         }
 
         public override void EquipItem()
