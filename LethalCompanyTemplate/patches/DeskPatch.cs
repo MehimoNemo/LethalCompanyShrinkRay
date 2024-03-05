@@ -26,32 +26,28 @@ namespace LCShrinkRay.patches
             }
 
             placedPlayer.PlaceOnSellCounterServerRpc();
-
-            int scrapValue = 5;
-            foreach (var valuableItem in placedPlayer.grabbedPlayer.ItemSlots)
-            {
-                if (valuableItem != null)
-                    scrapValue += valuableItem.scrapValue;
-            }
-            placedPlayer.scrapValue = scrapValue;
         }
 
         [HarmonyPatch(typeof(DepositItemsDesk), "SellAndDisplayItemProfits")]
         [HarmonyPrefix()]
-        public static void SellStuffPrefix()
+        public static void SellStuffPrefix(DepositItemsDesk __instance, ref int profit)
         {
             Plugin.Log("selling on desk");
 
-            if(!GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
+            var placedObjects = __instance.deskObjectsContainer.GetComponentsInChildren<GrabbableObject>();
+            foreach(var obj in placedObjects )
             {
-                Plugin.Log("Our own GrabbablePlayerObject went missing..");
-                return;
-            }
+                var gpo = obj as GrabbablePlayerObject;
+                if (gpo == null) continue;
 
-            if (gpo.CanSellKill())
-            {
-                gpo.grabbedPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
-                Plugin.Log("We got killed by the sell counter monster!");
+                Plugin.Log("Scrap value: " + gpo.scrapValue);
+                profit += gpo.scrapValue;
+
+                if (gpo.IsCurrentPlayer)
+                {
+                    gpo.grabbedPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
+                    Plugin.Log("We got killed by the sell counter monster!");
+                }
             }
         }
 

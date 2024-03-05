@@ -1,4 +1,4 @@
-### 0.4.0 [Singleplayer update] ###
+### 0.4.0 [Singleplayer & Sounds update] ###
 **What's new**
 + Added two potions: Light & Heavy
   + Buyable in store including terminal notes & available as rare scrap in the dungeons!
@@ -9,12 +9,15 @@
   + Grabbing, dropping and consuming potions
   + Shrink ray beam
   + Death through shrinking
-+ Added ScanNodes for potions, shrink ray & grabbable players (value not updating yet)
++ Added loading / unloading phase for ShrinkRay
++ Added ScanNodes for potions, shrink ray & grabbable players (company-moon-only)
 
 **Fixes**
 + fixed "Grab" trigger blocking view while doing third person emotes
 + fixed being unable to grab anything after grabbed player grew to normal size or died
-+ fixed player mask being off after revive
++ fixed player visor being in the view after revive
++ fixed weight of grabbed player not updating when they grab/discard items
++ fixed sold players being worth nothing on counter
 
 ### 0.3.1 ###
 + fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime
