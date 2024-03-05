@@ -393,7 +393,7 @@ namespace LCShrinkRay.comp
             if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
                 playerHeldBy.DiscardHeldObject(); // Can lead to problems
 
-            if (audioSource.isPlaying)
+            if (audioSource != null && audioSource.isPlaying)
                 audioSource.Stop();
 
             if (onComplete != null)
@@ -700,6 +700,13 @@ namespace LCShrinkRay.comp
             IsOnSellCounter.Value = true;
             if (IsCurrentPlayer && PlayerModificationPatch.helmetRenderer != null)
                 PlayerModificationPatch.helmetRenderer.enabled = false;
+            PlaceOnSellCounterClientRpc();
+        }
+
+        [ClientRpc]
+        internal void PlaceOnSellCounterClientRpc()
+        {
+            itemProperties.isScrap = true; // todo: check if this can be generally set to true, to remove this ClientRpc
         }
 
         [ServerRpc(RequireOwnership = false)]

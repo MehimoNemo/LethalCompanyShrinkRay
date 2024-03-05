@@ -32,16 +32,11 @@ namespace LCShrinkRay.patches
         [HarmonyPrefix()]
         public static void SellStuffPrefix(DepositItemsDesk __instance, ref int profit)
         {
-            Plugin.Log("selling on desk");
-
             var placedObjects = __instance.deskObjectsContainer.GetComponentsInChildren<GrabbableObject>();
             foreach(var obj in placedObjects )
             {
                 var gpo = obj as GrabbablePlayerObject;
                 if (gpo == null) continue;
-
-                Plugin.Log("Scrap value: " + gpo.scrapValue);
-                profit += gpo.scrapValue;
 
                 if (gpo.IsCurrentPlayer)
                 {
