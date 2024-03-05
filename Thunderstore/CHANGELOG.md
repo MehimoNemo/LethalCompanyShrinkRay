@@ -12,6 +12,11 @@
 + Added loading / unloading phase for ShrinkRay
 + Added ScanNodes for potions, shrink ray & grabbable players (company-moon-only)
 
+**Tweaks**
++ multipleShrinking is now disabled by default, until targeting for the ShrinkRay is reworked
++ slightly increased default MovementSpeedMultiplier
++ changed ThumperBehaviour to Bumper to make the default gameplay experience more spicy
+
 **Fixes**
 + fixed "Grab" trigger blocking view while doing third person emotes
 + fixed being unable to grab anything after grabbed player grew to normal size or died
