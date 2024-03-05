@@ -104,6 +104,12 @@ namespace LCShrinkRay.comp
             // Handles the adjustment of our own GrabbablePlayerObject, aswell as follow someone who teleported (to adjust lighting, weather, items, etc)
             var grabbables = FindGrabbableObjectsFor(__instance.playerClientId);
 
+            if(grabbables.grabbedGPO == null && grabbables.holderGPO == null)
+            {
+                Plugin.Log("We aren't in a connection with anyone while dying.");
+                return;
+            }
+
             if (grabbables.grabbedGPO) // Player who teleports is grabbed
             {
                 if (grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
@@ -151,9 +157,55 @@ namespace LCShrinkRay.comp
             foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
             {
                 if (gpo != null && gpo.grabbedPlayerID != null)
-                    gpo.UpdateScanNode();
+                    gpo.UpdateScanNodeVisibility();
             }
         }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "SetObjectAsNoLongerHeld")]
+        [HarmonyPostfix]
+        public static void SetObjectAsNoLongerHeld(PlayerControllerB __instance, GrabbableObject dropObject)
+        {
+            if(dropObject != null && dropObject is GrabbablePlayerObject)
+            {
+                var isCurrentPlayer = (dropObject as GrabbablePlayerObject).IsCurrentPlayer;
+                Plugin.Log("SetObjectAsNoLongerHeld: Enable colliders -> " + isCurrentPlayer);
+                dropObject.EnablePhysics(!isCurrentPlayer);
+                dropObject.EnableItemMeshes(!isCurrentPlayer);
+            }
+
+            if (__instance.playerClientId != PlayerInfo.CurrentPlayerID) return;
+
+            if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
+                gpo.CalculateScrapValue();
+        }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "GrabObjectClientRpc")]
+        [HarmonyPostfix]
+        public static void GrabObjectClientRpc(PlayerControllerB __instance)
+        {
+            if (__instance.playerClientId != PlayerInfo.CurrentPlayerID) return;
+
+            if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
+                gpo.CalculateScrapValue();
+        }
+
+        [HarmonyPatch(typeof(GrabbableObject), "EnablePhysics")]
+        [HarmonyPrefix]
+        public static void EnablePhysics(GrabbableObject __instance, ref bool enable)
+        {
+            if (__instance is GrabbablePlayerObject && (__instance as GrabbablePlayerObject).IsCurrentPlayer)
+                enable = false;
+        }
+
+        [HarmonyPatch(typeof(GrabbableObject), "EnablePhysics")]
+        [HarmonyPrefix]
+        public static void EnableItemMeshes(GrabbableObject __instance, ref bool enable)
+        {
+            if (__instance is GrabbablePlayerObject && (__instance as GrabbablePlayerObject).IsCurrentPlayer)
+                enable = false;
+        }
+
+
         #endregion
 
         #region Helper
@@ -208,7 +260,9 @@ namespace LCShrinkRay.comp
         public static FoundGrabbables FindGrabbableObjectsFor(ulong playerID)
         {
             var grabbables = new FoundGrabbables();
-            foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+            var gpos = Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>();
+            Plugin.Log("FindGrabbableObjectsFor " + playerID + " -> " + gpos.Length);
+            foreach (var gpo in gpos)
             {
                 if (gpo != null)
                 {

@@ -200,10 +200,16 @@ namespace LCShrinkRay.helper
         public static void AdjustAllChilds(Transform transform, float size)
         {
             if (transform == null) return;
-            Plugin.Log("AdjustAllChilds of " + transform.name);
 
-            for (int i = 0; i < transform.childCount; i++)
-                transform.GetChild(i).localScale = Vector3.one * size;
+            // Todo: not working rn
+
+            /*var children = transform.GetComponentsInChildren<Transform>();
+            foreach( var child in children )
+            {
+                if (child.parent == transform) continue;
+                Plugin.Log("We found something unscaled: " + child.name);
+                child.localScale = Vector3.one * size;
+            }*/
         }
 
         public static Transform GetArmTransform(PlayerControllerB pcb)

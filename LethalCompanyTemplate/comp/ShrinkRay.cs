@@ -25,7 +25,7 @@ namespace LCShrinkRay.comp
 
         public static GameObject networkPrefab { get; set; }
 
-        private NetworkVariable<bool> IsInUse = new NetworkVariable<bool>(false);
+        private bool IsInUse = false;
 
         internal AudioSource audioSource;
 
@@ -96,7 +96,7 @@ namespace LCShrinkRay.comp
 
         public override void ItemActivate(bool used, bool buttonDown = true)
         {
-            if (IsInUse.Value) return;
+            if (IsInUse) return;
 
             Plugin.Log("Triggering " + name);
             base.ItemActivate(used, buttonDown);
@@ -109,7 +109,7 @@ namespace LCShrinkRay.comp
         {
             base.Update();
 
-            if (isPocketed || IsInUse.Value)
+            if (isPocketed || IsInUse)
                 return;
 
             if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
@@ -147,13 +147,19 @@ namespace LCShrinkRay.comp
         [ServerRpc(RequireOwnership = false)]
         private void ShootRayServerRpc(ulong playerHeldByID, ModificationType mode)
         {
-            IsInUse.Value = true;
+            Plugin.Log("ShootRayServerRpc -> " + itemProperties.syncUseFunction);
+            if (IsInUse) return;
+
             ShootRayClientRpc(playerHeldByID, mode);
         }
         [ClientRpc]
         private void ShootRayClientRpc(ulong playerHeldByID, ModificationType mode)
         {
-            if(playerHeldBy == null)
+            Plugin.Log("ShootRayClientRpc");
+            if (IsInUse) return;
+
+            IsInUse = true;
+            if (playerHeldBy == null)
             {
                 Plugin.Log("playerHeldBy not synced!", Plugin.LogType.Warning);
                 playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
@@ -164,7 +170,7 @@ namespace LCShrinkRay.comp
 
         private IEnumerator LoadRay(Action onComplete = null)
         {
-            Plugin.Log("LoadRay");
+            Plugin.Log("LoadRay", Plugin.LogType.Warning);
             if (audioSource != null && loadSFX != null)
             {
                 audioSource.PlayOneShot(loadSFX);
@@ -173,13 +179,14 @@ namespace LCShrinkRay.comp
             else
                 Plugin.Log("AudioSource or AudioClip for loading ShrinkRay was null!", Plugin.LogType.Warning);
 
+            Plugin.Log("Loading completed");
             if (onComplete != null)
                 onComplete();
         }
 
         private IEnumerator UnloadRay()
         {
-            Plugin.Log("UnloadRay");
+            Plugin.Log("UnloadRay", Plugin.LogType.Warning);
             if (audioSource != null && unloadSFX != null)
             {
                 audioSource.PlayOneShot(unloadSFX);
@@ -190,12 +197,12 @@ namespace LCShrinkRay.comp
 
             yield return new WaitForSeconds(useCooldown);
 
-            if (PlayerInfo.IsHost)
-                IsInUse.Value = false;
+            IsInUse = false;
         }
 
         private IEnumerator NoTargetForRay()
         {
+            Plugin.Log("NoTargetForRay", Plugin.LogType.Warning);
             if (audioSource != null && noTargetSFX != null)
             {
                 audioSource.PlayOneShot(noTargetSFX);
@@ -206,8 +213,7 @@ namespace LCShrinkRay.comp
 
             yield return new WaitForSeconds(useCooldown);
 
-            if (PlayerInfo.IsHost)
-                IsInUse.Value = false;
+            IsInUse = false;
         }
 
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
@@ -219,8 +225,7 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            if (IsOwner)
-                Plugin.Log("Shooting ray gun!");
+            Plugin.Log("Shooting ray gun!", Plugin.LogType.Warning);
 
             handledRayHits.Clear();
 

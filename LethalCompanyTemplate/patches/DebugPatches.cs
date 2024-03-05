@@ -30,18 +30,18 @@ namespace LCShrinkRay.patches
             {
                 if (Keyboard.current.f1Key.wasPressedThisFrame)
                 {
-                    //LogInsideEnemyNames();
-                    //SpawnEnemyInFrontOfPlayer("Centipede", PlayerInfo.CurrentPlayer);
-                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Shrinking);
+                    LogInsideEnemyNames();
+                    SpawnEnemyInFrontOfPlayer("Hoarder Bug", PlayerInfo.CurrentPlayer);
                 }
 
                 else if (Keyboard.current.f2Key.wasPressedThisFrame)
                 {
-                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Enlarging);
+                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Shrinking);
                 }
 
                 else if (Keyboard.current.f3Key.wasPressedThisFrame)
                 {
+                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Enlarging);
                 }
 
                 else if (Keyboard.current.f4Key.wasPressedThisFrame)
