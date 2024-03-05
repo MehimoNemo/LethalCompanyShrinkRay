@@ -204,7 +204,18 @@ namespace LCShrinkRay.comp
                 enable = false;
         }
 
+        [HarmonyPatch(typeof(Shovel), "HitShovel")]
+        [HarmonyPostfix]
+        public static void HitShovel(bool cancel, RaycastHit[] ___objectsHitByShovel)
+        {
+            if (cancel) return;
 
+            foreach(var obj in ___objectsHitByShovel)
+            {
+                if(obj.transform != null && obj.transform.TryGetComponent(out GrabbablePlayerObject gpo))
+                    gpo.OnGoombaServerRpc(gpo.grabbedPlayerID.Value);
+            }
+        }
         #endregion
 
         #region Helper

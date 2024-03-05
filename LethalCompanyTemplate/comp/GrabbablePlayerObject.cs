@@ -676,6 +676,7 @@ namespace LCShrinkRay.comp
         [ServerRpc(RequireOwnership = false)]
         public void OnGoombaServerRpc(ulong playerID)
         {
+            if (IsGoombaCoroutineRunning) return;
             OnGoombaClientRpc(playerID);
         }
 
@@ -686,7 +687,7 @@ namespace LCShrinkRay.comp
             if(currentPlayer.playerClientId == playerID)
                 Plugin.Log("WE GETTING GOOMBAD");
             else
-                Plugin.Log("A goomba...... stompin' on player " + playerID);
+                Plugin.Log("A goomba on player " + playerID);
             coroutines.GoombaStomp.StartRoutine(PlayerInfo.ControllerFromID(playerID).gameObject, () =>
             {
                 if (playerID == currentPlayer.playerClientId)

@@ -11,6 +11,7 @@ using static LCShrinkRay.helper.LayerMasks;
 using static LCShrinkRay.helper.PlayerModification;
 using System.IO;
 using System.Collections;
+using System.Linq;
 
 namespace LCShrinkRay.comp
 {
@@ -233,7 +234,8 @@ namespace LCShrinkRay.comp
 
             var layers = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies]);
             var raycastHits = Physics.SphereCastAll(ray, 5f, beamSearchDistance, layers, QueryTriggerInteraction.Collide); // todo: linecast instead!
-            foreach (var hit in raycastHits)
+            var raycastHitsByDistance = raycastHits.OrderBy((RaycastHit x) => x.distance).ToList();
+            foreach (var hit in raycastHitsByDistance)
             {
                 if (Vector3.Dot(transform.forward, hit.transform.position - transform.position) < 0f)
                     continue; // Is behind us
