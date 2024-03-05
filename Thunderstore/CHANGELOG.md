@@ -17,7 +17,7 @@
 + fixed being unable to grab anything after grabbed player grew to normal size or died
 + fixed player visor being in the view after revive
 + fixed weight of grabbed player not updating when they grab/discard items
-+ fixed sold players being worth nothing on counter
++ fixed players giving 0 credits when being sold on the counter
 
 ### 0.3.1 ###
 + fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime
