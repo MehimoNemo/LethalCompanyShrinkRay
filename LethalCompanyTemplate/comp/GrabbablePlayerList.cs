@@ -361,12 +361,11 @@ namespace LCShrinkRay.comp
             {
                 targetPlayer.gameObject.transform.localScale = Vector3.one;
 
-                PlayerInfo.AdjustArmScale(targetPlayer);
+                PlayerInfo.AdjustArms(targetPlayer);
 
                 if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
                 {
-                    PlayerInfo.AdjustMaskPos();
-                    PlayerInfo.AdjustMaskScale();
+                    PlayerInfo.AdjustMask();
                 }
             }
 

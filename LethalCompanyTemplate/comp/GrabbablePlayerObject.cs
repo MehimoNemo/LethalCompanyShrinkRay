@@ -243,6 +243,12 @@ namespace LCShrinkRay.comp
 
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(false);
+
+            if (IsCurrentPlayer)
+            {
+                if (PlayerModificationPatch.helmetRenderer != null)
+                    PlayerModificationPatch.helmetRenderer.enabled = false;
+            }
         }
 
         public override void DiscardItem()
@@ -264,8 +270,11 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerCollider.enabled = true;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
 
-            if (PlayerModificationPatch.helmetRenderer != null)
-                PlayerModificationPatch.helmetRenderer.enabled = true;
+            if(IsCurrentPlayer)
+            {
+                if (PlayerModificationPatch.helmetRenderer != null)
+                    PlayerModificationPatch.helmetRenderer.enabled = true;
+            }
 
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
@@ -285,7 +294,12 @@ namespace LCShrinkRay.comp
             audioSource.PlayOneShot(grabSFX);
 
             if (IsCurrentPlayer)
+            {
                 grabbedPlayer.DropAllHeldItemsAndSync();
+
+                if (PlayerModificationPatch.helmetRenderer != null)
+                    PlayerModificationPatch.helmetRenderer.enabled = false;
+            }
 
             foreach (var collider in enemyHeldBy.gameObject.GetComponentsInChildren<Collider>())
                 IgnoreColliderWith(collider, false);
@@ -315,13 +329,15 @@ namespace LCShrinkRay.comp
                 grabbedPlayer.TeleportPlayer(lastHoarderBugGrabbedBy.transform.position); // To avoid glitching through walls
             }
 
-            PlayerInfo.AdjustArmScale(grabbedPlayer);
-            PlayerInfo.AdjustMaskScale(grabbedPlayer);
-            PlayerInfo.AdjustMaskPos(grabbedPlayer);
-
             grabbedPlayer.ResetFallGravity();
 
             enemyHeldBy = null;
+
+            if (IsCurrentPlayer)
+            {
+                if (PlayerModificationPatch.helmetRenderer != null)
+                    PlayerModificationPatch.helmetRenderer.enabled = true;
+            }
         }
 
         public override void EquipItem()

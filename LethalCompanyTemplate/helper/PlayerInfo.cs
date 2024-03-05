@@ -181,12 +181,9 @@ namespace LCShrinkRay.helper
         {
             if (pcb == null) pcb = CurrentPlayer;
 
-            AdjustArmScale(pcb, size);
+            AdjustArms(pcb, size);
             if (pcb.playerClientId == CurrentPlayerID)
-            {
-                AdjustMaskPos(pcb, size);
-                AdjustMaskScale(pcb, size);
-            }
+                AdjustMask(pcb, size);
 
             // MoreCompany support
             AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/spine.004"), size); // head
@@ -214,14 +211,16 @@ namespace LCShrinkRay.helper
 
         public static Transform GetArmTransform(PlayerControllerB pcb)
         {
-            return BodyTransformOf(pcb)?.Find("ScavengerModelArmsOnly");
+            return BodyTransformOf(pcb)?.Find("ScavengerModelArmsOnly"); // our locally visible pair of hands
         }
 
-        public static void AdjustArmScale(PlayerControllerB pcb = null, Nullable<float> toSize = null)
+        public static void AdjustArms(PlayerControllerB pcb = null, Nullable<float> toSize = null)
         {
             var armTransform = GetArmTransform(pcb ?? CurrentPlayer);
-            if(armTransform != null )
+            if (armTransform != null)
+            {
                 armTransform.localScale = CalcArmScale(toSize ?? SizeOf(pcb ?? CurrentPlayer));
+            }
         }
 
         public static Vector3 CalcArmScale(float scale)
@@ -239,11 +238,14 @@ namespace LCShrinkRay.helper
             return GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
         }
 
-        public static void AdjustMaskPos(PlayerControllerB pcb = null, Nullable<float> toSize = null)
+        public static void AdjustMask(PlayerControllerB pcb = null, float? toSize = null)
         {
             var maskTransform = GetGlobalMaskTransform(pcb ?? CurrentPlayer);
             if (maskTransform != null)
+            {
+                maskTransform.localScale = CalcMaskScaleVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
                 maskTransform.localPosition = CalcMaskPosVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
+            }
         }
 
         public static Vector3 CalcMaskPosVec(float scale)
@@ -254,13 +256,6 @@ namespace LCShrinkRay.helper
                 y = 0.00375f * scale + 0.05425f,
                 z = 0.005f * scale - 0.279f
             };
-        }
-
-        public static void AdjustMaskScale(PlayerControllerB pcb = null, Nullable<float> toSize = null)
-        {
-            var maskTransform = GetGlobalMaskTransform(pcb ?? CurrentPlayer);
-            if (maskTransform != null)
-                maskTransform.localScale = CalcMaskScaleVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
         }
 
         public static Vector3 CalcMaskScaleVec(float scale)
