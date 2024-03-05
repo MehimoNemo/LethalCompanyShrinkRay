@@ -11,9 +11,11 @@
   + Death through shrinking
 + Added loading / unloading phase for ShrinkRay
 + Added ScanNodes for potions, shrink ray & grabbable players (company-moon-only)
++ Added effect for hitting shrunken players with a shovel
 
 **Tweaks**
-+ multipleShrinking is now disabled by default, until targeting for the ShrinkRay is reworked
++ multipleShrinking is now disabled by default (until targeting for the ShrinkRay is reworked)
++ ShrinkRay will focus the closest possible target (until targeting for the ShrinkRay is reworked)
 + slightly increased default MovementSpeedMultiplier
 + changed ThumperBehaviour to Bumper to make the default gameplay experience more spicy
 

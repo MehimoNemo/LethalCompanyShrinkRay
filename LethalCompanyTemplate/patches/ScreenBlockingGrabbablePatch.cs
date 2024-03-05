@@ -64,6 +64,7 @@ namespace LCShrinkRay.patches
 
         public static void TransformItemRelativeTo(GrabbableObject item, float scale, Vector3 additionalOffset = new Vector3())
         {
+            Plugin.Log("TransformItemRelativeTo -> " + (item != null ? item.name : "null") + "/" + scale + "/" + additionalOffset);
             if (item == null) return;
 
             if (PlayerInfo.Rounded(scale) == 1f)
