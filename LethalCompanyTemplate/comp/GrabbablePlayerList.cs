@@ -196,8 +196,8 @@ namespace LCShrinkRay.comp
                 enable = false;
         }
 
-        [HarmonyPatch(typeof(GrabbableObject), "EnablePhysics")]
-        [HarmonyPrefix]
+        [HarmonyPatch(typeof(GrabbableObject), "EnableItemMeshes")]
+        [HarmonyPrefix] // todo: check again
         public static void EnableItemMeshes(GrabbableObject __instance, ref bool enable)
         {
             if (__instance is GrabbablePlayerObject && (__instance as GrabbablePlayerObject).IsCurrentPlayer)

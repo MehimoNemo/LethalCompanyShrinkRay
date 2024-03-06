@@ -3,11 +3,7 @@ using LCShrinkRay.helper;
 using LethalLib.Modules;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using Unity.Netcode;
 using UnityEngine;
 using static LCShrinkRay.helper.PlayerModification;
@@ -33,7 +29,6 @@ namespace LCShrinkRay.comp
                 return;
 
             var potion = item.spawnPrefab.AddComponent<LittleShrinkingPotion>();
-            networkPrefab = item.spawnPrefab;
             networkPrefab = item.spawnPrefab;
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
