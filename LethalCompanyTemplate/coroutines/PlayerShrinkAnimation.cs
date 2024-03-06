@@ -30,8 +30,10 @@ namespace LCShrinkRay.coroutines
                 Plugin.Log("Attempting to shrink non existing player", Plugin.LogType.Warning);
                 yield break;
             }
-
             var playerTransform = targetPlayer.gameObject.transform;
+            var spine = PlayerInfo.SpineOf(targetPlayer);
+            if (spine != null)
+                spine.SetParent(playerTransform);
 
             GrabbableObject heldItem = null;
             Vector3 initialArmScale = Vector3.one;
@@ -40,7 +42,7 @@ namespace LCShrinkRay.coroutines
             if (targetingUs)
             {
                 heldItem = PlayerInfo.HeldItem(targetPlayer);
-                initialArmScale = PlayerInfo.CalcArmScale(currentSize);
+                initialArmScale = PlayerInfo.CalcLocalArmScale();
             }
 
             float elapsedTime = 0f;
@@ -61,12 +63,9 @@ namespace LCShrinkRay.coroutines
 
                 if (targetingUs)
                 {
-                    PlayerInfo.ScalePlayerBodyPartsRelativeTo(newSize, targetPlayer);
+                    PlayerInfo.ScaleLocalPlayerBodyParts();
                     if (heldItem != null)
-                    {
-                        var newArmScale = PlayerInfo.CalcArmScale(currentSize);
-                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
-                    }
+                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2);
                 }
 
                 elapsedTime += Time.deltaTime;
@@ -78,11 +77,10 @@ namespace LCShrinkRay.coroutines
             playerTransform.localScale = new Vector3(newSize, newSize, newSize);
             if (targetingUs)
             {
-                PlayerInfo.ScalePlayerBodyPartsRelativeTo(newSize, targetPlayer);
+                PlayerInfo.ScaleLocalPlayerBodyParts();
                 if (heldItem != null)
                 {
-                    var newArmScale = PlayerInfo.CalcArmScale(newSize);
-                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - newArmScale) / 2);
+                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2);
                     ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
                 if (newSize != 1f)

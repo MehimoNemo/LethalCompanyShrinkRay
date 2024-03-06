@@ -361,12 +361,8 @@ namespace LCShrinkRay.comp
             {
                 targetPlayer.gameObject.transform.localScale = Vector3.one;
 
-                PlayerInfo.AdjustArms(targetPlayer);
-
                 if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
-                {
-                    PlayerInfo.AdjustMask();
-                }
+                    PlayerInfo.ScaleLocalPlayerBodyParts();
             }
 
             SoundManager.Instance.SetPlayerPitch(1f, (int)targetPlayer.playerClientId);

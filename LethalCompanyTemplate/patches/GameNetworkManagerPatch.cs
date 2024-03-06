@@ -29,7 +29,7 @@ namespace LCShrinkRay.patches
             IsGameInitialized = false;
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
             GrabbablePlayerList.ClearGrabbablePlayerObjects();
-            PlayerModificationPatch.helmetRenderer = null;
+            PlayerInfo.Cleanup();
         }
     }
 }

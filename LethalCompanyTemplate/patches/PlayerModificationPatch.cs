@@ -9,8 +9,6 @@ namespace LCShrinkRay.patches
     [HarmonyPatch]
     internal class PlayerModificationPatch
     {
-        public static MeshRenderer helmetRenderer;
-
         private static bool modified = false, wasModifiedLastFrame = false, wasResetLastFrame = false;
         private static float modifiedSprintMultiplier = 0f;
 
@@ -36,16 +34,6 @@ namespace LCShrinkRay.patches
 
             if(__instance.playerClientId != PlayerInfo.CurrentPlayerID)
                 return; 
-
-            if (helmetRenderer == null)
-            {
-                var helmetTransform = PlayerInfo.GetGlobalMaskTransform(__instance);
-                if(helmetTransform != null)
-                {
-                    helmetRenderer = helmetTransform.gameObject?.GetComponent<MeshRenderer>();
-                    helmetTransform.localPosition = new Vector3(-0.0f, 0.058f, -0.274f);
-                }
-            }
 
             if (PlayerDefaultValues.Values == null)
                 return;

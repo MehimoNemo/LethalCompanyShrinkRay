@@ -1,4 +1,5 @@
 ﻿using GameNetcodeStuff;
+using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using System;
@@ -9,15 +10,15 @@ using UnityEngine;
 
 namespace LCShrinkRay.helper
 {
-    internal class PlayerInfo // maybe find better name
+    internal class PlayerInfo
     {
-        public static bool IsHost
+        public static void Cleanup()
         {
-            get
-            {
-                return NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
-            }
+            _cameraVisor = null;
+            _localArms = null;
         }
+
+        public static bool IsHost => NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
 
         public static bool IsCurrentPlayerGrabbed()
         {
@@ -45,13 +46,7 @@ namespace LCShrinkRay.helper
             return baseValue + weight;
         }
 
-        public static List<GameObject> AllPlayers
-        {
-            get
-            {
-                return StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled).Select(pcb => pcb.gameObject).ToList();
-            }
-        }
+        public static List<GameObject> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled).Select(pcb => pcb.gameObject).ToList();
 
         public static PlayerControllerB ControllerFromID(ulong playerID)
         {
@@ -73,29 +68,11 @@ namespace LCShrinkRay.helper
             return ulong.Parse(gameObject.name.Substring(startIndex + 1, endIndex - startIndex - 1));
         }
 
-        public static PlayerControllerB CurrentPlayer
-        {
-            get
-            {
-                return GameNetworkManager.Instance.localPlayerController;
-            }
-        }
+        public static PlayerControllerB CurrentPlayer => GameNetworkManager.Instance.localPlayerController;
 
-        public static ulong CurrentPlayerID
-        {
-            get
-            {
-                return CurrentPlayer.playerClientId;
-            }
-        }
+        public static ulong CurrentPlayerID => CurrentPlayer.playerClientId;
 
-        public static float CurrentPlayerScale
-        {
-            get
-            {
-                return PlayerScale(CurrentPlayer);
-            }
-        }
+        public static float CurrentPlayerScale => PlayerScale(CurrentPlayer);
 
         public static float PlayerScale(PlayerControllerB player)
         {
@@ -108,27 +85,13 @@ namespace LCShrinkRay.helper
             return PlayerScale(player.gameObject);
         }
 
-        public static float PlayerScale(GameObject playerObject)
-        {
-            if (playerObject == null) return 1f;
+        public static float PlayerScale(GameObject playerObject) => playerObject == null ? 1f : Rounded(playerObject.transform.localScale.x);
 
-            return Rounded(playerObject.transform.localScale.x);
-        }
+        public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
 
-        public static float Rounded(float unroundedValue)
-        {
-            return Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
-        }
+        public static float SizeOf(PlayerControllerB player) => Rounded(player.gameObject.transform.localScale.x);
 
-        public static float SizeOf(PlayerControllerB player)
-        {
-            return Rounded(player.gameObject.transform.localScale.x);
-        }
-
-        public static bool IsShrunk(PlayerControllerB player)
-        {
-            return IsShrunk(player.gameObject);
-        }
+        public static bool IsShrunk(PlayerControllerB player) => IsShrunk(player.gameObject);
 
         public static bool IsShrunk(GameObject playerObject)
         {
@@ -138,23 +101,11 @@ namespace LCShrinkRay.helper
             return IsShrunk(playerObject.transform.localScale.x);
         }
 
-        public static bool IsShrunk(float size)
-        {
-            return Rounded(size) < 1f;
-        }
+        public static bool IsShrunk(float size) => Rounded(size) < 1f;
 
-        public static bool IsNormalSize(PlayerControllerB player)
-        {
-            return SizeOf(player) == 1f;
-        }
+        public static bool IsNormalSize(PlayerControllerB player) => SizeOf(player) == 1f;
 
-        public static bool IsCurrentPlayerShrunk
-        {
-            get
-            {
-                return IsShrunk(CurrentPlayer);
-            }
-        }
+        public static bool IsCurrentPlayerShrunk => IsShrunk(CurrentPlayer);
 
         public static GrabbableObject HeldItem(PlayerControllerB pcb)
         {
@@ -164,67 +115,70 @@ namespace LCShrinkRay.helper
             return null;
         }
 
-        public static GrabbableObject CurrentPlayerHeldItem
+        public static GrabbableObject CurrentPlayerHeldItem => HeldItem(CurrentPlayer);
+
+        public static Transform BodyTransformOf(PlayerControllerB pcb) => pcb?.gameObject?.transform.Find("ScavengerModel/metarig");
+
+        public static Transform SpineOf(PlayerControllerB pcb) => BodyTransformOf(pcb)?.Find("spine");
+
+        public static void ScaleLocalPlayerBodyParts()
         {
-            get
-            {
-                return HeldItem(CurrentPlayer);
-            }
-        }
+            AdjustLocalArms();
+            AdjustLocalMask();
 
-        public static Transform BodyTransformOf(PlayerControllerB pcb)
-        {
-            return pcb?.gameObject?.transform.Find("ScavengerModel/metarig");
-        }
-
-        public static void ScalePlayerBodyPartsRelativeTo(float size, PlayerControllerB pcb = null)
-        {
-            if (pcb == null) pcb = CurrentPlayer;
-
-            AdjustArms(pcb, size);
-            if (pcb.playerClientId == CurrentPlayerID)
-                AdjustMask(pcb, size);
-
-            // MoreCompany support
-            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/spine.004"), size); // head
+            // MoreCompany support (WIP)
+            /*AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/spine.004"), size); // head
             AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003"), size); // chest
             AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/shoulder.R/arm.R_upper/arm.R_lower"), size); // lowerArmRight
             AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine"), size); // hip
             AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/thigh.L/shin.L"), size); // shinLeft
-            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/thigh.R/shin.R"), size); // shinRight
+            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/thigh.R/shin.R"), size); // shinRight*/
         }
 
-        public static void AdjustAllChilds(Transform transform, float size)
+        /*public static void AdjustAllChilds(Transform transform, float size)
         {
             if (transform == null) return;
 
-            // Todo: not working rn
-
-            /*var children = transform.GetComponentsInChildren<Transform>();
+            var children = transform.GetComponentsInChildren<Transform>();
             foreach( var child in children )
             {
                 if (child.parent == transform) continue;
                 Plugin.Log("We found something unscaled: " + child.name);
                 child.localScale = Vector3.one * size;
-            }*/
-        }
+            }
+        }*/
 
-        public static Transform GetArmTransform(PlayerControllerB pcb)
+        private static Vector3 defaultArmScale = Vector3.one;
+        private static Vector3 defaultArmPosition = Vector3.one;
+        private static Transform _localArms = null;
+        public static Transform LocalArms
         {
-            return BodyTransformOf(pcb)?.Find("ScavengerModelArmsOnly"); // our locally visible pair of hands
-        }
-
-        public static void AdjustArms(PlayerControllerB pcb = null, Nullable<float> toSize = null)
-        {
-            var armTransform = GetArmTransform(pcb ?? CurrentPlayer);
-            if (armTransform != null)
+            get
             {
-                armTransform.localScale = CalcArmScale(toSize ?? SizeOf(pcb ?? CurrentPlayer));
+                if (_localArms == null)
+                {
+                    _localArms = BodyTransformOf(CurrentPlayer)?.Find("ScavengerModelArmsOnly"); // our locally visible pair of hands
+                    if (_localArms != null)
+                    {
+                        Plugin.Log("Arms found!");
+                        defaultArmScale = _localArms.localScale;
+                        defaultArmPosition = _localArms.localPosition;
+                    }
+                }
+                return _localArms;
             }
         }
 
-        public static Vector3 CalcArmScale(float scale)
+        public static void AdjustLocalArms()
         {
+            if (LocalArms == null) return;
+
+            LocalArms.localScale = CalcLocalArmScale();
+        }
+
+        public static Vector3 CalcLocalArmScale()
+        {
+            var scale = SizeOf(CurrentPlayer);
             return new Vector3()
             {
                 x = 0.35f * scale + 0.58f,
@@ -233,39 +187,41 @@ namespace LCShrinkRay.helper
             };
         }
 
-        public static Transform GetGlobalMaskTransform(PlayerControllerB pcb)
+        private static Vector3 defaultMaskScale = Vector3.one;
+        private static Vector3 defaultMaskPos = Vector3.zero;
+        private static Transform _cameraVisor = null;
+        public static Transform CameraVisor
         {
-            return GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
-        }
-
-        public static void AdjustMask(PlayerControllerB pcb = null, float? toSize = null)
-        {
-            var maskTransform = GetGlobalMaskTransform(pcb ?? CurrentPlayer);
-            if (maskTransform != null)
+            get
             {
-                maskTransform.localScale = CalcMaskScaleVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
-                maskTransform.localPosition = CalcMaskPosVec(toSize ?? SizeOf(pcb ?? CurrentPlayer));
+                if (_cameraVisor == null)
+                {
+                    _cameraVisor = GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
+                    if (_cameraVisor != null)
+                    {
+                        Plugin.Log("Visor found!");
+                        defaultMaskScale = _cameraVisor.localScale;
+                        defaultMaskPos = _cameraVisor.localPosition;
+                    }
+                }
+                return _cameraVisor;
             }
         }
 
-        public static Vector3 CalcMaskPosVec(float scale)
+        public static void EnableCameraVisor(bool enable = true)
         {
-            return new Vector3()
-            {
-                x = 0,
-                y = 0.00375f * scale + 0.05425f,
-                z = 0.005f * scale - 0.279f
-            };
+            var renderer = CameraVisor?.gameObject?.GetComponent<MeshRenderer>();
+            if(renderer != null)
+                renderer.enabled = enable;
         }
 
-        public static Vector3 CalcMaskScaleVec(float scale)
+        public static void AdjustLocalMask()
         {
-            return new Vector3()
-            {
-                x = 0.277f * scale + 0.2546f,
-                y = 0.2645f * scale + 0.267f,
-                z = 0.177f * scale + 0.3546f
-            };
+            if (CameraVisor == null) return;
+
+            // todo: disappears when size < 0.3f
+            CameraVisor.localScale = defaultMaskScale * SizeOf(CurrentPlayer);
+            CameraVisor.localPosition = defaultMaskPos * SizeOf(CurrentPlayer);
         }
 
         public static void UpdateWeatherForPlayer(PlayerControllerB targetPlayer)

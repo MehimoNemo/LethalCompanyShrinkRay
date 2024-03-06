@@ -229,9 +229,6 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerCollider.enabled = false;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
 
-            if (PlayerModificationPatch.helmetRenderer != null)
-                PlayerModificationPatch.helmetRenderer.enabled = false;
-
             SetIsGrabbableToEnemies(false);
             SetControlTips();
 
@@ -245,10 +242,7 @@ namespace LCShrinkRay.comp
                 SetHolderGrabbable(false);
 
             if (IsCurrentPlayer)
-            {
-                if (PlayerModificationPatch.helmetRenderer != null)
-                    PlayerModificationPatch.helmetRenderer.enabled = false;
-            }
+                PlayerInfo.EnableCameraVisor(false);
         }
 
         public override void DiscardItem()
@@ -271,10 +265,7 @@ namespace LCShrinkRay.comp
             grabbedPlayer.playerRigidbody.detectCollisions = false;
 
             if(IsCurrentPlayer)
-            {
-                if (PlayerModificationPatch.helmetRenderer != null)
-                    PlayerModificationPatch.helmetRenderer.enabled = true;
-            }
+                PlayerInfo.EnableCameraVisor();
 
             foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
             {
@@ -296,9 +287,7 @@ namespace LCShrinkRay.comp
             if (IsCurrentPlayer)
             {
                 grabbedPlayer.DropAllHeldItemsAndSync();
-
-                if (PlayerModificationPatch.helmetRenderer != null)
-                    PlayerModificationPatch.helmetRenderer.enabled = false;
+                PlayerInfo.EnableCameraVisor(false);
             }
 
             foreach (var collider in enemyHeldBy.gameObject.GetComponentsInChildren<Collider>())
@@ -334,10 +323,7 @@ namespace LCShrinkRay.comp
             enemyHeldBy = null;
 
             if (IsCurrentPlayer)
-            {
-                if (PlayerModificationPatch.helmetRenderer != null)
-                    PlayerModificationPatch.helmetRenderer.enabled = true;
-            }
+                PlayerInfo.EnableCameraVisor();
         }
 
         public override void EquipItem()
@@ -715,8 +701,8 @@ namespace LCShrinkRay.comp
         internal void PlaceOnSellCounterServerRpc()
         {
             IsOnSellCounter.Value = true;
-            if (IsCurrentPlayer && PlayerModificationPatch.helmetRenderer != null)
-                PlayerModificationPatch.helmetRenderer.enabled = false;
+            if (IsCurrentPlayer)
+                PlayerInfo.EnableCameraVisor(false);
             PlaceOnSellCounterClientRpc();
         }
 
@@ -731,8 +717,8 @@ namespace LCShrinkRay.comp
         {
             IsOnSellCounter.Value = false;
 
-            if (IsCurrentPlayer && PlayerModificationPatch.helmetRenderer != null)
-                PlayerModificationPatch.helmetRenderer.enabled = true;
+            if (IsCurrentPlayer)
+                PlayerInfo.EnableCameraVisor();
         }
         #endregion
 
