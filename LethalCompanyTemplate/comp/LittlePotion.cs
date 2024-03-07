@@ -221,6 +221,8 @@ namespace LCShrinkRay.comp
 
             itemProperties.rotationOffset = new Vector3(0f, 0f, -70f);
             itemProperties.positionOffset = new Vector3(0f, 0.12f, 0f);
+
+            itemProperties.syncUseFunction = true;
         }
 
         internal void AdjustStoreAndScrapValues()
@@ -351,37 +353,38 @@ namespace LCShrinkRay.comp
             Consuming = true;
             isBeingUsed = true;
 
-            if (IsOwner && audioSource != null)
+            if (audioSource == null)
             {
+                SetConsumed();
+                yield break; ;
+            }
+
+            if (IsOwner)
                 audioSource.PlayOneShot(consumeSFX);
 
-                if (Cap != null)
-                    Destroy(Cap);
+            if (Cap != null)
+                Destroy(Cap);
 
-                var duration = ShrinkRayFX.beamDuration;
-                yield return new WaitForSeconds(duration / 5);
-                duration -= duration / 5;
+            var duration = ShrinkRayFX.beamDuration;
+            yield return new WaitForSeconds(duration / 5);
+            duration -= duration / 5;
 
-                if (Liquid != null) // drink that!
+            if (Liquid != null) // drink that!
+            {
+                var time = 0f;
+                while (time < duration)
                 {
-                    var time = 0f;
-                    while (time < duration)
-                    {
-                        var percentageFilled = 100 * Mathf.Lerp(InitialLiquidScale, 0f, time / duration) / InitialLiquidScale;
-                        Plugin.Log("percentageFilled: " + percentageFilled);
-                        SetLiquidLevel(percentageFilled);
-                        time += Time.deltaTime;
-                        yield return null;
-                    };
-
-                    SetConsumed();
-                }
-                else
-                {
-                    yield return new WaitWhile(() => audioSource.isPlaying); // In case the audio clip length didn't match..
-                    SetConsumed();
-                }
+                    var percentageFilled = 100 * Mathf.Lerp(InitialLiquidScale, 0f, time / duration) / InitialLiquidScale;
+                    Plugin.Log("percentageFilled: " + percentageFilled);
+                    SetLiquidLevel(percentageFilled);
+                    time += Time.deltaTime;
+                    yield return null;
+                };
             }
+            else
+                yield return new WaitWhile(() => audioSource.isPlaying); // In case the audio clip length didn't match..
+
+            SetConsumed();
         }
 
         internal void SetLiquidLevel(float percentage)
