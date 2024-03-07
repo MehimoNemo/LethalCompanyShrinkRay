@@ -375,7 +375,6 @@ namespace LCShrinkRay.comp
                 while (time < duration)
                 {
                     var percentageFilled = 100 * Mathf.Lerp(InitialLiquidScale, 0f, time / duration) / InitialLiquidScale;
-                    Plugin.Log("percentageFilled: " + percentageFilled);
                     SetLiquidLevel(percentageFilled);
                     time += Time.deltaTime;
                     yield return null;
@@ -393,7 +392,6 @@ namespace LCShrinkRay.comp
 
             var remainingLiquid = InitialLiquidScale * percentage / 100;
             var consumedLiquid = InitialLiquidScale - remainingLiquid;
-            Plugin.Log("Drank already " + consumedLiquid + " out of " + InitialLiquidScale);
             Liquid.transform.localPosition = new Vector3(Liquid.transform.localPosition.x, InitialLiquidPosition - consumedLiquid, Liquid.transform.localPosition.z);
             Liquid.transform.localScale = new Vector3(Liquid.transform.localScale.x, Liquid.transform.localScale.y, remainingLiquid);
         }
