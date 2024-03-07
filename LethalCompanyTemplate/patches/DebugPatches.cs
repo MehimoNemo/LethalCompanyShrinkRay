@@ -7,6 +7,7 @@ using LCShrinkRay.comp;
 using UnityEngine;
 using static LCShrinkRay.helper.Moons;
 using Unity.Netcode;
+using System.Collections;
 
 namespace LCShrinkRay.patches
 {
@@ -14,87 +15,16 @@ namespace LCShrinkRay.patches
     internal class DebugPatches
     {
 #if DEBUG
-        private static int waitFrames = 0;
+        private static bool Executing = false;
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
         public static void OnUpdate(PlayerControllerB __instance)
         {
-            if (waitFrames > 0) // Don't execute it multiple times
-            {
-                waitFrames--;
-                return;
-            }
-
             try
             {
-                if (Keyboard.current.f1Key.wasPressedThisFrame)
-                {
-                    LogInsideEnemyNames();
-                    SpawnEnemyInFrontOfPlayer("Hoarder Bug", PlayerInfo.CurrentPlayer);
-                }
-
-                else if (Keyboard.current.f2Key.wasPressedThisFrame)
-                {
-                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Shrinking);
-                }
-
-                else if (Keyboard.current.f3Key.wasPressedThisFrame)
-                {
-                    PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, PlayerModification.ModificationType.Enlarging);
-                }
-
-                else if (Keyboard.current.f4Key.wasPressedThisFrame)
-                {
-
-                }
-
-                else if (Keyboard.current.f5Key.wasPressedThisFrame)
-                {
-                    SpawnItemInFront(LittleShrinkingPotion.networkPrefab);
-                }
-
-                else if (Keyboard.current.f6Key.wasPressedThisFrame)
-                {
-                    SpawnItemInFront(LittleEnlargingPotion.networkPrefab);
-                }
-
-                else if (Keyboard.current.f7Key.wasPressedThisFrame)
-                {
-                    SpawnItemInFront(ShrinkRay.networkPrefab);
-                }
-
-                else if (Keyboard.current.f8Key.wasPressedThisFrame)
-                {
-                    ReloadAllSounds();
-                }
-
-                else if (Keyboard.current.f9Key.wasPressedThisFrame)
-                {
-                    LogPosition();
-
-                }
-
-                else if (Keyboard.current.f10Key.wasPressedThisFrame)
-                {
-                    TeleportIntoShip();
-                }
-
-                else if (Keyboard.current.f11Key.wasPressedThisFrame)
-                {
-                    TeleportOutsideDungeon();
-                }
-                
-                else if (Keyboard.current.f12Key.wasPressedThisFrame)
-                {
-                    TeleportInsideDungeon();
-                }
-
-                else
-                    return;
-
-                waitFrames = 5;
-
+                if (!Executing && CheckFunctionKeys())
+                    GameNetworkManager.Instance?.StartCoroutine(WaitAfterKeyPress());
             }
             catch (Exception e)
             {
@@ -102,6 +32,86 @@ namespace LCShrinkRay.patches
             }
         }
 
+        public static IEnumerator WaitAfterKeyPress()
+        {
+            if (Executing)
+                yield return new WaitWhile(() => Executing);
+            else
+            {
+                Executing = true;
+                yield return new WaitForSeconds(0.2f);
+                Executing = false;
+            }
+        }
+
+        public static bool CheckFunctionKeys()
+        {
+            if (Keyboard.current.f1Key.wasPressedThisFrame)
+            {
+                LogInsideEnemyNames();
+                SpawnEnemyInFrontOfPlayer("Hoarder Bug", PlayerInfo.CurrentPlayer);
+            }
+
+            else if (Keyboard.current.f2Key.wasPressedThisFrame)
+            {
+                ApplyModification(PlayerModification.ModificationType.Shrinking);
+            }
+
+            else if (Keyboard.current.f3Key.wasPressedThisFrame)
+            {
+                ApplyModification(PlayerModification.ModificationType.Enlarging);
+            }
+
+            else if (Keyboard.current.f4Key.wasPressedThisFrame)
+            {
+
+            }
+
+            else if (Keyboard.current.f5Key.wasPressedThisFrame)
+            {
+                SpawnItemInFront(LittleShrinkingPotion.networkPrefab);
+            }
+
+            else if (Keyboard.current.f6Key.wasPressedThisFrame)
+            {
+                SpawnItemInFront(LittleEnlargingPotion.networkPrefab);
+            }
+
+            else if (Keyboard.current.f7Key.wasPressedThisFrame)
+            {
+                SpawnItemInFront(ShrinkRay.networkPrefab);
+            }
+
+            else if (Keyboard.current.f8Key.wasPressedThisFrame)
+            {
+                ReloadAllSounds();
+            }
+
+            else if (Keyboard.current.f9Key.wasPressedThisFrame)
+            {
+                LogPosition();
+            }
+
+            else if (Keyboard.current.f10Key.wasPressedThisFrame)
+            {
+                TeleportIntoShip();
+            }
+
+            else if (Keyboard.current.f11Key.wasPressedThisFrame)
+            {
+                TeleportOutsideDungeon();
+            }
+
+            else if (Keyboard.current.f12Key.wasPressedThisFrame)
+            {
+                TeleportInsideDungeon();
+            }
+
+            else
+                return false;
+
+            return true;
+        }
         #region Methods
         public static GameObject CreateCube(Transform parent, Color color)
         {
@@ -193,6 +203,7 @@ namespace LCShrinkRay.patches
 
             PlayerInfo.CurrentPlayer.TeleportPlayer(pos);
         }
+
         public static void TeleportInsideDungeon()
         {
             if (StartOfRound.Instance.inShipPhase) return;
@@ -234,6 +245,15 @@ namespace LCShrinkRay.patches
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionDrop.wav", (item) => LittlePotion.dropSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionConsume.wav", (item) => LittlePotion.consumeSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionNoConsume.wav", (item) => LittlePotion.noConsumeSFX = item));
+        }
+
+        public static void ApplyModification(PlayerModification.ModificationType type)
+        {
+            if (!PlayerModification.CanApplyModificationTo(PlayerInfo.CurrentPlayer, type))
+                return;
+
+            Executing = true;
+            PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, type, () => Executing = false);
         }
         #endregion
 #endif
