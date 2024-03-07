@@ -12,6 +12,8 @@ using static LCShrinkRay.helper.PlayerModification;
 using System.IO;
 using System.Collections;
 using System.Linq;
+using UnityEngine.InputSystem.HID;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace LCShrinkRay.comp
 {
@@ -36,6 +38,10 @@ namespace LCShrinkRay.comp
         internal static AudioClip loadSFX;
         internal static AudioClip unloadSFX;
         internal static AudioClip noTargetSFX;
+
+        internal Light LaserLight = null;
+        internal LineRenderer LaserLine = null;
+        internal Light LaserDot = null;
         #endregion
 
         #region Networking
@@ -94,6 +100,12 @@ namespace LCShrinkRay.comp
 
             if (!TryGetComponent(out audioSource))
                 audioSource = gameObject.AddComponent<AudioSource>();
+
+            LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
+            LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
+            LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
+
+            DisableLaser();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -115,29 +127,68 @@ namespace LCShrinkRay.comp
 
             if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
                 ShootRayServerRpc(playerHeldBy.playerClientId, ModificationType.Enlarging);
+
+            if(LaserLine != null && LaserLine.enabled)
+                UpdateLaser();
         }
 
         public override void EquipItem()
         {
+            EnableLaser();
             audioSource?.PlayOneShot(grabSFX);
             base.EquipItem();
         }
 
         public override void PocketItem()
         {
+            DisableLaser();
             // idea: play a fading-out sound
             base.PocketItem();
         }
 
         public override void DiscardItem()
         {
+            DisableLaser();
             audioSource?.PlayOneShot(dropSFX);
             base.DiscardItem();
         }
 
         public override void GrabItem()
         {
+            EnableLaser();
             base.GrabItem();
+        }
+        #endregion
+
+        #region Targeting
+        internal void EnableLaser(bool enable = true)
+        {
+            if(LaserLine != null) LaserLine.enabled = enable;
+            if(LaserLight != null) LaserLight.enabled = enable;
+            if(LaserDot != null) LaserDot.enabled = enable;
+        }
+        internal void DisableLaser() => EnableLaser(false);
+
+        internal void UpdateLaser()
+        {
+            var startPoint = LaserLine.GetPosition(0);
+            var direction = playerHeldBy.gameplayCamera.transform.forward;
+            Plugin.Log("Direction: " + direction);
+
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, 10f, 605030721))
+            {
+                LaserLine.SetPosition(1, hit.point);
+                if (LaserDot != null)
+                {
+                    var distance = Vector3.Distance(hit.point, startPoint);
+                    Plugin.Log("Hit something: " + distance);
+                    LaserDot.innerSpotAngle = 10 - Mathf.Max(distance, 7);
+                }
+            }
+            else
+            {
+                LaserLine.SetPosition(1, startPoint + (direction * 10f));
+            }
         }
         #endregion
 
@@ -162,6 +213,8 @@ namespace LCShrinkRay.comp
                 Plugin.Log("playerHeldBy not synced!", Plugin.LogType.Warning);
                 playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
             }
+
+            DisableLaser();
 
             StartCoroutine(LoadRay(() => ShootRay(mode)));
         }
@@ -196,6 +249,7 @@ namespace LCShrinkRay.comp
             yield return new WaitForSeconds(useCooldown);
 
             IsInUse = false;
+            EnableLaser();
         }
 
         private IEnumerator NoTargetForRay()
@@ -212,6 +266,7 @@ namespace LCShrinkRay.comp
             yield return new WaitForSeconds(useCooldown);
 
             IsInUse = false;
+            EnableLaser();
         }
 
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
