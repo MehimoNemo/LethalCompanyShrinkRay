@@ -53,8 +53,31 @@ namespace LCShrinkRay.helper
 
         public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
         {
-            if (targetPlayer.isClimbingLadder)
+            if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder)
                 return false;
+
+            switch (type)
+            {
+                case ModificationType.Normalizing:
+                    if (PlayerInfo.IsNormalSize(targetPlayer))
+                        return false;
+                    break;
+
+                case ModificationType.Shrinking:
+                    var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
+                    if (nextShrunkenSize == PlayerInfo.SizeOf(targetPlayer) || (nextShrunkenSize == 0f && !targetPlayer.AllowPlayerDeath()))
+                        return false;
+                    break;
+
+                case ModificationType.Enlarging:
+                    var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
+                    if (nextIncreasedSize == PlayerInfo.SizeOf(targetPlayer))
+                        return false;
+                    break;
+
+                default:
+                    break;
+            }
 
             if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
             {
@@ -70,28 +93,7 @@ namespace LCShrinkRay.helper
                 }
             }
 
-            switch (type)
-            {
-                case ModificationType.Normalizing:
-                    if (PlayerInfo.IsNormalSize(targetPlayer))
-                        return false;
-                    return true;
-
-                case ModificationType.Shrinking:
-                    var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
-                    if (nextShrunkenSize == PlayerInfo.SizeOf(targetPlayer) || (nextShrunkenSize == 0f && !targetPlayer.AllowPlayerDeath()))
-                        return false;
-                    return true;
-
-                case ModificationType.Enlarging:
-                    var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
-                    if (nextIncreasedSize == PlayerInfo.SizeOf(targetPlayer))
-                        return false;
-                    return true;
-
-                default:
-                    return true;
-            }
+            return true;
         }
 
         public static bool ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, Action onComplete = null)

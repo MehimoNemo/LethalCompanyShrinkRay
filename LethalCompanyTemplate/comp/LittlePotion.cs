@@ -155,7 +155,7 @@ namespace LCShrinkRay.comp
         }
         #endregion
 
-        #region Abstract Methods
+        #region Initializing
         internal static bool TryLoadItem(AssetBundle assetBundle, string assetName, out Item item)
         {
             Item assetItem = null;
@@ -209,6 +209,9 @@ namespace LCShrinkRay.comp
 
             itemProperties.itemIcon = Icon;
             itemProperties.toolTips = ["Consume: LMB"];
+
+            itemProperties.rotationOffset = new Vector3(0f, 0f, -70f);
+            itemProperties.positionOffset = new Vector3(0f, 0.12f, 0f);
         }
 
         internal void AdjustStoreAndScrapValues()
