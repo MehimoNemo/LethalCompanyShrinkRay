@@ -6,8 +6,8 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |  Group       |          Option             |                           Description                                                     | Possible values                        | Default |
 | ------------ | --------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------- | ------- |
 | General      | ShrinkRayCost               | Store cost of the shrink ray                                                              | any number                             | 0 (BETA)|
-|              | MultipleShrinking           | If true, a player can shrink multiple times.. unfortunatly.                               | true / false                           | true    |
-| Shrunken     | MovementSpeedMultiplier     | Speed multiplier for shrunken players                                                     | 0.5 (slow) - 1.5 (fast)                | 1.2     |
+|              | MultipleShrinking           | If true, a player can shrink multiple times.. unfortunatly.                               | true / false                           | false   |
+| Shrunken     | MovementSpeedMultiplier     | Speed multiplier for shrunken players                                                     | 0.5 (slow) - 1.5 (fast)                | 1.3     |
 |              | JumpHeightMultiplier        | Jump-height multiplier for shrunken players                                               | 0.5 (lower) - 2 (higher)               | 1.3     |
 |              | WeightMultiplier            | Weight multiplier applied on held items of shrunken players                               | 0.5 (lighter) - 2 (heavier)            | 1.5     |
 |              | CanUseVents                 | If true, shrunken players can teleport between vents.                                     | true / false                           | true    |
@@ -17,7 +17,7 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | ThrowablePlayers            | If true, shrunken players can be thrown by normal sized players.                          | true / false                           | true    |
 |              | FriendlyFlight              | If true, held players can grab other players, causing comedic, but game breaking effects. | true / false                           | false   |
 | Enemies      | HoarderBugBehaviour         | Defines if hoarding bugs should be able to grab you and how likely that is                | Default, NoGrab, Addicted              | Default |
-|              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot, Bumper              | Default |
+|              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot, Bumper              | Bumper  |
 > client-sided options are marked with a \*, others will by synced with the host.
 
 ## Known bugs ##
