@@ -17,7 +17,7 @@ namespace LCShrinkRay.helper
             Enlarging
         }
 
-        internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.2f, 1f, 1.3f, 1.7f };
+        internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.4f, 1f, 1.3f, 1.7f };
 
         internal static AudioClip deathPoofSFX;
         #endregion

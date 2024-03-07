@@ -31,9 +31,9 @@ namespace LCShrinkRay.coroutines
                 yield break;
             }
             var playerTransform = targetPlayer.gameObject.transform;
-            var spine = PlayerInfo.SpineOf(targetPlayer);
+            /*var spine = PlayerInfo.SpineOf(targetPlayer);
             if (spine != null)
-                spine.SetParent(playerTransform);
+                spine.SetParent(playerTransform);*/
 
             GrabbableObject heldItem = null;
             Vector3 initialArmScale = Vector3.one;
