@@ -3,6 +3,7 @@
 + Added two potions: Light & Heavy
   + Buyable in store including terminal notes & available as rare scrap in the dungeons!
   + Fully configurable in the config after first startup.
+  + Once consumed it will stay as an empty potion with a maximum scrap value of 5
   + *This was wished by the community as a way to shrink yourself in singleplayer, as the shrink ray can only target others. Enjoy a drink!*
 + Added sounds for the following interactions:
   + Grabbing, dropping and throwing players
@@ -25,6 +26,7 @@
 + fixed player visor being in the view after revive
 + fixed weight of grabbed player not updating when they grab/discard items
 + fixed players giving 0 credits when being sold on the counter
++ fixed items not aligning correctly in hand after being held while changing player size
 
 ### 0.3.1 ###
 + fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime
