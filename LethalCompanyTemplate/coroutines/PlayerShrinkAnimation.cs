@@ -65,7 +65,7 @@ namespace LCShrinkRay.coroutines
                 {
                     PlayerInfo.ScaleLocalPlayerBodyParts();
                     if (heldItem != null)
-                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2);
+                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize/*, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2*/);
                 }
 
                 elapsedTime += Time.deltaTime;
@@ -80,7 +80,7 @@ namespace LCShrinkRay.coroutines
                 PlayerInfo.ScaleLocalPlayerBodyParts();
                 if (heldItem != null)
                 {
-                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2);
+                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize/*, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2*/);
                     ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
                 if (newSize != 1f)

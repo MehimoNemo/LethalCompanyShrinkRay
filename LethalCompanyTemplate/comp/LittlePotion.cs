@@ -48,9 +48,8 @@ namespace LCShrinkRay.comp
 
         public override void Start()
         {
+            PotionTransform = transform.Find("ShrinkingPotionSettings");
             base.Start();
-
-            Liquid = transform.Find("ShrinkingPotionSettings")?.Find("Liquid")?.GetComponent<MeshRenderer>();
         }
     }
 
@@ -93,9 +92,8 @@ namespace LCShrinkRay.comp
 
         public override void Start()
         {
+            PotionTransform = transform.Find("EnlargingPotionSettings");
             base.Start();
-
-            Liquid = transform.Find("EnlargingPotionSettings")?.Find("Liquid")?.GetComponent<MeshRenderer>();
         }
     }
 
@@ -118,6 +116,8 @@ namespace LCShrinkRay.comp
 
         internal static bool AudioLoaded = false;
 
+        internal static int ScrapValueWhenConsumed = 5;
+
         internal static AudioSource audioSource;
 
         internal static AudioClip grabSFX;
@@ -130,9 +130,18 @@ namespace LCShrinkRay.comp
 
         internal static Sprite Icon = AssetLoader.LoadIcon("Potion.png");
 
+        internal Transform PotionTransform = null;
+        internal MeshRenderer Glass = null;
         internal MeshRenderer Liquid = null;
+        internal MeshRenderer Cap = null;
 
-        internal bool Consumed = false;
+        internal bool Consuming = false;
+        internal NetworkVariable<bool> Consumed = new NetworkVariable<bool>(false);
+
+        internal float InitialLiquidScale = 0.7f;
+        internal float InitialLiquidPosition = -0.2f;
+
+        internal ScanNodeProperties ScanNodeProperties = null;
         #endregion
 
         #region Networking
@@ -231,14 +240,35 @@ namespace LCShrinkRay.comp
 
             Plugin.Log("Potion network spawn");
 
-            var scanNodeProperties = GetComponentInChildren<ScanNodeProperties>();
-            if (scanNodeProperties != null)
+            ScanNodeProperties = GetComponentInChildren<ScanNodeProperties>();
+            if (ScanNodeProperties != null)
             {
-                scanNodeProperties.headerText = ItemName;
-                scanNodeProperties.scrapValue = itemProperties.creditsWorth;
+                ScanNodeProperties.headerText = ItemName;
+                ScanNodeProperties.scrapValue = itemProperties.creditsWorth;
             }
 
             audioSource = GetComponent<AudioSource>();
+
+            if(PotionTransform != null)
+            {
+                Glass = PotionTransform.GetComponent<MeshRenderer>();
+                Cap = PotionTransform.Find("Cap")?.GetComponent<MeshRenderer>();
+                Liquid = PotionTransform.Find("Liquid")?.GetComponent<MeshRenderer>();
+                if (Liquid != null && Glass != null)
+                {
+                    var liquidColor = Liquid.material.color;
+                    liquidColor.a = 2f;
+
+                    Glass?.material.SetColor("_EmissionColor", liquidColor);
+                    Glass?.material.EnableKeyword("_EMISSION");
+                    
+                    InitialLiquidScale = Liquid.transform.localScale.z; // 0.7
+                    InitialLiquidPosition = Liquid.transform.localPosition.y; // -0.2
+                }
+            }
+
+            if (Consumed.Value)
+                SetConsumed();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -274,17 +304,14 @@ namespace LCShrinkRay.comp
 
         public override void GrabItem()
         {
-            transform.localScale = Vector3.one * 0.05f;
+            //transform.localScale = Vector3.one * 0.05f;
             base.GrabItem();
         }
 
         public override void DiscardItem()
         {
-            if(!Consumed)
-            {
-                transform.localScale = Vector3.one * 0.1f;
-                audioSource.PlayOneShot(dropSFX);
-            }
+            //transform.localScale = Vector3.one * 0.1f;
+            audioSource.PlayOneShot(dropSFX);
             base.DiscardItem();
         }
 
@@ -304,8 +331,15 @@ namespace LCShrinkRay.comp
         #region Methods
         private IEnumerator Consume()
         {
-            if (playerHeldBy == null || playerHeldBy.isClimbingLadder)
+            if (Consuming || playerHeldBy == null)
                 yield break;
+
+            if (Consumed.Value || playerHeldBy.isClimbingLadder)
+            {
+                if (IsOwner)
+                    audioSource?.PlayOneShot(noConsumeSFX);
+                yield break;
+            }
 
             if(!CanApplyModificationTo(playerHeldBy, modificationType) || !ApplyModificationTo(playerHeldBy, modificationType))
             {
@@ -314,29 +348,70 @@ namespace LCShrinkRay.comp
                 yield break;
             }
 
+            Consuming = true;
+            isBeingUsed = true;
+
             if (IsOwner && audioSource != null)
             {
                 audioSource.PlayOneShot(consumeSFX);
 
-                /*if (Liquid != null) // drink that!
+                if (Cap != null)
+                    Destroy(Cap);
+
+                var duration = ShrinkRayFX.beamDuration;
+                yield return new WaitForSeconds(duration / 5);
+                duration -= duration / 5;
+
+                if (Liquid != null) // drink that!
                 {
                     var time = 0f;
-                    var length = consumeSFX.length;
-                    Plugin.Log("length: " + length);
-
-                    var initialLiquidScale = Liquid != null ? Liquid.transform.localScale.y : 0.70f;
-                    while (time < length)
+                    while (time < duration)
                     {
-                        Liquid.transform.localScale = new Vector3(Liquid.transform.localScale.x, Liquid.transform.localScale.y, Mathf.Lerp(initialLiquidScale, 0f, time / length));
+                        var percentageFilled = 100 * Mathf.Lerp(InitialLiquidScale, 0f, time / duration) / InitialLiquidScale;
+                        Plugin.Log("percentageFilled: " + percentageFilled);
+                        SetLiquidLevel(percentageFilled);
                         time += Time.deltaTime;
+                        yield return null;
                     };
-                }*/
 
-                yield return new WaitWhile(() => audioSource.isPlaying); // In case the audio clip length didn't match..
+                    SetConsumed();
+                }
+                else
+                {
+                    yield return new WaitWhile(() => audioSource.isPlaying); // In case the audio clip length didn't match..
+                    SetConsumed();
+                }
             }
+        }
 
-            Consumed = true;
-            DestroyObjectInHand(playerHeldBy);
+        internal void SetLiquidLevel(float percentage)
+        {
+            if (Liquid == null) return;
+
+            var remainingLiquid = InitialLiquidScale * percentage / 100;
+            var consumedLiquid = InitialLiquidScale - remainingLiquid;
+            Plugin.Log("Drank already " + consumedLiquid + " out of " + InitialLiquidScale);
+            Liquid.transform.localPosition = new Vector3(Liquid.transform.localPosition.x, InitialLiquidPosition - consumedLiquid, Liquid.transform.localPosition.z);
+            Liquid.transform.localScale = new Vector3(Liquid.transform.localScale.x, Liquid.transform.localScale.y, remainingLiquid);
+        }
+
+        internal void SetConsumed()
+        {
+            Consuming = false;
+            isBeingUsed = false;
+            if (PlayerInfo.IsHost)
+                Consumed.Value = true;
+
+            if (Cap != null)
+                Destroy(Cap);
+            SetLiquidLevel(0f);
+
+            itemProperties.toolTips = [];
+
+            if (scrapValue > ScrapValueWhenConsumed)
+                SetScrapValue(ScrapValueWhenConsumed);
+            if (ScanNodeProperties != null)
+                ScanNodeProperties.headerText = "Empty Potion";
         }
         #endregion
     }
