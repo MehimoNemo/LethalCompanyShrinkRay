@@ -335,8 +335,6 @@ namespace LCShrinkRay.comp
 
         public override void PocketItem()
         {
-            if (!IsCurrentPlayer) return;
-
             //drop the player if we attempt to pocket them
             //base.PocketItem();
             this.DiscardItem();
