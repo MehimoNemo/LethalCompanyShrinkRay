@@ -1,3 +1,6 @@
+### 0.4.4 ###
++ fixed desync for ShrinkRay when trying to shrink the holder as the grabbed player
+
 ### 0.4.3 ###
 + shrunken players will now see the terminal screen upon usage
 
