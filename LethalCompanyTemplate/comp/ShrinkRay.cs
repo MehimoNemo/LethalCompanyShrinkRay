@@ -44,6 +44,9 @@ namespace LCShrinkRay.comp
         internal Light LaserLight = null;
         internal LineRenderer LaserLine = null;
         internal Light LaserDot = null;
+
+        internal GameObject targetObject = null;
+        internal List<Material> targetMaterials = new List<Material>();
         #endregion
 
         #region Networking
@@ -191,14 +194,44 @@ namespace LCShrinkRay.comp
                         LaserDot.spotAngle += (3f - distance) / 2;
                     LaserDot.innerSpotAngle = LaserDot.spotAngle / 3;
                 }
+
+                if (targetObject == null || targetObject != hit.collider.gameObject)
+                    ChangeTarget(hit.collider.gameObject);
             }
             else
             {
                 endPoint.z = 10f;
                 LaserDot.spotAngle = 0f;
                 LaserDot.innerSpotAngle = 0f;
+
+                ChangeTarget(null);
             }
             LaserLine.SetPosition(1, endPoint);
+        }
+
+        public void ChangeTarget(GameObject newTarget)
+        {
+            if(targetObject != null && targetMaterials.Count > 0 && targetObject.TryGetComponent(out MeshRenderer renderer))
+            {
+                renderer.materials = targetMaterials.ToArray();
+                targetMaterials.Clear();
+            }
+
+            if (newTarget != null)
+                Plugin.Log("New target for ray: " + newTarget.name);
+            else if(targetObject != null)
+                Plugin.Log("Laser has left target: " + targetObject.name);
+
+            targetObject = newTarget; // Change target object
+
+            if(targetObject.TryGetComponent(out renderer))
+            {
+                targetMaterials = renderer.materials.ToList();
+                List<Material> targetedMaterials = new List<Material>();
+                for (int i = 0; i < renderer.materials.Length; i++)
+                    targetedMaterials.Add(Materials.TargetedMaterial(renderer.materials[i]));
+                renderer.materials = targetedMaterials.ToArray();
+            }
         }
         #endregion
 

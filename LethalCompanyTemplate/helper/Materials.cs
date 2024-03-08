@@ -14,7 +14,7 @@ namespace LCShrinkRay.helper
             {
                 if (wireframeMaterial == null)
                 {
-                    Shader wireframeShader = AssetLoader.littleCompanyAsset?.LoadAsset<Shader>(Path.Combine(AssetLoader.BaseAssetPath, "Shader/wireframe.shader");
+                    Shader wireframeShader = AssetLoader.littleCompanyAsset?.LoadAsset<Shader>(Path.Combine(AssetLoader.BaseAssetPath, "Shader/wireframe.shader"));
                     if(wireframeShader == null)
                     {
                         Plugin.Log("Unable to load wireframe shader!", Plugin.LogType.Error);
@@ -67,6 +67,18 @@ namespace LCShrinkRay.helper
 
                 return laserMaterial;
             }
+        }
+
+        public static Material TargetedMaterial(Material origin)
+        {
+            var m = new Material(origin);
+            m.color = Color.red;
+            m.SetColor("_EmissionColor", new Color(1f, 0f, 0f, 2f));
+            m.SetFloat("_Metallic", 1f);
+            m.SetFloat("_Glossiness", 1f);
+            m.EnableKeyword("_EMISSION");
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            return m;
         }
     }
 }
