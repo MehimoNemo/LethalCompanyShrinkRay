@@ -1,3 +1,5 @@
++ replacing materials instead of sharedMaterials, to only modify the specific item, instead of any of their type
+
 ### 0.4.4 ###
 + fixed desync for ShrinkRay when trying to shrink the holder as the grabbed player
 
