@@ -14,6 +14,7 @@ using System.Collections;
 using System.Linq;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.Rendering.HighDefinition;
+using LCShrinkRay.patches;
 
 namespace LCShrinkRay.comp
 {
@@ -103,7 +104,11 @@ namespace LCShrinkRay.comp
 
             LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
             LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
-            LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
+            //LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
+            LaserLine = gameObject.AddComponent<LineRenderer>();
+            LaserLine.material = Materials.Laser;
+            LaserLine.startWidth = 0.04f;
+            LaserLine.endWidth = 0.04f;
 
             DisableLaser();
         }
@@ -163,6 +168,7 @@ namespace LCShrinkRay.comp
         #region Targeting
         internal void EnableLaser(bool enable = true)
         {
+            if(!IsOwner) return;
             if(LaserLine != null) LaserLine.enabled = enable;
             if(LaserLight != null) LaserLight.enabled = enable;
             if(LaserDot != null) LaserDot.enabled = enable;
@@ -171,24 +177,31 @@ namespace LCShrinkRay.comp
 
         internal void UpdateLaser()
         {
-            var startPoint = LaserLine.GetPosition(0);
-            var direction = playerHeldBy.gameplayCamera.transform.forward;
-            Plugin.Log("Direction: " + direction);
+            if(!IsOwner) return;
 
-            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, 10f, 605030721))
+            var startPoint = LaserLight.transform.position;
+            var direction = LaserLight.transform.forward;
+            LaserLine.SetPosition(0, startPoint);
+
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, 10f))
             {
                 LaserLine.SetPosition(1, hit.point);
                 if (LaserDot != null)
                 {
                     var distance = Vector3.Distance(hit.point, startPoint);
-                    Plugin.Log("Hit something: " + distance);
-                    LaserDot.innerSpotAngle = 10 - Mathf.Max(distance, 7);
+                    LaserDot.spotAngle = 1.5f;
+                    if (distance < 3f)
+                        LaserDot.spotAngle += (3f - distance) / 2;
+                    LaserDot.innerSpotAngle = LaserDot.spotAngle / 3;
                 }
             }
             else
             {
                 LaserLine.SetPosition(1, startPoint + (direction * 10f));
+                LaserDot.spotAngle = 0f;
+                LaserDot.innerSpotAngle = 0f;
             }
+            LaserLine.enabled = true; // why is this even needed??
         }
         #endregion
 

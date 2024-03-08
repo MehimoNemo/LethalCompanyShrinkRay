@@ -56,5 +56,17 @@ namespace LCShrinkRay.helper
                 return glassMaterial;
             }
         }
+
+        private static Material laserMaterial = null;
+        public static Material Laser
+        {
+            get
+            {
+                if (laserMaterial == null)
+                    laserMaterial = AssetLoader.littleCompanyAsset?.LoadAsset<Material>(Path.Combine(AssetLoader.BaseAssetPath, "Shrink/materials/Laser.mat"));
+
+                return laserMaterial;
+            }
+        }
     }
 }
