@@ -1,3 +1,6 @@
+### 0.4.2 ###
++ weight-updating is now called on demand, instead of checking for updates every frame
+
 ### 0.4.1 ###
 + using main folder as fallback if there is no audio / icons folder (e.g. when downloaded via thunderstore)
 

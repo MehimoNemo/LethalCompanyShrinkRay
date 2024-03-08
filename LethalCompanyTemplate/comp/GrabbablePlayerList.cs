@@ -177,7 +177,10 @@ namespace LCShrinkRay.comp
             }
 
             if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
+            {
                 gpo.CalculateScrapValue();
+                gpo.UpdateWeight();
+            }
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), "GrabObjectClientRpc")]
@@ -185,7 +188,10 @@ namespace LCShrinkRay.comp
         public static void GrabObjectClientRpc(PlayerControllerB __instance)
         {
             if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
+            {
                 gpo.CalculateScrapValue();
+                gpo.UpdateWeight();
+            }
         }
 
         [HarmonyPatch(typeof(GrabbableObject), "EnablePhysics")]
