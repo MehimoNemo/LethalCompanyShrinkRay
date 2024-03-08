@@ -24,8 +24,12 @@ namespace LCShrinkRay.helper
             var iconPath = Path.Combine(Path.Combine(AssetDir, "icons"), filename);
             if (!File.Exists(iconPath))
             {
-                Plugin.Log("Icon \"" +  iconPath + "\" not found in plugin directory!", Plugin.LogType.Error);
-                return null;
+                iconPath = Path.Combine(AssetDir, filename);
+                if (!File.Exists(iconPath))
+                {
+                    Plugin.Log("Icon \"" + iconPath + "\" not found in plugin directory!", Plugin.LogType.Error);
+                    return null;
+                }
             }
 
             byte[] bytes = File.ReadAllBytes(iconPath);
@@ -38,6 +42,16 @@ namespace LCShrinkRay.helper
         public static IEnumerator LoadAudioAsync(string filename, Action<AudioClip> onComplete, AudioType type = AudioType.WAV)
         {
             var audioPath = Path.Combine(Path.Combine(AssetDir, "audio"), filename);
+            if (!File.Exists(audioPath))
+            {
+                audioPath = Path.Combine(AssetDir, filename);
+                if (!File.Exists(audioPath))
+                {
+                    Plugin.Log("Audio \"" + audioPath + "\" not found in plugin directory!", Plugin.LogType.Error);
+                    yield break;
+                }
+            }
+
             using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(audioPath, type))
             {
                 var request = www.SendWebRequest();
