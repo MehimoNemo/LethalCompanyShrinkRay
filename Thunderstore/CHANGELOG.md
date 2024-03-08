@@ -1,3 +1,6 @@
+### 0.4.3 ###
++ shrunken players will now see the terminal screen upon usage
+
 ### 0.4.2 ###
 + weight-updating is now called on demand, instead of checking for updates every frame
 
