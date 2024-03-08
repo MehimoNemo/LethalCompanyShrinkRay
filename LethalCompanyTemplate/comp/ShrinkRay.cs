@@ -12,9 +12,6 @@ using static LCShrinkRay.helper.PlayerModification;
 using System.IO;
 using System.Collections;
 using System.Linq;
-using UnityEngine.InputSystem.HID;
-using UnityEngine.Rendering.HighDefinition;
-using LCShrinkRay.patches;
 
 namespace LCShrinkRay.comp
 {
@@ -183,7 +180,12 @@ namespace LCShrinkRay.comp
             var startPoint = LaserLight.transform.position;
             var direction = LaserLight.transform.forward;
             var endPoint = LaserLine.GetPosition(1);
-            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, 10f))
+
+
+
+            var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered, Mask.DecalStickableSurface]);
+
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, 10f, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
                 endPoint.z = distance;
@@ -217,14 +219,9 @@ namespace LCShrinkRay.comp
                 targetMaterials.Clear();
             }
 
-            if (newTarget != null)
-                Plugin.Log("New target for ray: " + newTarget.name);
-            else if(targetObject != null)
-                Plugin.Log("Laser has left target: " + targetObject.name);
+            targetObject = IdentifyTarget(newTarget); // Change target object
 
-            targetObject = newTarget; // Change target object
-
-            if(targetObject.TryGetComponent(out renderer))
+            if (targetObject != null && targetObject.TryGetComponent(out renderer))
             {
                 targetMaterials = renderer.materials.ToList();
                 List<Material> targetedMaterials = new List<Material>();
@@ -232,6 +229,39 @@ namespace LCShrinkRay.comp
                     targetedMaterials.Add(Materials.TargetedMaterial(renderer.materials[i]));
                 renderer.materials = targetedMaterials.ToArray();
             }
+        }
+
+        public GameObject IdentifyTarget(GameObject target)
+        {
+            if (target == null) return null;
+
+            //Plugin.Log("Target to identify: " + target.name + " [layer " + target.layer + "]");
+
+            switch((Mask)target.layer)
+            {
+                case Mask.Player: case Mask.DecalStickableSurface:
+                    var targetPlayer = target.GetComponentInParent<PlayerControllerB>();
+                    if (targetPlayer != null)
+                        Plugin.Log("Found player: " + targetPlayer.name);
+                    break;
+
+                case Mask.Props: case Mask.InteractableObject:
+                    var targetObject = target.GetComponentInParent<GrabbableObject>();
+                    if (targetObject != null)
+                        Plugin.Log("Found object: " + targetObject.name);
+
+                    var targetItem = target.GetComponentInParent<Item>();
+                    if (targetItem != null)
+                        Plugin.Log("Found item: " + targetItem.name);
+                    break;
+
+                case Mask.Enemies: case Mask.EnemiesNotRendered:
+                    var targetEnemy = target.GetComponentInParent<EnemyAI>();
+                    if (targetEnemy != null)
+                        Plugin.Log("Found enemy: " + targetEnemy.enemyType.name);
+                    break;
+            }
+            return target;
         }
         #endregion
 
