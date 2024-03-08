@@ -1,3 +1,6 @@
+### 0.4.1 ###
++ using main folder as fallback if there is no audio / icons folder (e.g. when downloaded via thunderstore)
+
 ### 0.4.0 [Singleplayer & Sounds update] ###
 **What's new**
 + Added two potions: Light & Heavy
