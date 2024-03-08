@@ -43,7 +43,7 @@ namespace LCShrinkRay.comp
             if (meshRenderer != null)
             {
                 foreach (var r in meshRenderer)
-                    initialValues.rendererDefaults[r.GetInstanceID()] = new RendererDefaults() { priority = r.rendererPriority, materials = r.sharedMaterials };
+                    initialValues.rendererDefaults[r.GetInstanceID()] = new RendererDefaults() { priority = r.rendererPriority, materials = r.materials };
             }
         }
     }

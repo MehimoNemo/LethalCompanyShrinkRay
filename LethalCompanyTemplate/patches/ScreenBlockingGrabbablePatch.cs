@@ -90,7 +90,7 @@ namespace LCShrinkRay.patches
                 foreach (var r in meshRenderer)
                 {
                     var rendererDefaults = scaledItemData.initialValues.rendererDefaults[r.GetInstanceID()];
-                    r.sharedMaterials = rendererDefaults.materials;
+                    r.materials = rendererDefaults.materials;
                     r.rendererPriority = rendererDefaults.priority;
                 }
             }
@@ -112,14 +112,14 @@ namespace LCShrinkRay.patches
             {
                 foreach (var r in meshRenderer)
                 {
-                    if (r.sharedMaterials == null || r.sharedMaterials.Length == 0)
+                    if (r.materials == null || r.materials.Length == 0)
                         return;
 
                     r.rendererPriority = 0;
 
-                    var materials = new Material[r.sharedMaterials.Length];
+                    var materials = new Material[r.materials.Length];
                     System.Array.Fill(materials, Materials.Glass);
-                    r.sharedMaterials = materials;
+                    r.materials = materials;
                 }
             }
         }
