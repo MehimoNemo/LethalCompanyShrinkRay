@@ -40,6 +40,7 @@ namespace LCShrinkRay.comp
         internal static AudioClip unloadSFX;
         internal static AudioClip noTargetSFX;
 
+        internal bool LaserEnabled = false;
         internal Light LaserLight = null;
         internal LineRenderer LaserLine = null;
         internal Light LaserDot = null;
@@ -96,19 +97,13 @@ namespace LCShrinkRay.comp
         public override void Start()
         {
             base.Start();
-            //itemProperties.grabSFX = grabSFX;
-            //itemProperties.dropSFX = dropSFX;
 
             if (!TryGetComponent(out audioSource))
                 audioSource = gameObject.AddComponent<AudioSource>();
 
             LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
             LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
-            //LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
-            LaserLine = gameObject.AddComponent<LineRenderer>();
-            LaserLine.material = Materials.Laser;
-            LaserLine.startWidth = 0.04f;
-            LaserLine.endWidth = 0.04f;
+            LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
 
             DisableLaser();
         }
@@ -133,7 +128,7 @@ namespace LCShrinkRay.comp
             if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
                 ShootRayServerRpc(playerHeldBy.playerClientId, ModificationType.Enlarging);
 
-            if(LaserLine != null && LaserLine.enabled)
+            if(LaserEnabled)
                 UpdateLaser();
         }
 
@@ -168,27 +163,29 @@ namespace LCShrinkRay.comp
         #region Targeting
         internal void EnableLaser(bool enable = true)
         {
-            if(!IsOwner) return;
-            if(LaserLine != null) LaserLine.enabled = enable;
-            if(LaserLight != null) LaserLight.enabled = enable;
-            if(LaserDot != null) LaserDot.enabled = enable;
+            if (playerHeldBy == null || playerHeldBy.playerClientId != PlayerInfo.CurrentPlayerID || LaserLine == null || LaserDot == null || LaserLight == null)
+                enable = false;
+
+            LaserEnabled = enable;
+            if (LaserLine != null) LaserLine.enabled = enable;
+            if (LaserLight != null) LaserLight.enabled = enable;
+            if (LaserDot != null) LaserDot.enabled = enable;
         }
         internal void DisableLaser() => EnableLaser(false);
 
         internal void UpdateLaser()
         {
-            if(!IsOwner) return;
+            if(!LaserEnabled) return;
 
             var startPoint = LaserLight.transform.position;
             var direction = LaserLight.transform.forward;
-            LaserLine.SetPosition(0, startPoint);
-
+            var endPoint = LaserLine.GetPosition(1);
             if (Physics.Raycast(startPoint, direction, out RaycastHit hit, 10f))
             {
-                LaserLine.SetPosition(1, hit.point);
+                var distance = Vector3.Distance(hit.point, startPoint);
+                endPoint.z = distance;
                 if (LaserDot != null)
                 {
-                    var distance = Vector3.Distance(hit.point, startPoint);
                     LaserDot.spotAngle = 1.5f;
                     if (distance < 3f)
                         LaserDot.spotAngle += (3f - distance) / 2;
@@ -197,11 +194,11 @@ namespace LCShrinkRay.comp
             }
             else
             {
-                LaserLine.SetPosition(1, startPoint + (direction * 10f));
+                endPoint.z = 10f;
                 LaserDot.spotAngle = 0f;
                 LaserDot.innerSpotAngle = 0f;
             }
-            LaserLine.enabled = true; // why is this even needed??
+            LaserLine.SetPosition(1, endPoint);
         }
         #endregion
 
