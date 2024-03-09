@@ -343,12 +343,14 @@ namespace LCShrinkRay.comp
                 yield break;
             }
 
-            if(!CanApplyModificationTo(playerHeldBy, modificationType) || !ApplyModificationTo(playerHeldBy, modificationType))
+            if(!CanApplyModificationTo(playerHeldBy, modificationType))
             {
                 if (IsOwner)
                     audioSource?.PlayOneShot(noConsumeSFX);
                 yield break;
             }
+
+            ApplyModificationTo(playerHeldBy, modificationType);
 
             Consuming = true;
             isBeingUsed = true;

@@ -76,7 +76,7 @@ namespace LCShrinkRay.helper
                     break;
 
                 default:
-                    break;
+                    return false; // Not supported yet
             }
 
             if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
@@ -96,9 +96,9 @@ namespace LCShrinkRay.helper
             return true;
         }
 
-        public static bool ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, Action onComplete = null)
+        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, Action onComplete = null)
         {
-            if (targetPlayer == null) return false;
+            if (targetPlayer == null) return;
 
             bool targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
@@ -184,10 +184,10 @@ namespace LCShrinkRay.helper
                         break;
                     }
                 default:
-                    return false;
+                    return;
             }
 
-            return true;
+            return;
         }
         #endregion
     }
