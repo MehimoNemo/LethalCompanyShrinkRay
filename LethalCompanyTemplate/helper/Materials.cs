@@ -7,7 +7,7 @@ namespace LCShrinkRay.helper
     internal class Materials
     {
         // Wireframe
-        /*private static Material wireframeMaterial = null;
+        private static Material wireframeMaterial = null;
         public static Material Wireframe
         {
             get
@@ -29,7 +29,15 @@ namespace LCShrinkRay.helper
                 }
                 return wireframeMaterial;
             }
-        }*/
+        }
+
+        public static Material TargetedWireframe(Material origin)
+        {
+            var m = Wireframe;
+            m.SetColor("Main Color", origin.color);
+            m.SetFloat("Edge width", 0.01f);
+            return m;
+        }
 
         // Glass
         private static Material glassMaterial = null;

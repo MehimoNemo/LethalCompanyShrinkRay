@@ -201,6 +201,7 @@ namespace LCShrinkRay.comp
                 yield break;
             }
 
+            shrinkRayAudio.Stop();
             shrinkRayAudio.PlayOneShot(beamSFX);
             yield return new WaitForSeconds(beamDuration);
 

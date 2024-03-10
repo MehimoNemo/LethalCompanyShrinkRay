@@ -226,7 +226,7 @@ namespace LCShrinkRay.comp
                     StartCoroutine(UnloadRay());
                     break;
                 case Mode.Missing:
-                    StartCoroutine(NoTargetForRay());
+                    StartCoroutine(UnloadRay(false));
                     break;
                 default: break;
             }
@@ -236,14 +236,13 @@ namespace LCShrinkRay.comp
         #region Targeting
         internal void EnableLaserForHolder(bool enable = true)
         {
-            if (PlayerInfo.CurrentPlayerID == 1231231) return;
-            if (playerHeldBy == null || playerHeldBy.playerClientId != PlayerInfo.CurrentPlayerID || LaserLine == null || LaserDot == null || LaserLight == null)
+            if (LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null || playerHeldBy.playerClientId != PlayerInfo.CurrentPlayer?.playerClientId)
                 enable = false;
 
             LaserEnabled = enable;
-            if (LaserLine != null) LaserLine.enabled = enable;
-            if (LaserLight != null) LaserLight.enabled = enable;
-            if (LaserDot != null) LaserDot.enabled = enable;
+            LaserLine.enabled = enable;
+            LaserLight.enabled = enable;
+            LaserDot.enabled = enable;
         }
         internal void DisableLaserForHolder() => EnableLaserForHolder(false);
 
@@ -251,13 +250,23 @@ namespace LCShrinkRay.comp
         {
             if(!LaserEnabled) return;
 
+            // todo: find the correct value for SetPosition(1) !
+            /*if(currentMode.Value == Mode.Loading && targetObject != null)
+            {
+                var distance = Vector3.Distance(transform.position, targetObject.transform.position);
+                if(distance < beamSearchDistance)
+                {
+                    LaserLine.SetPosition(1, LaserLine.transform.position - targetObject.transform.position; // Keep focus on this
+                    return;
+                }
+            }*/
+
             var startPoint = LaserLight.transform.position;
             var direction = LaserLight.transform.forward;
-            var endPoint = LaserLine.GetPosition(1);
+            var endPoint = Vector3.zero;
 
             var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered, Mask.DecalStickableSurface]);
-
-            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, (int)Mask.All))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
                 endPoint.z = distance;
@@ -291,22 +300,13 @@ namespace LCShrinkRay.comp
             if(identifiedTarget != null)
                 Plugin.Log("New target: " + identifiedTarget.name + " [layer " + identifiedTarget.layer + "]");
 #endif
-            if (targetObject != null && targetMaterials.Count > 0 && targetObject.TryGetComponent(out MeshRenderer renderer))
-            {
-                renderer.materials = targetMaterials.ToArray();
-                targetMaterials.Clear();
-            }
+            if (targetObject != null && targetObject.TryGetComponent(out TargetHighlighting highlighter))
+                Destroy(highlighter);
 
             targetObject = identifiedTarget; // Change target object
 
-            if (targetObject != null && targetObject.TryGetComponent(out renderer))
-            {
-                targetMaterials = renderer.materials.ToList();
-                List<Material> targetedMaterials = new List<Material>();
-                for (int i = 0; i < renderer.materials.Length; i++)
-                    targetedMaterials.Add(Materials.TargetedMaterial(renderer.materials[i]));
-                renderer.materials = targetedMaterials.ToArray();
-            }
+            if(targetObject != null)
+            targetObject.AddComponent<TargetHighlighting>();
         }
 
         public GameObject IdentifyTarget(GameObject target)
@@ -347,48 +347,26 @@ namespace LCShrinkRay.comp
         private IEnumerator LoadRay()
         {
             Plugin.Log("LoadRay");
-
             if (audioSource != null && loadSFX != null)
             {
-                if (audioSource.isPlaying)
-                    audioSource.Stop();
+                audioSource.Stop();
                 audioSource.PlayOneShot(loadSFX);
                 yield return new WaitWhile(() => audioSource.isPlaying);
             }
             else
                 Plugin.Log("AudioSource or AudioClip for loading ShrinkRay was null!", Plugin.LogType.Warning);
 
-            Plugin.Log("Loading completed");
-
             if (IsOwner)
                 ShootRayOnClient();
         }
 
-        private IEnumerator UnloadRay()
+        private IEnumerator UnloadRay(bool hasHitTarget = true)
         {
             Plugin.Log("UnloadRay");
             if (audioSource != null && unloadSFX != null)
             {
-                audioSource.PlayOneShot(unloadSFX);
-                yield return new WaitWhile(() => audioSource.isPlaying);
-            }
-            else
-                Plugin.Log("AudioSource or AudioClip for unloading ShrinkRay was null!", Plugin.LogType.Warning);
-
-            yield return new WaitForSeconds(useCooldown);
-
-            EnableLaserForHolder();
-
-            if (PlayerInfo.IsHost)
-                currentMode.Value = Mode.Default;
-        }
-
-        private IEnumerator NoTargetForRay()
-        {
-            Plugin.Log("NoTargetForRay");
-            if (audioSource != null && noTargetSFX != null)
-            {
-                audioSource.PlayOneShot(noTargetSFX);
+                audioSource.Stop();
+                audioSource.PlayOneShot(hasHitTarget ? unloadSFX : noTargetSFX);
                 yield return new WaitWhile(() => audioSource.isPlaying);
             }
             else
@@ -405,7 +383,7 @@ namespace LCShrinkRay.comp
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRayOnClient()
         {
-            if (playerHeldBy == null || targetObject == null || playerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || targetObject?.GetComponent<NetworkObject>() == null || playerHeldBy.isClimbingLadder)
             {
                 SwitchModeServerRpc((int)Mode.Missing);
                 return;
