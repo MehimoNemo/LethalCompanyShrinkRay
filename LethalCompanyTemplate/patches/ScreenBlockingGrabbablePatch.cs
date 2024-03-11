@@ -1,11 +1,6 @@
-﻿using GameNetcodeStuff;
-using HarmonyLib;
+﻿using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.helper;
-using LethalLib.Modules;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using UnityEngine;
 
 namespace LCShrinkRay.patches
@@ -51,15 +46,10 @@ namespace LCShrinkRay.patches
         {
             if (item == null || item.playerHeldBy == null) return;
 
-            if (!item.gameObject.TryGetComponent(out ScaledGrabbableObjectData scaledItemData))
-                return;
+            if (item.gameObject.TryGetComponent(out TargetScaling scaling))
+                Object.Destroy(scaling);
 
-            item.itemProperties.positionOffset = scaledItemData.initialValues.offset;
-            item.transform.localScale = scaledItemData.initialValues.scale;
-            if (scaledItemData.initialValues.rendererDefaults != null)
-                UnGlassifyItem(item, scaledItemData);
-
-            Object.Destroy(scaledItemData);
+            UnGlassifyItem(item);
         }
 
         public static void TransformItemRelativeTo(GrabbableObject item, float scale, Vector3 additionalOffset = new Vector3())
@@ -72,56 +62,27 @@ namespace LCShrinkRay.patches
                 return;
             }
 
-            if (!item.gameObject.TryGetComponent(out ScaledGrabbableObjectData scaledItemData))
-                scaledItemData = item.gameObject.AddComponent<ScaledGrabbableObjectData>();
+            if (!item.gameObject.TryGetComponent(out TargetScaling scaling))
+                scaling = item.gameObject.AddComponent<TargetScaling>();
 
-            item.itemProperties.positionOffset = scaledItemData.initialValues.offset * scale + additionalOffset;
-            item.transform.localScale = scaledItemData.initialValues.scale * scale;
+            scaling.ScaleRelativeTo(scale, additionalOffset);
         }
 
-        public static void UnGlassifyItem(GrabbableObject item, ScaledGrabbableObjectData scaledItemData = null)
+        public static void UnGlassifyItem(GrabbableObject item)
         {
-            if (item == null || scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
+            if (item == null)
                 return;
 
-            var meshRenderer = item.gameObject.GetComponentsInChildren<MeshRenderer>();
-            if (meshRenderer != null)
-            {
-                foreach (var r in meshRenderer)
-                {
-                    var rendererDefaults = scaledItemData.initialValues.rendererDefaults[r.GetInstanceID()];
-                    r.sharedMaterials = rendererDefaults.materials;
-                    r.rendererPriority = rendererDefaults.priority;
-                }
-            }
-
-            scaledItemData.IsGlassified = false;
+            if(item.TryGetComponent(out TargetGlassification glassification))
+                Object.Destroy(glassification);
         }
 
-        public static void GlassifyItem(GrabbableObject item, ScaledGrabbableObjectData scaledItemData = null)
+        public static void GlassifyItem(GrabbableObject item)
         {
             if (item == null) return;
 
-            if (scaledItemData == null && !item.gameObject.TryGetComponent(out scaledItemData))
-                scaledItemData = item.gameObject.AddComponent<ScaledGrabbableObjectData>();
-
-            if (scaledItemData.IsGlassified) return;
-
-            var meshRenderer = item.gameObject.GetComponentsInChildren<MeshRenderer>();
-            if (meshRenderer != null)
-            {
-                foreach (var r in meshRenderer)
-                {
-                    if (r.sharedMaterials == null || r.sharedMaterials.Length == 0)
-                        return;
-
-                    r.rendererPriority = 0;
-
-                    var materials = new Material[r.sharedMaterials.Length];
-                    System.Array.Fill(materials, Materials.Glass);
-                    r.sharedMaterials = materials;
-                }
-            }
+            if (!item.gameObject.TryGetComponent<TargetGlassification>(out _))
+                item.gameObject.AddComponent<TargetGlassification>();
         }
     }
 }
