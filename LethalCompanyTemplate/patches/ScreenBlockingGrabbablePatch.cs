@@ -15,6 +15,9 @@ namespace LCShrinkRay.patches
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
         {
+            if (PlayerInfo.CurrentPlayer == null) 
+                return;
+
             if (__instance.playerHeldBy == null || __instance is GrabbablePlayerObject)
             {
                 Plugin.Log("adjustItemOffset: object is not held or other player");
