@@ -350,7 +350,7 @@ namespace LCShrinkRay.comp
                 grabbedPlayerID.Value = playerID.Value;
 
             grabbedPlayerController = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
-            if (grabbedPlayer == null)
+            if (grabbedPlayerController == null)
             {
                 Plugin.Log("grabbedPlayer is null");
                 return;

@@ -1,5 +1,7 @@
+### 0.4.6 ###
++ Fixed a crash when grabbing something
+
 ### 0.4.5 ###
-+ Temp hotfix for an error causing players to crash
 + replacing materials instead of sharedMaterials, to only modify the specific item, instead of any of their type
 
 ### 0.4.4 ###
