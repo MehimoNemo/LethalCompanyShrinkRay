@@ -147,8 +147,12 @@ namespace LCShrinkRay.comp
 
         public override void EquipItem()
         {
-            EnableLaserForHolder();
-            audioSource?.PlayOneShot(grabSFX);
+            if (IsOwner)
+            {
+                EnableLaserForHolder();
+                audioSource?.PlayOneShot(grabSFX);
+            }
+
             base.EquipItem();
         }
 
@@ -161,8 +165,12 @@ namespace LCShrinkRay.comp
 
         public override void DiscardItem()
         {
-            DisableLaserForHolder();
-            audioSource?.PlayOneShot(dropSFX);
+            if (IsOwner)
+            {
+                DisableLaserForHolder();
+                audioSource?.PlayOneShot(dropSFX);
+            }
+
             base.DiscardItem();
         }
 
@@ -236,13 +244,13 @@ namespace LCShrinkRay.comp
         #region Targeting
         internal void EnableLaserForHolder(bool enable = true)
         {
-            if (LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null || playerHeldBy.playerClientId != PlayerInfo.CurrentPlayer?.playerClientId)
+            if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null)
                 enable = false;
 
             LaserEnabled = enable;
-            LaserLine.enabled = enable;
-            LaserLight.enabled = enable;
-            LaserDot.enabled = enable;
+            if (LaserLine != null) LaserLine.enabled = enable;
+            if (LaserLight != null) LaserLight.enabled = enable;
+            if (LaserDot != null) LaserDot.enabled = enable;
         }
         internal void DisableLaserForHolder() => EnableLaserForHolder(false);
 
@@ -250,23 +258,28 @@ namespace LCShrinkRay.comp
         {
             if(!LaserEnabled) return;
 
+#if !DEBUG
+            if(currentMode.Value != Mode.Loading) return; // In release only RayCast on loading, for better performance!
+#endif
+
             // todo: find the correct value for SetPosition(1) !
-            /*if(currentMode.Value == Mode.Loading && targetObject != null)
+            if(currentMode.Value == Mode.Loading && targetObject != null)
             {
                 var distance = Vector3.Distance(transform.position, targetObject.transform.position);
                 if(distance < beamSearchDistance)
                 {
-                    LaserLine.SetPosition(1, LaserLine.transform.position - targetObject.transform.position; // Keep focus on this
+                    var targetDirection = LaserLight.transform.InverseTransformPoint(targetObject.transform.position);
+                    LaserLine.SetPosition(1, targetDirection);
                     return;
                 }
-            }*/
+            }
 
             var startPoint = LaserLight.transform.position;
             var direction = LaserLight.transform.forward;
             var endPoint = Vector3.zero;
 
-            var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered, Mask.DecalStickableSurface]);
-            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, (int)Mask.All))
+            var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered/*, Mask.DecalStickableSurface*/]);
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
                 endPoint.z = distance;
@@ -297,8 +310,10 @@ namespace LCShrinkRay.comp
             var identifiedTarget = IdentifyTarget(newTarget);
             if (identifiedTarget == targetObject) return;
 #if DEBUG
-            if(identifiedTarget != null)
+            if (identifiedTarget != null)
                 Plugin.Log("New target: " + identifiedTarget.name + " [layer " + identifiedTarget.layer + "]");
+            else
+                Plugin.Log("Lost track of target.");
 #endif
             if (targetObject != null && targetObject.TryGetComponent(out TargetHighlighting highlighter))
                 Destroy(highlighter);
@@ -317,7 +332,7 @@ namespace LCShrinkRay.comp
 
             switch((Mask)target.layer)
             {
-                case Mask.Player: case Mask.DecalStickableSurface:
+                case Mask.Player: /*case Mask.DecalStickableSurface:*/
                     var targetPlayer = target.GetComponentInParent<PlayerControllerB>();
                     if (targetPlayer != null && targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID)
                         return targetPlayer.gameObject;
