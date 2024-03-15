@@ -167,6 +167,9 @@ namespace LCShrinkRay.comp
                 audioSource?.PlayOneShot(dropSFX);
             }
 
+            if(targetObject != null && targetObject.TryGetComponent(out TargetForceField forceField))
+                Destroy(forceField);
+
             base.DiscardItem();
         }
 
