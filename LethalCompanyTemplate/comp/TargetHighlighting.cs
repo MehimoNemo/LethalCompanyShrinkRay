@@ -62,7 +62,6 @@ namespace LCShrinkRay.comp
                     break;
                 case HighlightMethod.ForceField:
                     highlightingGameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    //highlightingGameObject.transform.SetParent(gameObject.transform, false);
 
                     if (highlightingGameObject.TryGetComponent(out SphereCollider sphereCollider))
                         sphereCollider.enabled = false;
@@ -84,6 +83,7 @@ namespace LCShrinkRay.comp
                         highlightingGameObject.transform.localScale = collider.bounds.size;
                         highlightingGameObject.transform.position = collider.bounds.center;
                     }
+                    highlightingGameObject.transform.SetParent(gameObject.transform, true);
                     break;
                 default: break;
             }
