@@ -13,6 +13,8 @@ namespace LCShrinkRay.comp
         internal Vector3 originalScale = Vector3.one;
         internal Vector3 originalOffset = Vector3.zero;
 
+        public float CurrentScale = 1f;
+
         void Awake()
         {
             if (gameObject == null)
@@ -33,7 +35,16 @@ namespace LCShrinkRay.comp
 
             if (gameObject.TryGetComponent(out GrabbableObject item))
                 item.itemProperties.positionOffset = originalOffset * relationalScale + additionalOffset;
+
+            CurrentScale = relationalScale;
         }
+
+        public Vector3 SizeAt(float percentage)
+        {
+            return originalScale * percentage;
+        }
+
+        public bool Unchanged => SizeAt(1f) == originalScale;
 
         void OnDestroy()
         {

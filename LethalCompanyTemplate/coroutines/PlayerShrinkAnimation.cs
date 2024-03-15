@@ -56,7 +56,7 @@ namespace LCShrinkRay.coroutines
             {
                 // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
                 var x = elapsedTime;
-                currentSize = direction * (a + 1f) * Mathf.Pow(x / 2, 2) + (x * b * direction) + c;
+                currentSize = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
 
                 var currentScale = new Vector3(currentSize, currentSize, currentSize);
                 playerTransform.localScale = currentScale;

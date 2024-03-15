@@ -315,13 +315,13 @@ namespace LCShrinkRay.comp
             else
                 Plugin.Log("Lost track of target.");
 #endif
-            if (targetObject != null && targetObject.TryGetComponent(out TargetHighlighting highlighter))
-                Destroy(highlighter);
+            if (targetObject != null && targetObject.TryGetComponent(out TargetForceField forceField))
+                Destroy(forceField);
 
             targetObject = identifiedTarget; // Change target object
 
             if(targetObject != null)
-            targetObject.AddComponent<TargetHighlighting>();
+            targetObject.AddComponent<TargetForceField>();
         }
 
         public GameObject IdentifyTarget(GameObject target)
