@@ -11,10 +11,6 @@ using static LCShrinkRay.helper.LayerMasks;
 using static LCShrinkRay.helper.PlayerModification;
 using System.IO;
 using System.Collections;
-using System.Linq;
-using System.ComponentModel.Design;
-using UnityEngine.Rendering;
-using static LCShrinkRay.comp.GrabbablePlayerObject;
 
 namespace LCShrinkRay.comp
 {
@@ -258,11 +254,8 @@ namespace LCShrinkRay.comp
         {
             if(!LaserEnabled) return;
 
-#if !DEBUG
-            if(currentMode.Value != Mode.Loading) return; // In release only RayCast on loading, for better performance!
-#endif
+            if(currentMode.Value != Mode.Loading && ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.OnLoading) return;
 
-            // todo: find the correct value for SetPosition(1) !
             if(currentMode.Value == Mode.Loading && targetObject != null)
             {
                 var distance = Vector3.Distance(transform.position, targetObject.transform.position);

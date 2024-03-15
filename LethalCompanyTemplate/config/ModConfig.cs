@@ -30,6 +30,12 @@ namespace LCShrinkRay.Config
             Addicted
         }
 
+        public enum ShrinkRayTargetHighlighting
+        {
+            Always,
+            OnLoading
+        }
+
         public struct ConfigValues
         {
             // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
@@ -56,7 +62,11 @@ namespace LCShrinkRay.Config
 
             public bool CanEscapeGrab { get; set; }
 
-            public bool multipleShrinking { get; set; }
+            public bool deathShrinking { get; set; }
+
+            public float sizeChangeStep { get; set; }
+
+            public ShrinkRayTargetHighlighting shrinkRayTargetHighlighting { get; set; }
 
             public ThumperBehaviour thumperBehaviour { get; set; }
 
@@ -89,7 +99,9 @@ namespace LCShrinkRay.Config
         public void Setup()
         {
             values.shrinkRayCost            = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
-            values.multipleShrinking        = Plugin.BepInExConfig().Bind("General", "MultipleShrinking", false, "If true, a player can shrink multiple times.. unfortunatly.").Value;
+            values.deathShrinking           = Plugin.BepInExConfig().Bind("General", "DeathShrinking", true, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
+            values.sizeChangeStep           = Plugin.BepInExConfig().Bind("General", "SizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step.", new AcceptableValueRange<float>(0.05f, 0.8f))).Value;
+            values.shrinkRayTargetHighlighting  = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnLoading, "Defines, when a target gets highlighted. Set to OnLoading for better performance.").Value;
 
             values.movementSpeedMultiplier  = Plugin.BepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.3f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (very slow) to 1.5 (very fast).", new AcceptableValueRange<float>(0.5f, 1.5f))).Value;
             values.jumpHeightMultiplier     = Plugin.BepInExConfig().Bind("Shrunken", "JumpHeightMultiplier", 1.3f, new ConfigDescription("Jump-height multiplier for shrunken players, ranging from 0.5 (very low) to 2 (very high).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
