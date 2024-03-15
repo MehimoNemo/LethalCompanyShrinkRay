@@ -99,7 +99,7 @@ namespace LCShrinkRay.Config
         public void Setup()
         {
             values.shrinkRayCost            = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
-            values.deathShrinking           = Plugin.BepInExConfig().Bind("General", "DeathShrinking", true, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
+            values.deathShrinking           = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
             values.sizeChangeStep           = Plugin.BepInExConfig().Bind("General", "SizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step.", new AcceptableValueRange<float>(0.05f, 0.8f))).Value;
             values.shrinkRayTargetHighlighting  = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnLoading, "Defines, when a target gets highlighted. Set to OnLoading for better performance.").Value;
 
