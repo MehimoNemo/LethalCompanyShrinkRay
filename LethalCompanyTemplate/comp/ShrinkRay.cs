@@ -87,6 +87,8 @@ namespace LCShrinkRay.comp
 
             shrinkRay.itemProperties = assetItem;
             shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
+            shrinkRay.itemProperties.syncGrabFunction = true;
+            shrinkRay.itemProperties.syncDiscardFunction = true;
             shrinkRay.grabbable = true;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;

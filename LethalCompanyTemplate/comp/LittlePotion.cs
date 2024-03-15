@@ -223,6 +223,8 @@ namespace LCShrinkRay.comp
             itemProperties.positionOffset = new Vector3(0f, 0.12f, 0f);
 
             itemProperties.syncUseFunction = true;
+            itemProperties.syncGrabFunction = false;
+            itemProperties.syncDiscardFunction = false;
         }
 
         internal void AdjustStoreAndScrapValues()
