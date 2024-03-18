@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.VFX;
 
 namespace LCShrinkRay.comp
 {
-    internal class TargetForceField : TargetHighlighting
+    internal class TargetCircle : TargetHighlighting
     {
         void Awake()
         {
-            HighlightUsing(HighlightMethod.ForceField);
+            HighlightUsing(HighlightMethod.Circle);
         }
     }
 
@@ -33,7 +34,7 @@ namespace LCShrinkRay.comp
         {
             None,
             Material,
-            ForceField
+            Circle
         }
         internal HighlightMethod method;
         internal List<Material> originalMaterials = null;
@@ -60,29 +61,25 @@ namespace LCShrinkRay.comp
                     originalMaterials = renderer.materials.ToList();
                     ChangeMaterials();
                     break;
-                case HighlightMethod.ForceField:
-                    highlightingGameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-                    if (highlightingGameObject.TryGetComponent(out SphereCollider sphereCollider))
-                        sphereCollider.enabled = false;
-
-                    if (highlightingGameObject.TryGetComponent(out MeshRenderer sphereRenderer))
+                case HighlightMethod.Circle:
+                    highlightingGameObject = Materials.CircleHighlight;
+                    if (highlightingGameObject == null)
                     {
-                        sphereRenderer.material = Materials.Glass;
-                        sphereRenderer.material.color = new UnityEngine.Color(1f, 0f, 0f, 0.3f); // transparent red
-                        sphereRenderer.enabled = true;
+                        Plugin.Log("Unable to load highlight.", Plugin.LogType.Error);
+                        return;
                     }
 
                     if (renderer != null)
                     {
-                        highlightingGameObject.transform.localScale = renderer.bounds.size;
-                        highlightingGameObject.transform.position = renderer.bounds.center;
+                        highlightingGameObject.transform.localScale = new Vector3(renderer.bounds.size.x, Mathf.Max(renderer.bounds.size.y, 1f), renderer.bounds.size.z);
+                        highlightingGameObject.transform.position = new Vector3(renderer.bounds.center.x, 0f, renderer.bounds.center.z);
                     }
                     else if(gameObject.TryGetComponent(out Collider collider))
                     {
-                        highlightingGameObject.transform.localScale = collider.bounds.size;
-                        highlightingGameObject.transform.position = collider.bounds.center;
+                        highlightingGameObject.transform.localScale = new Vector3(collider.bounds.size.x, Mathf.Max(collider.bounds.size.y, 1f), collider.bounds.size.z);
+                        highlightingGameObject.transform.position = new Vector3(collider.bounds.center.x, 0f, collider.bounds.center.z);
                     }
+
                     highlightingGameObject.transform.SetParent(gameObject.transform, true);
                     break;
                 default: break;

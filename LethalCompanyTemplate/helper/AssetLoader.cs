@@ -58,6 +58,9 @@ namespace LCShrinkRay.helper
 
         public static void LoadAllAssets()
         {
+            foreach (var assetName in littleCompanyAsset?.GetAllAssetNames())
+                Plugin.Log("Found asset: " + assetName);
+
             GrabbablePlayerObject.LoadAsset();
             ShrinkRay.LoadAsset();
             LittlePotion.LoadPotionAssets();

@@ -169,8 +169,8 @@ namespace LCShrinkRay.comp
                 audioSource?.PlayOneShot(dropSFX);
             }
 
-            if(targetObject != null && targetObject.TryGetComponent(out TargetForceField forceField))
-                Destroy(forceField);
+            if(targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
+                Destroy(circle);
 
             base.DiscardItem();
         }
@@ -313,13 +313,13 @@ namespace LCShrinkRay.comp
             else
                 Plugin.Log("Lost track of target.");
 #endif
-            if (targetObject != null && targetObject.TryGetComponent(out TargetForceField forceField))
-                Destroy(forceField);
+            if (targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
+                Destroy(circle);
 
             targetObject = identifiedTarget; // Change target object
 
             if(targetObject != null)
-            targetObject.AddComponent<TargetForceField>();
+            targetObject.AddComponent<TargetCircle>();
         }
 
         public GameObject IdentifyTarget(GameObject target)

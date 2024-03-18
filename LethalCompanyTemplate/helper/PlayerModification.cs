@@ -72,7 +72,7 @@ namespace LCShrinkRay.helper
                     return false; // Not supported yet
             }
 
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
+            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
             {
                 if (gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == targetPlayer.playerClientId)
                 {
@@ -155,8 +155,13 @@ namespace LCShrinkRay.helper
 
                 case ModificationType.Enlarging:
                     {
+
                         var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
                         Plugin.Log("Enlarging player [" + targetPlayer.playerClientId + "] to size: " + nextIncreasedSize);
+
+                        if (nextIncreasedSize >= 1f && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
+                            gpo.EnableInteractTrigger(false);
+
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () =>
                         {
                             if (nextIncreasedSize >= 1f)
