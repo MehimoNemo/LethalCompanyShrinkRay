@@ -124,8 +124,8 @@ namespace LCShrinkRay.patches
 
             if (cube.TryGetComponent(out MeshRenderer meshRenderer))
             {
-                meshRenderer.sharedMaterial = new Material(Shader.Find("HDRP/Lit"));
-                meshRenderer.sharedMaterial.color = color;
+                meshRenderer.material = new Material(Shader.Find("HDRP/Lit"));
+                meshRenderer.material.color = color;
                 meshRenderer.enabled = true;
             }
 

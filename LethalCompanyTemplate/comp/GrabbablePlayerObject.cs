@@ -66,6 +66,8 @@ namespace LCShrinkRay.comp
         internal static AudioClip dropSFX;
         internal static AudioClip throwSFX;
         internal static Sprite Icon = AssetLoader.LoadIcon("GrabbablePlayerIcon.png");
+
+        internal static float BaseWeight = 0.05f;
         #endregion
 
         #region Networking
@@ -187,17 +189,6 @@ namespace LCShrinkRay.comp
 
                 if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
-            }
-
-            if(itemProperties.weight != grabbedPlayer.carryWeight)
-            {
-                if(playerHeldBy != null)
-                {
-                    playerHeldBy.carryWeight -= itemProperties.weight;
-                    playerHeldBy.carryWeight += grabbedPlayer.carryWeight;
-                }
-
-                itemProperties.weight = grabbedPlayer.carryWeight;
             }
         }
         
@@ -360,7 +351,7 @@ namespace LCShrinkRay.comp
                 grabbedPlayerID.Value = playerID.Value;
 
             grabbedPlayerController = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
-            if (grabbedPlayer == null)
+            if (grabbedPlayerController == null)
             {
                 Plugin.Log("grabbedPlayer is null");
                 return;
@@ -375,9 +366,10 @@ namespace LCShrinkRay.comp
             EnableInteractTrigger();
 
             CalculateScrapValue();
-            SetIsGrabbableToEnemies(true);
-
             UpdateScanNodeVisibility();
+            UpdateWeight();
+
+            SetIsGrabbableToEnemies(true);
         }
 
         public IEnumerator CleanUp(Action onComplete = null)
@@ -469,19 +461,15 @@ namespace LCShrinkRay.comp
             Plugin.Log("Scrap value: " + value);
         }
 
-        public void UpdateWeightIfNeeded()
+        public void UpdateWeight()
         {
-            // Checking float-values every frame may be better than doing TryFindGrabbable.. also more stable for the future
-            if (itemProperties.weight == grabbedPlayer.carryWeight)
-                return;
+            if (playerHeldBy != null)
+                playerHeldBy.carryWeight -= itemProperties.weight; // Subtract old weight
+
+            itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight; // Set new weight
 
             if (playerHeldBy != null)
-            {
-                playerHeldBy.carryWeight -= itemProperties.weight;
-                playerHeldBy.carryWeight += grabbedPlayer.carryWeight;
-            }
-
-            itemProperties.weight = grabbedPlayer.carryWeight;
+                playerHeldBy.carryWeight += itemProperties.weight; // Add new weight
         }
 
         public void SetIsGrabbableToEnemies(bool isGrabbable = true)

@@ -4,15 +4,14 @@ using UnityEngine;
 
 namespace LCShrinkRay.patches
 {
-
-    [HarmonyPatch(typeof(Terminal))]
+    [HarmonyPatch]
     internal class TerminalPatch
     {
         static float smallestPlayerSize = 0.2f; // smallest the player is allowed to be
         static Vector3 SmallPosition = new Vector3(-0.4795f, 0.2694f, 0.085f); // used when the player is 0.2f tall
         static Vector3 NormalPosition = new Vector3(-0.84F, -1.49F, 0.09F); // used when the player is 1f tall
 
-        [HarmonyPatch("BeginUsingTerminal")]
+        [HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
         [HarmonyPostfix]
         public static void MovePlayerPos()
         {

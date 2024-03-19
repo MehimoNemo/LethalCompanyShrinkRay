@@ -1,3 +1,21 @@
+### 0.4.6 ###
++ Fixed a crash when grabbing something
+
+### 0.4.5 ###
++ replacing materials instead of sharedMaterials, to only modify the specific item, instead of any of their type
+
+### 0.4.4 ###
++ fixed desync for ShrinkRay when trying to shrink the holder as the grabbed player
+
+### 0.4.3 ###
++ shrunken players will now see the terminal screen upon usage
+
+### 0.4.2 ###
++ weight-updating is now called on demand, instead of checking for updates every frame
+
+### 0.4.1 ###
++ using main folder as fallback if there is no audio / icons folder (e.g. when downloaded via thunderstore)
+
 ### 0.4.0 [Singleplayer & Sounds update] ###
 **What's new**
 + Added two potions: Light & Heavy
