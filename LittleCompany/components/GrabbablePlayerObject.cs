@@ -219,7 +219,7 @@ namespace LittleCompany.components
 
         public override void GrabItem()
         {
-            Plugin.Log("Okay, let's grab!");
+            Plugin.Log("Okay, let's grab " + name);
             base.GrabItem();
 
             grabbedPlayer.playerCollider.enabled = false;
@@ -374,8 +374,15 @@ namespace LittleCompany.components
             SetIsGrabbableToEnemies(true);
         }
 
+        public IEnumerator DeleteLater()
+        {
+            yield return new WaitForSeconds(1f);
+            GrabbablePlayerList.RemovePlayerGrabbable(grabbedPlayerID.Value);
+        }
+
         public IEnumerator CleanUp(Action onComplete = null)
         {
+            Plugin.Log("Clean Up");
             SetIsGrabbableToEnemies(false);
             if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
             {
@@ -478,6 +485,7 @@ namespace LittleCompany.components
 
         public void UpdateWeight()
         {
+            Plugin.Log("UpdateWeight for gpo \"" + name + "\" who weights " + (grabbedPlayer.carryWeight + BaseWeight) + ". Holder is " + (playerHeldBy != null ? playerHeldBy.name : "null"));
             if (playerHeldBy != null)
                 playerHeldBy.carryWeight -= itemProperties.weight; // Subtract old weight
 
@@ -557,7 +565,7 @@ namespace LittleCompany.components
 
         private void SetHolderGrabbable(bool isGrabbable = true)
         {
-            if (!IsCurrentPlayer) return; // Only do this from the perspective of the currently held player, not the holder himself
+            if (!IsCurrentPlayer || playerHeldBy == null) return; // Only do this from the perspective of the currently held player, not the holder himself
 
             if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(playerHeldBy.playerClientId, out GrabbablePlayerObject gpo))
                 gpo.EnableInteractTrigger(isGrabbable);
@@ -632,6 +640,7 @@ namespace LittleCompany.components
         [ClientRpc]
         public void ThrowPlayerClientRpc(Vector3 direction)
         {
+            Plugin.Log("ThrowPlayerClientRpc");
             Thrown = true;
 
             if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)

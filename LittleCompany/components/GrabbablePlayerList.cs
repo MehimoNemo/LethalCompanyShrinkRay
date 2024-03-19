@@ -3,6 +3,7 @@ using HarmonyLib;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -23,14 +24,6 @@ namespace LittleCompany.components
         #endregion
 
         #region Patches
-        [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerServerRpc")]
-        [HarmonyPostfix]
-        public static void KillPlayerServerRpc(int playerId,/* bool spawnBody,*/ Vector3 bodyVelocity, int causeOfDeath/*, int deathAnimation*/)
-        {
-            Plugin.Log("KillPlayerServerRpc. Cause: " + (CauseOfDeath)causeOfDeath + " / Velocity: " + bodyVelocity);
-            RemovePlayerGrabbable((ulong)playerId);
-        }
-
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
         [HarmonyPrefix]
         public static void KillPlayerClientRpcPrefix(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
@@ -51,16 +44,17 @@ namespace LittleCompany.components
                 return;
             }
 
-            if (grabbables.grabbedGPO) // Player who dies is grabbed
+            if (grabbables.grabbedGPO) // Player who dies is grabbable
             {
-                if(weDied)
-                {
-                    Plugin.Log("We are grabbed and dying."); // Handled below!
-                }
                 if(grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
                 {
                     Plugin.Log("The person we are grabbing is dying -> dropping.");
                     PlayerInfo.CurrentPlayer.DiscardHeldObject();
+                }
+                if (PlayerInfo.IsHost)
+                {
+                    Plugin.Log("Delete gpo later");
+                    GameNetworkManager.Instance.StartCoroutine(grabbables.grabbedGPO.DeleteLater()); // Remove grabbable player object after everything is executed
                 }
             }
 
@@ -166,6 +160,7 @@ namespace LittleCompany.components
         [HarmonyPostfix]
         public static void SetObjectAsNoLongerHeld(PlayerControllerB __instance, GrabbableObject dropObject)
         {
+            Plugin.Log("SetObjectAsNoLongerHeld");
             if(dropObject != null && dropObject is GrabbablePlayerObject)
                 (dropObject as GrabbablePlayerObject).EnableInteractTrigger();
 
@@ -180,6 +175,7 @@ namespace LittleCompany.components
         [HarmonyPostfix]
         public static void GrabObjectClientRpc(PlayerControllerB __instance)
         {
+            Plugin.Log("GrabObjectClientRpc");
             if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
             {
                 gpo.CalculateScrapValue();
