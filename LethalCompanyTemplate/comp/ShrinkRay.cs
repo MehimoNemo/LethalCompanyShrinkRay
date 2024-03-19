@@ -1,5 +1,4 @@
 ﻿using GameNetcodeStuff;
-using System;
 using UnityEngine;
 using Unity.Netcode;
 using LethalLib.Modules;

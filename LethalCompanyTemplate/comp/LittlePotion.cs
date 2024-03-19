@@ -1,6 +1,5 @@
 ﻿using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using LethalLib.Extras;
 using LethalLib.Modules;
 using System;
 using System.Collections;

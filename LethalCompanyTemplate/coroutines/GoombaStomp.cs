@@ -1,5 +1,4 @@
-﻿using LCShrinkRay.comp;
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 

@@ -8,9 +8,7 @@ using LCShrinkRay.helper;
 using Unity.Netcode;
 using LCShrinkRay.patches;
 using System.IO;
-using System.Reflection;
 using System.Collections;
-using System.ComponentModel;
 using static LCShrinkRay.helper.Moons;
 
 namespace LCShrinkRay.comp

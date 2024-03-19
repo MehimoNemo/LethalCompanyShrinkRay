@@ -6,7 +6,6 @@ using Unity.Collections;
 using Unity.Netcode;
 using GameNetcodeStuff;
 using LCShrinkRay.helper;
-using Newtonsoft.Json.Linq;
 using LCShrinkRay.comp;
 
 namespace LCShrinkRay.Config

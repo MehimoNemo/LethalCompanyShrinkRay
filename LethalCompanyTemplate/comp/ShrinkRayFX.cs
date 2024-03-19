@@ -2,8 +2,6 @@ using GameNetcodeStuff;
 using LCShrinkRay.helper;
 using System;
 using System.Collections;
-using System.IO;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.VFX;
 using static LCShrinkRay.helper.PlayerModification;

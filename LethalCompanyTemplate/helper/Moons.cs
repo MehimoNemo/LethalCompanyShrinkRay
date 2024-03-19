@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace LCShrinkRay.helper
+﻿namespace LCShrinkRay.helper
 {
     internal class Moons
     {

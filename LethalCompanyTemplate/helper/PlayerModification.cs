@@ -2,7 +2,6 @@
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace LCShrinkRay.helper

@@ -1,6 +1,5 @@
 ﻿using GameNetcodeStuff;
 using LCShrinkRay.comp;
-using LCShrinkRay.Config;
 using LCShrinkRay.helper;
 using LCShrinkRay.patches;
 using System;

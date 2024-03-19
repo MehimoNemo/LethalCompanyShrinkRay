@@ -2,13 +2,11 @@
 using HarmonyLib;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using LethalLib.Modules;
 using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using static LCShrinkRay.comp.GrabbablePlayerObject;
-using static LCShrinkRay.helper.Moons;
 
 namespace LCShrinkRay.comp
 {
