@@ -1,2 +1,0 @@
-C:\Users\Izek\source\repos\LethalCompanyShrinkRay\netOutputLCShrink\obj\Debug\netOutputLCShrink.csproj.AssemblyReference.cache
-C:\Users\Izek\source\repos\LethalCompanyShrinkRay\netOutputLCShrink\obj\Debug\netOutputLCShrink.csproj.CoreCompileInputs.cache
