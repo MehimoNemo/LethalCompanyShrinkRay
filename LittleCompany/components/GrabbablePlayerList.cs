@@ -167,12 +167,7 @@ namespace LittleCompany.components
         public static void SetObjectAsNoLongerHeld(PlayerControllerB __instance, GrabbableObject dropObject)
         {
             if(dropObject != null && dropObject is GrabbablePlayerObject)
-            {
-                var isCurrentPlayer = (dropObject as GrabbablePlayerObject).IsCurrentPlayer;
-                Plugin.Log("SetObjectAsNoLongerHeld: Enable colliders -> " + isCurrentPlayer);
-                dropObject.EnablePhysics(!isCurrentPlayer);
-                dropObject.EnableItemMeshes(!isCurrentPlayer);
-            }
+                (dropObject as GrabbablePlayerObject).EnableInteractTrigger();
 
             if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
             {
@@ -194,18 +189,18 @@ namespace LittleCompany.components
 
         [HarmonyPatch(typeof(GrabbableObject), "EnablePhysics")]
         [HarmonyPrefix]
-        public static void EnablePhysics(GrabbableObject __instance, ref bool enable)
+        public static void EnablePhysicsPrefix(GrabbableObject __instance, ref bool enable)
         {
             if (__instance is GrabbablePlayerObject && (__instance as GrabbablePlayerObject).IsCurrentPlayer)
                 enable = false;
         }
 
-        [HarmonyPatch(typeof(GrabbableObject), "EnableItemMeshes")]
-        [HarmonyPrefix] // todo: check again
-        public static void EnableItemMeshes(GrabbableObject __instance, ref bool enable)
+        [HarmonyPatch(typeof(GrabbableObject), "EnablePhysics")]
+        [HarmonyPostfix]
+        public static void EnablePhysicsPostfix(GrabbableObject __instance, ref bool enable)
         {
-            if (__instance is GrabbablePlayerObject && (__instance as GrabbablePlayerObject).IsCurrentPlayer)
-                enable = false;
+            if (__instance is GrabbablePlayerObject)
+                (__instance as GrabbablePlayerObject).UpdateScanNodeVisibility();
         }
 
         [HarmonyPatch(typeof(Shovel), "HitShovel")]
