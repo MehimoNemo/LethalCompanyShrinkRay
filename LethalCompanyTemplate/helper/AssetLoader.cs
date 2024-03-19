@@ -58,8 +58,10 @@ namespace LCShrinkRay.helper
 
         public static void LoadAllAssets()
         {
+#if DEBUG
             foreach (var assetName in littleCompanyAsset?.GetAllAssetNames())
                 Plugin.Log("Found asset: " + assetName);
+#endif
 
             GrabbablePlayerObject.LoadAsset();
             ShrinkRay.LoadAsset();

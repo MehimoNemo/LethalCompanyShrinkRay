@@ -101,9 +101,6 @@ namespace LCShrinkRay.helper
                 }
 
                 var ch = Object.Instantiate(_circleHighlightPrefab);
-                if (ch == null) return null;
-
-                Object.DontDestroyOnLoad(ch);
                 return ch;
             }
         }

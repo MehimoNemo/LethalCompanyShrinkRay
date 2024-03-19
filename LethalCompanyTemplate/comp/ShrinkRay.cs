@@ -87,8 +87,8 @@ namespace LCShrinkRay.comp
 
             shrinkRay.itemProperties = assetItem;
             shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
-            shrinkRay.itemProperties.syncGrabFunction = true;
-            shrinkRay.itemProperties.syncDiscardFunction = true;
+            shrinkRay.itemProperties.minValue = 0;
+            shrinkRay.itemProperties.maxValue = 0;
             shrinkRay.grabbable = true;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
@@ -148,7 +148,8 @@ namespace LCShrinkRay.comp
             if (IsOwner)
             {
                 EnableLaserForHolder();
-                audioSource?.PlayOneShot(grabSFX);
+                if(grabSFX != null)
+                    audioSource?.PlayOneShot(grabSFX);
             }
 
             base.EquipItem();
@@ -163,14 +164,10 @@ namespace LCShrinkRay.comp
 
         public override void DiscardItem()
         {
-            if (IsOwner)
-            {
-                DisableLaserForHolder();
+            if (IsOwner && dropSFX != null)
                 audioSource?.PlayOneShot(dropSFX);
-            }
 
-            if(targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
-                Destroy(circle);
+            DisableLaserForHolder();
 
             base.DiscardItem();
         }
@@ -185,14 +182,17 @@ namespace LCShrinkRay.comp
 
         #region Mode Control
         [ServerRpc(RequireOwnership = false)]
-        internal void SyncTargetObjectServerRpc(ulong targetObjectNetworkID)
+        internal void SyncTargetObjectServerRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
         {
-            SyncTargetObjectClientRpc(targetObjectNetworkID);
+            SyncTargetObjectClientRpc(targetObjectNetworkID, playerHeldByID);
         }
 
         [ClientRpc]
-        internal void SyncTargetObjectClientRpc(ulong targetObjectNetworkID)
+        internal void SyncTargetObjectClientRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
         {
+            if(playerHeldBy == null || playerHeldBy.playerClientId != playerHeldByID)
+                playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID); // Sync holder
+
             if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.ContainsKey(targetObjectNetworkID))
             {
                 targetObject = null;
@@ -252,6 +252,9 @@ namespace LCShrinkRay.comp
             if (LaserLine != null) LaserLine.enabled = enable;
             if (LaserLight != null) LaserLight.enabled = enable;
             if (LaserDot != null) LaserDot.enabled = enable;
+
+            if (!enable && targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
+                ChangeTarget(null);
         }
         internal void DisableLaserForHolder() => EnableLaserForHolder(false);
 
@@ -319,7 +322,7 @@ namespace LCShrinkRay.comp
             targetObject = identifiedTarget; // Change target object
 
             if(targetObject != null)
-            targetObject.AddComponent<TargetCircle>();
+                targetObject.AddComponent<TargetCircle>();
         }
 
         public GameObject IdentifyTarget(GameObject target)
@@ -404,7 +407,7 @@ namespace LCShrinkRay.comp
 
             Plugin.Log("Shooting ray gun!", Plugin.LogType.Warning);
 
-            SyncTargetObjectServerRpc(targetObject.GetComponent<NetworkObject>().NetworkObjectId);
+            SyncTargetObjectServerRpc(targetObject.GetComponent<NetworkObject>().NetworkObjectId, playerHeldBy.playerClientId);
             bool rayHasHit = ShootRayOnClientAtTarget();
 
             if (rayHasHit)
