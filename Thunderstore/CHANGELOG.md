@@ -1,3 +1,17 @@
+## 0.5.0 [ShrinkRay targeting] ##
+**What's new**
++ ShrinkRay Targeting is finally here! The holder will see a laser pointer and targets will get highlighted (on activate by default, configurable).
++ 3 new config options:
+ + deathShrinking: Same as multipleShrinking was before. Allows shrinking players to death if set.
+ + shrinkRayTargetHighlighting: A performance option that manages, when targets should be highlighted.
+ + sizeChangeStep: The size change of a single modification *Enlarging has no benefits currently and won't make normal sized players grabbable. This is planned for 0.6.0!*
+
+**Fixes**
++ fixed players not getting normal again after rejoining (till reworked in 0.6.0)
++ fixed audio error leading to bugged interaction state
++ fixed host being able to grab themself
++ fixed goomba not working when jumping over a shrunken player
+
 ### 0.4.6 ###
 + Fixed a crash when grabbing something
 
