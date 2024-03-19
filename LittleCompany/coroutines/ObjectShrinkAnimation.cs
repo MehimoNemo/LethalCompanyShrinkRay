@@ -18,9 +18,6 @@ namespace LittleCompany.coroutines
 
         private IEnumerator Run(float desiredScale, Action onComplete)
         {
-            Plugin.Log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
-            Plugin.Log("gObject: " + gameObj, Plugin.LogType.Warning);
-
             if(!gameObj.TryGetComponent(out TargetScaling scaling))
                 scaling = gameObj.AddComponent<TargetScaling>();
 

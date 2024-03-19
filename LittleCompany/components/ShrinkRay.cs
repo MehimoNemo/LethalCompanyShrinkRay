@@ -221,7 +221,7 @@ namespace LittleCompany.components
         [ClientRpc]
         internal void SwitchModeClientRpc(int newMode)
         {
-            Plugin.Log("ShrinkRay mode switched to " + (Mode)newMode, Plugin.LogType.Warning);
+            Plugin.Log("ShrinkRay mode switched to " + (Mode)newMode);
             switch ((Mode)newMode)
             {
                 case Mode.Loading:
@@ -404,7 +404,7 @@ namespace LittleCompany.components
                 return;
             }
 
-            Plugin.Log("Shooting ray gun!", Plugin.LogType.Warning);
+            Plugin.Log("Shooting ray gun!");
 
             SyncTargetObjectServerRpc(targetObject.GetComponent<NetworkObject>().NetworkObjectId, playerHeldBy.playerClientId);
             bool rayHasHit = ShootRayOnClientAtTarget();

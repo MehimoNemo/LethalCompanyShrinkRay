@@ -136,7 +136,8 @@ namespace LittleCompany.components
             if(!TryGetComponent(out audioSource))
                 audioSource = gameObject.AddComponent<AudioSource>();
 
-            EnableInteractTrigger();
+            if (grabbedPlayer == null)
+                return;
         }
 
         public override void Update()
@@ -346,8 +347,6 @@ namespace LittleCompany.components
         #region Methods
         public void Initialize(ulong? playerID = null)
         {
-            Plugin.Log("GrabbablePlayerObject.Initialize");
-
             if(playerID != null)
                 grabbedPlayerID.Value = playerID.Value;
 
@@ -360,16 +359,13 @@ namespace LittleCompany.components
 
             this.tag = "PhysicsProp";
             this.name = "grabbable_player" + grabbedPlayerID.Value;
-            Plugin.Log("parenting grabbable object to player number :[" + grabbedPlayer.playerClientId + "]");
             IsCurrentPlayer = PlayerInfo.CurrentPlayerID == grabbedPlayerID.Value;
             Plugin.Log("Is current player: " + IsCurrentPlayer);
             this.grabbable = true;
+
             EnableInteractTrigger();
-
             CalculateScrapValue();
-            UpdateScanNodeVisibility();
             UpdateWeight();
-
             SetIsGrabbableToEnemies(true);
         }
 
@@ -384,8 +380,12 @@ namespace LittleCompany.components
                 hoarderBug.SwitchToBehaviourState(0);
             }
 
-            if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
-                playerHeldBy.DiscardHeldObject(); // Can lead to problems
+            try
+            {
+                if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                    playerHeldBy.DiscardHeldObject(); // Can lead to problems
+            }
+            catch { };
 
             if (audioSource != null && audioSource.isPlaying)
                 audioSource.Stop();
@@ -405,11 +405,16 @@ namespace LittleCompany.components
             }
 
             bool IsCompanyMoon = Enum.TryParse(RoundManager.Instance.currentLevel.levelID.ToString(), out Moon level) && level == Moon.CompanyBuilding;
+            if (IsCompanyMoon)
+                Plugin.Log("UpdateScanNodeVisibility: We're on company moon!");
+            if (IsCurrentPlayer)
+                Plugin.Log("UpdateScanNodeVisibility: That's us!");
             EnableScanNode(IsCompanyMoon && !IsCurrentPlayer);
         }
 
         public void EnableScanNode(bool enable = true)
         {
+            Plugin.Log("EnableScanNode: " + enable);
             var scanNode = GetComponentInChildren<ScanNodeProperties>();
             if (scanNode == null)
             {
@@ -419,8 +424,11 @@ namespace LittleCompany.components
 
             scanNode.enabled = enable;
 
-            if(scanNode.TryGetComponent(out BoxCollider collider))
+            if (scanNode.TryGetComponent(out BoxCollider collider))
+            {
+                Plugin.Log("Found BoxCollider for scanNode");
                 collider.enabled = enable;
+            }
         }
 
         public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)
@@ -440,6 +448,7 @@ namespace LittleCompany.components
         {
             EnablePhysics(enable && !IsCurrentPlayer);
             EnableItemMeshes(enable && !IsCurrentPlayer);
+            UpdateScanNodeVisibility(); // also a collider that gets enabled through EnablePhysics()
         }
 
         public void CalculateScrapValue()
