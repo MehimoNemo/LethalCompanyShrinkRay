@@ -1,9 +1,6 @@
 ﻿using HarmonyLib;
 using LCShrinkRay.comp;
 using LCShrinkRay.helper;
-using System.IO;
-using System.Reflection;
-using UnityEngine;
 
 namespace LCShrinkRay.patches
 {

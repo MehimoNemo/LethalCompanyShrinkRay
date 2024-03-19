@@ -260,7 +260,7 @@ namespace LCShrinkRay.comp
 
         internal void UpdateLaser()
         {
-            if(!LaserEnabled) return;
+            if(!LaserEnabled || ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.Off) return;
 
             if(currentMode.Value != Mode.Loading && ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.OnLoading) return;
 
