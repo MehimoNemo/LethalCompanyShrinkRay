@@ -70,8 +70,23 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-LethalCompanyTemplate/bin/
-LethalCompanyTemplate/obj/
-LethalCompanyTemplate/LCShrinkRay.csproj
-UnityPackage/UnityProject/
+LittleCompany/bin/
+LittleCompany/obj/
+
+Thunderstore/audio
+Thunderstore/icons
+Thunderstore/fxasset
+Thunderstore/littlecompanyasset
+Thunderstore/README.md
+Thunderstore/ShrinkRay.dll
+
+ThunderstoreBeta/audio
+ThunderstoreBeta/icons
+ThunderstoreBeta/fxasset
+ThunderstoreBeta/littlecompanyasset
+ThunderstoreBeta/README.md
+ThunderstoreBeta/ShrinkRay.dll
+
+UnityPackage/*
+*.zip
 *.csproj
