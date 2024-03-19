@@ -2,7 +2,7 @@
 using LittleCompany.helper;
 using UnityEngine;
 
-namespace LittleCompany.patches
+namespace LittleCompany.patches.EnemyBehaviours
 {
     [HarmonyPatch]
     internal class CentipedeAIPatch

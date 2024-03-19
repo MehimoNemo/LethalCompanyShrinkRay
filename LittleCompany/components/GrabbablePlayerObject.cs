@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using LittleCompany.helper;
 using Unity.Netcode;
-using LittleCompany.patches;
+using LittleCompany.patches.EnemyBehaviours;
 using System.IO;
 using System.Collections;
 using static LittleCompany.helper.Moons;

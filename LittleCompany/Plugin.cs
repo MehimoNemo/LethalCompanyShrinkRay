@@ -4,6 +4,7 @@ using HarmonyLib;
 using UnityEngine;
 using BepInEx.Configuration;
 using LittleCompany.patches;
+using LittleCompany.patches.EnemyBehaviours;
 using LittleCompany.Config;
 using System.Reflection;
 using LittleCompany.components;

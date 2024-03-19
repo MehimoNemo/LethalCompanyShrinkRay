@@ -3,7 +3,7 @@ using LittleCompany.Config;
 using LittleCompany.helper;
 using UnityEngine;
 
-namespace LittleCompany.patches
+namespace LittleCompany.patches.EnemyBehaviours
 {
     [HarmonyPatch]
     class ThumperAIPatch
