@@ -192,6 +192,11 @@ namespace LittleCompany.components
                 if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
                     DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
             }
+            else if(playerHeldBy != null && playerHeldBy.isPlayerDead && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+            {
+                Plugin.Log("Fallback triggered, where holder didn't drop held player upon death.");
+                playerHeldBy.DiscardHeldObject();
+            }
         }
         
         public override void ItemActivate(bool used, bool buttonDown = true)

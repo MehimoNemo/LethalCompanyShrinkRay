@@ -157,7 +157,9 @@ namespace LittleCompany.components
         public override void PocketItem()
         {
             DisableLaserForHolder();
-            // idea: play a fading-out sound
+			if (targetObject != null)
+                ChangeTarget(null);
+
             base.PocketItem();
         }
 
@@ -167,6 +169,8 @@ namespace LittleCompany.components
                 audioSource?.PlayOneShot(dropSFX);
 
             DisableLaserForHolder();
+            if(targetObject != null)
+                ChangeTarget(null);
 
             base.DiscardItem();
         }
@@ -251,9 +255,6 @@ namespace LittleCompany.components
             if (LaserLine != null) LaserLine.enabled = enable;
             if (LaserLight != null) LaserLight.enabled = enable;
             if (LaserDot != null) LaserDot.enabled = enable;
-
-            if (!enable && targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
-                ChangeTarget(null);
         }
         internal void DisableLaserForHolder() => EnableLaserForHolder(false);
 
