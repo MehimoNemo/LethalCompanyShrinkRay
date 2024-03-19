@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Reflection;
 using UnityEngine;
 
 namespace LCShrinkRay.helper
@@ -7,14 +6,14 @@ namespace LCShrinkRay.helper
     internal class Materials
     {
         // Wireframe
-        /*private static Material wireframeMaterial = null;
+        private static Material wireframeMaterial = null;
         public static Material Wireframe
         {
             get
             {
                 if (wireframeMaterial == null)
                 {
-                    Shader wireframeShader = AssetLoader.littleCompanyAsset?.LoadAsset<Shader>(Path.Combine(AssetLoader.BaseAssetPath, "Shader/wireframe.shader");
+                    Shader wireframeShader = AssetLoader.littleCompanyAsset?.LoadAsset<Shader>(Path.Combine(AssetLoader.BaseAssetPath, "Shader/wireframe.shader"));
                     if(wireframeShader == null)
                     {
                         Plugin.Log("Unable to load wireframe shader!", Plugin.LogType.Error);
@@ -29,7 +28,15 @@ namespace LCShrinkRay.helper
                 }
                 return wireframeMaterial;
             }
-        }*/
+        }
+
+        public static Material TargetedWireframe(Material origin)
+        {
+            var m = Wireframe;
+            m.SetColor("Main Color", origin.color);
+            m.SetFloat("Edge width", 0.01f);
+            return m;
+        }
 
         // Glass
         private static Material glassMaterial = null;
@@ -54,6 +61,46 @@ namespace LCShrinkRay.helper
                     glassMaterial.name = "LCGlass";
                 }
                 return glassMaterial;
+            }
+        }
+
+        private static Material laserMaterial = null;
+        public static Material Laser
+        {
+            get
+            {
+                if (laserMaterial == null)
+                    laserMaterial = AssetLoader.littleCompanyAsset?.LoadAsset<Material>(Path.Combine(AssetLoader.BaseAssetPath, "Shrink/materials/Laser.mat"));
+
+                return laserMaterial;
+            }
+        }
+
+        public static Material TargetedMaterial(Material origin)
+        {
+            var m = new Material(origin);
+            m.color = Color.red;
+            m.SetColor("_EmissionColor", new Color(1f, 0f, 0f, 2f));
+            m.SetFloat("_Metallic", 1f);
+            m.SetFloat("_Glossiness", 1f);
+            m.EnableKeyword("_EMISSION");
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            return m;
+        }
+
+        private static GameObject _circleHighlightPrefab = null;
+        public static GameObject CircleHighlight
+        {
+            get
+            {
+                if (_circleHighlightPrefab == null)
+                {
+                    _circleHighlightPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "Shrink/HighlightingCircle.prefab"));
+                    if (_circleHighlightPrefab == null) return null;
+                }
+
+                var ch = Object.Instantiate(_circleHighlightPrefab);
+                return ch;
             }
         }
     }

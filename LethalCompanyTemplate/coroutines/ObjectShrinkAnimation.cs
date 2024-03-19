@@ -1,7 +1,7 @@
-﻿using System;
+﻿using LCShrinkRay.comp;
+using System;
 using System.Collections;
 using UnityEngine;
-using static LCShrinkRay.helper.PlayerModification;
 
 namespace LCShrinkRay.coroutines
 {
@@ -16,41 +16,41 @@ namespace LCShrinkRay.coroutines
             routine.StartCoroutine(routine.Run(newSize, onComplete));
         }
 
-        private IEnumerator Run(float newSize, Action onComplete)
+        private IEnumerator Run(float desiredScale, Action onComplete)
         {
             Plugin.Log("ENTERING COROUTINE OBJECT SHRINK", Plugin.LogType.Warning);
             Plugin.Log("gObject: " + gameObj, Plugin.LogType.Warning);
-            Transform objectTransform = gameObj.GetComponent<Transform>();
-            float duration = 2f;
-            float elapsedTime = 0f;
-            float currentSize = gameObj.transform.localScale.x;
-            if (currentSize == newSize)
+
+            if(!gameObj.TryGetComponent(out TargetScaling scaling))
+                scaling = gameObj.AddComponent<TargetScaling>();
+
+            if (scaling.SizeAt(desiredScale) == scaling.originalScale)
                 yield break;
 
-            var modificationType = newSize < currentSize ? ModificationType.Shrinking : ModificationType.Enlarging;
-            float directionalForce, offset;
-            if (modificationType == ModificationType.Shrinking)
-            {
-                directionalForce = 0.58f;
-                offset = currentSize - 0.42f;
-            }
-            else
-            {
-                directionalForce = -0.58f;
-                offset = currentSize + 0.42f;
-            }
+            float duration = 2f;
+            float elapsedTime = 0f;
 
-            while (elapsedTime < duration && modificationType == ModificationType.Shrinking ? (currentSize > newSize) : (currentSize < newSize))
+            float c = scaling.CurrentScale;
+            var direction = desiredScale < c ? -1f : 1f;
+            float a = Mathf.Abs(c - desiredScale); // difference
+            const float b = -0.5f;
+
+            while (elapsedTime < duration)
             {
-                currentSize = (float)(directionalForce * Math.Sin((4 * elapsedTime / duration) + 0.81) + offset);
-                objectTransform.localScale = new Vector3(currentSize, currentSize, currentSize);
+                // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
+                var x = elapsedTime;
+                var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + 1f;
+                scaling.ScaleRelativeTo(newScale);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
             }
 
             // Ensure final scale is set to the desired value
-            objectTransform.localScale = new Vector3(newSize, newSize, newSize);
+            scaling.ScaleRelativeTo(desiredScale);
+
+            if (desiredScale == 1f)
+                Destroy(scaling);
 
             if (onComplete != null)
                 onComplete();

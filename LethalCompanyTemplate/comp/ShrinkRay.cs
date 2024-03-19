@@ -1,5 +1,4 @@
 ﻿using GameNetcodeStuff;
-using System;
 using UnityEngine;
 using Unity.Netcode;
 using LethalLib.Modules;
@@ -11,7 +10,6 @@ using static LCShrinkRay.helper.LayerMasks;
 using static LCShrinkRay.helper.PlayerModification;
 using System.IO;
 using System.Collections;
-using System.Linq;
 
 namespace LCShrinkRay.comp
 {
@@ -22,11 +20,7 @@ namespace LCShrinkRay.comp
 
         private const float beamSearchDistance = 10f;
 
-        private List<ulong> handledRayHits = new List<ulong>();
-
         public static GameObject networkPrefab { get; set; }
-
-        private bool IsInUse = false;
 
         internal AudioSource audioSource;
 
@@ -36,6 +30,25 @@ namespace LCShrinkRay.comp
         internal static AudioClip loadSFX;
         internal static AudioClip unloadSFX;
         internal static AudioClip noTargetSFX;
+
+        internal bool LaserEnabled = false;
+        internal Light LaserLight = null;
+        internal LineRenderer LaserLine = null;
+        internal Light LaserDot = null;
+
+        internal GameObject targetObject = null;
+        internal List<Material> targetMaterials = new List<Material>();
+
+        internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
+        internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
+        internal enum Mode
+        {
+            Default,
+            Loading,
+            Shooting,
+            Unloading,
+            Missing
+        }
         #endregion
 
         #region Networking
@@ -73,6 +86,8 @@ namespace LCShrinkRay.comp
 
             shrinkRay.itemProperties = assetItem;
             shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
+            shrinkRay.itemProperties.minValue = 0;
+            shrinkRay.itemProperties.maxValue = 0;
             shrinkRay.grabbable = true;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
@@ -89,105 +104,284 @@ namespace LCShrinkRay.comp
         public override void Start()
         {
             base.Start();
-            //itemProperties.grabSFX = grabSFX;
-            //itemProperties.dropSFX = dropSFX;
 
             if (!TryGetComponent(out audioSource))
                 audioSource = gameObject.AddComponent<AudioSource>();
+
+            LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
+            LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
+            LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
+
+            DisableLaserForHolder();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
         {
-            if (IsInUse) return;
+            if (currentMode.Value != Mode.Default) return;
 
             Plugin.Log("Triggering " + name);
             base.ItemActivate(used, buttonDown);
-
-            ShootRayServerRpc(playerHeldBy.playerClientId, ModificationType.Shrinking);
+            SwitchModificationTypeServerRpc((int)ModificationType.Shrinking);
+            SwitchModeServerRpc((int)Mode.Loading);
         }
 
         public override void Update()
         {
             base.Update();
 
-            if (isPocketed || IsInUse)
+            if (LaserEnabled)
+                UpdateLaser();
+
+            if (isPocketed || currentMode.Value != Mode.Default)
                 return;
 
-            if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
-                ShootRayServerRpc(playerHeldBy.playerClientId, ModificationType.Enlarging);
+            if (Mouse.current.middleButton.wasPressedThisFrame && IsOwner) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
+            {
+                SwitchModificationTypeServerRpc((int)ModificationType.Enlarging);
+                SwitchModeServerRpc((int)Mode.Loading);
+            }
         }
 
         public override void EquipItem()
         {
-            audioSource?.PlayOneShot(grabSFX);
+            if (IsOwner)
+            {
+                EnableLaserForHolder();
+                if(grabSFX != null)
+                    audioSource?.PlayOneShot(grabSFX);
+            }
+
             base.EquipItem();
         }
 
         public override void PocketItem()
         {
+            DisableLaserForHolder();
             // idea: play a fading-out sound
             base.PocketItem();
         }
 
         public override void DiscardItem()
         {
-            audioSource?.PlayOneShot(dropSFX);
+            if (IsOwner && dropSFX != null)
+                audioSource?.PlayOneShot(dropSFX);
+
+            DisableLaserForHolder();
+
             base.DiscardItem();
         }
 
         public override void GrabItem()
         {
+            Plugin.Log("IsOwner of ShrinkRay: " + IsOwner);
+            EnableLaserForHolder();
             base.GrabItem();
         }
         #endregion
 
-        #region Shooting
+        #region Mode Control
         [ServerRpc(RequireOwnership = false)]
-        private void ShootRayServerRpc(ulong playerHeldByID, ModificationType mode)
+        internal void SyncTargetObjectServerRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
         {
-            Plugin.Log("ShootRayServerRpc -> " + itemProperties.syncUseFunction);
-            if (IsInUse) return;
-
-            ShootRayClientRpc(playerHeldByID, mode);
+            SyncTargetObjectClientRpc(targetObjectNetworkID, playerHeldByID);
         }
-        [ClientRpc]
-        private void ShootRayClientRpc(ulong playerHeldByID, ModificationType mode)
-        {
-            Plugin.Log("ShootRayClientRpc");
-            if (IsInUse) return;
 
-            IsInUse = true;
-            if (playerHeldBy == null)
+        [ClientRpc]
+        internal void SyncTargetObjectClientRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
+        {
+            if(playerHeldBy == null || playerHeldBy.playerClientId != playerHeldByID)
+                playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID); // Sync holder
+
+            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.ContainsKey(targetObjectNetworkID))
             {
-                Plugin.Log("playerHeldBy not synced!", Plugin.LogType.Warning);
-                playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
+                targetObject = null;
+                return;
             }
 
-            StartCoroutine(LoadRay(() => ShootRay(mode)));
+            targetObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[targetObjectNetworkID]?.gameObject;
+            if(targetObject != null)
+                Plugin.Log("Synced target: " + targetObject.name);
         }
 
-        private IEnumerator LoadRay(Action onComplete = null)
+        [ServerRpc(RequireOwnership = false)]
+        internal void SwitchModificationTypeServerRpc(int newType)
         {
-            Plugin.Log("LoadRay", Plugin.LogType.Warning);
+            Plugin.Log("ShrinkRay modificationType switched to " + (ModificationType)newType);
+            currentModificationType.Value = (ModificationType)newType;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        internal void SwitchModeServerRpc(int newMode)
+        {
+            currentMode.Value = (Mode)newMode;
+
+            SwitchModeClientRpc(newMode);
+        }
+
+        [ClientRpc]
+        internal void SwitchModeClientRpc(int newMode)
+        {
+            Plugin.Log("ShrinkRay mode switched to " + (Mode)newMode, Plugin.LogType.Warning);
+            switch ((Mode)newMode)
+            {
+                case Mode.Loading:
+                    StartCoroutine(LoadRay());
+                    break;
+                case Mode.Shooting:
+                    ShootRayBeam();
+                    break;
+                case Mode.Unloading:
+                    StartCoroutine(UnloadRay());
+                    break;
+                case Mode.Missing:
+                    StartCoroutine(UnloadRay(false));
+                    break;
+                default: break;
+            }
+        }
+        #endregion
+
+        #region Targeting
+        internal void EnableLaserForHolder(bool enable = true)
+        {
+            if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null)
+                enable = false;
+
+            LaserEnabled = enable;
+            if (LaserLine != null) LaserLine.enabled = enable;
+            if (LaserLight != null) LaserLight.enabled = enable;
+            if (LaserDot != null) LaserDot.enabled = enable;
+
+            if (!enable && targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
+                ChangeTarget(null);
+        }
+        internal void DisableLaserForHolder() => EnableLaserForHolder(false);
+
+        internal void UpdateLaser()
+        {
+            if(!LaserEnabled || ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.Off) return;
+
+            if(currentMode.Value != Mode.Loading && ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.OnLoading) return;
+
+            if(currentMode.Value == Mode.Loading && targetObject != null)
+            {
+                var distance = Vector3.Distance(transform.position, targetObject.transform.position);
+                if(distance < beamSearchDistance)
+                {
+                    var targetDirection = LaserLight.transform.InverseTransformPoint(targetObject.transform.position);
+                    LaserLine.SetPosition(1, targetDirection);
+                    return;
+                }
+            }
+
+            var startPoint = LaserLight.transform.position;
+            var direction = LaserLight.transform.forward;
+            var endPoint = Vector3.zero;
+
+            var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered/*, Mask.DecalStickableSurface*/]);
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
+            {
+                var distance = Vector3.Distance(hit.point, startPoint);
+                endPoint.z = distance;
+                if (LaserDot != null)
+                {
+                    LaserDot.spotAngle = 1.5f;
+                    if (distance < 3f)
+                        LaserDot.spotAngle += (3f - distance) / 2;
+                    LaserDot.innerSpotAngle = LaserDot.spotAngle / 3;
+                }
+
+                if (targetObject == null || targetObject != hit.collider.gameObject)
+                    ChangeTarget(hit.collider.gameObject);
+            }
+            else
+            {
+                endPoint.z = 10f;
+                LaserDot.spotAngle = 0f;
+                LaserDot.innerSpotAngle = 0f;
+
+                ChangeTarget(null);
+            }
+            LaserLine.SetPosition(1, endPoint);
+        }
+
+        public void ChangeTarget(GameObject newTarget)
+        {
+            var identifiedTarget = IdentifyTarget(newTarget);
+            if (identifiedTarget == targetObject) return;
+#if DEBUG
+            if (identifiedTarget != null)
+                Plugin.Log("New target: " + identifiedTarget.name + " [layer " + identifiedTarget.layer + "]");
+            else
+                Plugin.Log("Lost track of target.");
+#endif
+            if (targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
+                Destroy(circle);
+
+            targetObject = identifiedTarget; // Change target object
+
+            if(targetObject != null)
+                targetObject.AddComponent<TargetCircle>();
+        }
+
+        public GameObject IdentifyTarget(GameObject target)
+        {
+            if (target == null) return null;
+
+            //Plugin.Log("Target to identify: " + target.name + " [layer " + target.layer + "]");
+
+            switch((Mask)target.layer)
+            {
+                case Mask.Player: /*case Mask.DecalStickableSurface:*/
+                    var targetPlayer = target.GetComponentInParent<PlayerControllerB>();
+                    if (targetPlayer != null && targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID)
+                        return targetPlayer.gameObject;
+                    break;
+
+                case Mask.Props: case Mask.InteractableObject:
+                    var targetPlayerObject = target.GetComponentInParent<GrabbablePlayerObject>();
+                    if (targetPlayerObject != null)
+                        return targetPlayerObject.grabbedPlayer.gameObject;
+
+                    var targetObject = target.GetComponentInParent<GrabbableObject>();
+                    if (targetObject != null)
+                        return targetObject.gameObject;
+                    break;
+
+                case Mask.Enemies: case Mask.EnemiesNotRendered:
+                    var targetEnemy = target.GetComponentInParent<EnemyAI>();
+                    if (targetEnemy != null)
+                        return targetEnemy.gameObject;
+                    break;
+            }
+            return null;
+        }
+        #endregion
+
+        #region Shooting
+        private IEnumerator LoadRay()
+        {
+            Plugin.Log("LoadRay");
             if (audioSource != null && loadSFX != null)
             {
+                audioSource.Stop();
                 audioSource.PlayOneShot(loadSFX);
                 yield return new WaitWhile(() => audioSource.isPlaying);
             }
             else
                 Plugin.Log("AudioSource or AudioClip for loading ShrinkRay was null!", Plugin.LogType.Warning);
 
-            Plugin.Log("Loading completed");
-            if (onComplete != null)
-                onComplete();
+            if (IsOwner)
+                ShootRayOnClient();
         }
 
-        private IEnumerator UnloadRay()
+        private IEnumerator UnloadRay(bool hasHitTarget = true)
         {
-            Plugin.Log("UnloadRay", Plugin.LogType.Warning);
+            Plugin.Log("UnloadRay");
             if (audioSource != null && unloadSFX != null)
             {
-                audioSource.PlayOneShot(unloadSFX);
+                audioSource.Stop();
+                audioSource.PlayOneShot(hasHitTarget ? unloadSFX : noTargetSFX);
                 yield return new WaitWhile(() => audioSource.isPlaying);
             }
             else
@@ -195,95 +389,56 @@ namespace LCShrinkRay.comp
 
             yield return new WaitForSeconds(useCooldown);
 
-            IsInUse = false;
-        }
+            EnableLaserForHolder();
 
-        private IEnumerator NoTargetForRay()
-        {
-            Plugin.Log("NoTargetForRay", Plugin.LogType.Warning);
-            if (audioSource != null && noTargetSFX != null)
-            {
-                audioSource.PlayOneShot(noTargetSFX);
-                yield return new WaitWhile(() => audioSource.isPlaying);
-            }
-            else
-                Plugin.Log("AudioSource or AudioClip for unloading ShrinkRay was null!", Plugin.LogType.Warning);
-
-            yield return new WaitForSeconds(useCooldown);
-
-            IsInUse = false;
+            if (PlayerInfo.IsHost)
+                currentMode.Value = Mode.Default;
         }
 
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
-        private void ShootRay(ModificationType type)
+        private void ShootRayOnClient()
         {
-            if (playerHeldBy == null || playerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || targetObject?.GetComponent<NetworkObject>() == null || playerHeldBy.isClimbingLadder)
             {
-                StartCoroutine(NoTargetForRay());
+                SwitchModeServerRpc((int)Mode.Missing);
                 return;
             }
 
             Plugin.Log("Shooting ray gun!", Plugin.LogType.Warning);
 
-            handledRayHits.Clear();
+            SyncTargetObjectServerRpc(targetObject.GetComponent<NetworkObject>().NetworkObjectId, playerHeldBy.playerClientId);
+            bool rayHasHit = ShootRayOnClientAtTarget();
 
-            var transform = playerHeldBy.gameplayCamera.transform;
-            var ray = new Ray(transform.position, transform.position + transform.forward * beamSearchDistance);
-
-            bool rayHasHit = false;
-
-            var layers = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies]);
-            var raycastHits = Physics.SphereCastAll(ray, 5f, beamSearchDistance, layers, QueryTriggerInteraction.Collide); // todo: linecast instead!
-            var raycastHitsByDistance = raycastHits.OrderBy((RaycastHit x) => x.distance).ToList();
-            foreach (var hit in raycastHitsByDistance)
-            {
-                if (Vector3.Dot(transform.forward, hit.transform.position - transform.position) < 0f)
-                    continue; // Is behind us
-
-                // Check if in line of sight
-                if (Physics.Linecast(transform.position, hit.transform.position, out RaycastHit hitInfo, StartOfRound.Instance.collidersRoomDefaultAndFoliage, QueryTriggerInteraction.Ignore))
-                {
-                    if(IsOwner)
-                        Plugin.Log("\"" + hitInfo.collider.name + "\" [Layer " + hitInfo.collider.gameObject.layer + "] is between us and \"" + hit.collider.name + "\" [Layer " + hit.collider.gameObject.layer + "]");
-                    continue;
-                }
-
-                rayHasHit = OnRayHit(hit, type);
-                if(rayHasHit) // Only single hits for now
-                    break;
-            }
-
-            if (!rayHasHit)
-                StartCoroutine(NoTargetForRay());
+            if (rayHasHit)
+                DisableLaserForHolder();
+            else
+                SwitchModeServerRpc((int)Mode.Missing);
         }
         
-        private bool OnRayHit(RaycastHit hit, ModificationType type)
+        private bool ShootRayOnClientAtTarget()
         {
-            var layer = hit.collider.gameObject.layer;
-            switch ((Mask)layer)
+            switch ((Mask)targetObject.layer)
             {
                 case Mask.Player:
                     {
-                        if (!hit.transform.TryGetComponent(out PlayerControllerB targetPlayer) || handledRayHits.Contains(targetPlayer.playerClientId))
+                        if (!targetObject.TryGetComponent(out PlayerControllerB targetPlayer))
                             return false;
 
-                        handledRayHits.Add(targetPlayer.playerClientId);
                         if(IsOwner)
                             Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, type))
+                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, currentModificationType.Value))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
                             return false;
                         }
 
-                        if (IsOwner)
-                            OnPlayerModificationServerRpc(playerHeldBy.playerClientId, targetPlayer.playerClientId, type);
+                        OnPlayerModificationServerRpc(targetPlayer.playerClientId);
                         return true;
                     }
                 case Mask.Props:
                     {
-                        if (!hit.transform.TryGetComponent(out GrabbableObject item))
+                        if (!targetObject.TryGetComponent(out GrabbableObject item))
                             return false;
 
                         if(item is GrabbablePlayerObject)
@@ -296,7 +451,7 @@ namespace LCShrinkRay.comp
                     }
                 case Mask.InteractableObject:
                     {
-                        if (!hit.transform.TryGetComponent(out Item item))
+                        if (!targetObject.TryGetComponent(out Item item))
                             return false;
 
                         if (IsOwner)
@@ -306,40 +461,53 @@ namespace LCShrinkRay.comp
                     }
                 case Mask.Enemies:
                     {
-                        if (!hit.transform.TryGetComponent(out EnemyAI enemyAI))
+                        if (!targetObject.TryGetComponent(out EnemyAI enemyAI))
                             return false;
 
                         if (IsOwner)
-                            Plugin.Log("Ray has hit an ENEMY -> \"" + hit.collider.name);
+                            Plugin.Log("Ray has hit an ENEMY -> \"" + enemyAI.enemyType.name);
                         //Plugin.Log("WIP");
                         return false;
                     }
                 default:
                     if (IsOwner)
-                        Plugin.Log("Ray has hit an unhandled object named \"" + hit.collider.name + "\" [Layer " + layer + "]");
+                        Plugin.Log("Ray has hit an unhandled object named \"" + targetObject.name + "\" [Layer " + targetObject.layer + "]");
                     return false;
             };
 
+        }
+
+        internal void ShootRayBeam()
+        {
+            if (!transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) || shrinkRayFX == null || playerHeldBy == null)
+            {
+                Plugin.Log("Unable to shoot ray beam.", Plugin.LogType.Error);
+                SwitchModeClientRpc((int)Mode.Unloading);
+                return;
+            }
+
+            StartCoroutine(shrinkRayFX.RenderRayBeam(playerHeldBy.gameplayCamera.transform, targetObject.transform, currentModificationType.Value, audioSource, () =>
+            {
+                Plugin.Log("Ray beam, has finished.");
+                SwitchModeClientRpc((int)Mode.Unloading);
+            }));
         }
         #endregion
 
         #region PlayerTargeting
         // ------ Ray hitting Player ------
         [ServerRpc(RequireOwnership = false)]
-        public void OnPlayerModificationServerRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
+        public void OnPlayerModificationServerRpc(ulong targetPlayerID)
         {
-            Plugin.Log("Player (" + PlayerInfo.CurrentPlayerID + ") modified Player(" + targetPlayerID + "): " + type.ToString());
-            OnPlayerModificationClientRpc(holderPlayerID, targetPlayerID, type );
+            Plugin.Log("OnPlayerModification");
+            OnPlayerModificationClientRpc(targetPlayerID);
         }
 
         [ClientRpc]
-        public void OnPlayerModificationClientRpc(ulong holderPlayerID, ulong targetPlayerID, ModificationType type)
+        public void OnPlayerModificationClientRpc(ulong targetPlayerID)
         {
-            Plugin.Log("OnPlayerModificationClientRpc");
             var targetPlayer = PlayerInfo.ControllerFromID(targetPlayerID);
-            if (targetPlayer == null) return;
-
-            if (targetPlayer == null || targetPlayer.gameObject == null || targetPlayer.gameObject.transform == null)
+            if (targetPlayer?.gameObject?.transform == null)
             {
                 Plugin.Log("Ay.. that's not a valid player somehow..");
                 return;
@@ -348,33 +516,14 @@ namespace LCShrinkRay.comp
             // For other clients
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
-            bool appliedModification = ApplyModificationTo(targetPlayer, type, () =>
+            Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
+            ApplyModificationTo(targetPlayer, currentModificationType.Value, () =>
             {
-                Plugin.Log("Finished player modification with type: " + type.ToString());
+                Plugin.Log("Finished player modification with type: " + currentModificationType.Value.ToString());
             });
 
-            if (appliedModification)
-            {
-                Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
-
-                // Shoot ray
-                if (transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) && shrinkRayFX != null)
-                {
-                    var holder = playerHeldBy != null ? playerHeldBy : PlayerInfo.ControllerFromID(holderPlayerID);
-                    if (holder != null)
-                    {
-                        StartCoroutine(shrinkRayFX.RenderRayBeam(holder.gameplayCamera.transform, targetPlayer.transform, type, audioSource, () =>
-                        {
-                            Plugin.Log("Ray beam, has finished.");
-                            StartCoroutine(UnloadRay());
-                        }));
-                        return;
-                    }
-                }
-
-                Plugin.Log("Unable to shoot ray beam.", Plugin.LogType.Error);
-                StartCoroutine(UnloadRay());
-            }
+            if(IsOwner)
+                SwitchModeServerRpc((int)Mode.Shooting);
         }
         #endregion
 

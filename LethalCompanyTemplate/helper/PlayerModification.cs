@@ -2,7 +2,6 @@
 using LCShrinkRay.comp;
 using LCShrinkRay.Config;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace LCShrinkRay.helper
@@ -10,14 +9,13 @@ namespace LCShrinkRay.helper
     public class PlayerModification
     {
         #region Properties
+        internal static float DeathShrinkMargin => 0.1f;
         public enum ModificationType
         {
             Normalizing,
             Shrinking,
             Enlarging
         }
-
-        internal static readonly List<float> possiblePlayerSizes = new() { 0f, 0.4f, 1f, 1.3f, 1.7f };
 
         internal static AudioClip deathPoofSFX;
         #endregion
@@ -26,28 +24,22 @@ namespace LCShrinkRay.helper
 
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
-            if (!ModConfig.Instance.values.multipleShrinking)
-                return possiblePlayerSizes[1];
 
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var currentSizeIndex = possiblePlayerSizes.IndexOf(playerSize);
-            if (currentSizeIndex <= 0)
-                return playerSize;
+            if (!ModConfig.Instance.values.deathShrinking)
+            {
+                if (playerSize - ModConfig.Instance.values.sizeChangeStep < DeathShrinkMargin) // deathShrink
+                    return playerSize;
+            }
 
-            return possiblePlayerSizes[currentSizeIndex - 1];
+            return playerSize - ModConfig.Instance.values.sizeChangeStep;
         }
 
         public static float NextIncreasedSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var currentSizeIndex = possiblePlayerSizes.IndexOf(playerSize);
-            if (currentSizeIndex == -1 || playerSize == possiblePlayerSizes.Count - 1)
-                return playerSize;
-
-            if (currentSizeIndex >= 2) // remove this if() once we think about growing
-                return possiblePlayerSizes[2];
-
-            return possiblePlayerSizes[currentSizeIndex + 1];
+            //if (playerSize + ModConfig.Instance.values.sizeChangeStep > 1f) return;
+            return playerSize + ModConfig.Instance.values.sizeChangeStep;
         }
 
 
@@ -76,7 +68,7 @@ namespace LCShrinkRay.helper
                     break;
 
                 default:
-                    break;
+                    return false; // Not supported yet
             }
 
             if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
@@ -96,9 +88,9 @@ namespace LCShrinkRay.helper
             return true;
         }
 
-        public static bool ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, Action onComplete = null)
+        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, Action onComplete = null)
         {
-            if (targetPlayer == null) return false;
+            if (targetPlayer == null) return;
 
             bool targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
@@ -133,7 +125,7 @@ namespace LCShrinkRay.helper
                         Plugin.Log("Shrinking player [" + targetPlayer.playerClientId + "] to size: " + nextShrunkenSize);
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextShrunkenSize, () =>
                         {
-                            if (nextShrunkenSize <= 0f)
+                            if (nextShrunkenSize < DeathShrinkMargin)
                             {
                                 // Poof Target to death because they are too small to exist
                                 if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
@@ -162,8 +154,13 @@ namespace LCShrinkRay.helper
 
                 case ModificationType.Enlarging:
                     {
+
                         var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
                         Plugin.Log("Enlarging player [" + targetPlayer.playerClientId + "] to size: " + nextIncreasedSize);
+
+                        if (nextIncreasedSize >= 1f && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
+                            gpo.EnableInteractTrigger(false);
+
                         coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () =>
                         {
                             if (nextIncreasedSize >= 1f)
@@ -184,10 +181,10 @@ namespace LCShrinkRay.helper
                         break;
                     }
                 default:
-                    return false;
+                    return;
             }
 
-            return true;
+            return;
         }
         #endregion
     }

@@ -46,6 +46,8 @@ namespace LCShrinkRay.patches
 
             Plugin.Log("Player " + clientId + " left.");
 
+            GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.ControllerFromID(clientId));
+
             if (PlayerInfo.IsHost)
                 GrabbablePlayerList.RemovePlayerGrabbable(clientId);
         }

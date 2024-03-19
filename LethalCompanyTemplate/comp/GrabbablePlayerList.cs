@@ -2,13 +2,11 @@
 using HarmonyLib;
 using LCShrinkRay.Config;
 using LCShrinkRay.helper;
-using LethalLib.Modules;
 using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using static LCShrinkRay.comp.GrabbablePlayerObject;
-using static LCShrinkRay.helper.Moons;
 
 namespace LCShrinkRay.comp
 {
@@ -212,14 +210,17 @@ namespace LCShrinkRay.comp
 
         [HarmonyPatch(typeof(Shovel), "HitShovel")]
         [HarmonyPostfix]
-        public static void HitShovel(bool cancel, RaycastHit[] ___objectsHitByShovel)
+        public static void HitShovel(bool cancel, RaycastHit[] ___objectsHitByShovel, Shovel __instance)
         {
             if (cancel) return;
 
             foreach(var obj in ___objectsHitByShovel)
             {
                 if(obj.transform != null && obj.transform.TryGetComponent(out GrabbablePlayerObject gpo))
-                    gpo.OnGoombaServerRpc(gpo.grabbedPlayerID.Value);
+                {
+                    if (__instance.playerHeldBy == null || __instance.playerHeldBy.playerClientId != gpo.grabbedPlayerID.Value)
+                        gpo.OnGoombaServerRpc(gpo.grabbedPlayerID.Value);
+                }
             }
         }
         #endregion

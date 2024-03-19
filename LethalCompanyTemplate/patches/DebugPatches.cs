@@ -113,10 +113,11 @@ namespace LCShrinkRay.patches
             return true;
         }
         #region Methods
-        public static GameObject CreateCube(Transform parent, Color color)
+        public static GameObject CreateCube(Color color, Transform parent = null)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.SetParent(parent);
+            if(parent != null)
+                cube.transform.SetParent(parent);
 
             if (cube.TryGetComponent(out BoxCollider boxCollider))
                 boxCollider.enabled = false;

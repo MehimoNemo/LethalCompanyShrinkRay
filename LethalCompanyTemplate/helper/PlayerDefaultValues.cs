@@ -1,6 +1,4 @@
 ﻿using GameNetcodeStuff;
-using HarmonyLib;
-using UnityEngine;
 
 namespace LCShrinkRay.helper
 {

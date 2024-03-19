@@ -200,7 +200,7 @@ namespace LCShrinkRay.comp
                 AdjustStoreAndScrapValues();
                 var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
                 terminalNode.displayText = TerminalDescription;
-                Items.RegisterShopItem(itemProperties, null, null, terminalNode, itemProperties.creditsWorth);
+                Items.RegisterShopItem(itemProperties, null, null, terminalNode, StorePrice);
                 IsStoreItem = true;
             }
             else if(IsStoreItem) // Remove from store
@@ -223,6 +223,8 @@ namespace LCShrinkRay.comp
             itemProperties.positionOffset = new Vector3(0f, 0.12f, 0f);
 
             itemProperties.syncUseFunction = true;
+            itemProperties.syncGrabFunction = false;
+            itemProperties.syncDiscardFunction = false;
         }
 
         internal void AdjustStoreAndScrapValues()
@@ -256,14 +258,8 @@ namespace LCShrinkRay.comp
                 Glass = PotionTransform.GetComponent<MeshRenderer>();
                 Cap = PotionTransform.Find("Cap")?.GetComponent<MeshRenderer>();
                 Liquid = PotionTransform.Find("Liquid")?.GetComponent<MeshRenderer>();
-                if (Liquid != null && Glass != null)
+                if (Liquid != null)
                 {
-                    var liquidColor = Liquid.material.color;
-                    liquidColor.a = 2f;
-
-                    Glass?.material.SetColor("_EmissionColor", liquidColor);
-                    Glass?.material.EnableKeyword("_EMISSION");
-                    
                     InitialLiquidScale = Liquid.transform.localScale.z; // 0.7
                     InitialLiquidPosition = Liquid.transform.localPosition.y; // -0.2
                 }
@@ -300,32 +296,34 @@ namespace LCShrinkRay.comp
 
         public override void EquipItem()
         {
-            audioSource.PlayOneShot(grabSFX);
+            if(grabSFX != null)
+                audioSource?.PlayOneShot(grabSFX);
             base.EquipItem();
         }
 
         public override void GrabItem()
         {
-            //transform.localScale = Vector3.one * 0.05f;
             base.GrabItem();
         }
 
         public override void DiscardItem()
         {
-            //transform.localScale = Vector3.one * 0.1f;
-            audioSource.PlayOneShot(dropSFX);
+            if (dropSFX != null)
+                audioSource?.PlayOneShot(dropSFX);
             base.DiscardItem();
         }
 
         public override void GrabItemFromEnemy(EnemyAI enemyAI)
         {
-            audioSource.PlayOneShot(grabSFX);
+            if (grabSFX != null)
+                audioSource?.PlayOneShot(grabSFX);
             base.GrabItemFromEnemy(enemyAI);
         }
 
         public override void DiscardItemFromEnemy()
         {
-            audioSource.PlayOneShot(dropSFX);
+            if (dropSFX != null)
+                audioSource?.PlayOneShot(dropSFX);
             base.DiscardItemFromEnemy();
         }
         #endregion
@@ -336,19 +334,14 @@ namespace LCShrinkRay.comp
             if (Consuming || playerHeldBy == null)
                 yield break;
 
-            if (Consumed.Value || playerHeldBy.isClimbingLadder)
+            if (Consumed.Value || playerHeldBy.isClimbingLadder || !CanApplyModificationTo(playerHeldBy, modificationType))
             {
-                if (IsOwner)
+                if (IsOwner && noConsumeSFX != null)
                     audioSource?.PlayOneShot(noConsumeSFX);
                 yield break;
             }
 
-            if(!CanApplyModificationTo(playerHeldBy, modificationType) || !ApplyModificationTo(playerHeldBy, modificationType))
-            {
-                if (IsOwner)
-                    audioSource?.PlayOneShot(noConsumeSFX);
-                yield break;
-            }
+            ApplyModificationTo(playerHeldBy, modificationType);
 
             Consuming = true;
             isBeingUsed = true;
@@ -359,8 +352,8 @@ namespace LCShrinkRay.comp
                 yield break; ;
             }
 
-            if (IsOwner)
-                audioSource.PlayOneShot(consumeSFX);
+            if (IsOwner && consumeSFX != null)
+                audioSource?.PlayOneShot(consumeSFX);
 
             if (Cap != null)
                 Destroy(Cap);

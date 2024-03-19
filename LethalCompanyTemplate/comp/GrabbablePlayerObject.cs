@@ -8,9 +8,7 @@ using LCShrinkRay.helper;
 using Unity.Netcode;
 using LCShrinkRay.patches;
 using System.IO;
-using System.Reflection;
 using System.Collections;
-using System.ComponentModel;
 using static LCShrinkRay.helper.Moons;
 
 namespace LCShrinkRay.comp
@@ -137,7 +135,7 @@ namespace LCShrinkRay.comp
             if(!TryGetComponent(out audioSource))
                 audioSource = gameObject.AddComponent<AudioSource>();
 
-            //itemProperties.grabSFX = grabSFX;
+            EnableInteractTrigger();
         }
 
         public override void Update()
@@ -241,10 +239,11 @@ namespace LCShrinkRay.comp
             if (Thrown)
             {
                 Thrown = false;
-                audioSource.PlayOneShot(throwSFX);
+                if(throwSFX != null)
+                    audioSource?.PlayOneShot(throwSFX);
             }
-            else
-                audioSource.PlayOneShot(dropSFX);
+            else if(dropSFX != null)
+                audioSource?.PlayOneShot(dropSFX);
 
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
@@ -273,7 +272,8 @@ namespace LCShrinkRay.comp
             Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
             enemyHeldBy = enemyAI;
 
-            audioSource.PlayOneShot(grabSFX);
+            if(grabSFX != null)
+                audioSource?.PlayOneShot(grabSFX);
 
             if (IsCurrentPlayer)
             {
@@ -293,7 +293,8 @@ namespace LCShrinkRay.comp
                 return;
             }
 
-            audioSource.PlayOneShot(dropSFX);
+            if (dropSFX != null)
+                audioSource?.PlayOneShot(dropSFX);
 
             Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
 
@@ -320,8 +321,8 @@ namespace LCShrinkRay.comp
         public override void EquipItem()
         {
             base.EquipItem();
-
-            audioSource.PlayOneShot(grabSFX);
+            if(grabSFX != null)
+                audioSource?.PlayOneShot(grabSFX);
         }
 
         public override void PocketItem()
@@ -631,7 +632,8 @@ namespace LCShrinkRay.comp
 
             if (grabbedPlayer == null) return;
 
-            grabbedPlayer.movementAudio.PlayOneShot(throwSFX);
+            if(throwSFX != null)
+                grabbedPlayer.movementAudio?.PlayOneShot(throwSFX);
 
             if (grabbedPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
             {

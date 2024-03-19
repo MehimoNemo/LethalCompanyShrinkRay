@@ -2,8 +2,6 @@ using GameNetcodeStuff;
 using LCShrinkRay.helper;
 using System;
 using System.Collections;
-using System.IO;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.VFX;
 using static LCShrinkRay.helper.PlayerModification;
@@ -122,6 +120,7 @@ namespace LCShrinkRay.comp
                 yield break;
             }
 
+            bool beamCreated = false;
             try
             {
                 activeVisualEffect = fxObject.GetComponentInChildren<VisualEffect>();
@@ -190,7 +189,7 @@ namespace LCShrinkRay.comp
                 bezier4.transform.position = beamEndPos;
                 bezier4.transform.SetParent(targetHeadTransform, true);
 
-                // Destroy the beziers before the fxObject, just barely
+                beamCreated = true;
             }
             catch (Exception e)
             {
@@ -200,18 +199,18 @@ namespace LCShrinkRay.comp
                 yield break;
             }
 
-            Plugin.Log("beamSFX", Plugin.LogType.Warning);
+            shrinkRayAudio.Stop();
             shrinkRayAudio.PlayOneShot(beamSFX);
+            yield return new WaitForSeconds(beamDuration);
 
-            yield return new WaitWhile(() => shrinkRayAudio.isPlaying);
-            Plugin.Log("beamSFX -> Stop", Plugin.LogType.Warning);
-            //yield return new WaitForSeconds(beamDuration);
-
-            Destroy(fxObject.transform.GetChild(0)?.Find("Pos1")?.gameObject);
-            Destroy(fxObject.transform.GetChild(0)?.Find("Pos2")?.gameObject);
-            Destroy(fxObject.transform.GetChild(0)?.Find("Pos3")?.gameObject);
-            Destroy(fxObject.transform.GetChild(0)?.Find("Pos4")?.gameObject);
-            Destroy(fxObject);
+            if (beamCreated)
+            {
+                Destroy(fxObject.transform.GetChild(0)?.Find("Pos1")?.gameObject);
+                Destroy(fxObject.transform.GetChild(0)?.Find("Pos2")?.gameObject);
+                Destroy(fxObject.transform.GetChild(0)?.Find("Pos3")?.gameObject);
+                Destroy(fxObject.transform.GetChild(0)?.Find("Pos4")?.gameObject);
+                Destroy(fxObject);
+            }
 
             if (onComplete != null)
                 onComplete();
