@@ -87,7 +87,7 @@ namespace LittleCompany.helper
 
         public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
 
-        public static float SizeOf(PlayerControllerB player) => Rounded(player.gameObject.transform.localScale.x);
+        public static float SizeOf(PlayerControllerB player) => Rounded(player.gameObject.transform.localScale.y);
 
         public static bool IsShrunk(PlayerControllerB player) => IsShrunk(player.gameObject);
 

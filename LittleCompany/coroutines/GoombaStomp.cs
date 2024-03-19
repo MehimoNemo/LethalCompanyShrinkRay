@@ -17,11 +17,13 @@ namespace LittleCompany.coroutines
 
         private IEnumerator Run(Action onComplete = null)
         {
+            Plugin.Log("Starting goomba coroutine");
+            var initialSize = playerObj.transform.localScale.y;
             AnimationCurve scaleCurve = new AnimationCurve(
-                new Keyframe(0, 0.4f),
+                new Keyframe(0, initialSize),
                 new Keyframe(0.05f, 0.05f),
                 new Keyframe(0.85f, 0.1f),
-                new Keyframe(1f, 0.4f)
+                new Keyframe(1f, initialSize)
             );
             scaleCurve.preWrapMode = WrapMode.PingPong;
             scaleCurve.postWrapMode = WrapMode.PingPong;
@@ -29,7 +31,7 @@ namespace LittleCompany.coroutines
             AnimationCurve stretchCurve = new AnimationCurve(
                 new Keyframe(0, 0.7f),
                 new Keyframe(0.5f, 0.6f),
-                new Keyframe(1f, 0.4f)
+                new Keyframe(1f, initialSize)
             );
 
             float duration = 5f;

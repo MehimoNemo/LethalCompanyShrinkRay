@@ -10,6 +10,7 @@ using LittleCompany.patches.EnemyBehaviours;
 using System.IO;
 using System.Collections;
 using static LittleCompany.helper.Moons;
+using static LittleCompany.helper.LayerMasks;
 
 namespace LittleCompany.components
 {
@@ -494,12 +495,8 @@ namespace LittleCompany.components
         private PlayerControllerB GetPlayerAbove()
         {
             // Cast a ray upwards to check for the player above
-            RaycastHit hit;
-            if (Physics.Raycast(StartOfRound.Instance.localPlayerController.gameplayCamera.transform.position, StartOfRound.Instance.localPlayerController.gameObject.transform.up, out hit, 1f, StartOfRound.Instance.playersMask, QueryTriggerInteraction.Ignore))
-            {
-                // todo: check if getting held by that player to avoid eternal stomping
+            if (Physics.Raycast(grabbedPlayer.gameplayCamera.transform.position, grabbedPlayer.gameObject.transform.up, out RaycastHit hit, 0.5f, ToInt([Mask.Player]), QueryTriggerInteraction.Ignore))
                 return hit.collider.gameObject.GetComponent<PlayerControllerB>();
-            }
 
             return null;
         }
@@ -522,16 +519,12 @@ namespace LittleCompany.components
             if (playerAbove == null)
                 return;
 
-            var currentPlayer = PlayerInfo.CurrentPlayer;
-            if (currentPlayer.gameObject.transform.localScale.x >= playerAbove.gameObject.transform.localScale.x)
-            {
-                //Plugin.log("2 Weak 2 Goomba c:");
-                return;
-            }
+            if (PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer) >= PlayerInfo.SizeOf(playerAbove))
+                return; // 2 Weak 2 Goomba c:
 
             IsGoombaCoroutineRunning = true;
 
-            OnGoombaServerRpc(currentPlayer.playerClientId);
+            OnGoombaServerRpc(PlayerInfo.CurrentPlayer.playerClientId);
         }
 
         private GrabbableObject GrabbedPlayerCurrentItem()
