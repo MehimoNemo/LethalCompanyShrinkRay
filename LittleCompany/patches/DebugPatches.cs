@@ -3,7 +3,7 @@ using System;
 using UnityEngine.InputSystem;
 using GameNetcodeStuff;
 using LittleCompany.helper;
-using LittleCompany.comp;
+using LittleCompany.components;
 using UnityEngine;
 using static LittleCompany.helper.Moons;
 using Unity.Netcode;

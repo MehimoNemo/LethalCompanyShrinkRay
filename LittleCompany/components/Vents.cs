@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace LittleCompany.comp
+namespace LittleCompany.components
 {
     [HarmonyPatch]
     internal class Vents

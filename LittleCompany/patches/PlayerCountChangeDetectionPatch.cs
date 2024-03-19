@@ -1,6 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LittleCompany.comp;
+using LittleCompany.components;
 using LittleCompany.helper;
 
 namespace LittleCompany.patches

@@ -6,7 +6,7 @@ using BepInEx.Configuration;
 using LittleCompany.patches;
 using LittleCompany.Config;
 using System.Reflection;
-using LittleCompany.comp;
+using LittleCompany.components;
 using LittleCompany.compatibility;
 
 namespace LittleCompany

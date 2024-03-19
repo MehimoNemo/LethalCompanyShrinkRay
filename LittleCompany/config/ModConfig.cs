@@ -6,7 +6,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using GameNetcodeStuff;
 using LittleCompany.helper;
-using LittleCompany.comp;
+using LittleCompany.components;
 
 namespace LittleCompany.Config
 {

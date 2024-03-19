@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using static LittleCompany.comp.GrabbablePlayerObject;
+using static LittleCompany.components.GrabbablePlayerObject;
 
-namespace LittleCompany.comp
+namespace LittleCompany.components
 {
     [HarmonyPatch]
     internal class GrabbablePlayerList

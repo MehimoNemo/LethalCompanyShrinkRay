@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using LittleCompany.comp;
+using LittleCompany.components;
 using LittleCompany.helper;
 using UnityEngine;
 

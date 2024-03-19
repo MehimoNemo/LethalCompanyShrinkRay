@@ -8,7 +8,7 @@ using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.helper.PlayerModification;
 
-namespace LittleCompany.comp
+namespace LittleCompany.components
 {
     public class LittleShrinkingPotion : LittlePotion
     {

@@ -1,5 +1,5 @@
 ﻿using GameNetcodeStuff;
-using LittleCompany.comp;
+using LittleCompany.components;
 using LittleCompany.Config;
 using System.Collections.Generic;
 using System.Linq;

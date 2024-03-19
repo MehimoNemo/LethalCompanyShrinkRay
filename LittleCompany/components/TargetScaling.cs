@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace LittleCompany.comp
+namespace LittleCompany.components
 {
     internal class TargetScaling : MonoBehaviour
     {

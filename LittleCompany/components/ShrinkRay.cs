@@ -11,7 +11,7 @@ using static LittleCompany.helper.PlayerModification;
 using System.IO;
 using System.Collections;
 
-namespace LittleCompany.comp
+namespace LittleCompany.components
 {
     public class ShrinkRay : GrabbableObject
     {

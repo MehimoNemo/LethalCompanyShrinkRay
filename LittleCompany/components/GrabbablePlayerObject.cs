@@ -11,7 +11,7 @@ using System.IO;
 using System.Collections;
 using static LittleCompany.helper.Moons;
 
-namespace LittleCompany.comp
+namespace LittleCompany.components
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {

@@ -1,4 +1,4 @@
-﻿using LittleCompany.comp;
+﻿using LittleCompany.components;
 using System;
 using System.Collections;
 using System.IO;

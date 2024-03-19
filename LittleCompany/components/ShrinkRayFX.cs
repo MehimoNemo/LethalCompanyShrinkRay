@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.VFX;
 using static LittleCompany.helper.PlayerModification;
 
-namespace LittleCompany.comp
+namespace LittleCompany.components
 {
     public class ShrinkRayFX : MonoBehaviour
     {

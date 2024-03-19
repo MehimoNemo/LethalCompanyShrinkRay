@@ -1,5 +1,5 @@
 ﻿using GameNetcodeStuff;
-using LittleCompany.comp;
+using LittleCompany.components;
 using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
