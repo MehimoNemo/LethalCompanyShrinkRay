@@ -296,13 +296,13 @@ namespace LittleCompany.components
 
         public override void EquipItem()
         {
-            if(grabSFX != null)
-                audioSource?.PlayOneShot(grabSFX);
             base.EquipItem();
         }
 
         public override void GrabItem()
         {
+            if (grabSFX != null)
+                audioSource?.PlayOneShot(grabSFX);
             base.GrabItem();
         }
 
