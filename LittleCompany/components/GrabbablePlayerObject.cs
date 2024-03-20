@@ -219,6 +219,9 @@ namespace LittleCompany.components
 
         public override void GrabItem()
         {
+            if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
+                HoarderBugAIPatch.DropHeldItem(enemyHeldBy as HoarderBugAI);
+
             Plugin.Log("Okay, let's grab " + name);
             base.GrabItem();
 
@@ -385,12 +388,7 @@ namespace LittleCompany.components
             Plugin.Log("Clean Up");
             SetIsGrabbableToEnemies(false);
             if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
-            {
-                var hoarderBug = enemyHeldBy as HoarderBugAI;
-                hoarderBug.heldItem = null;
-                hoarderBug.targetItem = null;
-                hoarderBug.SwitchToBehaviourState(0);
-            }
+                HoarderBugAIPatch.DropHeldItem(enemyHeldBy as HoarderBugAI);
 
             try
             {

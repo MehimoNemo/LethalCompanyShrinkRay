@@ -88,6 +88,20 @@ namespace LittleCompany.patches.EnemyBehaviours
             HoarderBugAI.HoarderBugItems.RemoveAll(item => item.itemGrabbableObject.NetworkObjectId == gpo.NetworkObjectId);
         }
 
+        public static void DropHeldItem(HoarderBugAI hoarderBug, bool switchToSearchState = true)
+        {
+            if (hoarderBug?.heldItem?.itemGrabbableObject == null) return;
+
+            hoarderBug.DropItemServerRpc(hoarderBug.heldItem.itemGrabbableObject.NetworkObject, hoarderBug.transform.position, false);
+
+            if(switchToSearchState)
+            {
+                hoarderBug.heldItem = null;
+                hoarderBug.targetItem = null;
+                hoarderBug.SwitchToBehaviourState(0);
+            }
+        }
+
         public static void HoardingBugTargetUs(HoarderBugAI hoarderBug, GrabbablePlayerObject gpo)
         {
             if (gpo.playerHeldBy != null && ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.Addicted)
@@ -100,8 +114,7 @@ namespace LittleCompany.patches.EnemyBehaviours
                 return;
             }
 
-            if (hoarderBug.heldItem != null && hoarderBug.heldItem.itemGrabbableObject != null)
-                hoarderBug.DropItemServerRpc(hoarderBug.heldItem.itemGrabbableObject.NetworkObject, hoarderBug.transform.position, false);
+            DropHeldItem(hoarderBug, false);
             hoarderBug.targetItem = gpo;
             hoarderBug.StopSearch(hoarderBug.searchForItems, clear: false);
             hoarderBug.SwitchToBehaviourState(0);
