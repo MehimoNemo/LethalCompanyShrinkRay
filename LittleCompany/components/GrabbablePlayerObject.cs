@@ -487,7 +487,7 @@ namespace LittleCompany.components
             if (playerHeldBy != null)
                 playerHeldBy.carryWeight -= itemProperties.weight; // Subtract old weight
 
-            itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight; // Set new weight
+            itemProperties.weight = (grabbedPlayer.carryWeight * ModConfig.Instance.values.weightMultiplier) + BaseWeight; // Set new weight
 
             if (playerHeldBy != null)
                 playerHeldBy.carryWeight += itemProperties.weight; // Add new weight

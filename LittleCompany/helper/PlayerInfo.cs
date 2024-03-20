@@ -26,24 +26,6 @@ namespace LittleCompany.helper
             return false;
         }
 
-        public static float CalculateWeightFor(PlayerControllerB player, bool playerWeightIncluded = false)
-        {
-            float baseValue = 1f;
-            float weight = playerWeightIncluded ? (0.1f * player.transform.localScale.x) : 0;
-
-            if (player != null && player.ItemSlots != null)
-            {
-                foreach (var item in player.ItemSlots)
-                    if (item != null)
-                        weight += Mathf.Clamp(item.itemProperties.weight - 1f, 0f, 10f);
-            }
-
-            if(IsShrunk(player))
-                weight *= ModConfig.Instance.values.weightMultiplier;
-
-            return baseValue + weight;
-        }
-
         public static List<GameObject> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled).Select(pcb => pcb.gameObject).ToList();
 
         public static PlayerControllerB ControllerFromID(ulong playerID)
