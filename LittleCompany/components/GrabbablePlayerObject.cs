@@ -140,6 +140,8 @@ namespace LittleCompany.components
 
             if (grabbedPlayer == null)
                 return;
+
+            EnableInteractTrigger();
         }
 
         public override void Update()
@@ -503,15 +505,12 @@ namespace LittleCompany.components
         public void WeightChangedBy(float diff)
         {
             var modifiedValue = diff * (ModConfig.Instance.values.weightMultiplier - 1f);
-            Plugin.Log("WeightChangedBy " + modifiedValue + " (originally " + diff + ") from " + grabbedPlayer.carryWeight + " to " + (grabbedPlayer.carryWeight + modifiedValue));
 
             itemProperties.weight += diff;
 
             grabbedPlayer.carryWeight += modifiedValue;
 
-            if (playerHeldBy != null) // Update holder weight
-                playerHeldBy.carryWeight += diff;
-
+            Plugin.Log("Weight of " + name + " changed by " + (diff + modifiedValue) + " (originally " + diff + ") from " + previousCarryWeight + " to " + grabbedPlayer.carryWeight, Plugin.LogType.Warning);
             previousCarryWeight = grabbedPlayer.carryWeight;
 
             CalculateScrapValue(); // When our weight changed it's likely that our value did too
