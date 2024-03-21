@@ -11,6 +11,7 @@
 + fixed audio error leading to bugged interaction state
 + fixed host being able to grab themself
 + fixed goomba not working when jumping over a shrunken player
++ fixed weightMultiplier not being applied
 
 ### 0.4.6 ###
 + Fixed a crash when grabbing something
