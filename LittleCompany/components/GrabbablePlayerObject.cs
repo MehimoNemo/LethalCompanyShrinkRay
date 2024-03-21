@@ -379,22 +379,22 @@ namespace LittleCompany.components
             EnableInteractTrigger();
             CalculateScrapValue();
 
-            Plugin.Log("grabbedPlayer carryWeight: " + PlayerInfo.CalculateWeightFor(grabbedPlayer));
-            Plugin.Log("weightMultiplier: " + ModConfig.Instance.values.weightMultiplier);
             itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight;
             grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) * ModConfig.Instance.values.weightMultiplier;
             previousCarryWeight = grabbedPlayer.carryWeight;
             Plugin.Log("gpo weight: " + itemProperties.weight);
-            Plugin.Log("Updated grabbedPlayer carryWeight: " + grabbedPlayer.carryWeight);
 
             SetIsGrabbableToEnemies(true);
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void CleanUpServerRpc()
+        public void CleanUpServerRpc(bool removeImmediatly)
         {
             CleanUpClientRpc();
-            StartCoroutine(DeleteLater());
+            if(removeImmediatly)
+                GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
+            else
+                StartCoroutine(DeleteLater());
         }
 
         [ClientRpc]
@@ -503,7 +503,7 @@ namespace LittleCompany.components
         public void WeightChangedBy(float diff)
         {
             var modifiedValue = diff * (ModConfig.Instance.values.weightMultiplier - 1f);
-            Plugin.Log("WeightChangedBy " + diff + ", which adds/subtracts " + modifiedValue);
+            Plugin.Log("WeightChangedBy " + modifiedValue + " (originally " + diff + ") from " + grabbedPlayer.carryWeight + " to " + (grabbedPlayer.carryWeight + modifiedValue));
 
             itemProperties.weight += diff;
 

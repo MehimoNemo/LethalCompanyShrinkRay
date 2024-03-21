@@ -266,7 +266,7 @@ namespace LittleCompany.components
 
             List<ulong> playerIDs = new List<ulong>(networkObjects.Keys);
             foreach (var playerID in playerIDs)
-                RemovePlayerGrabbable(playerID);
+                RemovePlayerGrabbable(playerID, true);
         }
 
         public static void SetPlayerGrabbable(ulong playerID)
@@ -279,15 +279,22 @@ namespace LittleCompany.components
 
             if (networkObjects.ContainsKey(playerID))
             {
-                Plugin.Log("Player " + playerID + " already grabbable!");
-                return;
+                if (networkObjects[playerID] == null)
+                    networkObjects.Remove(playerID);
+                else if (networkObjects[playerID].IsSpawned)
+                {
+                    Plugin.Log("Player " + playerID + " already grabbable!");
+                    return;
+                }
+                else
+                    UnityEngine.Object.Destroy(networkObjects[playerID]);
             }
 
             networkObjects[playerID] = GrabbablePlayerObject.Instantiate(playerID);
             Plugin.Log("NEW GRABBALEPLAYER COUNT: " + networkObjects.Count);
         }
 
-        public static void RemovePlayerGrabbable(ulong playerID)
+        public static void RemovePlayerGrabbable(ulong playerID, bool immediatly = false)
         {
             if (!PlayerInfo.IsHost)
             {
@@ -308,7 +315,7 @@ namespace LittleCompany.components
                 return;
             }
 
-            gpo.CleanUpServerRpc();
+            gpo.CleanUpServerRpc(immediatly);
         }
 
         public static void DespawnGrabbablePlayer(ulong playerID)

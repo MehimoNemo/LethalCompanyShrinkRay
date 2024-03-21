@@ -49,7 +49,7 @@ namespace LittleCompany.patches
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.ControllerFromID(clientId));
 
             if (PlayerInfo.IsHost)
-                GrabbablePlayerList.RemovePlayerGrabbable(clientId);
+                GrabbablePlayerList.RemovePlayerGrabbable(clientId, true);
         }
     }
 }
