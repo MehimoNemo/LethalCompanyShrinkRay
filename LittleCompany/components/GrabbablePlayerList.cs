@@ -24,9 +24,22 @@ namespace LittleCompany.components
         #endregion
 
         #region Patches
+
+
+        [HarmonyPatch(typeof(PlayerControllerB), "DamagePlayer")]
+        [HarmonyPrefix]
+        public static void DamagePlayer(PlayerControllerB __instance, int damageNumber, bool hasDamageSFX = true, bool callRPC = true, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false, Vector3 force = default(Vector3))
+        {
+            if (__instance == null || !TryFindGrabbableObjectByHolder(__instance.playerClientId, out GrabbablePlayerObject gpo)) return;
+            if (causeOfDeath == CauseOfDeath.Suffocation || causeOfDeath == CauseOfDeath.Drowning || causeOfDeath == CauseOfDeath.Abandoned) return;
+
+            // Grabbed player takes half the damage
+            gpo.grabbedPlayer.DamagePlayer(damageNumber / 2, hasDamageSFX, callRPC, causeOfDeath, deathAnimation, fallDamage, force);
+        }
+        
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
         [HarmonyPrefix]
-        public static void KillPlayerClientRpcPrefix(int playerId, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation)
+        public static void KillPlayerClientRpcPrefix(int playerId/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
         {
             Plugin.Log("KillPlayerClientRpcPrefix");
 
@@ -54,7 +67,7 @@ namespace LittleCompany.components
                 if (PlayerInfo.IsHost)
                 {
                     Plugin.Log("Delete gpo later");
-                    GameNetworkManager.Instance.StartCoroutine(grabbables.grabbedGPO.DeleteLater()); // Remove grabbable player object after everything is executed
+                    grabbables.grabbedGPO.DeleteNextFrame = true; // Remove grabbable player object after everything is executed
                 }
             }
 
@@ -70,9 +83,6 @@ namespace LittleCompany.components
                     Plugin.Log("The person who died is holding us.");
                     grabbables.holderGPO.DiscardItemOnClient();
                     grabbables.holderGPO.playerHeldBy = null;
-
-                    /*if ((CauseOfDeath)causeOfDeath == CauseOfDeath.Gravity)
-                        PlayerInfo.CurrentPlayer.KillPlayer(bodyVelocity, spawnBody, (CauseOfDeath)causeOfDeath, deathAnimation);*/
                 }
             }
         }
@@ -266,7 +276,7 @@ namespace LittleCompany.components
 
             List<ulong> playerIDs = new List<ulong>(networkObjects.Keys);
             foreach (var playerID in playerIDs)
-                RemovePlayerGrabbable(playerID, true);
+                RemovePlayerGrabbable(playerID);
         }
 
         public static void SetPlayerGrabbable(ulong playerID)
@@ -294,7 +304,7 @@ namespace LittleCompany.components
             Plugin.Log("NEW GRABBALEPLAYER COUNT: " + networkObjects.Count);
         }
 
-        public static void RemovePlayerGrabbable(ulong playerID, bool immediatly = false)
+        public static void RemovePlayerGrabbable(ulong playerID)
         {
             if (!PlayerInfo.IsHost)
             {
@@ -315,7 +325,7 @@ namespace LittleCompany.components
                 return;
             }
 
-            gpo.CleanUpServerRpc(immediatly);
+            DespawnGrabbablePlayer(playerID);
         }
 
         public static void DespawnGrabbablePlayer(ulong playerID)

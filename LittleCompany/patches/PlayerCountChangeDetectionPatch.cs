@@ -41,15 +41,16 @@ namespace LittleCompany.patches
         [HarmonyPrefix]
         public static void OnClientDisconnect(ulong clientId)
         {
+            if (GrabbablePlayerList.TryFindGrabbableObjectByHolder(clientId, out GrabbablePlayerObject gpo))
+                gpo.DiscardItem();
+
+            GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.ControllerFromID(clientId));
+
             if (!PlayerInfo.IsHost || !GameNetworkManagerPatch.IsGameInitialized)
                 return;
 
             Plugin.Log("Player " + clientId + " left.");
-
-            GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.ControllerFromID(clientId));
-
-            if (PlayerInfo.IsHost)
-                GrabbablePlayerList.RemovePlayerGrabbable(clientId, true);
+            GrabbablePlayerList.RemovePlayerGrabbable(clientId);
         }
     }
 }

@@ -58,6 +58,8 @@ namespace LittleCompany.components
 
         internal float previousCarryWeight = 1f;
 
+        internal bool DeleteNextFrame = false;
+
         public enum TargetPlayer
         {
             GrabbedPlayer = 0,
@@ -107,6 +109,7 @@ namespace LittleCompany.components
         public override void OnNetworkDespawn()
         {
             Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
+            CleanUp();
             base.OnNetworkDespawn();
         }
 
@@ -150,6 +153,9 @@ namespace LittleCompany.components
 
             if (grabbedPlayer == null)
                 return;
+
+            if (grabbedPlayer.carryWeight != previousCarryWeight)
+                WeightChangedBy(grabbedPlayer.carryWeight - previousCarryWeight);
 
             if (IsOnSellCounter.Value || enemyHeldBy != null || this.isHeld)
             {
@@ -202,8 +208,11 @@ namespace LittleCompany.components
                 playerHeldBy.DiscardHeldObject();
             }
 
-            if (grabbedPlayer.carryWeight != previousCarryWeight)
-                WeightChangedBy(grabbedPlayer.carryWeight - previousCarryWeight);
+            if(DeleteNextFrame && PlayerInfo.IsHost)
+            {
+                DeleteNextFrame = false;
+                GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
+            }
         }
         
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -244,7 +253,7 @@ namespace LittleCompany.components
                     IgnoreColliderWith(player.playerCollider);
             }
 
-            if (!ModConfig.Instance.values.friendlyFlight)
+            if (IsCurrentPlayer && !ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(false);
 
             if (IsCurrentPlayer)
@@ -389,42 +398,26 @@ namespace LittleCompany.components
             SetIsGrabbableToEnemies(true);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        public void CleanUpServerRpc(bool removeImmediatly)
-        {
-            CleanUpClientRpc();
-            if(removeImmediatly)
-                GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
-            else
-                StartCoroutine(DeleteLater());
-        }
-
-        [ClientRpc]
-        public void CleanUpClientRpc()
+        public void CleanUp()
         {
             Plugin.Log("Clean Up");
-            SetIsGrabbableToEnemies(false);
-            if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
-                HoarderBugAIPatch.DropHeldItem(enemyHeldBy as HoarderBugAI);
-
             try
             {
+                SetIsGrabbableToEnemies(false);
+
+                grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) / ModConfig.Instance.values.weightMultiplier;
+                previousCarryWeight = grabbedPlayer.carryWeight;
+
+                if (audioSource != null && audioSource.isPlaying)
+                    audioSource.Stop();
+
+                if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
+                    HoarderBugAIPatch.DropHeldItem(enemyHeldBy as HoarderBugAI);
+
                 if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
                     playerHeldBy.DiscardHeldObject(); // Can lead to problems
             }
             catch { };
-
-            grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) / ModConfig.Instance.values.weightMultiplier;
-            previousCarryWeight = grabbedPlayer.carryWeight;
-
-            if (audioSource != null && audioSource.isPlaying)
-                audioSource.Stop();
-        }
-
-        public IEnumerator DeleteLater()
-        {
-            yield return new WaitForSeconds(0.5f);
-            GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
         }
 
         public void UpdateScanNodeVisibility()
