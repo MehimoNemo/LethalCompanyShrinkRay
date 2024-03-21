@@ -1,8 +1,42 @@
+## BETA ##
+**What's new**
++ ShrinkRay Targeting is finally here! The holder will see a laser pointer and targets will get highlighted (on activate by default, configurable).
++ 3 new config options:
+ + deathShrinking: Same as multipleShrinking was before. Allows shrinking players to death if set.
+ + shrinkRayTargetHighlighting: A performance option that manages, when targets should be highlighted.
+ + sizeChangeStep: The size change of a single modification *Enlarging has no benefits currently and won't make normal sized players grabbable. This is planned for 0.6.0!*
+
+**Fixes**
++ fixed players not getting normal again after rejoining (till reworked in 0.6.0)
++ fixed audio error leading to bugged interaction state
++ fixed host being able to grab themself
++ fixed goomba not working when jumping over a shrunken player
++ fixed weightMultiplier not being applied
+
+### 0.4.6 ###
++ Fixed a crash when grabbing something
+
+### 0.4.5 ###
++ replacing materials instead of sharedMaterials, to only modify the specific item, instead of any of their type
+
+### 0.4.4 ###
++ fixed desync for ShrinkRay when trying to shrink the holder as the grabbed player
+
+### 0.4.3 ###
++ shrunken players will now see the terminal screen upon usage
+
+### 0.4.2 ###
++ weight-updating is now called on demand, instead of checking for updates every frame
+
+### 0.4.1 ###
++ using main folder as fallback if there is no audio / icons folder (e.g. when downloaded via thunderstore)
+
 ### 0.4.0 [Singleplayer & Sounds update] ###
 **What's new**
 + Added two potions: Light & Heavy
   + Buyable in store including terminal notes & available as rare scrap in the dungeons!
   + Fully configurable in the config after first startup.
+  + Once consumed it will stay as an empty potion with a maximum scrap value of 5
   + *This was wished by the community as a way to shrink yourself in singleplayer, as the shrink ray can only target others. Enjoy a drink!*
 + Added sounds for the following interactions:
   + Grabbing, dropping and throwing players
@@ -25,6 +59,7 @@
 + fixed player visor being in the view after revive
 + fixed weight of grabbed player not updating when they grab/discard items
 + fixed players giving 0 credits when being sold on the counter
++ fixed items not aligning correctly in hand after being held while changing player size
 
 ### 0.3.1 ###
 + fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime

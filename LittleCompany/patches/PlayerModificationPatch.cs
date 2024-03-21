@@ -66,8 +66,6 @@ namespace LittleCompany.patches
                 modifiedSprintMultiplier = Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed);
                 ___sprintMultiplier = modifiedSprintMultiplier;
             }
-
-            //__instance.carryWeight = PlayerHelper.calculatePlayerWeightFor(__instance);
         }
     }
 }
