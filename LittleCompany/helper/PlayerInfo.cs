@@ -204,6 +204,19 @@ namespace LittleCompany.helper
             CameraVisor.localPosition = defaultMaskPos * SizeOf(CurrentPlayer);
         }
 
+        public static float CalculateWeightFor(PlayerControllerB player)
+        {
+            if(player?.ItemSlots == null) return 1f;
+
+            float weight = 1f;
+
+            foreach (var item in player.ItemSlots)
+                if (item != null)
+                    weight += Mathf.Clamp(item.itemProperties.weight - 1f, 0f, 10f);
+
+            return weight;
+        }
+
         public static void UpdateWeatherForPlayer(PlayerControllerB targetPlayer)
         {
             var audioPresetIndex = targetPlayer.isInsideFactory ? 2 : 3;

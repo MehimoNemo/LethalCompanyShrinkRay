@@ -156,33 +156,6 @@ namespace LittleCompany.components
             }
         }
 
-        [HarmonyPatch(typeof(PlayerControllerB), "SetObjectAsNoLongerHeld")]
-        [HarmonyPostfix]
-        public static void SetObjectAsNoLongerHeld(PlayerControllerB __instance, GrabbableObject dropObject)
-        {
-            Plugin.Log("SetObjectAsNoLongerHeld");
-            if(dropObject != null && dropObject is GrabbablePlayerObject)
-                (dropObject as GrabbablePlayerObject).EnableInteractTrigger();
-
-            if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
-            {
-                gpo.CalculateScrapValue();
-                gpo.UpdateWeight();
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerControllerB), "GrabObjectClientRpc")]
-        [HarmonyPostfix]
-        public static void GrabObjectClientRpc(PlayerControllerB __instance)
-        {
-            Plugin.Log("GrabObjectClientRpc");
-            if (TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo))
-            {
-                gpo.CalculateScrapValue();
-                gpo.UpdateWeight();
-            }
-        }
-
         [HarmonyPatch(typeof(GrabbableObject), "EnablePhysics")]
         [HarmonyPrefix]
         public static void EnablePhysicsPrefix(GrabbableObject __instance, ref bool enable)
@@ -289,6 +262,8 @@ namespace LittleCompany.components
         {
             Plugin.Log("ClearGrabbablePlayerObjects");
 
+            if (!PlayerInfo.IsHost) return;
+
             List<ulong> playerIDs = new List<ulong>(networkObjects.Keys);
             foreach (var playerID in playerIDs)
                 RemovePlayerGrabbable(playerID);
@@ -314,6 +289,12 @@ namespace LittleCompany.components
 
         public static void RemovePlayerGrabbable(ulong playerID)
         {
+            if (!PlayerInfo.IsHost)
+            {
+                Plugin.Log("RemovePlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
+                return;
+            }
+
             Plugin.Log("RemovePlayerGrabbable");
             if (!networkObjects.TryGetValue(playerID, out NetworkObject networkObject))
             {
@@ -327,19 +308,7 @@ namespace LittleCompany.components
                 return;
             }
 
-            try
-            {
-                gpo.StartCoroutine(gpo.CleanUp(() =>
-                {
-                    DespawnGrabbablePlayer(playerID);
-                }));
-            }
-            catch(Exception ex)
-            {
-                Plugin.Log("Error cleaning up grabbablePlayer: " + ex.Message, Plugin.LogType.Error);
-                DespawnGrabbablePlayer(playerID);
-            }
-
+            gpo.CleanUpServerRpc();
         }
 
         public static void DespawnGrabbablePlayer(ulong playerID)

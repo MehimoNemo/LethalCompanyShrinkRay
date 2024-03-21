@@ -56,6 +56,8 @@ namespace LittleCompany.components
         public NetworkVariable<bool> InLastHoardingBugNestRange = new NetworkVariable<bool>(false);
         private bool Thrown = false;
 
+        internal float previousCarryWeight = 1f;
+
         public enum TargetPlayer
         {
             GrabbedPlayer = 0,
@@ -197,6 +199,9 @@ namespace LittleCompany.components
                 Plugin.Log("Fallback triggered, where holder didn't drop held player upon death.");
                 playerHeldBy.DiscardHeldObject();
             }
+
+            if (grabbedPlayer.carryWeight != previousCarryWeight)
+                WeightChangedBy(grabbedPlayer.carryWeight - previousCarryWeight);
         }
         
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -373,17 +378,27 @@ namespace LittleCompany.components
 
             EnableInteractTrigger();
             CalculateScrapValue();
-            UpdateWeight();
+
+            Plugin.Log("grabbedPlayer carryWeight: " + PlayerInfo.CalculateWeightFor(grabbedPlayer));
+            Plugin.Log("weightMultiplier: " + ModConfig.Instance.values.weightMultiplier);
+            itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight;
+            grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) * ModConfig.Instance.values.weightMultiplier;
+            previousCarryWeight = grabbedPlayer.carryWeight;
+            Plugin.Log("gpo weight: " + itemProperties.weight);
+            Plugin.Log("Updated grabbedPlayer carryWeight: " + grabbedPlayer.carryWeight);
+
             SetIsGrabbableToEnemies(true);
         }
 
-        public IEnumerator DeleteLater()
+        [ServerRpc(RequireOwnership = false)]
+        public void CleanUpServerRpc()
         {
-            yield return new WaitForSeconds(1f);
-            GrabbablePlayerList.RemovePlayerGrabbable(grabbedPlayerID.Value);
+            CleanUpClientRpc();
+            StartCoroutine(DeleteLater());
         }
 
-        public IEnumerator CleanUp(Action onComplete = null)
+        [ClientRpc]
+        public void CleanUpClientRpc()
         {
             Plugin.Log("Clean Up");
             SetIsGrabbableToEnemies(false);
@@ -397,13 +412,17 @@ namespace LittleCompany.components
             }
             catch { };
 
+            grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) / ModConfig.Instance.values.weightMultiplier;
+            previousCarryWeight = grabbedPlayer.carryWeight;
+
             if (audioSource != null && audioSource.isPlaying)
                 audioSource.Stop();
+        }
 
-            if (onComplete != null)
-                onComplete();
-
-            yield break;
+        public IEnumerator DeleteLater()
+        {
+            yield return new WaitForSeconds(0.5f);
+            GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
         }
 
         public void UpdateScanNodeVisibility()
@@ -481,16 +500,35 @@ namespace LittleCompany.components
             Plugin.Log("Scrap value: " + value);
         }
 
-        public void UpdateWeight()
+        public void WeightChangedBy(float diff)
         {
-            Plugin.Log("UpdateWeight for gpo \"" + name + "\" who weights " + (grabbedPlayer.carryWeight + BaseWeight) + ". Holder is " + (playerHeldBy != null ? playerHeldBy.name : "null"));
-            if (playerHeldBy != null)
-                playerHeldBy.carryWeight -= itemProperties.weight; // Subtract old weight
+            var modifiedValue = diff * (ModConfig.Instance.values.weightMultiplier - 1f);
+            Plugin.Log("WeightChangedBy " + diff + ", which adds/subtracts " + modifiedValue);
 
-            itemProperties.weight = (grabbedPlayer.carryWeight * ModConfig.Instance.values.weightMultiplier) + BaseWeight; // Set new weight
+            itemProperties.weight += diff;
 
-            if (playerHeldBy != null)
-                playerHeldBy.carryWeight += itemProperties.weight; // Add new weight
+            grabbedPlayer.carryWeight += modifiedValue;
+
+            if (playerHeldBy != null) // Update holder weight
+                playerHeldBy.carryWeight += diff;
+
+            previousCarryWeight = grabbedPlayer.carryWeight;
+
+            CalculateScrapValue(); // When our weight changed it's likely that our value did too
+        }
+
+        public void UpdateWeightAfterDropping(GrabbableObject droppedObject)
+        {
+            var realObjectWeight = droppedObject.itemProperties.weight - 1f;
+
+            itemProperties.weight -= realObjectWeight;
+            grabbedPlayer.carryWeight -= realObjectWeight * (ModConfig.Instance.values.weightMultiplier - 1f);
+
+            if (playerHeldBy != null) // Update holder weight
+                playerHeldBy.carryWeight -= realObjectWeight;
+
+            Plugin.Log("Dropped " + droppedObject.name + " -> Weight: " + realObjectWeight + ", new gpo weight: " + itemProperties.weight
+                 + ", new player weight: " + grabbedPlayer.carryWeight + ", new holder weight: " + (playerHeldBy != null ? playerHeldBy.carryWeight : "no holder"));
         }
 
         public void SetIsGrabbableToEnemies(bool isGrabbable = true)
