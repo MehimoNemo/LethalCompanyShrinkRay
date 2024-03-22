@@ -64,7 +64,7 @@ namespace LittleCompany.coroutines
                 {
                     PlayerInfo.ScaleLocalPlayerBodyParts();
                     if (heldItem != null)
-                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize/*, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2*/);
+                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2);
                 }
 
                 elapsedTime += Time.deltaTime;
@@ -79,13 +79,13 @@ namespace LittleCompany.coroutines
                 PlayerInfo.ScaleLocalPlayerBodyParts();
                 if (heldItem != null)
                 {
-                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize/*, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2*/);
+                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, currentSize, (initialArmScale - PlayerInfo.CalcLocalArmScale()) / 2);
                     ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
                 if (newSize != 1f)
-                    PlayerModificationPatch.Modify(newSize);
+                    PlayerMultiplierPatch.Modify(newSize);
                 else
-                    PlayerModificationPatch.Reset();
+                    PlayerMultiplierPatch.Reset();
             }
 
             if (onComplete != null)
