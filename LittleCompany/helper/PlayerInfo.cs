@@ -52,24 +52,13 @@ namespace LittleCompany.helper
 
         public static ulong CurrentPlayerID => CurrentPlayer.playerClientId;
 
-        public static float CurrentPlayerScale => PlayerScale(CurrentPlayer);
+        public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 
-        public static float PlayerScale(PlayerControllerB player)
-        {
-            if (!player || !player.gameObject)
-            {
-                Plugin.Log("unable to retrieve currentPlayerScale!");
-                return 1f;
-            }
+        public static float SizeOf(PlayerControllerB player) => SizeOf(player?.gameObject);
 
-            return PlayerScale(player.gameObject);
-        }
-
-        public static float PlayerScale(GameObject playerObject) => playerObject == null ? 1f : Rounded(playerObject.transform.localScale.x);
+        public static float SizeOf(GameObject playerObject) => playerObject == null ? 1f : Rounded(playerObject.transform.localScale.y);
 
         public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
-
-        public static float SizeOf(PlayerControllerB player) => Rounded(player.gameObject.transform.localScale.y);
 
         public static bool IsShrunk(PlayerControllerB player) => IsShrunk(player.gameObject);
 

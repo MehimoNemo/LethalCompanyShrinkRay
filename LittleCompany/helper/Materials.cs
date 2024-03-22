@@ -87,21 +87,5 @@ namespace LittleCompany.helper
             m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             return m;
         }
-
-        private static GameObject _circleHighlightPrefab = null;
-        public static GameObject CircleHighlight
-        {
-            get
-            {
-                if (_circleHighlightPrefab == null)
-                {
-                    _circleHighlightPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "Shrink/HighlightingCircle.prefab"));
-                    if (_circleHighlightPrefab == null) return null;
-                }
-
-                var ch = Object.Instantiate(_circleHighlightPrefab);
-                return ch;
-            }
-        }
     }
 }

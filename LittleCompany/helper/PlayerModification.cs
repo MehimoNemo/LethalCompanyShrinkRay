@@ -9,7 +9,7 @@ namespace LittleCompany.helper
     public class PlayerModification
     {
         #region Properties
-        internal static float DeathShrinkMargin => 0.1f;
+        internal static float DeathShrinkMargin => 0.2f;
         public enum ModificationType
         {
             Normalizing,
@@ -24,24 +24,15 @@ namespace LittleCompany.helper
 
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
-
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            if (!ModConfig.Instance.values.deathShrinking)
-            {
-                if (playerSize - ModConfig.Instance.values.sizeChangeStep < DeathShrinkMargin) // deathShrink
-                    return playerSize;
-            }
-
-            return playerSize - ModConfig.Instance.values.sizeChangeStep;
+            return Mathf.Max(playerSize - ModConfig.Instance.values.sizeChangeStep, 0f);
         }
 
         public static float NextIncreasedSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            //if (playerSize + ModConfig.Instance.values.sizeChangeStep > 1f) return;
-            return playerSize + ModConfig.Instance.values.sizeChangeStep;
+            return Mathf.Min(playerSize + ModConfig.Instance.values.sizeChangeStep, ModConfig.Instance.values.maximumPlayerSize);
         }
-
 
         public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
         {
@@ -57,7 +48,8 @@ namespace LittleCompany.helper
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
-                    if (nextShrunkenSize == PlayerInfo.SizeOf(targetPlayer) || (nextShrunkenSize == 0f && !targetPlayer.AllowPlayerDeath()))
+                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + PlayerInfo.SizeOf(targetPlayer));
+                    if (nextShrunkenSize == PlayerInfo.SizeOf(targetPlayer) || (nextShrunkenSize < DeathShrinkMargin && !targetPlayer.AllowPlayerDeath()))
                         return false;
                     break;
 
@@ -128,10 +120,8 @@ namespace LittleCompany.helper
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
                                 // Poof Target to death because they are too small to exist
-                                if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position, Quaternion.identity))
-                                    UnityEngine.Object.Destroy(deathPoof, 4f);
-
-                                targetPlayer.movementAudio.PlayOneShot(deathPoofSFX);
+                                if(ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position))
+                                    targetPlayer.movementAudio.PlayOneShot(deathPoofSFX);
 
                                 if (targetingUs)
                                     targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);

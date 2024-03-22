@@ -2,6 +2,7 @@ using GameNetcodeStuff;
 using LittleCompany.helper;
 using System;
 using System.Collections;
+using System.IO;
 using UnityEngine;
 using UnityEngine.VFX;
 using static LittleCompany.helper.PlayerModification;
@@ -12,7 +13,6 @@ namespace LittleCompany.components
     {
         #region Properties
         private static GameObject shrinkRayFX { get; set; }
-        private static GameObject deathPoofFX { get; set; }
 
         private VisualEffect defaultVisualEffect { get; set; }
         private VisualEffect activeVisualEffect { get; set; }
@@ -105,11 +105,6 @@ namespace LittleCompany.components
             noisePower = 0.1f;
             sparksSize = 1f;
             thickness = 0.1f;
-
-            // Load death poof asset (WIP)
-            //deathPoofFX = AssetLoader.fxAsset?.LoadAsset<GameObject>("Poof FX");
-            //if (deathPoofFX == null)
-            //    Plugin.log("AssetBundle Loading Error: Death Poof VFX", Plugin.LogType.Error);
         }
 
         public IEnumerator RenderRayBeam(Transform holderCamera, Transform target, PlayerModification.ModificationType type, AudioSource shrinkRayAudio, Action onComplete = null)
@@ -229,16 +224,15 @@ namespace LittleCompany.components
             return beam != null;
         }
 
-        public static bool TryCreateDeathPoofAt(out GameObject deathPoof, Vector3 position, Quaternion rotation)
+        public static bool TryCreateDeathPoofAt(out GameObject deathPoof, Vector3 position)
         {
-            if (deathPoofFX == null)
-            {
-                deathPoof = null;
+            deathPoof = Effects.DeathPoof;
+            if (deathPoof == null)
                 return false;
-            }
 
-            deathPoof = Instantiate(deathPoofFX, position, rotation);
-            DontDestroyOnLoad(deathPoof);
+            deathPoof.transform.position = position;
+            Destroy(deathPoof, 3f);
+
             return deathPoof != null;
         }
 

@@ -60,7 +60,7 @@ namespace LittleCompany.components
                     ChangeMaterials();
                     break;
                 case HighlightMethod.Circle:
-                    highlightingGameObject = Materials.CircleHighlight;
+                    highlightingGameObject = Effects.CircleHighlight;
                     if (highlightingGameObject == null)
                     {
                         Plugin.Log("Unable to load highlight.", Plugin.LogType.Error);
