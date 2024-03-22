@@ -50,7 +50,7 @@ namespace LittleCompany.patches
             if (item == null || item.playerHeldBy == null) return;
 
             if (item.gameObject.TryGetComponent(out TargetScaling scaling))
-                Object.Destroy(scaling);
+                scaling.Reset();
 
             UnGlassifyItem(item);
         }

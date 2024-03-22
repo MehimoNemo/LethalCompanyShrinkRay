@@ -18,12 +18,12 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Max(ScalingOf(targetObject).CurrentSize - ModConfig.Instance.values.sizeChangeStep, 0f);
+            return Mathf.Max(ScalingOf(targetObject).IntendedSize - ModConfig.Instance.values.sizeChangeStep, 0f);
         }
 
         public static float NextIncreasedSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Min(ScalingOf(targetObject).CurrentSize + ModConfig.Instance.values.sizeChangeStep, 4f);
+            return Mathf.Min(ScalingOf(targetObject).IntendedSize + ModConfig.Instance.values.sizeChangeStep, 4f);
         }
 
         public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type)
@@ -38,20 +38,20 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (scaling.CurrentSize == 1f)
+                    if (scaling.IntendedSize == 1f)
                         return false;
                     break;
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
-                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.CurrentSize);
-                    if (nextShrunkenSize == scaling.CurrentSize)
+                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.IntendedSize);
+                    if (nextShrunkenSize == scaling.IntendedSize)
                         return false;
                     break;
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
-                    if (nextIncreasedSize == scaling.CurrentSize)
+                    if (nextIncreasedSize == scaling.IntendedSize)
                         return false;
                     break;
 

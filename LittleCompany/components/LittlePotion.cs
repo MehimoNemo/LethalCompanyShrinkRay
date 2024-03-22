@@ -152,10 +152,10 @@ namespace LittleCompany.components
             LittleShrinkingPotion.LoadAsset();
             LittleEnlargingPotion.LoadAsset();
 
-            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionGrab.wav", (item) => grabSFX = item));
-            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionDrop.wav", (item) => dropSFX = item));
-            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionConsume.wav", (item) => consumeSFX = item));
-            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionNoConsume.wav", (item) => noConsumeSFX = item));
+            grabSFX = AssetLoader.LoadAudio("potionGrab.wav");
+            dropSFX = AssetLoader.LoadAudio("potionDrop.wav");
+            consumeSFX = AssetLoader.LoadAudio("potionConsume.wav");
+            noConsumeSFX = AssetLoader.LoadAudio("potionNoConsume.wav");
         }
 
         public static void ConfigSynced()

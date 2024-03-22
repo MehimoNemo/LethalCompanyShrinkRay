@@ -21,13 +21,13 @@ namespace LittleCompany.coroutines
             if(!gameObj.TryGetComponent(out TargetScaling scaling))
                 scaling = gameObj.AddComponent<TargetScaling>();
 
-            if (scaling.SizeAt(desiredScale) == scaling.originalScale)
+            if (scaling.SizeAt(desiredScale) == scaling.intendedScale)
                 yield break;
 
             float duration = 2f;
             float elapsedTime = 0f;
 
-            float c = scaling.CurrentSize;
+            float c = scaling.IntendedSize;
             var direction = desiredScale < c ? -1f : 1f;
             float a = Mathf.Abs(c - desiredScale); // difference
             const float b = -0.5f;
@@ -37,17 +37,14 @@ namespace LittleCompany.coroutines
                 // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
                 var x = elapsedTime;
                 var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
-                scaling.ScaleRelativeTo(newScale);
+                scaling.ScaleRelativeTo(newScale, default, true);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
             }
 
             // Ensure final scale is set to the desired value
-            scaling.ScaleRelativeTo(desiredScale);
-
-            if (desiredScale == 1f)
-                Destroy(scaling);
+            scaling.ScaleRelativeTo(desiredScale, default, true);
 
             if (onComplete != null)
                 onComplete();

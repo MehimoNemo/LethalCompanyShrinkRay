@@ -39,7 +39,7 @@ namespace LittleCompany.helper
             return sprite;
         }
 
-        public static IEnumerator LoadAudioAsync(string filename, Action<AudioClip> onComplete, AudioType type = AudioType.WAV)
+        public static AudioClip LoadAudio(string filename, AudioType type = AudioType.WAV)
         {
             var audioPath = Path.Combine(Path.Combine(AssetDir, "audio"), filename);
             if (!File.Exists(audioPath))
@@ -48,25 +48,24 @@ namespace LittleCompany.helper
                 if (!File.Exists(audioPath))
                 {
                     Plugin.Log("Audio \"" + audioPath + "\" not found in plugin directory!", Plugin.LogType.Error);
-                    yield break;
+                    return null;
                 }
             }
 
             using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(audioPath, type))
             {
                 var request = www.SendWebRequest();
-                yield return new WaitUntil(() => request.isDone);
+                while( !request.isDone ) { }
 
                 if (www.result == UnityWebRequest.Result.ConnectionError)
                 {
                     Plugin.Log(www.error, Plugin.LogType.Error);
-                    yield break;
+                    return null;
                 }
 
                 AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
-                yield return new WaitUntil(() => clip.loadState == AudioDataLoadState.Loaded);
                 Plugin.Log("Loaded audio \"" + filename);
-                onComplete(clip);
+                return clip;
             }
         }
 
@@ -80,7 +79,7 @@ namespace LittleCompany.helper
             GrabbablePlayerObject.LoadAsset();
             ShrinkRay.LoadAsset();
             LittlePotion.LoadPotionAssets();
-            GameNetworkManager.Instance.StartCoroutine(LoadAudioAsync("deathPoof.wav", (item) => Modification.deathPoofSFX = item));
+            Modification.deathPoofSFX = LoadAudio("deathPoof.wav");
         }
     }
 }

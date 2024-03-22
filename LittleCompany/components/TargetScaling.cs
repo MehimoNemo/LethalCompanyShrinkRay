@@ -4,10 +4,11 @@ namespace LittleCompany.components
 {
     internal class TargetScaling : MonoBehaviour
     {
+        internal Vector3 intendedScale = Vector3.one;    // The scale this object should have by default (Changes e.g. after modification through shrinkRay)
         internal Vector3 originalScale = Vector3.one;
         internal Vector3 originalOffset = Vector3.zero;
 
-        public float CurrentSize = 1f;
+        public float CurrentSize = 1f, IntendedSize = 1f;
 
         void Awake()
         {
@@ -18,19 +19,26 @@ namespace LittleCompany.components
             }
 
             originalScale = gameObject.transform.localScale;
+            intendedScale = originalScale;
 
             if(gameObject.TryGetComponent(out GrabbableObject item))
                 originalOffset = item.itemProperties.positionOffset;
         }
 
-        public void ScaleRelativeTo(float relationalSize = 1f, Vector3 additionalOffset = new Vector3())
+        public void ScaleRelativeTo(float relationalSize = 1f, Vector3 additionalOffset = new Vector3(), bool saveAsIntendedSize = false)
         {
-            gameObject.transform.localScale = originalScale * relationalSize;
+            gameObject.transform.localScale = intendedScale * relationalSize;
 
             if (gameObject.TryGetComponent(out GrabbableObject item))
                 item.itemProperties.positionOffset = originalOffset * relationalSize + additionalOffset;
 
             CurrentSize = relationalSize;
+
+            if(saveAsIntendedSize)
+            {
+                IntendedSize = CurrentSize;
+                intendedScale = originalScale * IntendedSize;
+            }
         }
 
         public Vector3 SizeAt(float percentage)
@@ -38,11 +46,11 @@ namespace LittleCompany.components
             return originalScale * percentage;
         }
 
-        public bool Unchanged => SizeAt(1f) == originalScale;
+        public bool Unchanged => SizeAt(1f) == intendedScale;
 
-        void OnDestroy()
+        public void Reset()
         {
-            gameObject.transform.localScale = originalScale;
+            gameObject.transform.localScale = intendedScale;
 
             if (gameObject.TryGetComponent(out GrabbableObject item))
                 item.itemProperties.positionOffset = originalOffset;
