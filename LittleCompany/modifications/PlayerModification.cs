@@ -13,7 +13,12 @@ namespace LittleCompany.modifications
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            return Mathf.Max(playerSize - ModConfig.Instance.values.sizeChangeStep, 0f);
+            var nextShrunkenSize = Mathf.Max(playerSize - ModConfig.Instance.values.sizeChangeStep, 0f);
+
+            if (!ModConfig.Instance.values.deathShrinking && nextShrunkenSize < DeathShrinkMargin)
+                return playerSize;
+
+            return nextShrunkenSize;
         }
 
         public static float NextIncreasedSizeOf(PlayerControllerB targetPlayer)
