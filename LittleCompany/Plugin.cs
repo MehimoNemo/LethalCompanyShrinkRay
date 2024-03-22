@@ -45,7 +45,7 @@ namespace LittleCompany
 
             // patches
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
-            harmony.PatchAll(typeof(PlayerModificationPatch));
+            harmony.PatchAll(typeof(PlayerMultiplierPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             harmony.PatchAll(typeof(ThumperAIPatch));
             harmony.PatchAll(typeof(HoarderBugAIPatch));
