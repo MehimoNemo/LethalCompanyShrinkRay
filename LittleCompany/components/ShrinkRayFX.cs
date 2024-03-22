@@ -112,6 +112,9 @@ namespace LittleCompany.components
             if (!TryCreateNewBeam(out GameObject fxObject))
             {
                 Plugin.Log("FX Object Null", Plugin.LogType.Error);
+
+                if (onComplete != null)
+                    onComplete();
                 yield break;
             }
 
@@ -152,16 +155,19 @@ namespace LittleCompany.components
                 if (!bezier3) Plugin.Log("bezier3 Null", Plugin.LogType.Error);
                 if (!bezier4) Plugin.Log("bezier4 Null", Plugin.LogType.Error);
 
-                if(!target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer) || targetPlayer.gameplayCamera == null)
+                if(target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer)) // For players target the head
                 {
-                    Plugin.Log("Failed to get target player for shrink ray vfx", Plugin.LogType.Warning);
-                    yield break;
-                }
-                Transform targetHeadTransform = targetPlayer.gameplayCamera.transform.Find("HUDHelmetPosition")?.transform;
-                if(targetHeadTransform == null)
-                {
-                    Plugin.Log("Failed to get target players helmet position for shrink ray vfx", Plugin.LogType.Warning);
-                    yield break;
+                    Transform targetHeadTransform = targetPlayer?.gameplayCamera?.transform?.Find("HUDHelmetPosition")?.transform;
+                    if (targetHeadTransform == null)
+                    {
+                        Plugin.Log("Failed to get target players helmet position for shrink ray vfx", Plugin.LogType.Warning);
+
+                        if (onComplete != null)
+                            onComplete();
+                        yield break;
+                    }
+
+                    target = targetHeadTransform;
                 }
 
                 // Stole this from above, minor adjustments to where the beam comes from
@@ -172,17 +178,17 @@ namespace LittleCompany.components
                 bezier1.transform.SetParent(this.transform, true);
 
                 // Set bezier 2 (curve)
-                bezier2.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, bezier2YPoint) + (Vector3.up * bezier2YOffset);
+                bezier2.transform.position = Vector3.Lerp(beamStartPos, target.position, bezier2YPoint) + (Vector3.up * bezier2YOffset);
                 bezier2.transform.SetParent(this.transform, true);
 
                 // Set bezier 3 (curve)
-                bezier3.transform.position = Vector3.Lerp(beamStartPos, targetHeadTransform.position, bezier3YPoint) + (Vector3.up * bezier3YOffset);
-                bezier3.transform.SetParent(targetHeadTransform, true);
+                bezier3.transform.position = Vector3.Lerp(beamStartPos, target.position, bezier3YPoint) + (Vector3.up * bezier3YOffset);
+                bezier3.transform.SetParent(target, true);
 
                 // Set Bezier 4 (final endpoint)
-                Vector3 beamEndPos = (targetHeadTransform.position);
+                Vector3 beamEndPos = (target.position);
                 bezier4.transform.position = beamEndPos;
-                bezier4.transform.SetParent(targetHeadTransform, true);
+                bezier4.transform.SetParent(target, true);
 
                 beamCreated = true;
             }
@@ -191,6 +197,9 @@ namespace LittleCompany.components
                 Plugin.Log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
                 Plugin.Log("error source: " + e.Source);
                 Plugin.Log("error stack: " + e.StackTrace);
+
+                if (onComplete != null)
+                    onComplete();
                 yield break;
             }
 

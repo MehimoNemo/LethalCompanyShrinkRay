@@ -36,7 +36,7 @@ namespace LittleCompany.coroutines
             {
                 // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
                 var x = elapsedTime;
-                var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + 1f;
+                var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
                 scaling.ScaleRelativeTo(newScale);
 
                 elapsedTime += Time.deltaTime;

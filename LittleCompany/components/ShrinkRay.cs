@@ -445,8 +445,6 @@ namespace LittleCompany.components
                         if (IsOwner)
                             Plugin.Log("Ray has hit an ITEM -> " + item.name);
 
-                        return false; // WIP
-
                         if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value))
                         {
                             if (IsOwner)
@@ -520,6 +518,8 @@ namespace LittleCompany.components
             if (targetPlayer?.gameObject?.transform == null)
             {
                 Plugin.Log("Ay.. that's not a valid player somehow..");
+                if (IsOwner)
+                    SwitchModeServerRpc((int)Mode.Missing);
                 return;
             }
 
@@ -545,7 +545,7 @@ namespace LittleCompany.components
         public void OnObjectModificationServerRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
         {
             Plugin.Log("OnObjectModification");
-            OnPlayerModificationClientRpc(targetObjectNetworkID, playerHeldByID);
+            OnObjectModificationClientRpc(targetObjectNetworkID, playerHeldByID);
         }
 
         [ClientRpc]
@@ -556,6 +556,8 @@ namespace LittleCompany.components
             if (!TryGetObjectByNetworkID(targetObjectNetworkID, out targetObject))
             {
                 Plugin.Log("OnObjectModification: Object not found", Plugin.LogType.Error);
+                if (IsOwner)
+                    SwitchModeServerRpc((int)Mode.Missing);
                 return;
             }
 
