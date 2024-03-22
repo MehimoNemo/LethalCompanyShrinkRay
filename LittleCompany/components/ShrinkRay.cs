@@ -285,7 +285,8 @@ namespace LittleCompany.components
             var direction = LaserLight.transform.forward;
             var endPoint = Vector3.zero;
 
-            var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered/*, Mask.DecalStickableSurface*/]);
+            //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
+            var layerMask = ToInt([Mask.Player]);
             if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
