@@ -386,6 +386,7 @@ namespace LittleCompany.components
             IsCurrentPlayer = PlayerInfo.CurrentPlayerID == grabbedPlayerID.Value;
             Plugin.Log("Is current player: " + IsCurrentPlayer);
             this.grabbable = true;
+            itemProperties = Instantiate(itemProperties);
 
             EnableInteractTrigger();
             CalculateScrapValue();
@@ -477,7 +478,6 @@ namespace LittleCompany.components
 
         public void CalculateScrapValue()
         {
-            // todo: change scrap value when grabbed player grabs something
             int value = 5; // todo: find where the player scrap value set in code for deadBody
 
             if (grabbedPlayer != null && grabbedPlayer.ItemSlots != null)
@@ -503,24 +503,10 @@ namespace LittleCompany.components
 
             grabbedPlayer.carryWeight += modifiedValue;
 
-            Plugin.Log("Weight of " + name + " changed by " + (diff + modifiedValue) + " (originally " + diff + ") from " + previousCarryWeight + " to " + grabbedPlayer.carryWeight, Plugin.LogType.Warning);
+            //Plugin.Log("Weight of " + name + " changed by " + (diff + modifiedValue) + " from " + previousCarryWeight + " to " + grabbedPlayer.carryWeight + ". New gpo weight: " + itemProperties.weight, Plugin.LogType.Warning);
             previousCarryWeight = grabbedPlayer.carryWeight;
 
             CalculateScrapValue(); // When our weight changed it's likely that our value did too
-        }
-
-        public void UpdateWeightAfterDropping(GrabbableObject droppedObject)
-        {
-            var realObjectWeight = droppedObject.itemProperties.weight - 1f;
-
-            itemProperties.weight -= realObjectWeight;
-            grabbedPlayer.carryWeight -= realObjectWeight * (ModConfig.Instance.values.weightMultiplier - 1f);
-
-            if (playerHeldBy != null) // Update holder weight
-                playerHeldBy.carryWeight -= realObjectWeight;
-
-            Plugin.Log("Dropped " + droppedObject.name + " -> Weight: " + realObjectWeight + ", new gpo weight: " + itemProperties.weight
-                 + ", new player weight: " + grabbedPlayer.carryWeight + ", new holder weight: " + (playerHeldBy != null ? playerHeldBy.carryWeight : "no holder"));
         }
 
         public void SetIsGrabbableToEnemies(bool isGrabbable = true)
