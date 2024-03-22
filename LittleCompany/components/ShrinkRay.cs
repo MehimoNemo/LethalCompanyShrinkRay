@@ -7,9 +7,11 @@ using LittleCompany.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using static LittleCompany.helper.LayerMasks;
-using static LittleCompany.helper.PlayerModification;
+using static LittleCompany.modifications.Modification;
 using System.IO;
 using System.Collections;
+using LittleCompany.modifications;
+using static LittleCompany.components.GrabbablePlayerObject;
 
 namespace LittleCompany.components
 {
@@ -80,7 +82,6 @@ namespace LittleCompany.components
             // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
-            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("deathPoof.wav", (item) => deathPoofSFX = item));
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>()); // todo: make this not needed
 
@@ -185,29 +186,6 @@ namespace LittleCompany.components
 
         #region Mode Control
         [ServerRpc(RequireOwnership = false)]
-        internal void SyncTargetObjectServerRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
-        {
-            SyncTargetObjectClientRpc(targetObjectNetworkID, playerHeldByID);
-        }
-
-        [ClientRpc]
-        internal void SyncTargetObjectClientRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
-        {
-            if(playerHeldBy == null || playerHeldBy.playerClientId != playerHeldByID)
-                playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID); // Sync holder
-
-            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.ContainsKey(targetObjectNetworkID))
-            {
-                targetObject = null;
-                return;
-            }
-
-            targetObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[targetObjectNetworkID]?.gameObject;
-            if(targetObject != null)
-                Plugin.Log("Synced target: " + targetObject.name);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
         internal void SwitchModificationTypeServerRpc(int newType)
         {
             Plugin.Log("ShrinkRay modificationType switched to " + (ModificationType)newType);
@@ -246,6 +224,19 @@ namespace LittleCompany.components
         #endregion
 
         #region Targeting
+
+        internal static bool TryGetObjectByNetworkID(ulong networkID, out GameObject gameObject)
+        {
+            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.ContainsKey(networkID))
+            {
+                gameObject = null;
+                return false;
+            }
+
+            gameObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[networkID]?.gameObject;
+            return gameObject != null;
+        }
+
         internal void EnableLaserForHolder(bool enable = true)
         {
             if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null)
@@ -286,7 +277,7 @@ namespace LittleCompany.components
             var endPoint = Vector3.zero;
 
             //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
-            var layerMask = ToInt([Mask.Player]);
+            var layerMask = ToInt([Mask.Player, Mask.Props]);
             if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
@@ -414,7 +405,6 @@ namespace LittleCompany.components
 
             Plugin.Log("Shooting ray gun!");
 
-            SyncTargetObjectServerRpc(targetObject.GetComponent<NetworkObject>().NetworkObjectId, playerHeldBy.playerClientId);
             bool rayHasHit = ShootRayOnClientAtTarget();
 
             if (rayHasHit)
@@ -434,14 +424,14 @@ namespace LittleCompany.components
 
                         if(IsOwner)
                             Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !CanApplyModificationTo(targetPlayer, currentModificationType.Value))
+                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
                             return false;
                         }
 
-                        OnPlayerModificationServerRpc(targetPlayer.playerClientId);
+                        OnPlayerModificationServerRpc(targetPlayer.playerClientId, playerHeldBy.playerClientId);
                         return true;
                     }
                 case Mask.Props:
@@ -454,8 +444,18 @@ namespace LittleCompany.components
 
                         if (IsOwner)
                             Plugin.Log("Ray has hit an ITEM -> " + item.name);
-                        //Plugin.Log("WIP");
-                        return false;
+
+                        return false; // WIP
+
+                        if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value))
+                        {
+                            if (IsOwner)
+                                Plugin.Log("... but would do nothing.");
+                            return false;
+                        }
+
+                        OnObjectModificationServerRpc(item.NetworkObjectId, playerHeldBy.playerClientId);
+                        return true;
                     }
                 case Mask.InteractableObject:
                     {
@@ -505,15 +505,17 @@ namespace LittleCompany.components
         #region PlayerTargeting
         // ------ Ray hitting Player ------
         [ServerRpc(RequireOwnership = false)]
-        public void OnPlayerModificationServerRpc(ulong targetPlayerID)
+        public void OnPlayerModificationServerRpc(ulong targetPlayerID, ulong playerHeldByID)
         {
             Plugin.Log("OnPlayerModification");
-            OnPlayerModificationClientRpc(targetPlayerID);
+            OnPlayerModificationClientRpc(targetPlayerID, playerHeldByID);
         }
 
         [ClientRpc]
-        public void OnPlayerModificationClientRpc(ulong targetPlayerID)
+        public void OnPlayerModificationClientRpc(ulong targetPlayerID, ulong playerHeldByID)
         {
+            playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
+
             var targetPlayer = PlayerInfo.ControllerFromID(targetPlayerID);
             if (targetPlayer?.gameObject?.transform == null)
             {
@@ -521,11 +523,13 @@ namespace LittleCompany.components
                 return;
             }
 
+            targetObject = targetPlayer.gameObject;
+
             // For other clients
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
             Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
-            ApplyModificationTo(targetPlayer, currentModificationType.Value, () =>
+            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, () =>
             {
                 Plugin.Log("Finished player modification with type: " + currentModificationType.Value.ToString());
             });
@@ -537,9 +541,32 @@ namespace LittleCompany.components
 
         #region ObjectTargeting
         // ------ Ray hitting Object ------
-        public static void OnObjectModification(GameObject targetObject)
+        [ServerRpc(RequireOwnership = false)]
+        public void OnObjectModificationServerRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
         {
-            // wip
+            Plugin.Log("OnObjectModification");
+            OnPlayerModificationClientRpc(targetObjectNetworkID, playerHeldByID);
+        }
+
+        [ClientRpc]
+        public void OnObjectModificationClientRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
+        {
+            playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
+
+            if (!TryGetObjectByNetworkID(targetObjectNetworkID, out targetObject))
+            {
+                Plugin.Log("OnObjectModification: Object not found", Plugin.LogType.Error);
+                return;
+            }
+
+            Plugin.Log("Ray has hit " + targetObject.name + "!");
+            ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, () =>
+            {
+                Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
+            });
+
+            if (IsOwner)
+                SwitchModeServerRpc((int)Mode.Shooting);
         }
         #endregion
     }

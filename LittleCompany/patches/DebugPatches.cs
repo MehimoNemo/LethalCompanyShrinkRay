@@ -8,6 +8,8 @@ using UnityEngine;
 using static LittleCompany.helper.Moons;
 using Unity.Netcode;
 using System.Collections;
+using LittleCompany.modifications;
+using static LittleCompany.modifications.Modification;
 
 namespace LittleCompany.patches
 {
@@ -54,12 +56,12 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
             {
-                ApplyModification(PlayerModification.ModificationType.Shrinking);
+                ApplyModification(ModificationType.Shrinking);
             }
 
             else if (Keyboard.current.f3Key.wasPressedThisFrame)
             {
-                ApplyModification(PlayerModification.ModificationType.Enlarging);
+                ApplyModification(ModificationType.Enlarging);
             }
 
             else if (Keyboard.current.f4Key.wasPressedThisFrame)
@@ -236,7 +238,7 @@ namespace LittleCompany.patches
 
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
 
-            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("deathPoof.wav", (item) => PlayerModification.deathPoofSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("deathPoof.wav", (item) => deathPoofSFX = item));
 
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerGrab.wav", (item) => GrabbablePlayerObject.grabSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerDrop.wav", (item) => GrabbablePlayerObject.dropSFX = item));
@@ -248,7 +250,7 @@ namespace LittleCompany.patches
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionNoConsume.wav", (item) => LittlePotion.noConsumeSFX = item));
         }
 
-        public static void ApplyModification(PlayerModification.ModificationType type)
+        public static void ApplyModification(ModificationType type)
         {
             if (!PlayerModification.CanApplyModificationTo(PlayerInfo.CurrentPlayer, type))
                 return;

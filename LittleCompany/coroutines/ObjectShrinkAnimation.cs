@@ -27,7 +27,7 @@ namespace LittleCompany.coroutines
             float duration = 2f;
             float elapsedTime = 0f;
 
-            float c = scaling.CurrentScale;
+            float c = scaling.CurrentSize;
             var direction = desiredScale < c ? -1f : 1f;
             float a = Mathf.Abs(c - desiredScale); // difference
             const float b = -0.5f;

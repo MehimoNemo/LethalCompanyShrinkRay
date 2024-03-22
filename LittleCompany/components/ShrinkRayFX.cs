@@ -5,7 +5,7 @@ using System.Collections;
 using System.IO;
 using UnityEngine;
 using UnityEngine.VFX;
-using static LittleCompany.helper.PlayerModification;
+using static LittleCompany.modifications.Modification;
 
 namespace LittleCompany.components
 {
@@ -107,7 +107,7 @@ namespace LittleCompany.components
             thickness = 0.1f;
         }
 
-        public IEnumerator RenderRayBeam(Transform holderCamera, Transform target, PlayerModification.ModificationType type, AudioSource shrinkRayAudio, Action onComplete = null)
+        public IEnumerator RenderRayBeam(Transform holderCamera, Transform target, ModificationType type, AudioSource shrinkRayAudio, Action onComplete = null)
         {
             if (!TryCreateNewBeam(out GameObject fxObject))
             {

@@ -7,7 +7,7 @@ namespace LittleCompany.components
         internal Vector3 originalScale = Vector3.one;
         internal Vector3 originalOffset = Vector3.zero;
 
-        public float CurrentScale = 1f;
+        public float CurrentSize = 1f;
 
         void Awake()
         {
@@ -23,14 +23,14 @@ namespace LittleCompany.components
                 originalOffset = item.itemProperties.positionOffset;
         }
 
-        public void ScaleRelativeTo(float relationalScale = 1f, Vector3 additionalOffset = new Vector3())
+        public void ScaleRelativeTo(float relationalSize = 1f, Vector3 additionalOffset = new Vector3())
         {
-            gameObject.transform.localScale = originalScale * relationalScale;
+            gameObject.transform.localScale = originalScale * relationalSize;
 
             if (gameObject.TryGetComponent(out GrabbableObject item))
-                item.itemProperties.positionOffset = originalOffset * relationalScale + additionalOffset;
+                item.itemProperties.positionOffset = originalOffset * relationalSize + additionalOffset;
 
-            CurrentScale = relationalScale;
+            CurrentSize = relationalSize;
         }
 
         public Vector3 SizeAt(float percentage)

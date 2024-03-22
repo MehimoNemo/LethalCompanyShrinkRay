@@ -1,27 +1,15 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
 using LittleCompany.Config;
+using LittleCompany.helper;
 using System;
 using UnityEngine;
 
-namespace LittleCompany.helper
+namespace LittleCompany.modifications
 {
-    public class PlayerModification
+    public class PlayerModification : Modification
     {
-        #region Properties
-        internal static float DeathShrinkMargin => 0.2f;
-        public enum ModificationType
-        {
-            Normalizing,
-            Shrinking,
-            Enlarging
-        }
-
-        internal static AudioClip deathPoofSFX;
-        #endregion
-
         #region Methods
-
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
@@ -144,7 +132,6 @@ namespace LittleCompany.helper
 
                 case ModificationType.Enlarging:
                     {
-
                         var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
                         Plugin.Log("Enlarging player [" + targetPlayer.playerClientId + "] to size: " + nextIncreasedSize);
 

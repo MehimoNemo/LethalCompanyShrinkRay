@@ -6,7 +6,8 @@ using System.Collections;
 using System.IO;
 using Unity.Netcode;
 using UnityEngine;
-using static LittleCompany.helper.PlayerModification;
+using static LittleCompany.modifications.Modification;
+using LittleCompany.modifications;
 
 namespace LittleCompany.components
 {
@@ -334,14 +335,14 @@ namespace LittleCompany.components
             if (Consuming || playerHeldBy == null)
                 yield break;
 
-            if (Consumed.Value || playerHeldBy.isClimbingLadder || !CanApplyModificationTo(playerHeldBy, modificationType))
+            if (Consumed.Value || playerHeldBy.isClimbingLadder || !PlayerModification.CanApplyModificationTo(playerHeldBy, modificationType))
             {
                 if (IsOwner && noConsumeSFX != null)
                     audioSource?.PlayOneShot(noConsumeSFX);
                 yield break;
             }
 
-            ApplyModificationTo(playerHeldBy, modificationType);
+            PlayerModification.ApplyModificationTo(playerHeldBy, modificationType);
 
             Consuming = true;
             isBeingUsed = true;
