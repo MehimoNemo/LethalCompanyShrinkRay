@@ -12,6 +12,7 @@
 + fixed host being able to grab themself
 + fixed goomba not working when jumping over a shrunken player
 + fixed weightMultiplier not being applied
++ fixed grabbed items not being scaled correctly
 
 ### 0.4.6 ###
 + Fixed a crash when grabbing something

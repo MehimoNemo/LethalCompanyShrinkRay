@@ -260,6 +260,12 @@ namespace LittleCompany.components
 
         internal void UpdateLaser()
         {
+            if(LaserEnabled && isPocketed) // Fallback -> todo: find main reason why laser is still active sometimes when pocketed
+            {
+                DisableLaserForHolder();
+                return;
+            }
+
             if(!LaserEnabled || ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.Off) return;
 
             if(currentMode.Value != Mode.Loading && ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.OnLoading) return;
