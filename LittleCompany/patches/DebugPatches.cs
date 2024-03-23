@@ -230,24 +230,24 @@ namespace LittleCompany.patches
 
         public static void ReloadAllSounds()
         {
-            ShrinkRay.grabSFX = AssetLoader.LoadAudio("shrinkRayGrab.wav");
-            ShrinkRay.dropSFX = AssetLoader.LoadAudio("shrinkRayDrop.wav");
-            ShrinkRay.loadSFX = AssetLoader.LoadAudio("shrinkRayLoad.wav");
-            ShrinkRay.unloadSFX = AssetLoader.LoadAudio("shrinkRayUnload.wav");
-            ShrinkRay.noTargetSFX = AssetLoader.LoadAudio("shrinkRayNoTarget.wav");
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayGrab.wav", (item) => ShrinkRay.grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayDrop.wav", (item) => ShrinkRay.dropSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayLoad.wav", (item) => ShrinkRay.loadSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayUnload.wav", (item) => ShrinkRay.unloadSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayNoTarget.wav", (item) => ShrinkRay.noTargetSFX = item));
 
-            ShrinkRayFX.beamSFX = AssetLoader.LoadAudio("shrinkRayBeam.wav");
-                           
-            deathPoofSFX = AssetLoader.LoadAudio("deathPoof.wav");
-                           
-            GrabbablePlayerObject.grabSFX = AssetLoader.LoadAudio("playerGrab.wav");
-            GrabbablePlayerObject.dropSFX = AssetLoader.LoadAudio("playerDrop.wav");
-            GrabbablePlayerObject.throwSFX = AssetLoader.LoadAudio("playerThrow.wav");
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
 
-            LittlePotion.grabSFX = AssetLoader.LoadAudio("potionGrab.wav");
-            LittlePotion.dropSFX = AssetLoader.LoadAudio("potionDrop.wav");
-            LittlePotion.consumeSFX = AssetLoader.LoadAudio("potionConsume.wav");
-            LittlePotion.noConsumeSFX = AssetLoader.LoadAudio("potionNoConsume.wav");
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("deathPoof.wav", (item) => deathPoofSFX = item));
+
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerGrab.wav", (item) => GrabbablePlayerObject.grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerDrop.wav", (item) => GrabbablePlayerObject.dropSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerThrow.wav", (item) => GrabbablePlayerObject.throwSFX = item));
+
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionGrab.wav", (item) => LittlePotion.grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionDrop.wav", (item) => LittlePotion.dropSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionConsume.wav", (item) => LittlePotion.consumeSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionNoConsume.wav", (item) => LittlePotion.noConsumeSFX = item));
         }
 
         public static void ApplyModification(ModificationType type)

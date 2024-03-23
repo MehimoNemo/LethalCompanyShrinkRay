@@ -91,9 +91,9 @@ namespace LittleCompany.components
 
             var component = networkPrefab.AddComponent<GrabbablePlayerObject>();
 
-            grabSFX = AssetLoader.LoadAudio("playerGrab.wav");
-            dropSFX = AssetLoader.LoadAudio("playerDrop.wav");
-            throwSFX = AssetLoader.LoadAudio("playerThrow.wav");
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerGrab.wav", (item) => grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerDrop.wav", (item) => dropSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("playerThrow.wav", (item) => throwSFX = item));
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
 

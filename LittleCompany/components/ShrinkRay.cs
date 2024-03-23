@@ -72,16 +72,16 @@ namespace LittleCompany.components
             networkPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
 
             ShrinkRay shrinkRay = networkPrefab.AddComponent<ShrinkRay>();
-            grabSFX = AssetLoader.LoadAudio("shrinkRayGrab.wav");
-            dropSFX = AssetLoader.LoadAudio("shrinkRayDrop.wav");
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayGrab.wav", (item) => grabSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayDrop.wav", (item) => dropSFX = item));
 
-            loadSFX = AssetLoader.LoadAudio("shrinkRayLoad.wav");
-            unloadSFX = AssetLoader.LoadAudio("shrinkRayUnload.wav");
-            noTargetSFX = AssetLoader.LoadAudio("shrinkRayNoTarget.wav");
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayLoad.wav", (item) => loadSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayUnload.wav", (item) => unloadSFX = item));
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayNoTarget.wav", (item) => noTargetSFX = item));
 
             // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
-            ShrinkRayFX.beamSFX = AssetLoader.LoadAudio("shrinkRayBeam.wav");
+            GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>()); // todo: make this not needed
 
@@ -277,7 +277,7 @@ namespace LittleCompany.components
             var endPoint = Vector3.zero;
 
             //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
-            var layerMask = ToInt([Mask.Player]);
+            var layerMask = ToInt([Mask.Player, Mask.Props]);
             if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
