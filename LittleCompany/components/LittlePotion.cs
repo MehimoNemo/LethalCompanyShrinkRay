@@ -31,6 +31,7 @@ namespace LittleCompany.components
 
             var potion = item.spawnPrefab.AddComponent<LittleShrinkingPotion>();
             networkPrefab = item.spawnPrefab;
+            Utilities.FixMixerGroups(networkPrefab);
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
             potion.itemProperties = item;
@@ -74,6 +75,7 @@ namespace LittleCompany.components
 
             var potion = item.spawnPrefab.AddComponent<LittleEnlargingPotion>();
             networkPrefab = item.spawnPrefab;
+            Utilities.FixMixerGroups(networkPrefab);
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
             potion.itemProperties = item;
@@ -244,6 +246,8 @@ namespace LittleCompany.components
             base.Start();
 
             Plugin.Log("Potion network spawn");
+
+            itemProperties = Instantiate(itemProperties);
 
             ScanNodeProperties = GetComponentInChildren<ScanNodeProperties>();
             if (ScanNodeProperties != null)

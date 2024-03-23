@@ -1,6 +1,6 @@
 {
     "name": "ToyboxBetaTest",
-    "version_number": "0.5.10",
+    "version_number": "0.5.9",
     "website_url": "https://github.com/MehimoNemo/LethalCompanyShrinkRay",
     "description": "A beta version of our Lethal Company mod, that may contain bugs.",
     "dependencies": [

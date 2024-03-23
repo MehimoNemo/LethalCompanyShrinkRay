@@ -11,6 +11,7 @@ using System.IO;
 using System.Collections;
 using static LittleCompany.helper.Moons;
 using static LittleCompany.helper.LayerMasks;
+using LethalLib.Modules;
 
 namespace LittleCompany.components
 {
@@ -88,6 +89,7 @@ namespace LittleCompany.components
             }
 
             networkPrefab = assetItem.spawnPrefab;
+            Utilities.FixMixerGroups(networkPrefab);
 
             var component = networkPrefab.AddComponent<GrabbablePlayerObject>();
 

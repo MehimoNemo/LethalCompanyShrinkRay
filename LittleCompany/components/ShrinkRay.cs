@@ -66,6 +66,7 @@ namespace LittleCompany.components
             }
 
             networkPrefab = assetItem.spawnPrefab;
+            Utilities.FixMixerGroups(networkPrefab);
             assetItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
             assetItem.weight = 1.05f;
             assetItem.canBeGrabbedBeforeGameStart = true;
@@ -105,6 +106,8 @@ namespace LittleCompany.components
         public override void Start()
         {
             base.Start();
+
+            itemProperties = Instantiate(itemProperties);
 
             if (!TryGetComponent(out audioSource))
                 audioSource = gameObject.AddComponent<AudioSource>();

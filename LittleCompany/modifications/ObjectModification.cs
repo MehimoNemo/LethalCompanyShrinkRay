@@ -3,6 +3,7 @@ using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.modifications
 {
@@ -95,8 +96,7 @@ namespace LittleCompany.modifications
                                 if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetObject.transform.position) && targetObject.gameObject.TryGetComponent(out AudioSource audioSource))
                                     audioSource.PlayOneShot(deathPoofSFX);
 
-                                if (PlayerInfo.IsHost)
-                                    UnityEngine.Object.Destroy(targetObject);
+                                targetObject.DestroyObjectInHand(targetObject.playerHeldBy);
                             }
 
                             if (onComplete != null)
