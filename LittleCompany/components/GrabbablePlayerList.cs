@@ -337,6 +337,13 @@ namespace LittleCompany.components
             networkObjects.Remove(playerID);
         }
 
+        public static void ReInitializePlayerGrabbable(ulong playerID)
+        {
+            RemovePlayerGrabbable(playerID);
+            if(PlayerInfo.ControllerFromID(playerID) != null)
+                SetPlayerGrabbable(playerID);
+        }
+
         public static void ResetAnyPlayerModificationsFor(PlayerControllerB targetPlayer)
         {
             Plugin.Log("ResetAnyPlayerModificationsFor");

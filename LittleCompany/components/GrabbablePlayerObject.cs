@@ -371,15 +371,30 @@ namespace LittleCompany.components
         #endregion
 
         #region Methods
+        int InitializeAttempts = 0;
+        bool AboutToBeRemoved = false;
         public void Initialize(ulong? playerID = null)
         {
-            if(playerID != null)
+            if (playerID != null)
                 grabbedPlayerID.Value = playerID.Value;
+
+            if (InitializeAttempts > 1000) // Really can't get that one, don't we?
+            {
+                if(!AboutToBeRemoved)
+                {
+                    Plugin.Log("Removed grabbable object from player " + grabbedPlayerID.Value + " as they're unable to be found.. Please contact the mod dev if possible.", Plugin.LogType.Error);
+                    ReInitializeServerRpc();
+                    AboutToBeRemoved = true;
+                }
+                return;
+            }
+            InitializeAttempts++;
 
             grabbedPlayerController = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
             if (grabbedPlayerController == null)
             {
-                Plugin.Log("grabbedPlayer is null");
+                if(InitializeAttempts % 100 == 1)
+                    Plugin.Log("Player with ID " + grabbedPlayerID.Value + " not found. Trying again later.");
                 return;
             }
 
@@ -399,6 +414,12 @@ namespace LittleCompany.components
             Plugin.Log("gpo weight: " + itemProperties.weight);
 
             SetIsGrabbableToEnemies(true);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void ReInitializeServerRpc()
+        {
+            GrabbablePlayerList.ReInitializePlayerGrabbable(grabbedPlayerID.Value);
         }
 
         public void CleanUp()
