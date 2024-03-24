@@ -256,7 +256,8 @@ namespace LittleCompany.components
                 ScanNodeProperties.scrapValue = itemProperties.creditsWorth;
             }
 
-            audioSource = GetComponent<AudioSource>();
+            if(!TryGetComponent(out audioSource))
+                audioSource = gameObject.AddComponent<AudioSource>();
 
             if(PotionTransform != null)
             {
@@ -292,6 +293,12 @@ namespace LittleCompany.components
         public override void Update()
         {
             base.Update();
+
+            if (audioSource == null) // todo: find out why it is null after a while
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
         }
 
         public override void PocketItem()
@@ -306,29 +313,29 @@ namespace LittleCompany.components
 
         public override void GrabItem()
         {
-            if (grabSFX != null)
-                audioSource?.PlayOneShot(grabSFX);
+            if (grabSFX != null && audioSource != null)
+                audioSource.PlayOneShot(grabSFX);
             base.GrabItem();
         }
 
         public override void DiscardItem()
         {
-            if (dropSFX != null)
-                audioSource?.PlayOneShot(dropSFX);
+            if (dropSFX != null && audioSource != null)
+                audioSource.PlayOneShot(dropSFX);
             base.DiscardItem();
         }
 
         public override void GrabItemFromEnemy(EnemyAI enemyAI)
         {
-            if (grabSFX != null)
-                audioSource?.PlayOneShot(grabSFX);
+            if (grabSFX != null && audioSource != null)
+                audioSource.PlayOneShot(grabSFX);
             base.GrabItemFromEnemy(enemyAI);
         }
 
         public override void DiscardItemFromEnemy()
         {
-            if (dropSFX != null)
-                audioSource?.PlayOneShot(dropSFX);
+            if (dropSFX != null && audioSource != null)
+                audioSource.PlayOneShot(dropSFX);
             base.DiscardItemFromEnemy();
         }
         #endregion
@@ -341,8 +348,8 @@ namespace LittleCompany.components
 
             if (Consumed.Value || playerHeldBy.isClimbingLadder || !PlayerModification.CanApplyModificationTo(playerHeldBy, modificationType))
             {
-                if (IsOwner && noConsumeSFX != null)
-                    audioSource?.PlayOneShot(noConsumeSFX);
+                if (IsOwner && noConsumeSFX != null && audioSource != null)
+                    audioSource.PlayOneShot(noConsumeSFX);
                 yield break;
             }
 
@@ -357,8 +364,8 @@ namespace LittleCompany.components
                 yield break; ;
             }
 
-            if (IsOwner && consumeSFX != null)
-                audioSource?.PlayOneShot(consumeSFX);
+            if (IsOwner && consumeSFX != null && audioSource != null)
+                audioSource.PlayOneShot(consumeSFX);
 
             if (Cap != null)
                 Destroy(Cap);

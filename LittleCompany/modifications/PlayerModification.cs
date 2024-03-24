@@ -113,7 +113,7 @@ namespace LittleCompany.modifications
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
                                 // Poof Target to death because they are too small to exist
-                                if(ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position))
+                                if(ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position) && targetPlayer.movementAudio != null)
                                     targetPlayer.movementAudio.PlayOneShot(deathPoofSFX);
 
                                 if (targetingUs)

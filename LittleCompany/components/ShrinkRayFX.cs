@@ -203,8 +203,11 @@ namespace LittleCompany.components
                 yield break;
             }
 
-            shrinkRayAudio.Stop();
-            shrinkRayAudio.PlayOneShot(beamSFX);
+            if (shrinkRayAudio != null)
+            {
+                shrinkRayAudio.Stop();
+                shrinkRayAudio.PlayOneShot(beamSFX);
+            }
             yield return new WaitForSeconds(beamDuration);
 
             if (beamCreated)

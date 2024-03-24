@@ -156,6 +156,12 @@ namespace LittleCompany.components
             if (grabbedPlayer == null)
                 return;
 
+            if (audioSource == null) // todo: find out why it is null after a while
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
             if (grabbedPlayer.carryWeight != previousCarryWeight)
                 WeightChangedBy(grabbedPlayer.carryWeight - previousCarryWeight);
 
@@ -267,11 +273,11 @@ namespace LittleCompany.components
             if (Thrown)
             {
                 Thrown = false;
-                if(throwSFX != null)
-                    audioSource?.PlayOneShot(throwSFX);
+                if(throwSFX != null && audioSource != null)
+                    audioSource.PlayOneShot(throwSFX);
             }
-            else if(dropSFX != null)
-                audioSource?.PlayOneShot(dropSFX);
+            else if(dropSFX != null && audioSource != null)
+                audioSource.PlayOneShot(dropSFX);
 
             if (!ModConfig.Instance.values.friendlyFlight)
                 SetHolderGrabbable(true);
@@ -300,8 +306,8 @@ namespace LittleCompany.components
             Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
             enemyHeldBy = enemyAI;
 
-            if(grabSFX != null)
-                audioSource?.PlayOneShot(grabSFX);
+            if(grabSFX != null && audioSource != null)
+                audioSource.PlayOneShot(grabSFX);
 
             if (IsCurrentPlayer)
             {
@@ -321,8 +327,8 @@ namespace LittleCompany.components
                 return;
             }
 
-            if (dropSFX != null)
-                audioSource?.PlayOneShot(dropSFX);
+            if (dropSFX != null && audioSource != null)
+                audioSource.PlayOneShot(dropSFX);
 
             Plugin.Log("Player " + grabbedPlayerID.Value + " got dropped by enemy " + enemyHeldBy.name);
 
@@ -349,8 +355,8 @@ namespace LittleCompany.components
         public override void EquipItem()
         {
             base.EquipItem();
-            if(grabSFX != null)
-                audioSource?.PlayOneShot(grabSFX);
+            if(grabSFX != null && audioSource != null)
+                audioSource.PlayOneShot(grabSFX);
         }
 
         public override void PocketItem()
@@ -685,8 +691,8 @@ namespace LittleCompany.components
 
             if (grabbedPlayer == null) return;
 
-            if(throwSFX != null)
-                grabbedPlayer.movementAudio?.PlayOneShot(throwSFX);
+            if(throwSFX != null && grabbedPlayer.movementAudio != null)
+                grabbedPlayer.movementAudio.PlayOneShot(throwSFX);
 
             if (grabbedPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
             {

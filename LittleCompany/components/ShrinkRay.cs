@@ -133,6 +133,12 @@ namespace LittleCompany.components
         {
             base.Update();
 
+            if (audioSource == null) // todo: find out why it is null after a while
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
             if (LaserEnabled)
                 UpdateLaser();
 
@@ -151,8 +157,8 @@ namespace LittleCompany.components
             if (IsOwner)
             {
                 EnableLaserForHolder();
-                if(grabSFX != null)
-                    audioSource?.PlayOneShot(grabSFX);
+                if(grabSFX != null && audioSource != null)
+                    audioSource.PlayOneShot(grabSFX);
             }
 
             base.EquipItem();
@@ -169,8 +175,8 @@ namespace LittleCompany.components
 
         public override void DiscardItem()
         {
-            if (IsOwner && dropSFX != null)
-                audioSource?.PlayOneShot(dropSFX);
+            if (IsOwner && dropSFX != null && audioSource != null)
+                audioSource.PlayOneShot(dropSFX);
 
             DisableLaserForHolder();
             if(targetObject != null)
@@ -364,7 +370,7 @@ namespace LittleCompany.components
         private IEnumerator LoadRay()
         {
             Plugin.Log("LoadRay");
-            if (audioSource != null && loadSFX != null)
+            if (loadSFX != null && audioSource != null)
             {
                 audioSource.Stop();
                 audioSource.PlayOneShot(loadSFX);
@@ -380,7 +386,7 @@ namespace LittleCompany.components
         private IEnumerator UnloadRay(bool hasHitTarget = true)
         {
             Plugin.Log("UnloadRay");
-            if (audioSource != null && unloadSFX != null)
+            if (unloadSFX != null && audioSource != null)
             {
                 audioSource.Stop();
                 audioSource.PlayOneShot(hasHitTarget ? unloadSFX : noTargetSFX);
