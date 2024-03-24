@@ -1,6 +1,5 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
-using LittleCompany.Config;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -20,7 +19,9 @@ namespace LittleCompany.helper
 
         public static bool IsCurrentPlayerGrabbed()
         {
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(CurrentPlayerID, out GrabbablePlayerObject gpo))
+            if(!CurrentPlayerID.HasValue) return false;
+
+            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(CurrentPlayerID.Value, out GrabbablePlayerObject gpo))
                 return gpo.playerHeldBy != null;
 
             return false;
@@ -50,7 +51,7 @@ namespace LittleCompany.helper
 
         public static PlayerControllerB CurrentPlayer => GameNetworkManager.Instance.localPlayerController;
 
-        public static ulong CurrentPlayerID => CurrentPlayer.playerClientId;
+        public static ulong? CurrentPlayerID => CurrentPlayer?.playerClientId;
 
         public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 
@@ -94,28 +95,7 @@ namespace LittleCompany.helper
         {
             AdjustLocalArms();
             AdjustLocalMask();
-
-            // MoreCompany support (WIP)
-            /*AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/spine.004"), size); // head
-            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003"), size); // chest
-            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/spine.001/spine.002/spine.003/shoulder.R/arm.R_upper/arm.R_lower"), size); // lowerArmRight
-            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine"), size); // hip
-            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/thigh.L/shin.L"), size); // shinLeft
-            AdjustAllChilds(BodyTransformOf(pcb)?.Find("spine/thigh.R/shin.R"), size); // shinRight*/
         }
-
-        /*public static void AdjustAllChilds(Transform transform, float size)
-        {
-            if (transform == null) return;
-
-            var children = transform.GetComponentsInChildren<Transform>();
-            foreach( var child in children )
-            {
-                if (child.parent == transform) continue;
-                Plugin.Log("We found something unscaled: " + child.name);
-                child.localScale = Vector3.one * size;
-            }
-        }*/
 
         private static Vector3 defaultArmScale = Vector3.one;
         private static Vector3 defaultArmPosition = Vector3.one;
@@ -165,13 +145,14 @@ namespace LittleCompany.helper
             {
                 if (_cameraVisor == null)
                 {
-                    _cameraVisor = GameObject.Find("ScavengerHelmet")?.GetComponent<Transform>();
-                    if (_cameraVisor != null)
-                    {
-                        Plugin.Log("Visor found!");
-                        defaultMaskScale = _cameraVisor.localScale;
-                        defaultMaskPos = _cameraVisor.localPosition;
-                    }
+                    var helmet = GameObject.Find("ScavengerHelmet");
+                    if (helmet == null) return null;
+
+                    _cameraVisor = helmet.GetComponent<Transform>();
+                    if (_cameraVisor == null) return null;
+
+                    defaultMaskScale = _cameraVisor.localScale;
+                    defaultMaskPos = _cameraVisor.localPosition;
                 }
                 return _cameraVisor;
             }
@@ -179,7 +160,8 @@ namespace LittleCompany.helper
 
         public static void EnableCameraVisor(bool enable = true)
         {
-            var renderer = CameraVisor?.gameObject?.GetComponent<MeshRenderer>();
+            if (CameraVisor == null || CameraVisor.gameObject == null) return;
+            var renderer = CameraVisor.gameObject.GetComponent<MeshRenderer>();
             if(renderer != null)
                 renderer.enabled = enable;
         }
@@ -209,7 +191,7 @@ namespace LittleCompany.helper
         public static void UpdateWeatherForPlayer(PlayerControllerB targetPlayer)
         {
             var audioPresetIndex = targetPlayer.isInsideFactory ? 2 : 3;
-            var audioReverbPresets = UnityEngine.Object.FindObjectOfType<AudioReverbPresets>();
+            var audioReverbPresets = Object.FindObjectOfType<AudioReverbPresets>();
             if (audioReverbPresets != null && audioReverbPresets.audioPresets.Length > audioPresetIndex)
             {
                 Plugin.Log("Change audio reverb preset (to affect weather)");

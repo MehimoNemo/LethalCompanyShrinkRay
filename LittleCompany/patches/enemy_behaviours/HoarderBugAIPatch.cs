@@ -61,7 +61,7 @@ namespace LittleCompany.patches.EnemyBehaviours
             var inLineOfSight = __instance.HasLineOfSightToPosition(PlayerInfo.CurrentPlayer.transform.position);
             if (!inLineOfSight) return;
 
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
+            if (PlayerInfo.CurrentPlayerID.HasValue && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID.Value, out GrabbablePlayerObject gpo))
             {
                 if (!IsGrabbablePlayerTargetable(gpo))
                 {
@@ -72,7 +72,6 @@ namespace LittleCompany.patches.EnemyBehaviours
                 Plugin.Log("Forget everything else.. we found a grabbable player! Let's goooo..!");
                 gpo.HoardingBugTargetUsServerRpc(__instance.NetworkObjectId);
                 ___timeSinceLookingTowardsNoise = 0f; // Set this to avoid switching to behaviour 1 (which is "return to nest")
-                return;
             }
         }
 
@@ -217,11 +216,11 @@ namespace LittleCompany.patches.EnemyBehaviours
 
         public static void SetUsAsStolen()
         {
-            if(GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
-            {
-                Plugin.Log("Added as stolen hoarding bug item");
-                HoarderBugAI.HoarderBugItems.Add(new HoarderBugItem(gpo, HoarderBugItemStatus.Stolen, gpo.transform.position));
-            }
+            if (!PlayerInfo.CurrentPlayerID.HasValue || !GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID.Value, out GrabbablePlayerObject gpo))
+                return;
+
+            Plugin.Log("Added as stolen hoarding bug item");
+            HoarderBugAI.HoarderBugItems.Add(new HoarderBugItem(gpo, HoarderBugItemStatus.Stolen, gpo.transform.position));
         }
 
         public static void TeleportToLatestNest()

@@ -38,6 +38,7 @@ namespace LittleCompany.components
             {
                 IntendedSize = CurrentSize;
                 intendedScale = originalScale * IntendedSize;
+                //Plugin.Log("New intended scale is: " + intendedScale + " with a relative size of " + IntendedSize);
             }
         }
 
@@ -46,11 +47,13 @@ namespace LittleCompany.components
             return originalScale * percentage;
         }
 
-        public bool Unchanged => SizeAt(1f) == intendedScale;
+        public bool Unchanged => originalScale == intendedScale;
 
         public void Reset()
         {
+            //Plugin.Log("Reset scaled object to size: " + intendedScale);
             gameObject.transform.localScale = intendedScale;
+            CurrentSize = IntendedSize;
 
             if (gameObject.TryGetComponent(out GrabbableObject item))
                 item.itemProperties.positionOffset = originalOffset;

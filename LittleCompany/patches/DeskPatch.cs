@@ -50,7 +50,7 @@ namespace LittleCompany.patches
         [HarmonyPrefix()]
         public static void ShipHasLeftPrefix()
         {
-            if (!GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID, out GrabbablePlayerObject gpo))
+            if (!PlayerInfo.CurrentPlayerID.HasValue || !GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID.Value, out GrabbablePlayerObject gpo))
                 return;
 
             if (gpo.IsOnSellCounter.Value)

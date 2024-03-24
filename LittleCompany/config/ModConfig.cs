@@ -7,6 +7,7 @@ using Unity.Netcode;
 using GameNetcodeStuff;
 using LittleCompany.helper;
 using LittleCompany.components;
+using LittleCompany.compatibility;
 
 namespace LittleCompany.Config
 {
@@ -200,6 +201,8 @@ namespace LittleCompany.Config
 
                 // Adjust client-sided options (WIP -> replace later with e.g. custom JsonConverter)
                 hostValues.pitchDistortionIntensity = Instance.values.pitchDistortionIntensity;
+
+                PlayerCosmetics.RegularizeCosmetics();
 
                 Instance.values = hostValues;
                 Instance.Synced();

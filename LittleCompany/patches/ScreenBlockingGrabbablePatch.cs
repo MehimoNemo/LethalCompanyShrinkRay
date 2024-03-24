@@ -10,36 +10,41 @@ namespace LittleCompany.patches
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
         {
-            if (PlayerInfo.CurrentPlayer == null) 
-                return;
+            if(!CanBlockOurScreen(__instance)) return;
 
-            if (__instance.playerHeldBy == null || __instance is GrabbablePlayerObject)
-            {
-                Plugin.Log("adjustItemOffset: object is not held or other player");
-                return;
-            }
-
-            if (__instance.playerHeldBy.playerClientId != PlayerInfo.CurrentPlayerID)
-                return;
-
-            TransformItemRelativeTo(__instance, __instance.playerHeldBy.transform.localScale.x);
+            TransformItemRelativeTo(__instance, PlayerInfo.SizeOf(__instance.playerHeldBy));
             CheckForGlassify(__instance);
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
         public static void DiscardItem(GrabbableObject __instance)
         {
+            if (!CanBlockOurScreen(__instance)) return;
+
             OnItemNormalize(__instance);
+        }
+
+        public static bool CanBlockOurScreen(GrabbableObject item)
+        {
+            var currentPlayerID = PlayerInfo.CurrentPlayerID;
+            if (currentPlayerID.HasValue && item.playerHeldBy != null && item.playerHeldBy.playerClientId != currentPlayerID)
+                return false;
+
+            if (item is GrabbablePlayerObject)
+                return false;
+
+            return true;
         }
 
         public static void CheckForGlassify(GrabbableObject item)
         {
-            if (item == null || item.playerHeldBy == null || PlayerInfo.IsNormalSize(item.playerHeldBy)) return;
+            if (item == null) return;
 
-            if (item.playerHeldBy.playerClientId != PlayerInfo.CurrentPlayerID)
-                return;
+            bool isScaled = item.TryGetComponent(out TargetScaling scaling) && !scaling.Unchanged;
 
-            if (item.itemProperties.twoHanded)
+            if (PlayerInfo.IsNormalSize(item.playerHeldBy) && !isScaled) return;
+
+            if (item.itemProperties.twoHanded || isScaled && scaling.CurrentSize > 1f)
                 GlassifyItem(item);
             else
                 UnGlassifyItem(item);
@@ -47,7 +52,7 @@ namespace LittleCompany.patches
 
         public static void OnItemNormalize(GrabbableObject item)
         {
-            if (item == null || item.playerHeldBy == null) return;
+            if (item == null) return;
 
             if (item.gameObject.TryGetComponent(out TargetScaling scaling))
                 scaling.Reset();
@@ -59,14 +64,10 @@ namespace LittleCompany.patches
         {
             if (item == null) return;
 
-            if (PlayerInfo.Rounded(scale) == 1f)
-            {
-                OnItemNormalize(item);
-                return;
-            }
-
             if (!item.gameObject.TryGetComponent(out TargetScaling scaling))
                 scaling = item.gameObject.AddComponent<TargetScaling>();
+
+            //Plugin.Log("TransformItemRelativeTo: " + scale);
 
             scaling.ScaleRelativeTo(scale, additionalOffset);
         }
