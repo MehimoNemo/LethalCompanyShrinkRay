@@ -5,7 +5,7 @@
  + deathShrinking: Same as multipleShrinking was before. Allows shrinking players to death if set.
  + shrinkRayTargetHighlighting: A performance option that manages, when targets should be highlighted.
  + sizeChangeStep: The size change of a single modification *Enlarging has no benefits currently and won't make normal sized players grabbable. This is planned for 0.6.0!*
- + maxPlayerSize: Defines how tall a player can become. 1.8 is the default and also the highest value for standing inside the ship.
+ + maxPlayerSize: Defines how tall a player can become. 1.7 is the default and also the highest value for standing inside the ship and going through doors.
 + Smoke VFX when being shrunken to death
 + Item shrinking! *Currently only visual..*
 

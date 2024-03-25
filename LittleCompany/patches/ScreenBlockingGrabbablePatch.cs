@@ -67,8 +67,6 @@ namespace LittleCompany.patches
             if (!item.gameObject.TryGetComponent(out TargetScaling scaling))
                 scaling = item.gameObject.AddComponent<TargetScaling>();
 
-            //Plugin.Log("TransformItemRelativeTo: " + scale);
-
             scaling.ScaleRelativeTo(scale, additionalOffset);
         }
 
