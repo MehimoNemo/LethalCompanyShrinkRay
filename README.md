@@ -16,9 +16,10 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | CanUseVents                 | If true, shrunken players can teleport between vents.                                     | true / false                           | true    |
 |              | PitchDistortionIntensity \* | Intensity of the pitch distortion for shrunken players.                                   | 0 (normal voice) - 0.5 (high pitched)  | 0.3     |
 |              | CanEscapeGrab               | If true, a player who got grabbed can escape by jumping.                                  | true / false                           | true    |
-| Interactions | JumpOnShrunkenPlayers       | If true, larger players can harm smaller ones by jumping on them.               | true / false                           | true    |
-|              | ThrowablePlayers            | If true, shrunken players can be thrown by their holder.                          | true / false                           | true    |
-|              | FriendlyFlight              | If true, held players can grab their holder, causing comedic, but game breaking effects. | true / false                           | false   |
+|              | CantOpenStorageCloset       | If true, a shrunken player can't open or close the storage closet. For the evil minded..  | true / false                           | false   |
+| Interactions | JumpOnShrunkenPlayers       | If true, larger players can harm smaller ones by jumping on them.                         | true / false                           | true    |
+|              | ThrowablePlayers            | If true, shrunken players can be thrown by their holder.                                  | true / false                           | true    |
+|              | FriendlyFlight              | If true, held players can grab their holder, causing comedic, but game breaking effects.  | true / false                           | false   |
 | Enemies      | HoarderBugBehaviour         | Defines if hoarding bugs should be able to grab you and how likely that is                | Default, NoGrab, Addicted              | Default |
 |              | ThumperBehaviour            | Defines the way Thumpers react on shrunken players.	                                     | Default, One-Shot, Bumper              | Bumper  |
 > client-sided options are marked with a \*, others will by synced with the host.

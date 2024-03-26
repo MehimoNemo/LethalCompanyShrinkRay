@@ -70,6 +70,8 @@ namespace LittleCompany.Config
 
             public float maximumPlayerSize { get; set; }
 
+            public bool cantOpenStorageCloset { get; set; }
+
             public ShrinkRayTargetHighlighting shrinkRayTargetHighlighting { get; set; }
 
             public ThumperBehaviour thumperBehaviour { get; set; }
@@ -114,7 +116,8 @@ namespace LittleCompany.Config
             values.canUseVents                  = Plugin.BepInExConfig().Bind("Shrunken", "CanUseVents", true, "If true, shrunken players can move between vents.").Value;
             values.pitchDistortionIntensity     = Plugin.BepInExConfig().Bind("Shrunken", "PitchDistortionIntensity", 0.3f, new ConfigDescription("Intensity of the pitch distortion for shrunken players. 0 is the normal voice and 0.5 is very high.", new AcceptableValueRange<float>(0f, 0.5f))).Value;
             values.CanEscapeGrab                = Plugin.BepInExConfig().Bind("Shrunken", "CanEscapeGrab", true, "If true, a player who got grabbed can escape by jumping").Value;
-
+            values.cantOpenStorageCloset        = Plugin.BepInExConfig().Bind("Shrunken", "CantOpenStorageCloset", false, "If true, a shrunken player can't open or close the storage closet anymore.").Value;
+            
             values.jumpOnShrunkenPlayers        = Plugin.BepInExConfig().Bind("Interactions", "JumpOnShrunkenPlayers", true, "If true, normal-sized players can harm shrunken players by jumping on them.").Value;
             values.throwablePlayers             = Plugin.BepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
             values.friendlyFlight               = Plugin.BepInExConfig().Bind("Interactions", "FriendlyFlight", false, "If true, held players can grab other players, causing comedic, but game breaking effects.").Value;

@@ -198,6 +198,26 @@ namespace LittleCompany.components
                 }
             }
         }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "SetHoverTipAndCurrentInteractTrigger")]
+        [HarmonyPostfix]
+        private static void SetHoverTipAndCurrentInteractTriggerPatch(ref InteractTrigger ___hoveringOverTrigger) // Disable storage closet for shrunken players
+        {
+            if (___hoveringOverTrigger == null || !ModConfig.Instance.values.cantOpenStorageCloset) return;
+
+            var parentCube = ___hoveringOverTrigger.transform;
+            if (parentCube == null) return;
+
+            var parentCube001 = parentCube.parent;
+            if (parentCube001 == null) return;
+
+            var storageCloset = parentCube001.parent;
+            if(storageCloset == null || storageCloset.name != "StorageCloset") return;
+
+            ___hoveringOverTrigger.interactable = !PlayerInfo.IsCurrentPlayerShrunk;
+            if (String.IsNullOrEmpty(___hoveringOverTrigger.disabledHoverTip))
+                ___hoveringOverTrigger.disabledHoverTip = "[Too weak]";
+        }
         #endregion
 
         #region Helper

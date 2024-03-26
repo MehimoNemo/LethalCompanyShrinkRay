@@ -17,7 +17,6 @@ namespace LittleCompany.components
 {
     internal class GrabbablePlayerObject : GrabbableObject
     {
-        
         #region Properties
         internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "grabbable");
 
