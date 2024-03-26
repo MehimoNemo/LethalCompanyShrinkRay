@@ -66,7 +66,7 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f4Key.wasPressedThisFrame)
             {
-
+                Plugin.Log(GrabbablePlayerList.Log);
             }
 
             else if (Keyboard.current.f5Key.wasPressedThisFrame)

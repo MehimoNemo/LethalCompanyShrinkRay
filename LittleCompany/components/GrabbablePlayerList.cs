@@ -207,29 +207,18 @@ namespace LittleCompany.components
             get
             {
                 string output = "GrabbablePlayerList:\n";
-                output += "------------------------------\n";
                 foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
-                    output += ("[" + gpo.name + "] with player " + gpo.grabbedPlayerID.Value + ".\n");
-
-                if (PlayerInfo.IsHost)
                 {
-                    output += "------------------------------\n";
-                    output += "Network List:\n";
-                    output += "------------------------------\n";
-                    foreach (var networkObjectPair in networkObjects)
-                    {
-                        output += ("PlayerID: " + networkObjectPair.Key + ".\n");
-                        if (networkObjectPair.Value != null)
-                        {
-                            if (networkObjectPair.Value.TryGetComponent(out NetworkObject networkObject))
-                                output += ("NetworkID: " + networkObject.NetworkObjectId + ".\n");
-                            if (TryFindGrabbableObjectForPlayer(networkObjectPair.Key, out GrabbablePlayerObject gpo))
-                                output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
-                        }
-                        output += ("------------------------------\n");
-                    }
-                }
+                    output += ("------------------------------\n");
 
+                    output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
+                    output += ("ItemProperties: " + gpo.itemProperties?.itemName + ", " + gpo.itemProperties?.weight + "lb" + ".\n");
+                    output += ("IDs: ItemPorperties[" + gpo.itemProperties.GetInstanceID() + "] - " +
+                                    "AudioSource[" + (gpo.TryGetComponent(out AudioSource audioSource) ? audioSource.GetInstanceID() : "none") + "] - " +
+                                    "NetworkObject[" + (gpo.TryGetComponent(out NetworkObject networkObject) ? networkObject.NetworkObjectId : "none") + "] - " +
+                                    "GPO[" + gpo.GetInstanceID() + "]\n");
+                }
+                output += ("------------------------------\n");
                 return output;
             }
         }
