@@ -154,7 +154,7 @@ namespace LittleCompany.components
             if (grabbedPlayer == null)
                 return;
 
-            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that shouldn't happen nowadays
+            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
             {
                 Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
                 audioSource = gameObject.AddComponent<AudioSource>();
