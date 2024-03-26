@@ -1,4 +1,5 @@
 ﻿using GameNetcodeStuff;
+using LittleCompany.helper;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -12,8 +13,7 @@ namespace LittleCompany.compatibility
         public static void RegularizeCosmetics()
         {
             Plugin.Log("RegularizeCosmetics");
-            PlayerControllerB[] players = StartOfRound.Instance.allPlayerScripts;
-            foreach (var player in players)
+            foreach (var player in PlayerInfo.AllPlayers)
             {
                 Component cosmetic = GetCosmeticApplication(player);
 

@@ -41,8 +41,6 @@ namespace LittleCompany.Config
         public struct ConfigValues
         {
             // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
-            public bool friendlyFlight { get; set; }
-
             public bool sellablePlayers { get; set; }
 
             public int shrinkRayCost { get; set; }
@@ -120,7 +118,6 @@ namespace LittleCompany.Config
             
             values.jumpOnShrunkenPlayers        = Plugin.BepInExConfig().Bind("Interactions", "JumpOnShrunkenPlayers", true, "If true, normal-sized players can harm shrunken players by jumping on them.").Value;
             values.throwablePlayers             = Plugin.BepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
-            values.friendlyFlight               = Plugin.BepInExConfig().Bind("Interactions", "FriendlyFlight", false, "If true, held players can grab other players, causing comedic, but game breaking effects.").Value;
             values.sellablePlayers              = Plugin.BepInExConfig().Bind("Interactions", "sellablePlayers", true, "If true, shrunken players can be sold to the company").Value;
 
 
