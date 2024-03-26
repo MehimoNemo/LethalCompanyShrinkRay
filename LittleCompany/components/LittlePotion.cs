@@ -121,7 +121,7 @@ namespace LittleCompany.components
 
         internal static int ScrapValueWhenConsumed = 5;
 
-        internal static AudioSource audioSource;
+        internal AudioSource audioSource;
 
         internal static AudioClip grabSFX;
 

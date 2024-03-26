@@ -66,7 +66,7 @@ namespace LittleCompany.components
             Holder
         }
 
-        internal static AudioSource audioSource;
+        internal AudioSource audioSource;
         internal static AudioClip grabSFX;
         internal static AudioClip dropSFX;
         internal static AudioClip throwSFX;
@@ -109,18 +109,22 @@ namespace LittleCompany.components
 
         public override void OnNetworkDespawn()
         {
-            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
+            GrabbablePlayerList.GrabbablePlayerObjects.Remove(grabbedPlayerID.Value);
+            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value + ". " + GrabbablePlayerList.GrabbablePlayerObjects.Count + " grabbable players now.");
             CleanUp();
+
             base.OnNetworkDespawn();
         }
 
         public override void OnNetworkSpawn()
         {
-            Plugin.Log("Spawning gpo for player: " + grabbedPlayerID.Value);
+            GrabbablePlayerList.GrabbablePlayerObjects.Add(grabbedPlayerID.Value, this);
+            Plugin.Log("Spawning gpo for player: " + grabbedPlayerID.Value + ". " + GrabbablePlayerList.GrabbablePlayerObjects.Count + " grabbable players now.");
+
             base.OnNetworkDespawn();
         }
 
-        public static NetworkObject Instantiate(ulong playerID)
+        public static void Instantiate(ulong playerID)
         {
             var obj = Instantiate(networkPrefab);
             DontDestroyOnLoad(obj);
@@ -129,8 +133,6 @@ namespace LittleCompany.components
 
             var networkObj = obj.GetComponent<NetworkObject>();
             networkObj.Spawn();
-
-            return networkObj;
         }
 #endregion
 
@@ -138,9 +140,6 @@ namespace LittleCompany.components
         public override void Start()
         {
             base.Start();
-
-            if(!TryGetComponent(out audioSource))
-                audioSource = gameObject.AddComponent<AudioSource>();
 
             if (grabbedPlayer == null)
                 return;
@@ -155,7 +154,7 @@ namespace LittleCompany.components
             if (grabbedPlayer == null)
                 return;
 
-            if (audioSource == null) // todo: find out why it is null after a while
+            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that shouldn't happen nowadays
             {
                 Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
                 audioSource = gameObject.AddComponent<AudioSource>();
@@ -215,10 +214,10 @@ namespace LittleCompany.components
                 playerHeldBy.DiscardHeldObject();
             }
 
-            if(DeleteNextFrame && PlayerInfo.IsHost)
+            if(DeleteNextFrame)
             {
-                DeleteNextFrame = false;
-                GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
+                if(PlayerInfo.IsHost && GrabbablePlayerList.RemovePlayerGrabbable(this))
+                    DeleteNextFrame = false;
             }
         }
         
