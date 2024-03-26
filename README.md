@@ -24,8 +24,7 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 > client-sided options are marked with a \*, others will by synced with the host.
 
 ## Known bugs ##
-+ Shrinkray floats above the ground when dropped
-+ Collision detection when holding players not accurate enough
+A list of known bugs can be found on our Github repository in the [issues section](https://github.com/MehimoNemo/LethalCompanyShrinkRay/issues)
 
 ## Planned features ##
 - Animations for holding / throwing players
