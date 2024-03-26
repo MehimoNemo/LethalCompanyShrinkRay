@@ -7,7 +7,6 @@
  + sizeChangeStep: The size change of a single modification *Enlarging has no benefits currently and won't make normal sized players grabbable. This is planned for 0.6.0!*
  + maxPlayerSize: Defines how tall a player can become. 1.7 is the default and also the highest value for standing inside the ship and going through doors.
 + Smoke VFX when being shrunken to death
-+ Item shrinking! *Currently only visual..*
 
 **Fixes**
 + fixed players not getting normal again after rejoining (till reworked in 0.6.0)
@@ -19,7 +18,6 @@
 + fixed bug where item became glassified or non-holders
 + prevented error when AudioSource was null. This is the main cause for the "unable to interact with anything" bug that required a rejoin
 + added fallback for grabbablePlayerObject not being loaded correctly and spamming the log
-+ MoreCompany cosmetic resizing synchronization in most cases (only third person emotes show off-sized cosmetics)
 
 ### 0.4.6 ###
 + Fixed a crash when grabbing something
