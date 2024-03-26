@@ -109,9 +109,6 @@ namespace LittleCompany.components
 
             itemProperties = Instantiate(itemProperties);
 
-            if (!TryGetComponent(out audioSource))
-                audioSource = gameObject.AddComponent<AudioSource>();
-
             LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
             LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
             LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
@@ -133,7 +130,7 @@ namespace LittleCompany.components
         {
             base.Update();
 
-            if (audioSource == null) // todo: find out why it is null after a while
+            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
             {
                 Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
                 audioSource = gameObject.AddComponent<AudioSource>();

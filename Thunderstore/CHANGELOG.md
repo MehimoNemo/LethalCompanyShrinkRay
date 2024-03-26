@@ -1,3 +1,6 @@
+### 0.5.3 ###
++ fixed audio error leading to bugged interaction state (previous fix was a workaround, this fixes the cause)
+
 ### 0.5.2 ###
 + Added a new config option "CantOpenStorageCloset" in section "Shrunken"
 *This will prevent shrunken players from opening and closing the storage closet door.. leaving those stuck, that weren't a great asset..*

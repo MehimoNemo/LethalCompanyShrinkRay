@@ -121,7 +121,7 @@ namespace LittleCompany.components
 
         internal static int ScrapValueWhenConsumed = 5;
 
-        internal static AudioSource audioSource;
+        internal AudioSource audioSource;
 
         internal static AudioClip grabSFX;
 
@@ -256,9 +256,6 @@ namespace LittleCompany.components
                 ScanNodeProperties.scrapValue = itemProperties.creditsWorth;
             }
 
-            if(!TryGetComponent(out audioSource))
-                audioSource = gameObject.AddComponent<AudioSource>();
-
             if(PotionTransform != null)
             {
                 Glass = PotionTransform.GetComponent<MeshRenderer>();
@@ -294,7 +291,7 @@ namespace LittleCompany.components
         {
             base.Update();
 
-            if (audioSource == null) // todo: find out why it is null after a while
+            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
             {
                 Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
                 audioSource = gameObject.AddComponent<AudioSource>();
