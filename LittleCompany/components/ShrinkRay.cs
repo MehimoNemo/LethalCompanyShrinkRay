@@ -12,6 +12,7 @@ using System.IO;
 using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.components.GrabbablePlayerObject;
+using DunGen;
 
 namespace LittleCompany.components
 {
@@ -286,7 +287,7 @@ namespace LittleCompany.components
             var endPoint = Vector3.zero;
 
             //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
-            var layerMask = ToInt([Mask.Player]);
+            var layerMask = ToInt([Mask.Player, Mask.InteractableObject]);
             if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
@@ -336,7 +337,7 @@ namespace LittleCompany.components
         {
             if (target == null) return null;
 
-            //Plugin.Log("Target to identify: " + target.name + " [layer " + target.layer + "]");
+            Plugin.Log("Target to identify: " + target.name + " [layer " + target.layer + "]");
 
             switch((Mask)target.layer)
             {
@@ -354,7 +355,9 @@ namespace LittleCompany.components
                     var targetObject = target.GetComponentInParent<GrabbableObject>();
                     if (targetObject != null)
                         return targetObject.gameObject;
-                    break;
+
+                    return target;
+                    //break;
 
                 case Mask.Enemies: case Mask.EnemiesNotRendered:
                     var targetEnemy = target.GetComponentInParent<EnemyAI>();
@@ -406,7 +409,7 @@ namespace LittleCompany.components
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRayOnClient()
         {
-            if (playerHeldBy == null || targetObject?.GetComponent<NetworkObject>() == null || playerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || playerHeldBy.isClimbingLadder)
             {
                 Plugin.Log("ShootRayOnClient: Missing");
                 SwitchModeServerRpc((int)Mode.Missing);
@@ -470,13 +473,30 @@ namespace LittleCompany.components
                     }
                 case Mask.InteractableObject:
                     {
-                        if (!targetObject.TryGetComponent(out Item item))
+                        /*if (!targetObject.TryGetComponent(out Item item))
                             return false;
 
                         if (IsOwner)
-                            Plugin.Log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
+                            Plugin.Log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);*/
+
+                        var door = targetObject.GetComponentInParent<DoorLock>();
+                        if (door != null)
+                        {
+                            targetObject = door.gameObject;
+                            var no = door.GetComponentInParent<NetworkObject>();
+                            Plugin.Log("no name: " + no.gameObject.name);
+                            OnObjectModificationServerRpc(no.NetworkObjectId, playerHeldBy.playerClientId);
+                            return true;
+                        }
+
+                        if (!targetObject.TryGetComponent(out NetworkObject networkObject))
+                            return false;
+
+                        Plugin.Log("Found networked door!");
+
+                        OnObjectModificationServerRpc(networkObject.NetworkObjectId, playerHeldBy.playerClientId);
                         //Plugin.Log("WIP");
-                        return false;
+                        return true;
                     }
                 case Mask.Enemies:
                     {
