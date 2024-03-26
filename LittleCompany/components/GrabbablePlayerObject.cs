@@ -109,18 +109,22 @@ namespace LittleCompany.components
 
         public override void OnNetworkDespawn()
         {
-            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
+            GrabbablePlayerList.GrabbablePlayerObjects.Remove(grabbedPlayerID.Value);
+            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value + ". " + GrabbablePlayerList.GrabbablePlayerObjects.Count + " grabbable players now.");
             CleanUp();
+
             base.OnNetworkDespawn();
         }
 
         public override void OnNetworkSpawn()
         {
-            Plugin.Log("Spawning gpo for player: " + grabbedPlayerID.Value);
+            GrabbablePlayerList.GrabbablePlayerObjects.Add(grabbedPlayerID.Value, this);
+            Plugin.Log("Spawning gpo for player: " + grabbedPlayerID.Value + ". " + GrabbablePlayerList.GrabbablePlayerObjects.Count + " grabbable players now.");
+
             base.OnNetworkDespawn();
         }
 
-        public static NetworkObject Instantiate(ulong playerID)
+        public static void Instantiate(ulong playerID)
         {
             var obj = Instantiate(networkPrefab);
             DontDestroyOnLoad(obj);
@@ -129,8 +133,6 @@ namespace LittleCompany.components
 
             var networkObj = obj.GetComponent<NetworkObject>();
             networkObj.Spawn();
-
-            return networkObj;
         }
 #endregion
 
@@ -212,10 +214,10 @@ namespace LittleCompany.components
                 playerHeldBy.DiscardHeldObject();
             }
 
-            if(DeleteNextFrame && PlayerInfo.IsHost)
+            if(DeleteNextFrame)
             {
-                DeleteNextFrame = false;
-                GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
+                if(PlayerInfo.IsHost && GrabbablePlayerList.RemovePlayerGrabbable(this))
+                    DeleteNextFrame = false;
             }
         }
         

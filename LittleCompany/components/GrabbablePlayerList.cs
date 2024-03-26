@@ -4,11 +4,10 @@ using LethalLib.Modules;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using static LittleCompany.components.GrabbablePlayerObject;
+using LittleCompany.components;
 
 namespace LittleCompany.components
 {
@@ -16,7 +15,7 @@ namespace LittleCompany.components
     internal class GrabbablePlayerList
     {
         #region Properties
-        public static Dictionary<ulong, NetworkObject> networkObjects = new Dictionary<ulong, NetworkObject>();
+        public static Dictionary<ulong, GrabbablePlayerObject> GrabbablePlayerObjects = new Dictionary<ulong, GrabbablePlayerObject>();
         internal struct FoundGrabbables
         {
             internal GrabbablePlayerObject holderGPO { get; set; }
@@ -25,8 +24,6 @@ namespace LittleCompany.components
         #endregion
 
         #region Patches
-
-
         [HarmonyPatch(typeof(PlayerControllerB), "DamagePlayer")]
         [HarmonyPrefix]
         public static void DamagePlayer(PlayerControllerB __instance, int damageNumber, bool hasDamageSFX = true, bool callRPC = true, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false, Vector3 force = default(Vector3))
@@ -121,7 +118,7 @@ namespace LittleCompany.components
                 if (grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID) // Player who teleports is grabbed
                 {
                     Plugin.Log("We're holding the person who teleported.");
-                    grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.GrabbedPlayer));
+                    grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.GrabbedPlayer));
                 }
             }
 
@@ -130,7 +127,7 @@ namespace LittleCompany.components
                 if (grabbables.holderGPO.grabbedPlayerID.Value == PlayerInfo.CurrentPlayerID)
                 {
                     Plugin.Log("We're held by person who teleported.");
-                    grabbables.holderGPO.StartCoroutine(grabbables.holderGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.Holder));
+                    grabbables.holderGPO.StartCoroutine(grabbables.holderGPO.UpdateRegionAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.Holder));
                 }
             }
         }
@@ -237,11 +234,11 @@ namespace LittleCompany.components
             get
             {
                 string output = "GrabbablePlayerList:\n";
-                foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+                foreach (var (playerID, gpo) in GrabbablePlayerObjects)
                 {
                     output += ("------------------------------\n");
 
-                    output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
+                    output += ("GPO for player " + playerID + ".\n");
                     output += ("ItemProperties: " + gpo.itemProperties?.itemName + ", " + gpo.itemProperties?.weight + "lb" + ".\n");
                     output += ("IDs: ItemPorperties[" + gpo.itemProperties.GetInstanceID() + "] - " +
                                     "AudioSource[" + (gpo.TryGetComponent(out AudioSource audioSource) ? audioSource.GetInstanceID() : "none") + "] - " +
@@ -256,32 +253,24 @@ namespace LittleCompany.components
 
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)
         {
-            var grabbables = FindGrabbableObjectsFor(playerID);
-            result = grabbables.grabbedGPO;
-            return result != null;
+            return GrabbablePlayerObjects.TryGetValue(playerID, out result);
         }
 
         public static bool TryFindGrabbableObjectByHolder(ulong playerHeldByID, out GrabbablePlayerObject result)
         {
-            var grabbables = FindGrabbableObjectsFor(playerHeldByID);
-            result = grabbables.holderGPO;
+            result = FindGrabbableObjectsFor(playerHeldByID).holderGPO;
             return result != null;
         }
 
-        public static FoundGrabbables FindGrabbableObjectsFor(ulong playerID)
+        public static FoundGrabbables FindGrabbableObjectsFor(ulong targetPlayerID)
         {
             var grabbables = new FoundGrabbables();
-            var gpos = Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>();
-            Plugin.Log("FindGrabbableObjectsFor " + playerID + " -> " + gpos.Length);
-            foreach (var gpo in gpos)
+            foreach (var (playerID, gpo) in GrabbablePlayerObjects)
             {
-                if (gpo != null)
-                {
-                    if (gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == playerID)
-                        grabbables.holderGPO = gpo;
-                    if (gpo.grabbedPlayerID.Value == playerID)
-                        grabbables.grabbedGPO = gpo;
-                }
+                if (gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == targetPlayerID)
+                    grabbables.holderGPO = gpo;
+                if (playerID == targetPlayerID)
+                    grabbables.grabbedGPO = gpo;
             }
             return grabbables;
         }
@@ -294,66 +283,47 @@ namespace LittleCompany.components
 
             if (!PlayerInfo.IsHost) return;
 
-            List<ulong> playerIDs = new List<ulong>(networkObjects.Keys);
-            foreach (var playerID in playerIDs)
-                RemovePlayerGrabbable(playerID);
+            foreach (var gpo in GrabbablePlayerObjects.Values)
+                RemovePlayerGrabbable(gpo);
         }
 
-        public static void SetPlayerGrabbable(ulong playerID)
+        public static bool SetPlayerGrabbable(ulong playerID)
         {
             if(!PlayerInfo.IsHost)
             {
                 Plugin.Log("SetPlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
-                return;
+                return false;
             }
 
-            if (networkObjects.ContainsKey(playerID))
+            if (GrabbablePlayerObjects.ContainsKey(playerID))
             {
-                if (networkObjects[playerID] == null)
-                    networkObjects.Remove(playerID);
-                else if (networkObjects[playerID].IsSpawned)
-                {
-                    Plugin.Log("Player " + playerID + " already grabbable!");
-                    return;
-                }
-                else
-                    UnityEngine.Object.Destroy(networkObjects[playerID]);
+                Plugin.Log("Player " + playerID + " already grabbable!");
+                return false;
             }
 
-            networkObjects[playerID] = GrabbablePlayerObject.Instantiate(playerID);
-            Plugin.Log("NEW GRABBALEPLAYER COUNT: " + networkObjects.Count);
+            GrabbablePlayerObject.Instantiate(playerID);
+            return true;
         }
 
-        public static void RemovePlayerGrabbable(ulong playerID)
+        public static bool RemovePlayerGrabbable(ulong playerID)
         {
-            if (!PlayerInfo.IsHost)
+            if (!PlayerInfo.IsHost) return false;
+            if (!GrabbablePlayerObjects.TryGetValue(playerID, out GrabbablePlayerObject gpo))
             {
-                Plugin.Log("RemovePlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
-                return;
+                Plugin.Log("RemovePlayerGrabbable -> Player wasn't grabbable.");
+                return false;
             }
 
-            Plugin.Log("RemovePlayerGrabbable");
-            if (!networkObjects.TryGetValue(playerID, out NetworkObject networkObject))
-            {
-                Plugin.Log("Player " + playerID + " wasn't grabbable!");
-                return;
-            }
-
-            if (!TryFindGrabbableObjectForPlayer(playerID, out GrabbablePlayerObject gpo)) // todo: make it so the tryFind is not needed
-            {
-                Plugin.Log("Player " + playerID + " didn't had a grabbableObject!");
-                return;
-            }
-
-            DespawnGrabbablePlayer(playerID);
+            return RemovePlayerGrabbable(gpo);
         }
 
-        public static void DespawnGrabbablePlayer(ulong playerID)
+        public static bool RemovePlayerGrabbable(GrabbablePlayerObject gpo)
         {
-            if (PlayerInfo.IsHost && networkObjects[playerID].IsSpawned)
-                networkObjects[playerID].Despawn();
+            if (!gpo.TryGetComponent(out NetworkObject networkObject) || !networkObject.IsSpawned)
+                return false;
 
-            networkObjects.Remove(playerID);
+            networkObject.Despawn();
+            return true;
         }
 
         public static void ReInitializePlayerGrabbable(ulong playerID)
