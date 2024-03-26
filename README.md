@@ -24,16 +24,11 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 > client-sided options are marked with a \*, others will by synced with the host.
 
 ## Known bugs ##
-+ Shrunken players sometimes face the wrong direction when climbing ladders
 + Shrinkray floats above the ground when dropped
-+ Weight of held players not updating
-+ Jetpack offset for shrunken players
 + Collision detection when holding players not accurate enough
-
 
 ## Planned features ##
 - Animations for holding / throwing players
-- Improved ray sfx
 - Make sandworms unlikely targeting shrunken players
 
 ## Got more ideas? ##
@@ -46,20 +41,13 @@ or write it in our threads on the unofficial lethal companys mod discords:
 [Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1168655651455639582/1206337352608256010)
 
 ## Special Thanks To
+[AboveFire](https://github.com/AboveFire) & [MissScarlett](https://github.com/QueenScarlett23) for development help!
 [@peppermint_2859](https://twitter.com/ItsJOEYthe) on discord for the ShrinkRay model!
 [Sakiskid](https://github.com/Sakiskid) for the ShrinkRay beam!
-Ellethwen for the potion & player item icons!
-Spinmaster for creating all the sounds this mod includes!
+Ellethwen on discord for the potion & player item icons!
+Spinmaster on discord for creating all the sounds this mod includes!
 
 
 ## And the testers too (sorry for making you join and leave the lobby a billion times)!
-[StrawberriStorm](https://twitter.com/strawberristorm)
-
-[Tcorn](https://twitter.com/TcorntheLazy)
-
-[Sirdog](https://youtu.be/6ItPIiegBms?si=zH-Cf467VIOtVTMt)
-
-[IceSigil](https://twitter.com/IceSigil)
-
-[NimNom](https://www.twitch.tv/nimnom)
+[StrawberriStorm](https://twitter.com/strawberristorm) | [Tcorn](https://twitter.com/TcorntheLazy) | [Sirdog](https://youtu.be/6ItPIiegBms?si=zH-Cf467VIOtVTMt) | [IceSigil](https://twitter.com/IceSigil) | [NimNom](https://www.twitch.tv/nimnom)
 

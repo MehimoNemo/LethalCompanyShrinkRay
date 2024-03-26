@@ -15,8 +15,7 @@
 + fixed goomba not working when jumping over a shrunken player
 + fixed weightMultiplier not being applied
 + fixed grabbed items not being scaled correctly
-+ fixed bug where item became glassified or non-holders
-+ prevented error when AudioSource was null. This is the main cause for the "unable to interact with anything" bug that required a rejoin
++ fixed bug where item became glassified on non-holders
 + added fallback for grabbablePlayerObject not being loaded correctly and spamming the log
 
 ### 0.4.6 ###
