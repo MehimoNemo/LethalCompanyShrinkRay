@@ -14,6 +14,7 @@ namespace LittleCompany.Config
     public sealed class ModConfig
     {
         #region Properties
+        internal static readonly float SmallestSizeChange = 0.05f;
         public static bool DebugLog { get; set; }
 
         public enum ThumperBehaviour
@@ -103,7 +104,7 @@ namespace LittleCompany.Config
         {
             values.shrinkRayCost                = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
             values.deathShrinking               = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
-            values.sizeChangeStep               = Plugin.BepInExConfig().Bind("General", "SizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(0.05f, 10f))).Value;
+            values.sizeChangeStep               = Plugin.BepInExConfig().Bind("General", "SizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
             values.shrinkRayTargetHighlighting  = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnHit, "Defines, when a target gets highlighted. Set to OnLoading if you encounter performance issues.").Value;
             values.maximumPlayerSize            = Plugin.BepInExConfig().Bind("General", "MaximumPlayerSize", 1.7f, new ConfigDescription("Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)", new AcceptableValueRange<float>(1f, 10f))).Value;
 

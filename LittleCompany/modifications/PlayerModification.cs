@@ -13,18 +13,17 @@ namespace LittleCompany.modifications
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var nextShrunkenSize = Mathf.Max(playerSize - ModConfig.Instance.values.sizeChangeStep, 0f);
-
-            if (!ModConfig.Instance.values.deathShrinking && nextShrunkenSize < DeathShrinkMargin)
-                return playerSize;
-
-            return nextShrunkenSize;
+            var nextShrunkenSize = Mathf.Max(PlayerInfo.Rounded(playerSize - ModConfig.Instance.values.sizeChangeStep), 0f);
+            if ((nextShrunkenSize + (ModConfig.SmallestSizeChange / 2)) <= DeathShrinkMargin)
+                return 0f;
+            else
+                return nextShrunkenSize;
         }
 
-        public static float NextIncreasedSizeOf(PlayerControllerB targetPlayer)
+        public static float NextEnlargedSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            return Mathf.Min(playerSize + ModConfig.Instance.values.sizeChangeStep, ModConfig.Instance.values.maximumPlayerSize);
+            return Mathf.Min(PlayerInfo.Rounded(playerSize + ModConfig.Instance.values.sizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
         }
 
         public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
@@ -41,14 +40,14 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
-                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + PlayerInfo.SizeOf(targetPlayer));
-                    if (nextShrunkenSize == PlayerInfo.SizeOf(targetPlayer) || (nextShrunkenSize < DeathShrinkMargin && !targetPlayer.AllowPlayerDeath()))
+                    if ((!ModConfig.Instance.values.deathShrinking || !targetPlayer.AllowPlayerDeath()) && Mathf.Approximately(nextShrunkenSize, 0f) )
                         return false;
+
                     break;
 
                 case ModificationType.Enlarging:
-                    var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
-                    if (nextIncreasedSize == PlayerInfo.SizeOf(targetPlayer))
+                    var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
+                    if (Mathf.Approximately(nextIncreasedSize, ModConfig.Instance.values.maximumPlayerSize))
                         return false;
                     break;
 
@@ -137,7 +136,7 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Enlarging:
                     {
-                        var nextIncreasedSize = NextIncreasedSizeOf(targetPlayer);
+                        var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
                         Plugin.Log("Enlarging player [" + targetPlayer.playerClientId + "] to size: " + nextIncreasedSize);
 
                         if (nextIncreasedSize >= 1f && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))

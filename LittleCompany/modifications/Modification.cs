@@ -5,7 +5,7 @@ namespace LittleCompany.modifications
     public abstract class Modification
     {
         #region Properties
-        internal static float DeathShrinkMargin => 0.2f;
+        internal static readonly float DeathShrinkMargin = 0.2f;
         public enum ModificationType
         {
             Normalizing,
