@@ -5,7 +5,15 @@
 **Fixes**
 +
 
-### 0.5.0 ###
+### 0.5.2 ###
++ Added a new config option "CantOpenStorageCloset" in section "Shrunken"
+*This will prevent shrunken players from opening and closing the storage closet door.. leaving those stuck, that weren't a great asset..*
+
+### 0.5.1 ###
++ fixed shrinking/enlarging not working when hitting exactly 0.2 or MaximumPlayerSize
++ added new config options to description
+
+## 0.5.0 [ShrinkRay targeting] ##
 **What's new**
 + ShrinkRay Targeting is finally here! The holder will see a laser pointer and targets will get highlighted (on activate by default, configurable).
 + 4 new config options:
