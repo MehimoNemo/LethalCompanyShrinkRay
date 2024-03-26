@@ -254,7 +254,13 @@ namespace LittleCompany.components
                 ScanNodeProperties.scrapValue = itemProperties.creditsWorth;
             }
 
-            if(PotionTransform != null)
+            if (!TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            if (PotionTransform != null)
             {
                 Glass = PotionTransform.GetComponent<MeshRenderer>();
                 Cap = PotionTransform.Find("Cap")?.GetComponent<MeshRenderer>();
@@ -288,12 +294,6 @@ namespace LittleCompany.components
         public override void Update()
         {
             base.Update();
-
-            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
-            {
-                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
-                audioSource = gameObject.AddComponent<AudioSource>();
-            }
         }
 
         public override void PocketItem()

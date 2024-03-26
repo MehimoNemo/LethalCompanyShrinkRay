@@ -143,8 +143,14 @@ namespace LittleCompany.components
 
             if (grabbedPlayer == null)
                 return;
+            
+            if (!TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
 
-            EnableInteractTrigger();
+            UpdateInteractTrigger();
         }
 
         public override void Update()
@@ -153,12 +159,6 @@ namespace LittleCompany.components
 
             if (grabbedPlayer == null)
                 return;
-
-            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
-            {
-                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
-                audioSource = gameObject.AddComponent<AudioSource>();
-            }
 
             if (grabbedPlayer.carryWeight != previousCarryWeight)
                 WeightChangedBy(grabbedPlayer.carryWeight - previousCarryWeight);
@@ -253,14 +253,13 @@ namespace LittleCompany.components
             SetIsGrabbableToEnemies(false);
             SetControlTips();
 
-            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            foreach (var player in PlayerInfo.AllPlayers)
             {
                 if (grabbedPlayer != player)
                     IgnoreColliderWith(player.playerCollider);
             }
 
-            if (IsCurrentPlayer && !ModConfig.Instance.values.friendlyFlight)
-                SetHolderGrabbable(false);
+            UpdateInteractTrigger();
 
             if (IsCurrentPlayer)
                 PlayerInfo.EnableCameraVisor(false);
@@ -277,8 +276,7 @@ namespace LittleCompany.components
             else if(dropSFX != null && audioSource != null)
                 audioSource.PlayOneShot(dropSFX);
 
-            if (!ModConfig.Instance.values.friendlyFlight)
-                SetHolderGrabbable(true);
+            UpdateInteractTrigger();
 
             grabbedPlayer.ResetFallGravity();
 
@@ -289,7 +287,7 @@ namespace LittleCompany.components
             if(IsCurrentPlayer)
                 PlayerInfo.EnableCameraVisor();
 
-            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            foreach (var player in PlayerInfo.AllPlayers)
             {
                 if (grabbedPlayer != player)
                     IgnoreColliderWith(player.playerCollider, false);
@@ -409,7 +407,7 @@ namespace LittleCompany.components
             this.grabbable = true;
             itemProperties = Instantiate(itemProperties);
 
-            EnableInteractTrigger();
+            UpdateInteractTrigger();
             CalculateScrapValue();
 
             itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight;
@@ -457,10 +455,6 @@ namespace LittleCompany.components
             }
 
             bool IsCompanyMoon = Enum.TryParse(RoundManager.Instance.currentLevel.levelID.ToString(), out Moon level) && level == Moon.CompanyBuilding;
-            if (IsCompanyMoon)
-                Plugin.Log("UpdateScanNodeVisibility: We're on company moon!");
-            if (IsCurrentPlayer)
-                Plugin.Log("UpdateScanNodeVisibility: That's us!");
             EnableScanNode(IsCompanyMoon && !IsCurrentPlayer);
         }
 
@@ -477,10 +471,7 @@ namespace LittleCompany.components
             scanNode.enabled = enable;
 
             if (scanNode.TryGetComponent(out BoxCollider collider))
-            {
-                Plugin.Log("Found BoxCollider for scanNode");
                 collider.enabled = enable;
-            }
         }
 
         public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)
@@ -496,10 +487,25 @@ namespace LittleCompany.components
             Physics.IgnoreCollision(thisCollider, otherCollider, ignore);
         }
 
+        public void UpdateInteractTrigger()
+        {
+            if (propColliders.Length == 0) return;
+
+            var enable = true;
+            if (IsCurrentPlayer ||                                                                                  // This is our gpo
+                (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayer.playerClientId) || // We're the holder
+                PlayerInfo.SizeOf(grabbedPlayer) >= PlayerInfo.CurrentPlayerScale ||								// We're smaller than the player of this grabbableObject
+				grabbedPlayer.isClimbingLadder || grabbedPlayer.inSpecialInteractAnimation)                         // Player is in an animation
+                    enable = false;
+
+            EnableInteractTrigger(enable);
+        }
+
+        // Makes the player grabbable / ungrabbable
         public void EnableInteractTrigger(bool enable = true)
         {
-            EnablePhysics(enable && !IsCurrentPlayer && !grabbedPlayer.isClimbingLadder && !grabbedPlayer.inSpecialInteractAnimation);
-            //EnableItemMeshes(enable && !IsCurrentPlayer);
+            Plugin.Log("EnableInteractTrigger: " + enable);
+            propColliders[0].enabled = enable;
             UpdateScanNodeVisibility(); // also a collider that gets enabled through EnablePhysics()
         }
 
@@ -602,14 +608,6 @@ namespace LittleCompany.components
                 return grabbedPlayer.ItemSlots[grabbedPlayer.currentItemSlot];
 
             return null;
-        }
-
-        private void SetHolderGrabbable(bool isGrabbable = true)
-        {
-            if (!IsCurrentPlayer || playerHeldBy == null) return; // Only do this from the perspective of the currently held player, not the holder himself
-
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(playerHeldBy.playerClientId, out GrabbablePlayerObject gpo))
-                gpo.EnableInteractTrigger(isGrabbable);
         }
 
         private void SetControlTips()

@@ -111,6 +111,12 @@ namespace LittleCompany.components
             LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
             LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
 
+            if (!TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
             DisableLaserForHolder();
         }
 
@@ -127,12 +133,6 @@ namespace LittleCompany.components
         public override void Update()
         {
             base.Update();
-
-            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
-            {
-                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
-                audioSource = gameObject.AddComponent<AudioSource>();
-            }
 
             if (LaserEnabled)
                 UpdateLaser();

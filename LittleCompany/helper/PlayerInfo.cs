@@ -27,14 +27,16 @@ namespace LittleCompany.helper
             return false;
         }
 
-        public static List<GameObject> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled).Select(pcb => pcb.gameObject).ToList();
+        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled && !pcb.isPlayerDead).ToList();
+
+        public static List<GameObject> AllPlayerObjects => AllPlayers.Select(pcb => pcb.gameObject).ToList();
 
         public static PlayerControllerB ControllerFromID(ulong playerID)
         {
-            foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
+            foreach(var player in AllPlayers)
             {
-                if (pcb.playerClientId == playerID)
-                    return pcb;
+                if (player.playerClientId == playerID)
+                    return player;
             }
             return null;
         }

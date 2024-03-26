@@ -148,18 +148,15 @@ namespace LittleCompany.components
         {
             if (SoundManager.Instance == null) return;
 
-            foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
+            foreach (var pcb in PlayerInfo.AllPlayers)
             {
-                if(pcb != null && pcb.isPlayerControlled && !pcb.isPlayerDead)
-                {
-                    float playerScale = PlayerInfo.SizeOf(pcb);
-                    float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
+                float playerScale = PlayerInfo.SizeOf(pcb);
+                float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
 
-                    float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
+                float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
 
-                    SoundManager.Instance.playerVoicePitchTargets[pcb.playerClientId] = modifiedPitch;
-                    SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
-                }
+                SoundManager.Instance.playerVoicePitchTargets[pcb.playerClientId] = modifiedPitch;
+                SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
             }
         }
 
@@ -351,26 +348,37 @@ namespace LittleCompany.components
 
         public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)
         {
-            /*Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
+            Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
             if(targetPlayer == null) return;
 
             if(targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID)
             {
                 // Someone else's size changed
                 if(TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
-                    gpo.EnableInteractTrigger(PlayerInfo.SizeOf(targetPlayer) < PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer));
+                    gpo.UpdateInteractTrigger();
             }
             else
             {
                 // We changed size
-                var currentSize = PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer);
-
-                foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+                foreach (var gpo in GrabbablePlayerObjects.Values)
                 {
-                    if (gpo == null || gpo.grabbedPlayerID.Value == ulong.MaxValue) continue;
-                    gpo.EnableInteractTrigger(PlayerInfo.SizeOf(gpo.grabbedPlayer) < currentSize);
+                    if (gpo == null) continue;
+                    gpo.UpdateInteractTrigger();
                 }
-            }*/
+            }
+
+            if(PlayerInfo.IsHost)
+            {
+                var playerSize = PlayerInfo.SizeOf(targetPlayer);
+                foreach(var player in PlayerInfo.AllPlayers)
+                {
+                    if (PlayerInfo.SizeOf(player) < playerSize && !TryFindGrabbableObjectForPlayer(player.playerClientId, out _)) // Make anyone grabbable who's smaller than this player
+                    {
+                        Plugin.Log("Making player " + player.playerClientId + " automatically grabbable, as they're smaller than the player who changed size.");
+                        SetPlayerGrabbable(player.playerClientId);
+                    }
+                }
+            }
         }
         #endregion
     }
