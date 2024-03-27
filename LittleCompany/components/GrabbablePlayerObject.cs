@@ -276,8 +276,6 @@ namespace LittleCompany.components
             else if(dropSFX != null && audioSource != null)
                 audioSource.PlayOneShot(dropSFX);
 
-            UpdateInteractTrigger();
-
             grabbedPlayer.ResetFallGravity();
 
             base.DiscardItem();
@@ -295,10 +293,13 @@ namespace LittleCompany.components
 
             SetIsGrabbableToEnemies(true);
             ResetControlTips();
+
+            UpdateInteractTrigger();
         }
 
         public override void GrabItemFromEnemy(EnemyAI enemyAI)
         {
+            base.GrabItemFromEnemy(enemyAI);
             Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
             enemyHeldBy = enemyAI;
 
@@ -317,7 +318,8 @@ namespace LittleCompany.components
 
         public override void DiscardItemFromEnemy()
         {
-            if(enemyHeldBy == null)
+            base.DiscardItemFromEnemy();
+            if (enemyHeldBy == null)
             {
                 Plugin.Log("Lost enemyHeldBy on grabbable player " + grabbedPlayerID.Value, Plugin.LogType.Warning);
                 return;
@@ -489,14 +491,30 @@ namespace LittleCompany.components
 
         public void UpdateInteractTrigger()
         {
+            Plugin.Log("UpdateInteractTrigger");
             if (propColliders.Length == 0) return;
 
             var enable = true;
-            if (IsCurrentPlayer ||                                                                                  // This is our gpo
+            if (IsCurrentPlayer)
+            {
+                Plugin.Log("Set to false because IsCurrentPlayer");
+                enable = false;
+            }
+            else if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayer.playerClientId)
+            {
+                Plugin.Log("Set to false because we're the holder");
+                enable = false;
+            }
+            else if (PlayerInfo.SizeOf(grabbedPlayer) >= PlayerInfo.CurrentPlayerScale)
+            {
+                Plugin.Log("Set to false because player is larger than us");
+                enable = false;
+            }
+            /*if (IsCurrentPlayer ||                                                                                  // This is our gpo
                 (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayer.playerClientId) || // We're the holder
                 PlayerInfo.SizeOf(grabbedPlayer) >= PlayerInfo.CurrentPlayerScale ||								// We're smaller than the player of this grabbableObject
 				grabbedPlayer.isClimbingLadder || grabbedPlayer.inSpecialInteractAnimation)                         // Player is in an animation
-                    enable = false;
+                    enable = false;*/
 
             EnableInteractTrigger(enable);
         }

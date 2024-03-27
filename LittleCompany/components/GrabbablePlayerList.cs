@@ -369,14 +369,13 @@ namespace LittleCompany.components
 
             if(PlayerInfo.IsHost)
             {
-                var playerSize = PlayerInfo.SizeOf(targetPlayer);
-                foreach(var player in PlayerInfo.AllPlayers)
+                var largestPlayerSize = PlayerInfo.LargestPlayerSize;
+                foreach (var player in PlayerInfo.AllPlayers)
                 {
-                    if (PlayerInfo.SizeOf(player) < playerSize && !TryFindGrabbableObjectForPlayer(player.playerClientId, out _)) // Make anyone grabbable who's smaller than this player
-                    {
-                        Plugin.Log("Making player " + player.playerClientId + " automatically grabbable, as they're smaller than the player who changed size.");
+                    if (PlayerInfo.SizeOf(player) < largestPlayerSize) // Make anyone grabbable who's smaller than this player
                         SetPlayerGrabbable(player.playerClientId);
-                    }
+                    else
+                        RemovePlayerGrabbable(player.playerClientId);
                 }
             }
         }
