@@ -19,8 +19,6 @@ namespace LittleCompany.compatibility
 
                 if (cosmetic != null)
                 {
-                    Plugin.Log("Cosmetic re-synch");
-
                     Transform[] componentsInChildren = cosmetic.gameObject.GetComponentsInChildren<Transform>();
                     foreach (Transform transform in componentsInChildren)
                     {
@@ -29,10 +27,6 @@ namespace LittleCompany.compatibility
                             transform.localScale = new Vector3(0.38f, 0.38f, 0.38f);
                         }
                     }
-                }
-                else
-                {
-                    Plugin.Log("No cosmetics to re-synch");
                 }
             }
         }

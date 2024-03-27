@@ -13,6 +13,8 @@ using LittleCompany.compatibility;
 namespace LittleCompany
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("me.swipez.melonloader.morecompany", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(LethalEmotesApiCompatibility.LethalEmotesApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         #region Properties
@@ -59,6 +61,13 @@ namespace LittleCompany
             // comp
             harmony.PatchAll(typeof(Vents));
             harmony.PatchAll(typeof(GrabbablePlayerList));
+
+            // Compatibility
+            if (LethalEmotesApiCompatibility.enabled)
+            {
+                Log("enabling LethalEmotesApiCompatibility");
+                harmony.PatchAll(typeof(LethalEmotesApiCompatibility));
+            }
 
 #if DEBUG
             harmony.PatchAll(typeof(DebugPatches));
