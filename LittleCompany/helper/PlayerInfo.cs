@@ -27,6 +27,17 @@ namespace LittleCompany.helper
             return false;
         }
 
+        public static float LargestPlayerSize
+        {
+            get
+            {
+                var scale = 0f;
+                foreach (var player in AllPlayers)
+                    scale = Mathf.Max(scale, SizeOf(player));
+                return scale;
+            }
+        }
+
         public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled && !pcb.isPlayerDead).ToList();
 
         public static List<GameObject> AllPlayerObjects => AllPlayers.Select(pcb => pcb.gameObject).ToList();
