@@ -12,6 +12,7 @@ using System.Collections;
 using static LittleCompany.helper.Moons;
 using static LittleCompany.helper.LayerMasks;
 using LethalLib.Modules;
+using LittleCompany.patches;
 
 namespace LittleCompany.components
 {
@@ -59,6 +60,8 @@ namespace LittleCompany.components
         internal float previousCarryWeight = 1f;
 
         internal bool DeleteNextFrame = false;
+        internal bool PlayerControlled = true;
+        internal Transform GrabbedPlayerParent = null;
 
         public enum TargetPlayer
         {
@@ -102,7 +105,7 @@ namespace LittleCompany.components
             component.itemProperties.isConductiveMetal = false;
             component.itemProperties.itemIcon = Icon;
             component.itemProperties.canBeGrabbedBeforeGameStart = true;
-            component.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
+            //component.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
@@ -165,9 +168,13 @@ namespace LittleCompany.components
 
             if (IsOnSellCounter.Value || enemyHeldBy != null || this.isHeld)
             {
+                /*if(PlayerControlled)
+                    SetPlayerControlled(false);*/
                 grabbedPlayer.transform.position = this.transform.position;
 
-                if(this.isHeld)
+                grabbedPlayer.ResetFallGravity();
+
+                if (this.isHeld)
                 {
                     //this looks like trash unfortunately .. change this
                     Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
@@ -175,11 +182,12 @@ namespace LittleCompany.components
                     Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
                     grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
-                    grabbedPlayer.ResetFallGravity();
                 }
             }
             else
             {
+                /*if (!PlayerControlled)
+                    SetPlayerControlled(true);*/
                 transform.position = grabbedPlayer.transform.position;
             }
         }
@@ -218,6 +226,15 @@ namespace LittleCompany.components
             {
                 if(PlayerInfo.IsHost && GrabbablePlayerList.RemovePlayerGrabbable(this))
                     DeleteNextFrame = false;
+            }
+
+            if(frameCounter % 500 == 1)
+            {
+                Plugin.Log("Position -> Player" + grabbedPlayer.transform.position + ", GPO" + transform.position);
+                Plugin.Log("LocalPos -> Player" + grabbedPlayer.transform.localPosition + ", GPO" + transform.localPosition);
+                Plugin.Log("LocScale -> Player" + grabbedPlayer.transform.localScale + ", GPO" + transform.localScale);
+                Plugin.Log("Parent of Player: " + grabbedPlayer.transform.parent?.name + ", of GPO: " + transform.parent?.name);
+                Plugin.Log("-------------------------------------------");
             }
         }
         
@@ -418,6 +435,9 @@ namespace LittleCompany.components
             Plugin.Log("gpo weight: " + itemProperties.weight);
 
             SetIsGrabbableToEnemies(true);
+            //SetPlayerControlled(true);
+
+            DebugPatches.CreateCube(new Color(1f, 0.5f, 0.5f, 0.2f), grabbedPlayer.transform);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -446,6 +466,37 @@ namespace LittleCompany.components
                     playerHeldBy.DiscardHeldObject(); // Can lead to problems
             }
             catch { };
+        }
+
+        public void SetPlayerControlled(bool playerControlled = true)
+        {
+            var playerSpine = PlayerInfo.SpineOf(grabbedPlayer);
+
+            PlayerControlled = playerControlled;
+            Plugin.Log("SetPlayerControlled -> " + PlayerControlled, Plugin.LogType.Warning);
+            if (PlayerControlled) // GrabbableObject follows Player (normal case)
+            {
+                //grabbedPlayer.transform.SetParent(GrabbedPlayerParent, false);
+                transform.localPosition = Vector3.zero;
+                if (grabbedPlayer.TryGetComponent(out BoxCollider playerCollider))
+                {
+                    transform.localScale = playerCollider.bounds.size;
+                    transform.SetParent(playerCollider.transform, false);
+                }
+                else
+                {
+                    Plugin.Log("SetPlayerControlled -> Fallback triggered.", Plugin.LogType.Warning);
+                    transform.localScale = Vector3.one;
+                    transform.SetParent(grabbedPlayer.transform, false);
+                }
+
+            }
+            else // Player follows GrabbableObject (e.g. when grabbed)
+            {
+                GrabbedPlayerParent = grabbedPlayer.transform.parent;
+                grabbedPlayer.transform.SetParent(transform, false);
+                grabbedPlayer.transform.localPosition = Vector3.zero;
+            }
         }
 
         public void UpdateScanNodeVisibility()

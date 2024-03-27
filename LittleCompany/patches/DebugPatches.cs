@@ -119,7 +119,7 @@ namespace LittleCompany.patches
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             if(parent != null)
-                cube.transform.SetParent(parent);
+                cube.transform.SetParent(parent, false);
 
             if (cube.TryGetComponent(out BoxCollider boxCollider))
                 boxCollider.enabled = false;

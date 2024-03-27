@@ -99,7 +99,6 @@ namespace LittleCompany.components
             else
                 highlightingGameObject.transform.localScale = new Vector3(scale.x, Mathf.Clamp(scale.y, 0.2f, 0.8f), scale.z);
             highlightingGameObject.transform.position = new Vector3(position.x, position.y, position.z);
-            Plugin.Log("Position: " + highlightingGameObject.transform.position + " / Scale: " + highlightingGameObject.transform.localScale);
         }
 
         internal virtual void ChangeMaterials()
