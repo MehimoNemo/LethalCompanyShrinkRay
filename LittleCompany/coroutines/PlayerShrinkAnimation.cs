@@ -29,19 +29,20 @@ namespace LittleCompany.coroutines
                 Plugin.Log("Attempting to shrink non existing player", Plugin.LogType.Warning);
                 yield break;
             }
-            var playerTransform = targetPlayer.gameObject.transform;
-            /*var spine = PlayerInfo.SpineOf(targetPlayer);
-            if (spine != null)
-                spine.SetParent(playerTransform);*/
 
             GrabbableObject heldItem = null;
             Vector3 initialArmScale = Vector3.one;
-            float currentSize = targetPlayer.gameObject.transform.localScale.x;
+            float currentSize = PlayerInfo.SizeOf(targetPlayer);
 
             if (targetingUs)
-            {
                 heldItem = PlayerInfo.HeldItem(targetPlayer);
-                initialArmScale = PlayerInfo.CalcLocalArmScale();
+
+            var modifiedPlayerModel = false; // Modified by other mods -> only scale transform
+            var playerTransform = PlayerInfo.SpineOf(targetPlayer);
+            if (playerTransform == null)
+            {
+                modifiedPlayerModel = true;
+                playerTransform = targetPlayer.gameObject.transform;
             }
 
             float elapsedTime = 0f;
@@ -57,8 +58,10 @@ namespace LittleCompany.coroutines
                 var x = elapsedTime;
                 currentSize = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
 
-                var currentScale = new Vector3(currentSize, currentSize, currentSize);
+                var currentScale = Vector3.one * currentSize;
                 playerTransform.localScale = currentScale;
+                if (!modifiedPlayerModel)
+                    playerTransform.localPosition = new Vector3(0f, currentSize - 1f, 0f);
 
                 if (targetingUs)
                 {
@@ -73,7 +76,9 @@ namespace LittleCompany.coroutines
             }
 
             // Ensure final scale is set to the desired value
-            playerTransform.localScale = new Vector3(newSize, newSize, newSize);
+            playerTransform.localScale = Vector3.one * newSize;
+            if (!modifiedPlayerModel)
+                playerTransform.localPosition = new Vector3(0f, newSize - 1f, 0f);
             if (targetingUs)
             {
                 PlayerInfo.ScaleLocalPlayerBodyParts();
