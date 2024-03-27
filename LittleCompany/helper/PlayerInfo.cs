@@ -68,9 +68,14 @@ namespace LittleCompany.helper
 
         public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 
-        public static float SizeOf(PlayerControllerB player) => SizeOf(player?.gameObject);
+        public static float SizeOf(PlayerControllerB player)
+        {
+            var spine = SpineOf(player);
+            if (spine == null)
+                return player.transform.localScale.y; // Modified player model
 
-        public static float SizeOf(GameObject playerObject) => playerObject == null ? 1f : Rounded(playerObject.transform.localScale.y);
+            return spine.transform.localScale.y;
+        }
 
         public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
 
