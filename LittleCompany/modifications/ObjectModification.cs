@@ -1,9 +1,7 @@
 ﻿using LittleCompany.components;
 using LittleCompany.Config;
-using LittleCompany.helper;
 using System;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.modifications
 {
