@@ -55,7 +55,7 @@ namespace LittleCompany.components
             ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, onComplete, overrideOriginalSize));
         }
 
-        public IEnumerator ScaleOverTimeToCoroutine(float scale, Action onComplete = null, bool overrideOriginalSize = false)
+        private IEnumerator ScaleOverTimeToCoroutine(float scale, Action onComplete = null, bool overrideOriginalSize = false)
         {
             float elapsedTime = 0f;
             var c = CurrentScale;
