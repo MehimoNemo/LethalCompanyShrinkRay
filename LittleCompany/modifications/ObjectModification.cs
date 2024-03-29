@@ -10,21 +10,21 @@ namespace LittleCompany.modifications
     public class ObjectModification : Modification
     {
         #region Methods
-        internal static TargetScaling ScalingOf(GrabbableObject target)
+        internal static ItemScaling ScalingOf(GrabbableObject target)
         {
-            if (!target.TryGetComponent(out TargetScaling scaling))
-                scaling = target.gameObject.AddComponent<TargetScaling>();
+            if (!target.TryGetComponent(out ItemScaling scaling))
+                scaling = target.gameObject.AddComponent<ItemScaling>();
             return scaling;
         }
 
         public static float NextShrunkenSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Max(ScalingOf(targetObject).IntendedSize - ModConfig.Instance.values.sizeChangeStep, 0f);
+            return Mathf.Max(ScalingOf(targetObject).CurrentScale - ModConfig.Instance.values.sizeChangeStep, 0f);
         }
 
         public static float NextIncreasedSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Min(ScalingOf(targetObject).IntendedSize + ModConfig.Instance.values.sizeChangeStep, 4f);
+            return Mathf.Min(ScalingOf(targetObject).CurrentScale + ModConfig.Instance.values.sizeChangeStep, 4f);
         }
 
         public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type)
@@ -39,20 +39,20 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (scaling.IntendedSize == 1f)
+                    if (scaling.CurrentScale == 1f)
                         return false;
                     break;
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
-                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.IntendedSize);
-                    if (nextShrunkenSize == scaling.IntendedSize)
+                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.CurrentScale);
+                    if (nextShrunkenSize == scaling.CurrentScale)
                         return false;
                     break;
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
-                    if (nextIncreasedSize == scaling.IntendedSize)
+                    if (nextIncreasedSize == scaling.CurrentScale)
                         return false;
                     break;
 
@@ -76,11 +76,11 @@ namespace LittleCompany.modifications
                     {
                         var normalizedSize = 1f;
                         Plugin.Log("Normalizing object [" + targetObject.name + "]");
-                        coroutines.ObjectShrinkAnimation.StartRoutine(targetObject.gameObject, normalizedSize, () =>
+                        scaling.ScaleOverTimeTo(normalizedSize, () =>
                         {
                             if (onComplete != null)
                                 onComplete();
-                        });
+                        }, true);
                         break;
                     }
 
@@ -88,7 +88,7 @@ namespace LittleCompany.modifications
                     {
                         var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
                         Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
-                        coroutines.ObjectShrinkAnimation.StartRoutine(targetObject.gameObject, nextShrunkenSize, () =>
+                        scaling.ScaleOverTimeTo(nextShrunkenSize, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
@@ -101,7 +101,7 @@ namespace LittleCompany.modifications
 
                             if (onComplete != null)
                                 onComplete();
-                        });
+                        }, true);
 
                         break;
                     }
@@ -110,11 +110,11 @@ namespace LittleCompany.modifications
                     {
                         var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
                         Plugin.Log("Enlarging object [" + targetObject.name + "] to size: " + nextIncreasedSize);
-                        coroutines.ObjectShrinkAnimation.StartRoutine(targetObject.gameObject, nextIncreasedSize, () =>
+                        scaling.ScaleOverTimeTo(nextIncreasedSize, () =>
                         {
                             if (onComplete != null)
                                 onComplete();
-                        });
+                        }, true);
 
                         break;
                     }

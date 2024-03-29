@@ -107,8 +107,6 @@ namespace LittleCompany.components
         {
             base.Start();
 
-            itemProperties = Instantiate(itemProperties);
-
             LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
             LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
             LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();

@@ -247,8 +247,6 @@ namespace LittleCompany.components
 
             Plugin.Log("Potion network spawn");
 
-            itemProperties = Instantiate(itemProperties);
-
             ScanNodeProperties = GetComponentInChildren<ScanNodeProperties>();
             if (ScanNodeProperties != null)
             {

@@ -71,7 +71,7 @@ namespace LittleCompany.components
         private const float bezier3YPoint= 0.80f;  // at 80%
         private const float bezier3YOffset = 1.5f; // Height offset
 
-        public static float beamDuration = 2f; // If changed then adjust PlayerShrinkAnimation formula!!!
+        public const float beamDuration = 2f; // If changed then adjust PlayerShrinkAnimation formula!!!
                                                //private const Color beamColor = Color.blue;
 
         public static AudioClip beamSFX;

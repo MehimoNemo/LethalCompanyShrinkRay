@@ -10,6 +10,13 @@ namespace LittleCompany.modifications
     public class PlayerModification : Modification
     {
         #region Methods
+        internal static PlayerScaling ScalingOf(PlayerControllerB target)
+        {
+            if (!target.TryGetComponent(out PlayerScaling scaling))
+                scaling = target.gameObject.AddComponent<PlayerScaling>();
+            return scaling;
+        }
+
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
@@ -39,6 +46,8 @@ namespace LittleCompany.modifications
                     break;
 
                 case ModificationType.Shrinking:
+                    if (ScalingOf(targetPlayer).GettingScaled) return false;
+
                     var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
                     if ((!ModConfig.Instance.values.deathShrinking || !targetPlayer.AllowPlayerDeath()) && Mathf.Approximately(nextShrunkenSize, 0f) )
                         return false;
@@ -46,6 +55,8 @@ namespace LittleCompany.modifications
                     break;
 
                 case ModificationType.Enlarging:
+                    if (ScalingOf(targetPlayer).GettingScaled) return false;
+
                     var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
                     if (Mathf.Approximately(nextIncreasedSize, ModConfig.Instance.values.maximumPlayerSize))
                         return false;
@@ -84,7 +95,7 @@ namespace LittleCompany.modifications
                     {
                         var normalizedSize = 1f;
                         Plugin.Log("Normalizing player [" + targetPlayer.playerClientId + "]");
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, normalizedSize, () =>
+                        ScalingOf(targetPlayer).ScaleOverTimeTo(normalizedSize, () =>
                         {
                             Plugin.Log("Finished ray shoot with type: " + type.ToString());
                             if (PlayerInfo.IsHost)
@@ -107,7 +118,7 @@ namespace LittleCompany.modifications
                     {
                         var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
                         Plugin.Log("Shrinking player [" + targetPlayer.playerClientId + "] to size: " + nextShrunkenSize);
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextShrunkenSize, () =>
+                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextShrunkenSize, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
@@ -142,7 +153,7 @@ namespace LittleCompany.modifications
                         if (nextIncreasedSize >= 1f && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
                             gpo.EnableInteractTrigger(false);
 
-                        coroutines.PlayerShrinkAnimation.StartRoutine(targetPlayer, nextIncreasedSize, () =>
+                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, () =>
                         {
                             if (nextIncreasedSize >= 1f)
                             {

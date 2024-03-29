@@ -40,11 +40,11 @@ namespace LittleCompany.patches
         {
             if (item == null) return;
 
-            bool isScaled = item.TryGetComponent(out TargetScaling scaling) && !scaling.Unchanged;
+            bool isScaled = item.TryGetComponent(out ItemScaling scaling) && !scaling.Unchanged;
 
             if (PlayerInfo.IsNormalSize(item.playerHeldBy) && !isScaled) return;
 
-            if (item.itemProperties.twoHanded || isScaled && scaling.CurrentSize > 1f)
+            if (item.itemProperties.twoHanded || isScaled && scaling.CurrentScale > 1f)
                 GlassifyItem(item);
             else
                 UnGlassifyItem(item);
@@ -54,7 +54,7 @@ namespace LittleCompany.patches
         {
             if (item == null) return;
 
-            if (item.gameObject.TryGetComponent(out TargetScaling scaling))
+            if (item.gameObject.TryGetComponent(out ItemScaling scaling))
                 scaling.Reset();
 
             UnGlassifyItem(item);
@@ -64,10 +64,10 @@ namespace LittleCompany.patches
         {
             if (item == null) return;
 
-            if (!item.gameObject.TryGetComponent(out TargetScaling scaling))
-                scaling = item.gameObject.AddComponent<TargetScaling>();
+            if (!item.gameObject.TryGetComponent(out ItemScaling scaling))
+                scaling = item.gameObject.AddComponent<ItemScaling>();
 
-            scaling.ScaleRelativeTo(scale, additionalOffset);
+            scaling.ScaleTo(scale, false, additionalOffset);
         }
 
         public static void UnGlassifyItem(GrabbableObject item)
