@@ -11,6 +11,7 @@ namespace LittleCompany.components
 {
     internal abstract class TargetScaling<T> : MonoBehaviour where T : Component
     {
+        #region Properties
         internal Vector3 OriginalOffset = Vector3.zero;
         internal Vector3 OriginalSize = Vector3.one;
 
@@ -20,7 +21,9 @@ namespace LittleCompany.components
         private Coroutine ScaleRoutine = null;
 
         internal T target;
+        #endregion
 
+        #region Base Methods
         void Awake()
         {
             if (gameObject == null)
@@ -37,6 +40,10 @@ namespace LittleCompany.components
                 OriginalOffset = item.itemProperties.positionOffset;
         }
 
+        void OnDestroy() => Reset();
+        #endregion
+
+        #region Methods
         public virtual void ScaleTo(float scale = 1f, bool overrideOriginalSize = false)
         {
             Plugin.Log("ScaleTo -> " + scale + "[" + overrideOriginalSize + "]");
@@ -100,15 +107,12 @@ namespace LittleCompany.components
             gameObject.transform.localScale = OriginalSize;
             CurrentScale = 1f;
         }
-
-        void OnDestroy()
-        {
-            Reset();
-        }
+        #endregion
     }
 
     internal class PlayerScaling : TargetScaling<PlayerControllerB>
     {
+        #region Methods
         public override void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false)
         {
             base.ScaleTo(scale);
@@ -143,10 +147,12 @@ namespace LittleCompany.components
                     onComplete();
             }, overrideOriginalSize);
         }
+        #endregion
     }
 
     internal class ItemScaling : TargetScaling<GrabbableObject>
     {
+        #region Methods
         public void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false, Vector3 additionalOffset = new Vector3())
         {
             base.ScaleTo(scale, saveAsIntendedSize);
@@ -162,5 +168,6 @@ namespace LittleCompany.components
             if(target != null)
                 target.itemProperties.positionOffset = OriginalOffset;
         }
+        #endregion
     }
 }
