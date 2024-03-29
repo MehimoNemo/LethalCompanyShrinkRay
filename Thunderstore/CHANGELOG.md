@@ -1,3 +1,6 @@
++ fixed desync from taking potion while getting hit by ShrinkRay
++ fixed clipping through ground sometimes when taking vents while being tiny
+
 ### 0.5.3 ###
 + fixed audio error leading to bugged interaction state (previous fix was a workaround, this fixes the cause)
 
