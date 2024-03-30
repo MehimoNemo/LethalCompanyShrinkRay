@@ -9,6 +9,9 @@ namespace LittleCompany.patches
     [HarmonyPatch]
     internal class PlayerMultiplierPatch
     {
+        private const float DefaultJumpForce = 5f;
+        private const float DefaultSprintMultiplier = 1f;
+
         private static bool modified = false, wasModifiedLastFrame = false, wasResetLastFrame = false;
         private static float modifiedSprintMultiplier = 0f;
 
@@ -32,24 +35,19 @@ namespace LittleCompany.patches
             if (!GameNetworkManagerPatch.IsGameInitialized || !GameNetworkManager.Instance.localPlayerController)
                 return;
 
-            if(__instance.playerClientId != PlayerInfo.CurrentPlayerID)
-                return; 
-
-            if (PlayerDefaultValues.Values == null)
+            if(__instance.playerClientId != PlayerInfo.CurrentPlayerID || !__instance.isPlayerControlled || __instance.isPlayerDead)
                 return;
-
-            var defaults = PlayerDefaultValues.Values;
 
             // Single-time changes
             if(wasModifiedLastFrame)
             {
-                ___jumpForce = defaults.Value.jumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
+                ___jumpForce = DefaultJumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
                 wasModifiedLastFrame = false;
             }
 
             if(wasResetLastFrame)
             {
-                ___jumpForce = defaults.Value.jumpForce;
+                ___jumpForce = DefaultJumpForce;
                 wasResetLastFrame = false;
             }
 
@@ -57,10 +55,11 @@ namespace LittleCompany.patches
             if (modified)
             {
                 if (modifiedSprintMultiplier == 0f)
-                    modifiedSprintMultiplier = defaults.Value.sprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
+                    modifiedSprintMultiplier = DefaultSprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
 
                 // Base values taken from PlayerControllerB.Update()
-                var baseModificationSpeed = __instance.isSprinting ? Time.deltaTime : (Time.deltaTime * 10f);
+                var delta = Time.deltaTime;
+                var baseModificationSpeed = __instance.isSprinting ? delta : (delta * 10f);
                 var baseSpeed = (__instance.isSprinting ? 2.25f : 1f) * ModConfig.Instance.values.movementSpeedMultiplier;
 
                 modifiedSprintMultiplier = Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed);
