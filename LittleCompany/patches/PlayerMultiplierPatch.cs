@@ -42,6 +42,7 @@ namespace LittleCompany.patches
             if(wasModifiedLastFrame)
             {
                 ___jumpForce = DefaultJumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
+                modifiedSprintMultiplier = ___sprintMultiplier;
                 wasModifiedLastFrame = false;
             }
 
