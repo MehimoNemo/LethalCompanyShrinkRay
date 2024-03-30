@@ -55,15 +55,11 @@ namespace LittleCompany.patches
             // Continuos changes
             if (modified)
             {
-                if (modifiedSprintMultiplier == 0f)
-                    modifiedSprintMultiplier = DefaultSprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
-
                 // Base values taken from PlayerControllerB.Update()
                 var delta = Time.deltaTime;
                 var baseModificationSpeed = __instance.isSprinting ? delta : (delta * 10f);
                 var baseSpeed = (__instance.isSprinting ? 2.25f : 1f) * ModConfig.Instance.values.movementSpeedMultiplier;
-                var maximumValue = DefaultSprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
-                modifiedSprintMultiplier = Mathf.Min(Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed), maximumValue);
+                modifiedSprintMultiplier = Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed);
                 ___sprintMultiplier = modifiedSprintMultiplier;
             }
         }
