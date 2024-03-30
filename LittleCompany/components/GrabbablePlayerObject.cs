@@ -626,9 +626,7 @@ namespace LittleCompany.components
                     holdingItem: true,
                     itemProperties);
             }
-            else if (!ModConfig.Instance.values.CanEscapeGrab)
-                return;
-            else
+            else if(IsCurrentPlayer && ModConfig.Instance.values.CanEscapeGrab)
             {
                 var grabbedPlayerItem = GrabbedPlayerCurrentItem();
                 if (grabbedPlayerItem != null) // only case that's not working so far!
@@ -653,13 +651,16 @@ namespace LittleCompany.components
                 return; // happens automatically
             }
 
-            HUDManager.Instance.ClearControlTips();
+            if(IsCurrentPlayer)
+            {
+                HUDManager.Instance.ClearControlTips();
 
-            Plugin.Log("resetControlTips");
+                Plugin.Log("resetControlTips");
 
-            var grabbedPlayerItem = GrabbedPlayerCurrentItem();
-            if (grabbedPlayerItem != null)
-                HUDManager.Instance.ChangeControlTipMultiple(grabbedPlayerItem.itemProperties.toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
+                var grabbedPlayerItem = GrabbedPlayerCurrentItem();
+                if (grabbedPlayerItem != null)
+                    HUDManager.Instance.ChangeControlTipMultiple(grabbedPlayerItem.itemProperties.toolTips, holdingItem: true, grabbedPlayerItem.itemProperties);
+            }
         }
 
         internal bool CanSellKill()
