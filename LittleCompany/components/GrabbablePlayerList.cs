@@ -137,7 +137,7 @@ namespace LittleCompany.components
         public static void IsInSpecialAnimationClientRpc(PlayerControllerB __instance)
         {
             if(TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo)) // Used to disable trigger when climbing ladders
-                gpo.EnableInteractTrigger();
+                gpo.UpdateInteractTrigger();
         }
                 
 

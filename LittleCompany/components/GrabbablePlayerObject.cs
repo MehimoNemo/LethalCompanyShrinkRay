@@ -546,26 +546,11 @@ namespace LittleCompany.components
             if (propColliders.Length == 0) return;
 
             var enable = true;
-            if (IsCurrentPlayer)
-            {
-                Plugin.Log("Set to false because IsCurrentPlayer");
-                enable = false;
-            }
-            else if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayer.playerClientId)
-            {
-                Plugin.Log("Set to false because we're the holder");
-                enable = false;
-            }
-            else if (PlayerInfo.SizeOf(grabbedPlayer) >= PlayerInfo.CurrentPlayerScale)
-            {
-                Plugin.Log("Set to false because player is larger than us");
-                enable = false;
-            }
-            /*if (IsCurrentPlayer ||                                                                                  // This is our gpo
+            if (IsCurrentPlayer ||                                                                                  // This is our gpo
                 (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayer.playerClientId) || // We're the holder
                 PlayerInfo.SizeOf(grabbedPlayer) >= PlayerInfo.CurrentPlayerScale ||								// We're smaller than the player of this grabbableObject
 				grabbedPlayer.isClimbingLadder || grabbedPlayer.inSpecialInteractAnimation)                         // Player is in an animation
-                    enable = false;*/
+                    enable = false;
 
             EnableInteractTrigger(enable);
         }
