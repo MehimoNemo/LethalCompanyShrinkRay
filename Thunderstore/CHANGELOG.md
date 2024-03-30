@@ -1,5 +1,10 @@
+### 0.5.4 ###
 + fixed desync from taking potion while getting hit by ShrinkRay
 + fixed clipping through ground sometimes when taking vents while being tiny
++ fixed being grabbable while climbing ladders, leading to weird behaviours. let them climb in peace c:
++ attempt to fix "Ungrab : [E]" being displayed while not grabbed
++ attempt to fix increased movement speed & jump height bug, even while being normal sized
++ fixed Potions & ShrinkRay disappearing on reloading a savefile
 
 ### 0.5.3 ###
 + fixed audio error leading to bugged interaction state (previous fix was a workaround, this fixes the cause)

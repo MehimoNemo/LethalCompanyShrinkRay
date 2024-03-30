@@ -9,7 +9,7 @@ namespace LittleCompany.patches
     [HarmonyPatch]
     internal class PlayerMultiplierPatch
     {
-        private const float DefaultJumpForce = 5f;
+        private const float DefaultJumpForce = 13f;
         private const float DefaultSprintMultiplier = 1f;
 
         private static bool modified = false, wasModifiedLastFrame = false, wasResetLastFrame = false;
@@ -62,8 +62,8 @@ namespace LittleCompany.patches
                 var delta = Time.deltaTime;
                 var baseModificationSpeed = __instance.isSprinting ? delta : (delta * 10f);
                 var baseSpeed = (__instance.isSprinting ? 2.25f : 1f) * ModConfig.Instance.values.movementSpeedMultiplier;
-
-                modifiedSprintMultiplier = Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed);
+                var maximumValue = DefaultSprintMultiplier * ModConfig.Instance.values.movementSpeedMultiplier;
+                modifiedSprintMultiplier = Mathf.Min(Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed), maximumValue);
                 ___sprintMultiplier = modifiedSprintMultiplier;
             }
         }
