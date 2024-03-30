@@ -496,7 +496,7 @@ namespace LittleCompany.components
 
         public void EnableInteractTrigger(bool enable = true)
         {
-            EnablePhysics(enable && !IsCurrentPlayer);
+            EnablePhysics(enable && !IsCurrentPlayer && !grabbedPlayer.isClimbingLadder && !grabbedPlayer.inSpecialInteractAnimation);
             //EnableItemMeshes(enable && !IsCurrentPlayer);
             UpdateScanNodeVisibility(); // also a collider that gets enabled through EnablePhysics()
         }

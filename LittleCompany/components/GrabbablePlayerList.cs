@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LethalLib.Modules;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
@@ -115,9 +116,9 @@ namespace LittleCompany.components
             if(grabbables.grabbedGPO == null && grabbables.holderGPO == null)
                 return; // Teleporting person was in no connection with any other player
 
-            if (grabbables.grabbedGPO) // Player who teleports is grabbed
+            if (grabbables.grabbedGPO) // Player who teleports is grabbable
             {
-                if (grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
+                if (grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID) // Player who teleports is grabbed
                 {
                     Plugin.Log("We're holding the person who teleported.");
                     grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.GrabbedPlayer));
@@ -133,6 +134,15 @@ namespace LittleCompany.components
                 }
             }
         }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "IsInSpecialAnimationClientRpc")]
+        [HarmonyPostfix]
+        public static void IsInSpecialAnimationClientRpc(PlayerControllerB __instance)
+        {
+            if(TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo)) // Used to disable trigger when climbing ladders
+                gpo.EnableInteractTrigger();
+        }
+                
 
         [HarmonyPatch(typeof(StartOfRound), "UpdatePlayerVoiceEffects")]
         [HarmonyBefore(["MoreCompany"])]
