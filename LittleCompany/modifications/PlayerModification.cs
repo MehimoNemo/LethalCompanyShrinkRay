@@ -35,7 +35,7 @@ namespace LittleCompany.modifications
 
         public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
         {
-            if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder)
+            if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder || targetPlayer.inTerminalMenu)
                 return false;
 
             switch (type)
