@@ -13,11 +13,11 @@ namespace LittleCompany.patches.EnemyBehaviours
     {
         private static readonly float maxAllowedNestDistance = 10f;
 
-        [HarmonyPatch(typeof(HoarderBugAI), "PlayerIsTargetable")]
+        [HarmonyPatch(typeof(EnemyAI), "PlayerIsTargetable")]
         [HarmonyPostfix]
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, EnemyAI __instance)
         {
-            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab)
+            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab || !(__instance is HoarderBugAI))
                 return __result;
 
             return !PlayerInfo.SmallerThan(playerScript, EnemyInfo.SizeOf(__instance));
