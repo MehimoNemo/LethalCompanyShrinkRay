@@ -190,9 +190,13 @@ namespace LittleCompany.components
         {
             base.Reset();
 
-            if(target != null)
+            if (target != null)
                 target.itemProperties.positionOffset = OriginalOffset;
         }
         #endregion
+    }
+
+    internal class EnemyScaling : TargetScaling<EnemyAI>
+    {
     }
 }

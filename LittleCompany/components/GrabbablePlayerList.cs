@@ -337,7 +337,7 @@ namespace LittleCompany.components
 
             if (targetPlayer.gameObject != null)
             {
-                targetPlayer.gameObject.transform.localScale = Vector3.one;
+                targetPlayer.gameObject.transform.localScale = Vector3.one * ModConfig.Instance.values.defaultPlayerSize;
 
                 if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
                     PlayerInfo.ScaleLocalPlayerBodyParts();
@@ -369,10 +369,10 @@ namespace LittleCompany.components
 
             if(PlayerInfo.IsHost)
             {
-                var largestPlayerSize = PlayerInfo.LargestPlayerSize;
+                var largestGrabberSize = Mathf.Max(PlayerInfo.LargestPlayerSize, EnemyInfo.LargestGrabbingEnemy);
                 foreach (var player in PlayerInfo.AllPlayers)
                 {
-                    if (PlayerInfo.SizeOf(player) < largestPlayerSize) // Make anyone grabbable who's smaller than this player
+                    if (PlayerInfo.SmallerThan(player, largestGrabberSize)) // Make anyone grabbable who's smaller than the largest player / enemy
                         SetPlayerGrabbable(player.playerClientId);
                     else
                         RemovePlayerGrabbable(player.playerClientId);

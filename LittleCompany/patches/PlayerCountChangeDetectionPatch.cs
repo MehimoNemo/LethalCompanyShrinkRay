@@ -3,6 +3,7 @@ using HarmonyLib;
 using LittleCompany.components;
 using LittleCompany.helper;
 using UnityEngine;
+using LittleCompany.modifications;
 
 namespace LittleCompany.patches
 {
@@ -10,21 +11,27 @@ namespace LittleCompany.patches
     internal class PlayerCountChangeDetection
     {
         // After a client joins
-        [HarmonyPatch(typeof(StartOfRound), "OnClientConnect")]
+        [HarmonyPatch(typeof(StartOfRound), "OnPlayerConnectedClientRpc")]
         [HarmonyPrefix]
-        public static void OnClientConnect(ulong clientId)
+        public static void OnPlayerConnectedClientRpc(ulong assignedPlayerObjectId)
         {
-            if (!PlayerInfo.IsHost || !GameNetworkManagerPatch.IsGameInitialized)
+            var player = StartOfRound.Instance.allPlayerScripts[assignedPlayerObjectId];
+            if(player == null)
+            {
+                Plugin.Log("Player joined without a player script.", Plugin.LogType.Error);
                 return;
+            }
 
-            Plugin.Log("Player " + clientId + " joined.");
+            Plugin.Log(player.name + " joined.");
+            GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
+            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(player);
         }
 
 
         // After client joined
         [HarmonyPatch(typeof(PlayerControllerB), "ConnectClientToPlayerObject")]
         [HarmonyPostfix]
-        public static void ConnectClientToPlayerObject(PlayerControllerB __instance, float ___sprintMultiplier, float ___jumpForce)
+        public static void ConnectClientToPlayerObject()
         {
             if (!GameNetworkManagerPatch.IsGameInitialized)
                 return;
@@ -49,6 +56,14 @@ namespace LittleCompany.patches
                     playerScaling.CurrentScale = size;
                 }
             }
+        }
+
+        // When players get revived
+        [HarmonyPatch(typeof(StartOfRound), "AllPlayersHaveRevivedClientRpc")]
+        [HarmonyPostfix]
+        public static void AllPlayersHaveRevivedClientRpc()
+        {
+            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(PlayerInfo.CurrentPlayer);
         }
 
         // Before client disconnects

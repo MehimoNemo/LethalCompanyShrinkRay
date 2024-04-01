@@ -88,6 +88,7 @@ namespace LittleCompany.modifications
             if (targetPlayer == null) return;
 
             bool targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
+            bool wasShrunkBefore = PlayerInfo.IsShrunk(targetPlayer);
 
             switch (type)
             {
@@ -98,10 +99,8 @@ namespace LittleCompany.modifications
                         ScalingOf(targetPlayer).ScaleOverTimeTo(normalizedSize, () =>
                         {
                             Plugin.Log("Finished ray shoot with type: " + type.ToString());
-                            if (PlayerInfo.IsHost)
-                                GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
 
-                            if (targetingUs)
+                            if (targetingUs && wasShrunkBefore && !PlayerInfo.IsShrunk(targetPlayer))
                                 Vents.DisableVents();
 
                             GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
@@ -130,11 +129,8 @@ namespace LittleCompany.modifications
                                     targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
                             }
 
-                            if (targetingUs && PlayerInfo.IsShrunk(targetPlayer))
+                            if (targetingUs && !wasShrunkBefore && PlayerInfo.IsShrunk(targetPlayer))
                                     Vents.EnableVents();
-
-                            if (nextShrunkenSize < 1f && nextShrunkenSize > 0f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
-                                GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
 
                             GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
 
@@ -155,14 +151,8 @@ namespace LittleCompany.modifications
 
                         ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, () =>
                         {
-                            if (nextIncreasedSize >= 1f)
-                            {
-                                if (PlayerInfo.IsHost)
-                                    GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
-
-                                if (targetingUs)
-                                    Vents.DisableVents();
-                            }
+                            if (targetingUs && wasShrunkBefore && !PlayerInfo.IsShrunk(targetPlayer))
+                                Vents.DisableVents();
 
                             GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
 

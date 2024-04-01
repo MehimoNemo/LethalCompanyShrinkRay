@@ -4,25 +4,23 @@ using LittleCompany.components;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using UnityEngine;
+using static LittleCompany.helper.EnemyInfo.HoarderBug;
 
 namespace LittleCompany.patches.EnemyBehaviours
 {
     [HarmonyPatch]
     internal class HoarderBugAIPatch
     {
-        private const float maxAllowedNestDistance = 10f;
+        private static readonly float maxAllowedNestDistance = 10f;
 
-        [HarmonyPatch(typeof(EnemyAI), "PlayerIsTargetable")]
+        [HarmonyPatch(typeof(HoarderBugAI), "PlayerIsTargetable")]
         [HarmonyPostfix]
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, EnemyAI __instance)
         {
             if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab)
                 return __result;
 
-            if (__result && __instance is HoarderBugAI)
-                return !PlayerInfo.IsShrunk(playerScript);
-
-            return __result;
+            return !PlayerInfo.SmallerThan(playerScript, EnemyInfo.SizeOf(__instance));
         }
 
         [HarmonyPatch(typeof(HoarderBugAI), "RefreshGrabbableObjectsInMapList")]
@@ -64,7 +62,7 @@ namespace LittleCompany.patches.EnemyBehaviours
 
             if (PlayerInfo.CurrentPlayerID.HasValue && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID.Value, out GrabbablePlayerObject gpo))
             {
-                if (!IsGrabbablePlayerTargetable(gpo))
+                if (!IsGrabbablePlayerTargetable(gpo, __instance))
                 {
                     Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " not targetable.");
                     return;
@@ -76,9 +74,12 @@ namespace LittleCompany.patches.EnemyBehaviours
             }
         }
 
-        public static bool IsGrabbablePlayerTargetable(GrabbablePlayerObject gpo)
+        public static bool IsGrabbablePlayerTargetable(GrabbablePlayerObject gpo, HoarderBugAI hoarderBug)
         {
-            return !gpo.InLastHoardingBugNestRange.Value;
+            if (gpo.InLastHoardingBugNestRange.Value)
+                return false;
+
+            return PlayerInfo.SmallerThan(gpo.grabbedPlayer, EnemyInfo.SizeOf(hoarderBug));
         }
 
         public static void AddToGrabbables(GrabbablePlayerObject gpo)
@@ -98,7 +99,7 @@ namespace LittleCompany.patches.EnemyBehaviours
             {
                 hoarderBug.heldItem = null;
                 hoarderBug.targetItem = null;
-                hoarderBug.SwitchToBehaviourState(0);
+                hoarderBug.SwitchToBehaviourState((int)BehaviourState.Searching);
             }
         }
 
@@ -110,14 +111,14 @@ namespace LittleCompany.patches.EnemyBehaviours
                 hoarderBug.targetItem = gpo;
                 hoarderBug.StopSearch(hoarderBug.searchForItems, clear: false);
                 gpo.lastHoarderBugGrabbedBy.angryAtPlayer = gpo.playerHeldBy;
-                gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(2);
+                gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState((int)BehaviourState.Chase);
                 return;
             }
 
             DropHeldItem(hoarderBug, false);
             hoarderBug.targetItem = gpo;
             hoarderBug.StopSearch(hoarderBug.searchForItems, clear: false);
-            hoarderBug.SwitchToBehaviourState(0);
+            hoarderBug.SwitchToBehaviourState((int)BehaviourState.Searching);
         }
 
         public static void HoarderBugEscapeRoutineForGrabbablePlayer(GrabbablePlayerObject gpo)
@@ -149,7 +150,7 @@ namespace LittleCompany.patches.EnemyBehaviours
                 gpo.lastHoarderBugGrabbedBy.targetItem = gpo;
                 gpo.lastHoarderBugGrabbedBy.StopSearch(gpo.lastHoarderBugGrabbedBy.searchForItems, clear: false);
                 gpo.lastHoarderBugGrabbedBy.angryAtPlayer = gpo.playerHeldBy;
-                gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState(2);
+                gpo.lastHoarderBugGrabbedBy.SwitchToBehaviourState((int)BehaviourState.Chase);
                 shouldDropItems = true;
                 Plugin.Log("HoarderBug saw that " + gpo.playerHeldBy.name + " stole " + gpo.name + ". Is angry now at them!");
             }
@@ -182,16 +183,15 @@ namespace LittleCompany.patches.EnemyBehaviours
             {
                 Plugin.Log("Ayy?! Still holding a player, you forgot?! Nononono..");
                 foundObject = __instance.heldItem.itemGrabbableObject.gameObject; // Hopefully this won't break stuff..
-                __instance.SwitchToBehaviourState(1);
+                __instance.SwitchToBehaviourState((int)BehaviourState.Nest);
             }
 
             if (!foundObject.TryGetComponent(out GrabbablePlayerObject gpo))
                 return;
 
-            if (!IsGrabbablePlayerTargetable(gpo))
+            if (!IsGrabbablePlayerTargetable(gpo, __instance))
             {
                 Plugin.Log("SetGoTowardsTargetObject: Player not targetable for hoarding bug");
-                HoarderBugAI.grabbableObjectsInMap.Remove(foundObject);
                 return;
             }
         }
