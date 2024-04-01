@@ -1,5 +1,6 @@
-﻿using GameNetcodeStuff;
-using HarmonyLib;
+﻿using HarmonyLib;
+using LittleCompany.helper;
+using System.Collections;
 using UnityEngine;
 
 namespace LittleCompany.patches
@@ -7,53 +8,38 @@ namespace LittleCompany.patches
     [HarmonyPatch]
     internal class TerminalPatch
     {
-        static float smallestPlayerSize = 0.2f; // smallest the player is allowed to be
-        static Vector3 SmallPosition = new Vector3(-0.4795f, 0.2694f, 0.085f); // used when the player is 0.2f tall
-        static Vector3 NormalPosition = new Vector3(-0.84F, -1.49F, 0.09F); // used when the player is 1f tall
+        private static float _realPlayerScale = 1f;
+        private static Coroutine _scalingCoroutine;
 
         [HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
-        [HarmonyPostfix]
-        public static void MovePlayerPos()
+        [HarmonyPrefix]
+        public static void BeginUsingTerminal()
         {
-            GameObject playerPos = GameObject.Find("Environment/HangarShip/Terminal/TerminalTrigger/playerPos");
-            if(playerPos == null)
-            {
-                Plugin.Log("TerminalPatch.MovePlayerPos: playerPos is null", Plugin.LogType.Warning);
-                return;
-            }
+            _realPlayerScale = PlayerInfo.CurrentPlayerScale;
+            _scalingCoroutine = GameNetworkManager.Instance.StartCoroutine(ScaleToTerminalSize());
+        }
 
-            PlayerControllerB playerUsingTerminal = null;
+        public static IEnumerator ScaleToTerminalSize()
+        {
+            float time = 0f, duration = 0.5f;
+            while (time < duration)
+            {
+                var scale = Mathf.Lerp(_realPlayerScale, 1f, time / duration);
+                PlayerInfo.CurrentPlayer.transform.localScale = Vector3.one * scale;
 
-            // check which player is using terminal
-            if (StartOfRound.Instance.localPlayerController.inTerminalMenu)
-            {
-                // player using terminal is local client
-                playerUsingTerminal = StartOfRound.Instance.localPlayerController;
+                time += Time.deltaTime;
+                yield return null;
             }
-            else
-            {
-                // player using terminal is not local client
-                foreach (PlayerControllerB player in StartOfRound.Instance.OtherClients)
-                {
-                    if (player.inTerminalMenu)
-                    {
-                        playerUsingTerminal = player;
-                        break;
-                    }
-                }
-            }
-            // checking if player is set
-            if (playerUsingTerminal == null)
-            {
-                Plugin.Log(string.Format("No player using terminal"), Plugin.LogType.Warning);
-                return;
-            }
-            //((1 - y) / (1 - smallestSize))
-            // making sure the value is between 0 and 1
-            float size = Mathf.Clamp01((1 - playerUsingTerminal.transform.localScale.y) / (1 - smallestPlayerSize));
-            Plugin.Log(string.Format("size value: {0}", size), Plugin.LogType.Warning);
+        }
 
-            playerPos.transform.localPosition = Vector3.Lerp(NormalPosition, SmallPosition, size);
+        [HarmonyPatch(typeof(Terminal), "QuitTerminal")]
+        [HarmonyPostfix]
+        public static void QuitTerminal(ref InteractTrigger ___terminalTrigger)
+        {
+            if (_scalingCoroutine != null)
+                GameNetworkManager.Instance.StopCoroutine(_scalingCoroutine);
+
+            PlayerInfo.CurrentPlayer.transform.localScale = Vector3.one * _realPlayerScale;
         }
     }
 }

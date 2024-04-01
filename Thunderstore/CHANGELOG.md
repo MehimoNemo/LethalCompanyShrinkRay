@@ -1,3 +1,7 @@
+### 0.5.5 ###
++ compatibility for v50 public beta
++ fixed terminal window not visible for enlarged players (at the cost of not moving the player up/down from the perspective of others. will get a full rework later on)
+
 ### 0.5.4 ###
 + fixed desync from taking potion while getting hit by ShrinkRay
 + fixed clipping through ground sometimes when taking vents while being tiny
