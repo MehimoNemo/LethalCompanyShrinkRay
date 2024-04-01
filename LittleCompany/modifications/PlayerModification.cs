@@ -130,7 +130,7 @@ namespace LittleCompany.modifications
                                     targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
                             }
 
-                            if (targetingUs && PlayerInfo.IsShrunk(nextShrunkenSize))
+                            if (targetingUs && PlayerInfo.IsShrunk(targetPlayer))
                                     Vents.EnableVents();
 
                             if (nextShrunkenSize < 1f && nextShrunkenSize > 0f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones

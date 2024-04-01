@@ -179,6 +179,8 @@ namespace LittleCompany.components
         public void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false, Vector3 additionalOffset = new Vector3())
         {
             base.ScaleTo(scale, saveAsIntendedSize);
+            if (saveAsIntendedSize)
+                target.originalScale = OriginalSize;
 
             if (target != null)
                 target.itemProperties.positionOffset = OriginalOffset * scale + additionalOffset;

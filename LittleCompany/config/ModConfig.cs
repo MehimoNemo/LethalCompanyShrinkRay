@@ -68,6 +68,8 @@ namespace LittleCompany.Config
 
             public float maximumPlayerSize { get; set; }
 
+            public float defaultPlayerSize { get; set; }
+
             public bool cantOpenStorageCloset { get; set; }
 
             public ShrinkRayTargetHighlighting shrinkRayTargetHighlighting { get; set; }
@@ -102,6 +104,7 @@ namespace LittleCompany.Config
         #region Methods
         public void Setup()
         {
+            values.defaultPlayerSize            = Plugin.BepInExConfig().Bind("General", "DefaultPlayerSize", 1f, "The default player size when joining a lobby or reviving.").Value;
             values.shrinkRayCost                = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
             values.deathShrinking               = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
             values.sizeChangeStep               = Plugin.BepInExConfig().Bind("General", "SizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;

@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
+using LittleCompany.Config;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -10,6 +11,7 @@ namespace LittleCompany.helper
 {
     internal class PlayerInfo
     {
+        public static float DefaultPlayerSize => ModConfig.Instance.values.defaultPlayerSize;
         public static void Cleanup()
         {
             _cameraVisor = null;
@@ -66,32 +68,21 @@ namespace LittleCompany.helper
 
         public static ulong? CurrentPlayerID => CurrentPlayer?.playerClientId;
 
-        public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
-
-        public static float SizeOf(PlayerControllerB player)
-        {
-            var spine = SpineOf(player);
-            if (spine == null)
-                return player.transform.localScale.y; // Modified player model
-
-            return spine.transform.localScale.y;
-        }
-
         public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
 
-        public static bool IsShrunk(PlayerControllerB player) => IsShrunk(player.gameObject);
+        public static float SizeOf(PlayerControllerB player) => Rounded(player.transform.localScale.y);
 
-        public static bool IsShrunk(GameObject playerObject)
-        {
-            if (playerObject == null)
-                return false;
+        public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 
-            return IsShrunk(playerObject.transform.localScale.x);
-        }
+        public static bool LargerThan(PlayerControllerB player, float size) => (SizeOf(player) - Mathf.Epsilon) > size;
 
-        public static bool IsShrunk(float size) => Rounded(size) < 1f;
+        public static bool SmallerThan(PlayerControllerB player, float size) => (SizeOf(player) + Mathf.Epsilon) < size;
 
-        public static bool IsNormalSize(PlayerControllerB player) => SizeOf(player) == 1f;
+        public static bool IsShrunk(PlayerControllerB player) => SmallerThan(player, DefaultPlayerSize);
+
+        public static bool IsNormalSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), DefaultPlayerSize);
+
+        public static bool IsEnlarged(PlayerControllerB player) => LargerThan(player, DefaultPlayerSize);
 
         public static bool IsCurrentPlayerShrunk => IsShrunk(CurrentPlayer);
 
