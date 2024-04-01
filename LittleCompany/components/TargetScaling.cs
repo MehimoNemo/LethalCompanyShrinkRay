@@ -44,7 +44,6 @@ namespace LittleCompany.components
         #region Methods
         public virtual void ScaleTo(float scale = 1f, bool overrideOriginalSize = false)
         {
-            Plugin.Log("ScaleTo -> " + scale + "[" + overrideOriginalSize + "]");
             gameObject.transform.localScale = OriginalSize * scale;
             CurrentScale = scale;
 
