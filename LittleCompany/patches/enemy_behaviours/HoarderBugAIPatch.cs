@@ -58,7 +58,8 @@ namespace LittleCompany.patches.EnemyBehaviours
                 }
             }
 
-            var inLineOfSight = __instance.HasLineOfSightToPosition(PlayerInfo.CurrentPlayer.transform.position);
+
+            var inLineOfSight = PlayerInfo.CurrentPlayer.HasLineOfSightToPosition(__instance.transform.position + Vector3.up * (PlayerInfo.CurrentPlayerScale - 1f + 0.75f)); // HoarderBugAI.Update() case 2
             if (!inLineOfSight) return;
 
             if (PlayerInfo.CurrentPlayerID.HasValue && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID.Value, out GrabbablePlayerObject gpo))

@@ -15,18 +15,22 @@
             Vow = 2,
             CompanyBuilding = 3,
             March = 4,
-            Rend = 5,
-            Dine = 6,
-            Offense = 7,
-            Titan = 8
+            Adamance = 5,
+            Rend = 6,
+            Dine = 7,
+            Offense = 8,
+            Titan = 9,
+            Artifice = 10,
+            Liquidation = 11,
+            Embrion = 12
         }
 
 #if DEBUG
         /*
         for (int i = 0; i < RoundManager.Instance.dungeonFlowTypes.Length; i++)
-        {
-            Plugin.Log("Dungeon: " + RoundManager.Instance.dungeonFlowTypes[i].name + " = " + i);
-        }
+            {
+                Plugin.Log("Dungeon: " + RoundManager.Instance.dungeonFlowTypes[i].dungeonFlow.name + " = " + i);
+            }
         */
         public enum Dungeon
         {
