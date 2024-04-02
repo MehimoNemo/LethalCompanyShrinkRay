@@ -2,8 +2,10 @@
 using LittleCompany.components;
 using LittleCompany.Config;
 using LittleCompany.helper;
+using LittleCompany.patches;
 using System;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.modifications
 {
@@ -30,7 +32,26 @@ namespace LittleCompany.modifications
         public static float NextEnlargedSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
+            Plugin.Log("NextEnlargedSizeOf -> " + playerSize);
             return Mathf.Min(PlayerInfo.Rounded(playerSize + ModConfig.Instance.values.sizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
+        }
+
+        public static void TransitionedToShrunk(PlayerControllerB targetPlayer)
+        {
+            if (PlayerInfo.IsCurrentPlayer(targetPlayer))
+            {
+                PlayerMultiplierPatch.Modify();
+                Vents.EnableVents();
+            }
+        }
+
+        public static void TransitionedFromShrunk(PlayerControllerB targetPlayer)
+        {
+            if (PlayerInfo.IsCurrentPlayer(targetPlayer))
+            {
+                PlayerMultiplierPatch.Reset();
+                Vents.DisableVents();
+            }
         }
 
         public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
@@ -87,29 +108,18 @@ namespace LittleCompany.modifications
         {
             if (targetPlayer == null) return;
 
-            bool targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
+            bool targetingUs = PlayerInfo.IsCurrentPlayer(targetPlayer);
             bool wasShrunkBefore = PlayerInfo.IsShrunk(targetPlayer);
 
             switch (type)
             {
                 case ModificationType.Normalizing:
                     {
-                        var normalizedSize = 1f;
                         Plugin.Log("Normalizing player [" + targetPlayer.playerClientId + "]");
-                        ScalingOf(targetPlayer).ScaleOverTimeTo(normalizedSize, () =>
-                        {
-                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
+                        ScalingOf(targetPlayer).ScaleTo(ModConfig.Instance.values.defaultPlayerSize);
 
-                            if (targetingUs && wasShrunkBefore && !PlayerInfo.IsShrunk(targetPlayer))
-                                Vents.DisableVents();
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
-                            GrabbablePlayerList.ResetAnyPlayerModificationsFor(targetPlayer);
-
-                            if (onComplete != null)
-                                onComplete();
-                        });
+                        if (onComplete != null)
+                            onComplete();
                         break;
                     }
 
@@ -129,11 +139,6 @@ namespace LittleCompany.modifications
                                     targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
                             }
 
-                            if (targetingUs && !wasShrunkBefore && PlayerInfo.IsShrunk(targetPlayer))
-                                    Vents.EnableVents();
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
                             if (onComplete != null)
                                 onComplete();
                         });
@@ -151,11 +156,6 @@ namespace LittleCompany.modifications
 
                         ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, () =>
                         {
-                            if (targetingUs && wasShrunkBefore && !PlayerInfo.IsShrunk(targetPlayer))
-                                Vents.DisableVents();
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
                             if (onComplete != null)
                                 onComplete();
                         });

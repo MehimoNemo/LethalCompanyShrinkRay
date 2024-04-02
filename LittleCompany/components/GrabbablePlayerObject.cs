@@ -230,11 +230,11 @@ namespace LittleCompany.components
 
             if(frameCounter % 500 == 1)
             {
-                Plugin.Log("Position -> Player" + grabbedPlayer.transform.position + ", GPO" + transform.position);
+                /*Plugin.Log("Position -> Player" + grabbedPlayer.transform.position + ", GPO" + transform.position);
                 Plugin.Log("LocalPos -> Player" + grabbedPlayer.transform.localPosition + ", GPO" + transform.localPosition);
                 Plugin.Log("LocScale -> Player" + grabbedPlayer.transform.localScale + ", GPO" + transform.localScale);
                 Plugin.Log("Parent of Player: " + grabbedPlayer.transform.parent?.name + ", of GPO: " + transform.parent?.name);
-                Plugin.Log("-------------------------------------------");
+                Plugin.Log("-------------------------------------------");*/
             }
         }
         

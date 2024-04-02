@@ -15,7 +15,7 @@ namespace LittleCompany.patches
         private static bool modified = false, wasModifiedLastFrame = false, wasResetLastFrame = false;
         private static float modifiedSprintMultiplier = 0f;
 
-        public static void Modify(float playerSize)
+        public static void Modify()
         {
             modified = true;
             wasModifiedLastFrame = true;

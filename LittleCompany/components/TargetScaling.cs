@@ -1,10 +1,11 @@
 ﻿using GameNetcodeStuff;
-using LittleCompany.compatibility;
 using LittleCompany.helper;
+using LittleCompany.modifications;
 using LittleCompany.patches;
 using System;
 using System.Collections;
 using UnityEngine;
+using static LittleCompany.components.GrabbablePlayerObject;
 
 namespace LittleCompany.components
 {
@@ -25,35 +26,31 @@ namespace LittleCompany.components
         #region Base Methods
         void Awake()
         {
-            if (gameObject == null || !gameObject.TryGetComponent(out target))
+            if (gameObject == null)
             {
-                Plugin.Log("TargetScaling -> target not found!", Plugin.LogType.Error);
+                Plugin.Log("TargetHighlighting -> no gameObject found!", Plugin.LogType.Error);
                 return;
             }
+
+            target = gameObject.GetComponent<T>();
 
             OriginalSize = gameObject.transform.localScale;
 
             if(gameObject.TryGetComponent(out GrabbableObject item))
                 OriginalOffset = item.itemProperties.positionOffset;
-            OnAwake();
         }
-
-        internal virtual void OnAwake() { }
 
         void OnDestroy() => Reset();
         #endregion
 
         #region Methods
-        public virtual void ScaleTo(float scale = 1f, bool overrideOriginalSize = false)
+        public virtual void ScaleTo(float scale = 1f, bool overrideOriginalSize = false, bool scalingFinished = true)
         {
             gameObject.transform.localScale = OriginalSize * scale;
             CurrentScale = scale;
 
             if (overrideOriginalSize)
-            {
                 OriginalSize = gameObject.transform.localScale;
-                CurrentScale = 1f;
-            }
         }
 
         public virtual void ScaleOverTimeTo(float scale, Action onComplete = null, bool overrideOriginalSize = false)
@@ -74,14 +71,14 @@ namespace LittleCompany.components
                 // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
                 var x = elapsedTime;
                 var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
-                ScaleTo(newScale);
+                ScaleTo(newScale, false, false);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
             }
 
             // Ensure final scale is set to the desired value
-            ScaleTo(scale, overrideOriginalSize);
+            ScaleTo(scale, overrideOriginalSize, true);
 
             ScaleRoutine = null;
             if (onComplete != null)
@@ -111,63 +108,38 @@ namespace LittleCompany.components
 
     internal class PlayerScaling : TargetScaling<PlayerControllerB>
     {
-        internal ModelReplacementApiCompatibility modelReplacementApiCompatibility;
-
         #region Methods
-        internal override void OnAwake()
+        public override void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false, bool scalingFinished = true)
         {
-            modelReplacementApiCompatibility = new ModelReplacementApiCompatibility(target);
-            OriginalSize = Vector3.one;
-            CurrentScale = PlayerInfo.SizeOf(target);
-        }
+            var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
 
-        public override void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false)
-        {
-            base.ScaleTo(scale);
-            CompatibilityAfterEachScale(scale);
-            if (target?.playerClientId == PlayerInfo.CurrentPlayer?.playerClientId)
+            base.ScaleTo(scale, saveAsIntendedSize, scalingFinished);
+
+            if (PlayerInfo.IsCurrentPlayer(target))
             {
                 // scale arms & visor
                 PlayerInfo.ScaleLocalPlayerBodyParts();
-            }
-        }
 
-        public override void ScaleOverTimeTo(float scale, Action onComplete = null, bool overrideOriginalSize = false)
-        {
-            base.ScaleOverTimeTo(scale, () =>
-            {
-                if (target?.playerClientId == PlayerInfo.CurrentPlayer?.playerClientId)
+                var heldItem = PlayerInfo.CurrentPlayerHeldItem;
+                if (heldItem != null)
+                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, scale);
+
+                var isShrunk = PlayerInfo.IsShrunk(target);
+                if (wasShrunkenBefore != isShrunk)
                 {
-                    PlayerInfo.ScaleLocalPlayerBodyParts();
-                    if (PlayerInfo.CurrentPlayerHeldItem != null)
-                    {
-                        ScreenBlockingGrabbablePatch.CheckForGlassify(PlayerInfo.CurrentPlayerHeldItem);
-                    }
-                    if (scale != 1f)
-                        PlayerMultiplierPatch.Modify(scale);
+                    if (isShrunk)
+                        PlayerModification.TransitionedToShrunk(target);
                     else
-                        PlayerMultiplierPatch.Reset();
+                        PlayerModification.TransitionedFromShrunk(target);
                 }
-                PlayerInfo.RebuildRig(target);
-                CompatibilityAtEndOfScaling();
-                if (onComplete != null)
-                    onComplete();
-            }, overrideOriginalSize);
-        }
 
-        private void CompatibilityAfterEachScale(float scale)
-        {
-            if (ModelReplacementApiCompatibility.enabled)
-            {
-                modelReplacementApiCompatibility.AdjustToSize(scale);
-            }
-        }
+                if (scalingFinished)
+                {
+                    if (heldItem != null)
+                        ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
 
-        private void CompatibilityAtEndOfScaling()
-        {
-            if (ModelReplacementApiCompatibility.enabled)
-            {
-                modelReplacementApiCompatibility.ReloadCurrentReplacementModel();
+                    GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
+                }
             }
         }
         #endregion

@@ -11,6 +11,7 @@ namespace LittleCompany.helper
 {
     internal class PlayerInfo
     {
+        public static readonly float VanillaPlayerSize = 1f;
         public static float DefaultPlayerSize => ModConfig.Instance.values.defaultPlayerSize;
         public static void Cleanup()
         {
@@ -28,6 +29,8 @@ namespace LittleCompany.helper
 
             return false;
         }
+
+        public static bool IsCurrentPlayer(PlayerControllerB player) => player?.playerClientId == CurrentPlayer?.playerClientId;
 
         public static float LargestPlayerSize
         {
@@ -78,11 +81,11 @@ namespace LittleCompany.helper
 
         public static bool SmallerThan(PlayerControllerB player, float size) => (SizeOf(player) + Mathf.Epsilon) < size;
 
-        public static bool IsShrunk(PlayerControllerB player) => SmallerThan(player, DefaultPlayerSize);
+        public static bool IsShrunk(PlayerControllerB player) => SmallerThan(player, VanillaPlayerSize);
 
-        public static bool IsNormalSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), DefaultPlayerSize);
+        public static bool IsNormalSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), VanillaPlayerSize);
 
-        public static bool IsEnlarged(PlayerControllerB player) => LargerThan(player, DefaultPlayerSize);
+        public static bool IsEnlarged(PlayerControllerB player) => LargerThan(player, VanillaPlayerSize);
 
         public static bool IsCurrentPlayerShrunk => IsShrunk(CurrentPlayer);
 

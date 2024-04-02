@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using LittleCompany.components;
+using LittleCompany.patches;
+using LittleCompany.modifications;
 
 namespace LittleCompany.components
 {
@@ -335,15 +337,7 @@ namespace LittleCompany.components
             Plugin.Log("ResetAnyPlayerModificationsFor");
             if (targetPlayer == null) return;
 
-            if (targetPlayer.gameObject != null)
-            {
-                targetPlayer.gameObject.transform.localScale = Vector3.one * ModConfig.Instance.values.defaultPlayerSize;
-
-                if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
-                    PlayerInfo.ScaleLocalPlayerBodyParts();
-            }
-
-            SoundManager.Instance.SetPlayerPitch(1f, (int)targetPlayer.playerClientId);
+            PlayerModification.ApplyModificationTo(targetPlayer, Modification.ModificationType.Normalizing);
         }
 
         public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)
