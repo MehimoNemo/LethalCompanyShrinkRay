@@ -1,3 +1,6 @@
+### 0.5.6 ###
++ fixed sometimes falling through ground after using vents
+
 ### 0.5.5 ###
 + compatibility for v50 public beta
 + fixed terminal window not visible for enlarged players (at the cost of not moving the player up/down from the perspective of others. will get a full rework later on)
