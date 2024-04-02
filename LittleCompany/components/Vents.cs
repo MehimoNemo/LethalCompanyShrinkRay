@@ -238,7 +238,7 @@ namespace LittleCompany.components
                         StartCoroutine(OccupyVent());
 
                     var targetPosition = siblingVent.floorNode.transform.position;
-                    targetPosition.y -= Mathf.Max(1f - PlayerInfo.SizeOf(player), 0f); // Ensure they don't go through the ground
+                    targetPosition.y += 0.3f;
                     player.TeleportPlayer(targetPosition);
                 }
                 else
