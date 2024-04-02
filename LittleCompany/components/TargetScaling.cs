@@ -35,9 +35,6 @@ namespace LittleCompany.components
             target = gameObject.GetComponent<T>();
 
             OriginalSize = gameObject.transform.localScale;
-
-            if(gameObject.TryGetComponent(out GrabbableObject item))
-                OriginalOffset = item.itemProperties.positionOffset;
         }
 
         void OnDestroy() => Reset();
@@ -148,6 +145,11 @@ namespace LittleCompany.components
     internal class ItemScaling : TargetScaling<GrabbableObject>
     {
         #region Methods
+        void Awake()
+        {
+            OriginalOffset = target.itemProperties.positionOffset;
+        }
+
         public void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false, Vector3 additionalOffset = new Vector3())
         {
             base.ScaleTo(scale, saveAsIntendedSize);
