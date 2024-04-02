@@ -83,7 +83,9 @@ namespace LittleCompany.helper
 
         public static bool IsShrunk(PlayerControllerB player) => SmallerThan(player, VanillaPlayerSize);
 
-        public static bool IsNormalSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), VanillaPlayerSize);
+        public static bool IsDefaultVanillaSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), VanillaPlayerSize);
+
+        public static bool IsDefaultSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), DefaultPlayerSize);
 
         public static bool IsEnlarged(PlayerControllerB player) => LargerThan(player, VanillaPlayerSize);
 

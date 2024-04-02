@@ -62,7 +62,7 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (PlayerInfo.IsNormalSize(targetPlayer))
+                    if (PlayerInfo.IsDefaultSize(targetPlayer))
                         return false;
                     break;
 
@@ -109,7 +109,6 @@ namespace LittleCompany.modifications
             if (targetPlayer == null) return;
 
             bool targetingUs = PlayerInfo.IsCurrentPlayer(targetPlayer);
-            bool wasShrunkBefore = PlayerInfo.IsShrunk(targetPlayer);
 
             switch (type)
             {

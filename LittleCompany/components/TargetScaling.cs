@@ -5,7 +5,6 @@ using LittleCompany.patches;
 using System;
 using System.Collections;
 using UnityEngine;
-using static LittleCompany.components.GrabbablePlayerObject;
 
 namespace LittleCompany.components
 {
@@ -41,21 +40,31 @@ namespace LittleCompany.components
         #endregion
 
         #region Methods
-        public virtual void ScaleTo(float scale = 1f, bool overrideOriginalSize = false, bool scalingFinished = true)
+        internal virtual void OnAwake() { }
+        public virtual void ScaleTo(float scale, bool permanently = false)
         {
             gameObject.transform.localScale = OriginalSize * scale;
             CurrentScale = scale;
 
-            if (overrideOriginalSize)
+            if(permanently)
                 OriginalSize = gameObject.transform.localScale;
         }
 
-        public virtual void ScaleOverTimeTo(float scale, Action onComplete = null, bool overrideOriginalSize = false)
+        public virtual void ScaleOverTimeTo(float scale, Action onComplete = null, bool permanently = false)
         {
-            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, onComplete, overrideOriginalSize));
+            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, () =>
+            {
+                ScaleRoutine = null;
+
+                // Ensure final scale is set to the desired value
+                ScaleTo(scale, permanently);
+                
+                if (onComplete != null)
+                    onComplete();
+            }));
         }
 
-        private IEnumerator ScaleOverTimeToCoroutine(float scale, Action onComplete = null, bool overrideOriginalSize = false)
+        private IEnumerator ScaleOverTimeToCoroutine(float scale, Action onComplete = null)
         {
             float elapsedTime = 0f;
             var c = CurrentScale;
@@ -68,16 +77,12 @@ namespace LittleCompany.components
                 // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
                 var x = elapsedTime;
                 var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
-                ScaleTo(newScale, false, false);
+                ScaleTo(newScale);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
             }
 
-            // Ensure final scale is set to the desired value
-            ScaleTo(scale, overrideOriginalSize, true);
-
-            ScaleRoutine = null;
             if (onComplete != null)
                 onComplete();
         }
@@ -106,11 +111,20 @@ namespace LittleCompany.components
     internal class PlayerScaling : TargetScaling<PlayerControllerB>
     {
         #region Methods
-        public override void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false, bool scalingFinished = true)
+        internal Vector3 armOffset = Vector3.zero;
+
+        public override void ScaleOverTimeTo(float scale, Action onComplete = null, bool permanently = false)
+        {
+            if(PlayerInfo.IsCurrentPlayer(target))
+                armOffset = PlayerInfo.CalcLocalArmScale();
+            base.ScaleOverTimeTo(scale, onComplete, permanently);
+        }
+
+        public override void ScaleTo(float scale, bool permanently = false)
         {
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
 
-            base.ScaleTo(scale, saveAsIntendedSize, scalingFinished);
+            base.ScaleTo(scale, permanently);
 
             if (PlayerInfo.IsCurrentPlayer(target))
             {
@@ -119,7 +133,12 @@ namespace LittleCompany.components
 
                 var heldItem = PlayerInfo.CurrentPlayerHeldItem;
                 if (heldItem != null)
-                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, scale);
+                {
+                    var currentArmOffset = PlayerInfo.CalcLocalArmScale();
+                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, scale, (armOffset - currentArmOffset) / 2);
+                    if (!GettingScaled) // Only check at the very end
+                        ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
+                }
 
                 var isShrunk = PlayerInfo.IsShrunk(target);
                 if (wasShrunkenBefore != isShrunk)
@@ -129,15 +148,10 @@ namespace LittleCompany.components
                     else
                         PlayerModification.TransitionedFromShrunk(target);
                 }
-
-                if (scalingFinished)
-                {
-                    if (heldItem != null)
-                        ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
-
-                    GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
-                }
             }
+
+            if(!GettingScaled) // Execute at the very end
+                GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
         }
         #endregion
     }
@@ -145,15 +159,15 @@ namespace LittleCompany.components
     internal class ItemScaling : TargetScaling<GrabbableObject>
     {
         #region Methods
-        void Awake()
+        internal override void OnAwake()
         {
             OriginalOffset = target.itemProperties.positionOffset;
         }
 
-        public void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false, Vector3 additionalOffset = new Vector3())
+        public void ScaleTo(float scale, bool permanently = false, Vector3 additionalOffset = new Vector3())
         {
-            base.ScaleTo(scale, saveAsIntendedSize);
-            if (saveAsIntendedSize)
+            base.ScaleTo(scale, permanently);
+            if (permanently)
                 target.originalScale = OriginalSize;
 
             if (target != null)

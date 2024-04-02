@@ -42,9 +42,7 @@ namespace LittleCompany.patches
 
             bool isScaled = item.TryGetComponent(out ItemScaling scaling) && !scaling.Unchanged;
 
-            if (!PlayerInfo.IsShrunk(item.playerHeldBy) && !isScaled) return;
-
-            if (item.itemProperties.twoHanded || isScaled && PlayerInfo.SmallerThan(item.playerHeldBy, scaling.CurrentScale))
+            if((PlayerInfo.IsShrunk(item.playerHeldBy) && item.itemProperties.twoHanded) || (isScaled && PlayerInfo.SmallerThan(item.playerHeldBy, scaling.CurrentScale)))
                 GlassifyItem(item);
             else
                 UnGlassifyItem(item);
