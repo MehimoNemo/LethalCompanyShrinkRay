@@ -34,6 +34,8 @@ namespace LittleCompany.components
             target = gameObject.GetComponent<T>();
 
             OriginalSize = gameObject.transform.localScale;
+
+            OnAwake();
         }
 
         void OnDestroy() => Reset();
