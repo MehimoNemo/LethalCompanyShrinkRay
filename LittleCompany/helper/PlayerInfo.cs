@@ -77,9 +77,9 @@ namespace LittleCompany.helper
 
         public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 
-        public static bool LargerThan(PlayerControllerB player, float size) => (SizeOf(player) - Mathf.Epsilon) > size;
+        public static bool LargerThan(PlayerControllerB player, float size) => (SizeOf(player) - (ModConfig.SmallestSizeChange / 2)) > size;
 
-        public static bool SmallerThan(PlayerControllerB player, float size) => (SizeOf(player) + Mathf.Epsilon) < size;
+        public static bool SmallerThan(PlayerControllerB player, float size) => (SizeOf(player) + (ModConfig.SmallestSizeChange / 2)) < size;
 
         public static bool IsShrunk(PlayerControllerB player) => SmallerThan(player, VanillaPlayerSize);
 
