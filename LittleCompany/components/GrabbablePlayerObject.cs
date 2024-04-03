@@ -436,8 +436,6 @@ namespace LittleCompany.components
 
             SetIsGrabbableToEnemies(true);
             //SetPlayerControlled(true);
-
-            DebugPatches.CreateCube(new Color(1f, 0.5f, 0.5f, 0.2f), grabbedPlayer.transform);
         }
 
         [ServerRpc(RequireOwnership = false)]

@@ -51,7 +51,7 @@ namespace LittleCompany.patches
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
                 LogInsideEnemyNames();
-                SpawnEnemyInFrontOfPlayer("Hoarder Bug", PlayerInfo.CurrentPlayer);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer/*, "Hoarder Bug" */);
             }
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
@@ -126,7 +126,7 @@ namespace LittleCompany.patches
 
             if (cube.TryGetComponent(out MeshRenderer meshRenderer))
             {
-                meshRenderer.material = new Material(Shader.Find("HDRP/Lit"));
+                meshRenderer.material = color.a < 1f ? Materials.Glass : new Material(Shader.Find("HDRP/Lit"));
                 meshRenderer.material.color = color;
                 meshRenderer.enabled = true;
             }
@@ -161,9 +161,13 @@ namespace LittleCompany.patches
             Plugin.Log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
         }
 
-        public static void SpawnEnemyInFrontOfPlayer(string enemyName, PlayerControllerB targetPlayer)
+        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, string enemyName = null)
         {
-            int enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == enemyName);
+            int enemyIndex;
+            if(enemyName != null)
+                enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == enemyName);
+            else
+                enemyIndex = UnityEngine.Random.Range(0, RoundManager.Instance.currentLevel.Enemies.Count - 1);
             if (enemyIndex != -1)
             {
                 var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;

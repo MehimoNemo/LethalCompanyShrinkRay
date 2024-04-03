@@ -281,7 +281,7 @@ namespace LittleCompany.components
             var endPoint = Vector3.zero;
 
             //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
-            var layerMask = ToInt([Mask.Player]);
+            var layerMask = ToInt([Mask.Player, Mask.Enemies]);
             if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
@@ -479,9 +479,17 @@ namespace LittleCompany.components
                             return false;
 
                         if (IsOwner)
-                            Plugin.Log("Ray has hit an ENEMY -> \"" + enemyAI.enemyType.name);
-                        //Plugin.Log("WIP");
-                        return false;
+                            Plugin.Log("Ray has hit an ENEMY -> " + enemyAI.enemyType.name);
+
+                        if(!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value))
+                        {
+                            if (IsOwner)
+                                Plugin.Log("... but would do nothing.");
+                            return false;
+                        }
+
+                        OnEnemyModificationServerRpc(enemyAI.NetworkObjectId, playerHeldBy.playerClientId);
+                        return true;
                     }
                 default:
                     if (IsOwner)
@@ -573,6 +581,39 @@ namespace LittleCompany.components
             ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, () =>
             {
                 Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
+            });
+
+            if (IsOwner)
+                SwitchModeServerRpc((int)Mode.Shooting);
+        }
+        #endregion
+
+        #region EnemyTargeting
+        // ------ Ray hitting Enemy ------
+        [ServerRpc(RequireOwnership = false)]
+        public void OnEnemyModificationServerRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
+        {
+            Plugin.Log("OnEnemyModification");
+            OnEnemyModificationClientRpc(targetEnemyNetworkID, playerHeldByID);
+        }
+
+        [ClientRpc]
+        public void OnEnemyModificationClientRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
+        {
+            playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
+
+            if (!TryGetObjectByNetworkID(targetEnemyNetworkID, out targetObject))
+            {
+                Plugin.Log("OnEnemyModification: Enemy not found", Plugin.LogType.Error);
+                if (IsOwner)
+                    SwitchModeServerRpc((int)Mode.Missing);
+                return;
+            }
+
+            Plugin.Log("Ray has hit " + targetObject.name + "!");
+            EnemyModification.ApplyModificationTo(targetObject.GetComponentInParent<EnemyAI>(), currentModificationType.Value, () =>
+            {
+                Plugin.Log("Finished enemy modification with type: " + currentModificationType.Value.ToString());
             });
 
             if (IsOwner)
