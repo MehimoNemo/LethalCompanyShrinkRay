@@ -1,9 +1,9 @@
-﻿using LittleCompany.components;
-using LittleCompany.Config;
-using LittleCompany.helper;
-using System;
-using Unity.Netcode;
+﻿using System;
 using UnityEngine;
+
+using LittleCompany.components;
+using LittleCompany.Config;
+using LittleCompany.events.enemy;
 
 namespace LittleCompany.modifications
 {
@@ -75,17 +75,19 @@ namespace LittleCompany.modifications
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
+                                EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking();
+                                /*
                                 // Poof Target to death because they are too small to exist
                                 if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetEnemy.transform.position) && targetEnemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
                                     audioSource.PlayOneShot(deathPoofSFX);
 
                                 if(PlayerInfo.IsHost && targetEnemy.TryGetComponent(out NetworkObject networkObject))
-                                    RoundManager.Instance.DespawnEnemyOnServer(networkObject);
+                                    RoundManager.Instance.DespawnEnemyOnServer(networkObject);*/
                             }
 
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        });
 
                         break;
                     }
@@ -98,7 +100,7 @@ namespace LittleCompany.modifications
                         {
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        });
 
                         break;
                     }

@@ -6,12 +6,12 @@ using LittleCompany.Config;
 using LittleCompany.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
-using static LittleCompany.helper.LayerMasks;
-using static LittleCompany.modifications.Modification;
 using System.IO;
 using System.Collections;
+
 using LittleCompany.modifications;
-using static LittleCompany.components.GrabbablePlayerObject;
+using static LittleCompany.helper.LayerMasks;
+using static LittleCompany.modifications.Modification;
 
 namespace LittleCompany.components
 {

@@ -1,10 +1,12 @@
 ﻿using GameNetcodeStuff;
-using LittleCompany.helper;
-using LittleCompany.modifications;
-using LittleCompany.patches;
 using System;
 using System.Collections;
 using UnityEngine;
+
+using LittleCompany.helper;
+using LittleCompany.modifications;
+using LittleCompany.patches;
+using LittleCompany.events.enemy;
 
 namespace LittleCompany.components
 {
@@ -188,5 +190,13 @@ namespace LittleCompany.components
 
     internal class EnemyScaling : TargetScaling<EnemyAI>
     {
+        public override void ScaleTo(float scale, bool permanently = false)
+        {
+            var previousScale = CurrentScale;
+            base.ScaleTo(scale, permanently);
+
+            if (!GettingScaled)
+                EnemyEventManager.EventHandlerOf(target)?.SizeChanged(previousScale, scale);
+        }
     }
 }

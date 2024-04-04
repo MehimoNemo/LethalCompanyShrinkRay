@@ -10,6 +10,8 @@ using Unity.Netcode;
 using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
+using static LittleCompany.components.GrabbablePlayerObject;
+using System.Linq;
 
 namespace LittleCompany.patches
 {
@@ -21,36 +23,29 @@ namespace LittleCompany.patches
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
-        public static void OnUpdate(PlayerControllerB __instance)
+        public static void OnUpdate()
         {
-            try
-            {
-                if (!Executing && CheckFunctionKeys())
-                    GameNetworkManager.Instance?.StartCoroutine(WaitAfterKeyPress());
-            }
-            catch (Exception e)
-            {
-                Plugin.Log("[DebugPatches] Error: " + e.Message, Plugin.LogType.Error);
-            }
+            if (Executing) return;
+
+            if(CheckFunctionKeys())
+                GameNetworkManager.Instance?.StartCoroutine(WaitAfterKeyPress());
         }
 
         public static IEnumerator WaitAfterKeyPress()
         {
-            if (Executing)
-                yield return new WaitWhile(() => Executing);
-            else
-            {
-                Executing = true;
-                yield return new WaitForSeconds(0.2f);
-                Executing = false;
-            }
+            if (Executing) yield break;
+
+            Executing = true;
+            yield return new WaitForSeconds(0.2f);
+            Executing = false;
         }
 
         public static bool CheckFunctionKeys()
         {
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                LogInsideEnemyNames();
+                //Plugin.Log(EnemyInfo.AllEnemyNames.Join(null, " | "));
+                //LogInsideEnemyNames();
                 SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer/*, "Hoarder Bug" */);
             }
 
@@ -161,19 +156,32 @@ namespace LittleCompany.patches
             Plugin.Log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
         }
 
+        public static int GetEnemyIndex(string enemyName = null, bool inside = true)
+        {
+            var enemyList = inside ? RoundManager.Instance.currentLevel.Enemies : RoundManager.Instance.currentLevel.OutsideEnemies;
+            if (enemyName != null)
+            {
+                var index = enemyList.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == enemyName);
+                if (index != -1) return index;
+            }
+
+            return UnityEngine.Random.Range(0, enemyList.Count - 1);
+        }
+
         public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, string enemyName = null)
         {
-            int enemyIndex;
-            if(enemyName != null)
-                enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == enemyName);
-            else
-                enemyIndex = UnityEngine.Random.Range(0, RoundManager.Instance.currentLevel.Enemies.Count - 1);
-            if (enemyIndex != -1)
+            //if (StartOfRound.Instance.inShipPhase || !StartOfRound.Instance.shipHasLanded) return;
+
+            var enemyIndex = GetEnemyIndex(enemyName, targetPlayer.isInsideFactory);
+            if (enemyIndex == -1)
+            {
+                Plugin.Log("No enemy found..");
+                return;
+            }
             {
                 var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
                 RoundManager.Instance.SpawnEnemyOnServer(location, 0f, enemyIndex);
-
-                // I tried so hard and got so far, but in the end... there's still an errooooorrrrr
+                Plugin.Log("Spawned enemy.");
             }
         }
 

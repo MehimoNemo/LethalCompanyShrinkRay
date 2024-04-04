@@ -57,6 +57,7 @@ namespace LittleCompany
             harmony.PatchAll(typeof(CentipedeAIPatch));
             harmony.PatchAll(typeof(ModdedDungeonEntrancePatch));
             harmony.PatchAll(typeof(TerminalPatch));
+            harmony.PatchAll(typeof(SpawnEnemyPatch));
 
             // comp
             harmony.PatchAll(typeof(Vents));

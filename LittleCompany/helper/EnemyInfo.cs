@@ -1,4 +1,6 @@
 ﻿using LittleCompany.components;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LittleCompany.helper
@@ -10,12 +12,23 @@ namespace LittleCompany.helper
             get
             {
                 var scale = 1f;
-                foreach(var enemyScaling in Object.FindObjectsOfType<EnemyScaling>())
+                foreach(var enemyScaling in UnityEngine.Object.FindObjectsOfType<EnemyScaling>())
                 {
                     if(enemyScaling.target is HoarderBugAI)
                         scale = Mathf.Max(scale, enemyScaling.CurrentScale);
                 }
                 return scale;
+            }
+        }
+
+        public static List<String> AllEnemyNames
+        {
+            get
+            {
+                var list = new List<string>();
+                foreach (var enemyType in UnityEngine.Object.FindObjectsOfType<EnemyType>())
+                    list.Add(enemyType.enemyName);
+                return list;
             }
         }
 

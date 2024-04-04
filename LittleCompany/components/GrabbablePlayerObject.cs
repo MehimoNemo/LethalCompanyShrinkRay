@@ -6,13 +6,13 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using LittleCompany.helper;
 using Unity.Netcode;
-using LittleCompany.patches.EnemyBehaviours;
 using System.IO;
 using System.Collections;
+using LethalLib.Modules;
+
+using LittleCompany.patches.EnemyBehaviours;
 using static LittleCompany.helper.Moons;
 using static LittleCompany.helper.LayerMasks;
-using LethalLib.Modules;
-using LittleCompany.patches;
 
 namespace LittleCompany.components
 {
