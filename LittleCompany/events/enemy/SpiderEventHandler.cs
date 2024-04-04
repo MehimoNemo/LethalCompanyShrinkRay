@@ -28,6 +28,8 @@ namespace LittleCompany.events.enemy
             }
 
             base.OnDeathShrinking();
+            if (deathPoof != null)
+                deathPoof.transform.localScale = Vector3.one * 0.5f; // larger death poof
         }
         public override void Shrunken(bool wasShrunkenBefore) { }
         public override void Enlarged(bool wasEnlargedBefore) { }
