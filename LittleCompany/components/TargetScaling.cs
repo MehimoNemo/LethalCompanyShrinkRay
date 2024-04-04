@@ -14,9 +14,9 @@ namespace LittleCompany.components
     {
         #region Properties
         internal Vector3 OriginalOffset = Vector3.zero;
-        internal Vector3 OriginalSize = Vector3.one;
+        internal Vector3 OriginalScale = Vector3.one;
 
-        public float CurrentScale = 1f;
+        public float RelativeScale = 1f;
 
         public bool GettingScaled => ScaleRoutine != null;
         private Coroutine ScaleRoutine = null;
@@ -35,7 +35,7 @@ namespace LittleCompany.components
 
             target = gameObject.GetComponent<T>();
 
-            OriginalSize = gameObject.transform.localScale;
+            OriginalScale = gameObject.transform.localScale;
 
             OnAwake();
         }
@@ -45,23 +45,20 @@ namespace LittleCompany.components
 
         #region Methods
         internal virtual void OnAwake() { }
-        public virtual void ScaleTo(float scale, bool permanently = false)
+        public virtual void ScaleTo(float scale)
         {
-            gameObject.transform.localScale = OriginalSize * scale;
-            CurrentScale = scale;
-
-            if(permanently)
-                OriginalSize = gameObject.transform.localScale;
+            gameObject.transform.localScale = OriginalScale * scale;
+            RelativeScale = scale;
         }
 
-        public virtual void ScaleOverTimeTo(float scale, Action onComplete = null, bool permanently = false)
+        public virtual void ScaleOverTimeTo(float scale, Action onComplete = null)
         {
             ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, () =>
             {
                 ScaleRoutine = null;
 
                 // Ensure final scale is set to the desired value
-                ScaleTo(scale, permanently);
+                ScaleTo(scale);
                 
                 if (onComplete != null)
                     onComplete();
@@ -71,7 +68,7 @@ namespace LittleCompany.components
         private IEnumerator ScaleOverTimeToCoroutine(float scale, Action onComplete = null)
         {
             float elapsedTime = 0f;
-            var c = CurrentScale;
+            var c = RelativeScale;
             var direction = scale < c ? -1f : 1f;
             float a = Mathf.Abs(c - scale); // difference
             const float b = -0.5f;
@@ -99,15 +96,15 @@ namespace LittleCompany.components
 
         public virtual Vector3 SizeAt(float percentage)
         {
-            return OriginalSize * percentage;
+            return OriginalScale * percentage;
         }
 
-        public bool Unchanged => OriginalSize == gameObject.transform.localScale;
+        public bool Unchanged => OriginalScale == gameObject.transform.localScale;
 
         public virtual void Reset()
         {
-            gameObject.transform.localScale = OriginalSize;
-            CurrentScale = 1f;
+            gameObject.transform.localScale = OriginalScale;
+            RelativeScale = 1f;
         }
         #endregion
     }
@@ -117,15 +114,15 @@ namespace LittleCompany.components
         #region Methods
         internal Vector3 armOffset = Vector3.zero;
 
-        public override void ScaleOverTimeTo(float scale, Action onComplete = null, bool permanently = false)
+        public override void ScaleOverTimeTo(float scale, Action onComplete = null)
         {
-            base.ScaleOverTimeTo(scale, onComplete, permanently);
+            base.ScaleOverTimeTo(scale, onComplete);
         }
 
-        public override void ScaleTo(float scale, bool permanently = false)
+        public override void ScaleTo(float scale)
         {
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
-            base.ScaleTo(scale, permanently);
+            base.ScaleTo(scale);
 
             if (PlayerInfo.IsCurrentPlayer(target))
             {
@@ -160,37 +157,31 @@ namespace LittleCompany.components
     internal class ItemScaling : TargetScaling<GrabbableObject>
     {
         #region Methods
-        internal override void OnAwake()
+        public override void ScaleTo(float scale)
         {
-            OriginalOffset = target.itemProperties.positionOffset;
+            base.ScaleTo(scale);
+
+            if (!GettingScaled && target != null)
+                target.originalScale = gameObject.transform.localScale;
         }
-
-        public void ScaleTo(float scale, bool permanently = false, Vector3 additionalOffset = new Vector3())
+        public void ScaleTemporarlyTo(float scale)
         {
-            base.ScaleTo(scale, permanently);
-            if (permanently)
-                target.originalScale = OriginalSize;
-
-            if (target != null)
-                target.itemProperties.positionOffset = OriginalOffset * scale + additionalOffset;
+            gameObject.transform.localScale = OriginalScale * scale;
         }
 
         public override void Reset()
         {
-            base.Reset();
-
-            if (target != null)
-                target.itemProperties.positionOffset = OriginalOffset;
+            gameObject.transform.localScale = target.originalScale;
         }
         #endregion
     }
 
     internal class EnemyScaling : TargetScaling<EnemyAI>
     {
-        public override void ScaleTo(float scale, bool permanently = false)
+        public override void ScaleTo(float scale)
         {
-            var previousScale = CurrentScale;
-            base.ScaleTo(scale, permanently);
+            var previousScale = RelativeScale;
+            base.ScaleTo(scale);
 
             if (!GettingScaled)
                 EnemyEventManager.EventHandlerOf(target)?.SizeChanged(previousScale, scale);

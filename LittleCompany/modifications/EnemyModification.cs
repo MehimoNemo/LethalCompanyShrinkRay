@@ -19,12 +19,12 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(EnemyAI targetEnemy)
         {
-            return Mathf.Max(ScalingOf(targetEnemy).CurrentScale - ModConfig.Instance.values.sizeChangeStep, 0f);
+            return Mathf.Max(ScalingOf(targetEnemy).RelativeScale - ModConfig.Instance.values.sizeChangeStep, 0f);
         }
 
         public static float NextIncreasedSizeOf(EnemyAI targetEnemy)
         {
-            return Mathf.Min(ScalingOf(targetEnemy).CurrentScale + ModConfig.Instance.values.sizeChangeStep, 4f);
+            return Mathf.Min(ScalingOf(targetEnemy).RelativeScale + ModConfig.Instance.values.sizeChangeStep, 4f);
         }
 
         public static bool CanApplyModificationTo(EnemyAI targetEnemy, ModificationType type)
@@ -40,14 +40,14 @@ namespace LittleCompany.modifications
             {
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy);
-                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.CurrentScale);
-                    if (nextShrunkenSize == scaling.CurrentScale)
+                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.RelativeScale);
+                    if (nextShrunkenSize == scaling.RelativeScale)
                         return false;
                     break;
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetEnemy);
-                    if (nextIncreasedSize == scaling.CurrentScale)
+                    if (nextIncreasedSize == scaling.RelativeScale)
                         return false;
                     break;
 

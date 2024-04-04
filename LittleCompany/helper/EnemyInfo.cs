@@ -15,7 +15,7 @@ namespace LittleCompany.helper
                 foreach(var enemyScaling in UnityEngine.Object.FindObjectsOfType<EnemyScaling>())
                 {
                     if(enemyScaling.target is HoarderBugAI)
-                        scale = Mathf.Max(scale, enemyScaling.CurrentScale);
+                        scale = Mathf.Max(scale, enemyScaling.RelativeScale);
                 }
                 return scale;
             }
@@ -32,7 +32,7 @@ namespace LittleCompany.helper
             }
         }
 
-        public static float SizeOf(EnemyAI enemyAI) => enemyAI.TryGetComponent(out EnemyScaling scaling) ? scaling.CurrentScale : 1f;
+        public static float SizeOf(EnemyAI enemyAI) => enemyAI.TryGetComponent(out EnemyScaling scaling) ? scaling.RelativeScale : 1f;
 
         internal class HoarderBug
         {

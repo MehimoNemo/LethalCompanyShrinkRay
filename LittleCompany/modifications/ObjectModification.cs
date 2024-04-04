@@ -17,12 +17,12 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Max(ScalingOf(targetObject).CurrentScale - ModConfig.Instance.values.sizeChangeStep, 0f);
+            return Mathf.Max(ScalingOf(targetObject).RelativeScale - ModConfig.Instance.values.sizeChangeStep, 0f);
         }
 
         public static float NextIncreasedSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Min(ScalingOf(targetObject).CurrentScale + ModConfig.Instance.values.sizeChangeStep, 4f);
+            return Mathf.Min(ScalingOf(targetObject).RelativeScale + ModConfig.Instance.values.sizeChangeStep, 4f);
         }
 
         public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type)
@@ -37,20 +37,20 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (scaling.CurrentScale == 1f)
+                    if (scaling.RelativeScale == 1f)
                         return false;
                     break;
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
-                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.CurrentScale);
-                    if (nextShrunkenSize == scaling.CurrentScale)
+                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.RelativeScale);
+                    if (nextShrunkenSize == scaling.RelativeScale)
                         return false;
                     break;
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
-                    if (nextIncreasedSize == scaling.CurrentScale)
+                    if (nextIncreasedSize == scaling.RelativeScale)
                         return false;
                     break;
 
@@ -78,7 +78,7 @@ namespace LittleCompany.modifications
                         {
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        });
                         break;
                     }
 
@@ -99,7 +99,7 @@ namespace LittleCompany.modifications
 
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        });
 
                         break;
                     }
@@ -112,7 +112,7 @@ namespace LittleCompany.modifications
                         {
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        });
 
                         break;
                     }
