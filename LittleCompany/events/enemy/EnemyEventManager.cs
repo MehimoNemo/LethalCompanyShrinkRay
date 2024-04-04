@@ -39,7 +39,7 @@ namespace LittleCompany.events.enemy
         {
             // todo: Make this generic -> public class EnemyEventHandler<T> : MonoBehaviour where T : EnemyAI
             // not working as it can't add the component, as there has to be a type specified...
-            private EnemyAI enemy = null;
+            internal EnemyAI enemy = null;
 
             void Awake()
             {
