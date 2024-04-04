@@ -119,15 +119,12 @@ namespace LittleCompany.components
 
         public override void ScaleOverTimeTo(float scale, Action onComplete = null, bool permanently = false)
         {
-            if(PlayerInfo.IsCurrentPlayer(target))
-                armOffset = PlayerInfo.CalcLocalArmScale();
             base.ScaleOverTimeTo(scale, onComplete, permanently);
         }
 
         public override void ScaleTo(float scale, bool permanently = false)
         {
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
-
             base.ScaleTo(scale, permanently);
 
             if (PlayerInfo.IsCurrentPlayer(target))
@@ -138,8 +135,6 @@ namespace LittleCompany.components
                 var heldItem = PlayerInfo.CurrentPlayerHeldItem;
                 if (heldItem != null)
                 {
-                    var currentArmOffset = PlayerInfo.CalcLocalArmScale();
-                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(heldItem, scale, (armOffset - currentArmOffset) / 2);
                     if (!GettingScaled) // Only check at the very end
                         ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
@@ -153,9 +148,11 @@ namespace LittleCompany.components
                         PlayerModification.TransitionedFromShrunk(target);
                 }
             }
-
-            if(!GettingScaled) // Execute at the very end
+            if (!GettingScaled) // Execute at the very end
+            {
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
+                PlayerInfo.RebuildRig(target);
+            }
         }
         #endregion
     }
