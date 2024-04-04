@@ -246,8 +246,9 @@ namespace LittleCompany.components
 
                 if (ModConfig.Instance.values.throwablePlayers)
                 {
-                    Plugin.Log("Throw grabbed player");
-                    ThrowPlayerServerRpc(direction);
+                    var sizeDifference = Mathf.Abs(PlayerInfo.SizeOf(playerHeldBy) - PlayerInfo.SizeOf(grabbedPlayer));
+                    var force = Mathf.Max(sizeDifference * 15f, 10f);
+                    ThrowPlayerServerRpc(direction, force);
                 }
             }
             catch (Exception e)
@@ -724,13 +725,13 @@ namespace LittleCompany.components
 
         #region RPCs
         [ServerRpc(RequireOwnership = false)]
-        public void ThrowPlayerServerRpc(Vector3 direction)
+        public void ThrowPlayerServerRpc(Vector3 direction, float force)
         {
-            ThrowPlayerClientRpc(direction);
+            ThrowPlayerClientRpc(direction, force);
         }
 
         [ClientRpc]
-        public void ThrowPlayerClientRpc(Vector3 direction)
+        public void ThrowPlayerClientRpc(Vector3 direction, float force)
         {
             Plugin.Log("ThrowPlayerClientRpc");
             Thrown = true;
@@ -745,8 +746,8 @@ namespace LittleCompany.components
 
             if (grabbedPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
             {
-                Plugin.Log("We got thrown!");
-                coroutines.PlayerThrowAnimation.StartRoutine(grabbedPlayer, direction, 10f);
+                Plugin.Log("We got thrown with a force of " + force);
+                coroutines.PlayerThrowAnimation.StartRoutine(grabbedPlayer, direction, force);
             }
         }
 

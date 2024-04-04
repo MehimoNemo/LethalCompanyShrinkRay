@@ -281,7 +281,7 @@ namespace LittleCompany.components
             var endPoint = Vector3.zero;
 
             //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
-            var layerMask = ToInt([Mask.Player, Mask.Enemies]);
+            var layerMask = ToInt([Mask.Player, Mask.Props, Mask.Enemies]);
             if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
