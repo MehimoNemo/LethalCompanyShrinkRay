@@ -10,6 +10,8 @@ using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
 using static LittleCompany.helper.EnemyInfo;
+using System.Collections.Generic;
+using System;
 
 namespace LittleCompany.patches
 {
@@ -42,8 +44,7 @@ namespace LittleCompany.patches
         {
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                LogCurrentLevelEnemyNames();
-                //SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Slime);
+                SpawnAnyRandomEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer);
             }
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
@@ -152,31 +153,35 @@ namespace LittleCompany.patches
             Plugin.Log(enemies != null ? enemies.Join(null, "\n") : "Not in a round.");
         }
 
-        public static int GetEnemyIndex(string enemyName = null, bool inside = true)
+        public static EnemyType GetEnemyType(string enemyName = null)
         {
-            var enemyList = inside ? RoundManager.Instance.currentLevel.Enemies : RoundManager.Instance.currentLevel.OutsideEnemies;
+            var enemyList = new List<SpawnableEnemyWithRarity>();
+            enemyList.AddRange(RoundManager.Instance.currentLevel.Enemies);
+            enemyList.AddRange(RoundManager.Instance.currentLevel.OutsideEnemies);
+            enemyList.AddRange(RoundManager.Instance.currentLevel.DaytimeEnemies);
+
             if (enemyName != null)
             {
-                var index = enemyList.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == enemyName);
-                if (index != -1) return index;
+                var index = enemyList.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.enemyName == enemyName);
+                if (index != -1) return enemyList[index].enemyType;
             }
 
-            return UnityEngine.Random.Range(0, enemyList.Count - 1);
+            return enemyList[UnityEngine.Random.Range(0, enemyList.Count - 1)].enemyType;
         }
 
         public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, Enemy? enemy = null)
         {
             var enemyName = enemy.HasValue ? EnemyNameOf(enemy.Value) : "";
-            var enemyIndex = GetEnemyIndex(enemyName, targetPlayer.isInsideFactory);
-            if (enemyIndex == -1)
+            Plugin.Log("Enemy name: " + enemyName);
+            var enemyType = GetEnemyType(enemyName);
+            if (enemyType == null)
             {
                 Plugin.Log("No enemy found..");
                 return;
             }
-            {
-                var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
-                RoundManager.Instance.SpawnEnemyOnServer(location, 0f, enemyIndex);
-            }
+
+            var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
+            RoundManager.Instance.SpawnEnemyGameObject(location, 0f, 0, enemyType);
         }
 
         public static void SpawnAnyRandomEnemyInFrontOfPlayer(PlayerControllerB targetPlayer) => SpawnEnemyInFrontOfPlayer(targetPlayer, RandomEnemy);

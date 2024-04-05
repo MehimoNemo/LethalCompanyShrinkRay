@@ -13,14 +13,13 @@ namespace LittleCompany.events.enemy
     {
         internal static readonly Dictionary<Enemy, Type> EventHandler = new Dictionary<Enemy, Type>
         {
-            { Enemy.Custom,     typeof(EnemyEventHandler)       },
             { Enemy.Centipede,  typeof(CentipedeEventHandler)   },
             { Enemy.Spider,     typeof(SpiderEventHandler)      },
             { Enemy.HoarderBug, typeof(HoarderBugEventHandler)  },
             { Enemy.Bracken,    typeof(BrackenEventHandler)     }
         };
 
-        public static Type EventHandlerByName(string enemyName) => EventHandler[EnemyByName(enemyName)];
+        public static Type EventHandlerByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
 
         public static EnemyEventHandler EventHandlerOf(EnemyAI enemyAI)
         {
