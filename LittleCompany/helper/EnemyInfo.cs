@@ -39,6 +39,8 @@ namespace LittleCompany.helper
 
         public static Dictionary<string, Enemy> EnemyNameMap = new Dictionary<string, Enemy>()
         {
+            { "Custom",             Enemy.Custom        },
+
             { "Baboon hawk",        Enemy.BaboonHawk    },
             { "Red Locust Bees",    Enemy.Bees          },
             { "Docile Locust Bees", Enemy.BeesHarmless  },
