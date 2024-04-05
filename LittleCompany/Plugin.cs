@@ -68,6 +68,11 @@ namespace LittleCompany
                 Log("enabling LethalEmotesApiCompatibility");
                 harmony.PatchAll(typeof(LethalEmotesApiCompatibility));
             }
+            if (ModelReplacementApiCompatibility.enabled)
+            {
+                Log("enabling ModelReplacementApiCompatibility");
+                harmony.PatchAll(typeof(ModelReplacementApiCompatibilityPatch));
+            }
 
 #if DEBUG
             harmony.PatchAll(typeof(DebugPatches));

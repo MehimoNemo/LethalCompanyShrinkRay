@@ -1,4 +1,5 @@
 ﻿using GameNetcodeStuff;
+using LittleCompany.compatibility;
 using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
@@ -36,7 +37,10 @@ namespace LittleCompany.components
 
             if(gameObject.TryGetComponent(out GrabbableObject item))
                 OriginalOffset = item.itemProperties.positionOffset;
+            OnAwake();
         }
+
+        internal virtual void OnAwake() { }
 
         void OnDestroy() => Reset();
         #endregion
@@ -109,10 +113,18 @@ namespace LittleCompany.components
 
     internal class PlayerScaling : TargetScaling<PlayerControllerB>
     {
+        internal ModelReplacementApiCompatibility modelReplacementApiCompatibility;
+
         #region Methods
+        internal override void OnAwake()
+        {
+            modelReplacementApiCompatibility = new ModelReplacementApiCompatibility(target);
+        }
+
         public override void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false)
         {
             base.ScaleTo(scale);
+            CompatibilityAfterEachScale(scale);
             if (target?.playerClientId == PlayerInfo.CurrentPlayer?.playerClientId)
             {
                 // scale arms & visor
@@ -137,9 +149,26 @@ namespace LittleCompany.components
                         PlayerMultiplierPatch.Reset();
                 }
                 PlayerInfo.RebuildRig(target);
+                CompatibilityAtEndOfScaling();
                 if (onComplete != null)
                     onComplete();
             }, overrideOriginalSize);
+        }
+
+        private void CompatibilityAfterEachScale(float scale)
+        {
+            if (ModelReplacementApiCompatibility.enabled)
+            {
+                modelReplacementApiCompatibility.AdjustToSize(scale);
+            }
+        }
+
+        private void CompatibilityAtEndOfScaling()
+        {
+            if (ModelReplacementApiCompatibility.enabled)
+            {
+                modelReplacementApiCompatibility.ReloadCurrentReplacementModel();
+            }
         }
         #endregion
     }
