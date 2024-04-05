@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using System;
 using UnityEngine.InputSystem;
 using GameNetcodeStuff;
 using LittleCompany.helper;
@@ -10,8 +9,6 @@ using Unity.Netcode;
 using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
-using static LittleCompany.components.GrabbablePlayerObject;
-using System.Linq;
 
 namespace LittleCompany.patches
 {
@@ -165,13 +162,13 @@ namespace LittleCompany.patches
                 if (index != -1) return index;
             }
 
-            return UnityEngine.Random.Range(0, enemyList.Count - 1);
+            return Random.Range(0, enemyList.Count - 1);
         }
 
-        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, string enemyName = null)
+        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, EnemyInfo.Enemy? enemy = null)
         {
             //if (StartOfRound.Instance.inShipPhase || !StartOfRound.Instance.shipHasLanded) return;
-
+            var enemyName = enemy.HasValue ? EnemyInfo.EnemyNameOf(enemy.Value) : "";
             var enemyIndex = GetEnemyIndex(enemyName, targetPlayer.isInsideFactory);
             if (enemyIndex == -1)
             {
@@ -181,7 +178,6 @@ namespace LittleCompany.patches
             {
                 var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
                 RoundManager.Instance.SpawnEnemyOnServer(location, 0f, enemyIndex);
-                Plugin.Log("Spawned enemy.");
             }
         }
 

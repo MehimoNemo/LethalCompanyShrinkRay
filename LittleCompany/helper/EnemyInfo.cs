@@ -1,6 +1,7 @@
 ﻿using LittleCompany.components;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace LittleCompany.helper
@@ -57,6 +58,8 @@ namespace LittleCompany.helper
         };
 
         public static Enemy EnemyByName(string name) => EnemyNameMap.GetValueOrDefault(name, Enemy.Custom);
+
+        public static string EnemyNameOf(Enemy enemy) => EnemyNameMap.FirstOrDefault((x) => x.Value == enemy).Key;
 
         public static float LargestGrabbingEnemy
         {
