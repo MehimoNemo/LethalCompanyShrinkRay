@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 namespace LittleCompany.helper
 {
@@ -12,7 +13,6 @@ namespace LittleCompany.helper
         public static void Cleanup()
         {
             _cameraVisor = null;
-            _localArms = null;
         }
 
         public static bool IsHost => NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
@@ -93,51 +93,19 @@ namespace LittleCompany.helper
 
         public static void ScaleLocalPlayerBodyParts()
         {
-            AdjustLocalArms();
-            AdjustLocalMask();
+            AdjustLocalVisor();
         }
 
-        private static Vector3 defaultArmScale = Vector3.one;
-        private static Vector3 defaultArmPosition = Vector3.one;
-        private static Transform _localArms = null;
-        public static Transform LocalArms
+        public static void RebuildRig(PlayerControllerB pcb)
         {
-            get
+            if (pcb != null && pcb.playerBodyAnimator != null)
             {
-                if (_localArms == null)
-                {
-                    _localArms = BodyTransformOf(CurrentPlayer)?.Find("ScavengerModelArmsOnly"); // our locally visible pair of hands
-                    if (_localArms != null)
-                    {
-                        Plugin.Log("Arms found!");
-                        defaultArmScale = _localArms.localScale;
-                        defaultArmPosition = _localArms.localPosition;
-                    }
-                }
-                return _localArms;
+                pcb.playerBodyAnimator.WriteDefaultValues();
+                pcb.playerBodyAnimator.GetComponent<RigBuilder>()?.Build();
             }
         }
 
-        public static void AdjustLocalArms()
-        {
-            if (LocalArms == null) return;
-
-            LocalArms.localScale = CalcLocalArmScale();
-        }
-
-        public static Vector3 CalcLocalArmScale()
-        {
-            var scale = SizeOf(CurrentPlayer);
-            return new Vector3()
-            {
-                x = 0.35f * scale + 0.58f,
-                y = -0.0625f * scale + 1.0625f,
-                z = -0.125f * scale + 1.15f
-            };
-        }
-
-        private static Vector3 defaultMaskScale = Vector3.one;
-        private static Vector3 defaultMaskPos = Vector3.zero;
+        private static Vector3 defaultMaskPos = new Vector3(0.01f, -0.05f, -0.05f);
         private static Transform _cameraVisor = null;
         public static Transform CameraVisor
         {
@@ -145,14 +113,11 @@ namespace LittleCompany.helper
             {
                 if (_cameraVisor == null)
                 {
-                    var helmet = GameObject.Find("ScavengerHelmet");
+                    var helmet = CurrentPlayer.localVisor;
                     if (helmet == null) return null;
 
-                    _cameraVisor = helmet.GetComponent<Transform>();
+                    _cameraVisor = helmet.transform;
                     if (_cameraVisor == null) return null;
-
-                    defaultMaskScale = _cameraVisor.localScale;
-                    defaultMaskPos = _cameraVisor.localPosition;
                 }
                 return _cameraVisor;
             }
@@ -166,13 +131,19 @@ namespace LittleCompany.helper
                 renderer.enabled = enable;
         }
 
-        public static void AdjustLocalMask()
+        public static void AdjustLocalVisor()
         {
-            if (CameraVisor == null) return;
+            CurrentPlayer.localVisorTargetPoint.localPosition = defaultMaskPos + VisorOffset(SizeOf(CurrentPlayer));
+        }
 
-            // todo: disappears when size < 0.3f
-            CameraVisor.localScale = defaultMaskScale * SizeOf(CurrentPlayer);
-            CameraVisor.localPosition = defaultMaskPos * SizeOf(CurrentPlayer);
+        public static Vector3 VisorOffset(float size)
+        {
+            return new Vector3()
+            {
+                x = (size < 1 ? (Mathf.Pow(size, -2f) - 1) * 0.002f : (Mathf.Pow(size, -2f) - 1) * 0.006f),
+                y = (size < 1 ? (Mathf.Pow(size, -2f) - 1) * -0.008f : (Mathf.Pow(size, -2f) - 1) * -0.038f),
+                z = (size < 1 ? (Mathf.Pow(size, -2f) - 1) * -0.008f : (Mathf.Pow(size, -2f) - 1) * -0.037f)
+            };
         }
 
         public static float CalculateWeightFor(PlayerControllerB player)

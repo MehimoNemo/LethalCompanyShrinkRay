@@ -117,8 +117,6 @@ namespace LittleCompany.components
             {
                 // scale arms & visor
                 PlayerInfo.ScaleLocalPlayerBodyParts();
-                if (PlayerInfo.CurrentPlayerHeldItem != null)
-                    ScreenBlockingGrabbablePatch.TransformItemRelativeTo(PlayerInfo.CurrentPlayerHeldItem, scale);
             }
         }
 
@@ -131,7 +129,6 @@ namespace LittleCompany.components
                     PlayerInfo.ScaleLocalPlayerBodyParts();
                     if (PlayerInfo.CurrentPlayerHeldItem != null)
                     {
-                        ScreenBlockingGrabbablePatch.TransformItemRelativeTo(PlayerInfo.CurrentPlayerHeldItem, scale);
                         ScreenBlockingGrabbablePatch.CheckForGlassify(PlayerInfo.CurrentPlayerHeldItem);
                     }
                     if (scale != 1f)
@@ -139,7 +136,7 @@ namespace LittleCompany.components
                     else
                         PlayerMultiplierPatch.Reset();
                 }
-
+                PlayerInfo.RebuildRig(target);
                 if (onComplete != null)
                     onComplete();
             }, overrideOriginalSize);

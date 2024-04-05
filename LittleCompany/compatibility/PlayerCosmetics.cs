@@ -8,6 +8,7 @@ namespace LittleCompany.compatibility
     internal class PlayerCosmetics
     {
         internal static string[] BasePartsException => ["commando(Clone)", "ArmsRotationTarget(Clone)", "scavEmoteSkeleton(Clone)"];
+        internal static string[] ModdedPartsCompatibilityException = ["LocalPhoneModel(Clone)"];
 
         public static void RegularizeCosmetics()
         {
@@ -22,7 +23,7 @@ namespace LittleCompany.compatibility
                     Transform[] componentsInChildren = cosmetic.gameObject.GetComponentsInChildren<Transform>();
                     foreach (Transform transform in componentsInChildren)
                     {
-                        if (transform.name.Contains("(Clone)") && !BasePartsException.Contains(transform.name))
+                        if (transform.name.Contains("(Clone)") && !BasePartsException.Contains(transform.name) && !ModdedPartsCompatibilityException.Contains(transform.name))
                         {
                             transform.localScale = new Vector3(0.38f, 0.38f, 0.38f);
                         }
