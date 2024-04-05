@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static LittleCompany.components.GrabbablePlayerObject;
 
 namespace LittleCompany.helper
 {
@@ -60,6 +61,15 @@ namespace LittleCompany.helper
         public static Enemy EnemyByName(string name) => EnemyNameMap.GetValueOrDefault(name, Enemy.Custom);
 
         public static string EnemyNameOf(Enemy enemy) => EnemyNameMap.FirstOrDefault((x) => x.Value == enemy).Key;
+
+        public static Enemy RandomEnemy
+        {
+            get
+            {
+                var enemies = Enum.GetValues(typeof(Enemy));
+                return (Enemy) enemies.GetValue(UnityEngine.Random.Range(1, enemies.Length));
+            }
+        }
 
         public static float LargestGrabbingEnemy
         {

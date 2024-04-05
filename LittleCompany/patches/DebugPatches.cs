@@ -9,6 +9,7 @@ using Unity.Netcode;
 using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
+using System;
 
 namespace LittleCompany.patches
 {
@@ -162,12 +163,11 @@ namespace LittleCompany.patches
                 if (index != -1) return index;
             }
 
-            return Random.Range(0, enemyList.Count - 1);
+            return UnityEngine.Random.Range(0, enemyList.Count - 1);
         }
 
         public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, EnemyInfo.Enemy? enemy = null)
         {
-            //if (StartOfRound.Instance.inShipPhase || !StartOfRound.Instance.shipHasLanded) return;
             var enemyName = enemy.HasValue ? EnemyInfo.EnemyNameOf(enemy.Value) : "";
             var enemyIndex = GetEnemyIndex(enemyName, targetPlayer.isInsideFactory);
             if (enemyIndex == -1)
@@ -180,6 +180,8 @@ namespace LittleCompany.patches
                 RoundManager.Instance.SpawnEnemyOnServer(location, 0f, enemyIndex);
             }
         }
+
+        public static void SpawnAnyRandomEnemyInFrontOfPlayer(PlayerControllerB targetPlayer) => SpawnEnemyInFrontOfPlayer(targetPlayer, EnemyInfo.RandomEnemy);
 
         public static void LogPosition()
         {
