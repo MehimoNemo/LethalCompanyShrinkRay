@@ -9,7 +9,7 @@ using Unity.Netcode;
 using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
-using System;
+using static LittleCompany.helper.EnemyInfo;
 
 namespace LittleCompany.patches
 {
@@ -42,9 +42,8 @@ namespace LittleCompany.patches
         {
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                //Plugin.Log(EnemyInfo.AllEnemyNames.Join(null, " | "));
-                //LogInsideEnemyNames();
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer/*, "Hoarder Bug" */);
+                LogCurrentLevelEnemyNames();
+                //SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Slime);
             }
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
@@ -147,11 +146,10 @@ namespace LittleCompany.patches
             item.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 1.5f;
         }
 
-        public static void LogInsideEnemyNames()
+        public static void LogCurrentLevelEnemyNames()
         {
-            string enemyTypes = "";
-            RoundManager.Instance.currentLevel.Enemies.ForEach(enemyType => { enemyTypes += " " + enemyType.enemyType.name; });
-            Plugin.Log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
+            var enemies = CurrentLevelEnemyNames;
+            Plugin.Log(enemies != null ? enemies.Join(null, "\n") : "Not in a round.");
         }
 
         public static int GetEnemyIndex(string enemyName = null, bool inside = true)
@@ -166,9 +164,9 @@ namespace LittleCompany.patches
             return UnityEngine.Random.Range(0, enemyList.Count - 1);
         }
 
-        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, EnemyInfo.Enemy? enemy = null)
+        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, Enemy? enemy = null)
         {
-            var enemyName = enemy.HasValue ? EnemyInfo.EnemyNameOf(enemy.Value) : "";
+            var enemyName = enemy.HasValue ? EnemyNameOf(enemy.Value) : "";
             var enemyIndex = GetEnemyIndex(enemyName, targetPlayer.isInsideFactory);
             if (enemyIndex == -1)
             {
@@ -181,7 +179,7 @@ namespace LittleCompany.patches
             }
         }
 
-        public static void SpawnAnyRandomEnemyInFrontOfPlayer(PlayerControllerB targetPlayer) => SpawnEnemyInFrontOfPlayer(targetPlayer, EnemyInfo.RandomEnemy);
+        public static void SpawnAnyRandomEnemyInFrontOfPlayer(PlayerControllerB targetPlayer) => SpawnEnemyInFrontOfPlayer(targetPlayer, RandomEnemy);
 
         public static void LogPosition()
         {

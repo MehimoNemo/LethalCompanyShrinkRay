@@ -32,30 +32,34 @@ namespace LittleCompany.helper
             Jester,
             LassoMan,
             Masked,
+            Butler,
+            Robot
         }
 
         public static Dictionary<string, Enemy> EnemyNameMap = new Dictionary<string, Enemy>()
         {
             { "Centipede",          Enemy.Centipede     },
-            { "Bunker Spider",      Enemy.Spider        },
-            { "Hoarding bug",       Enemy.HoarderBug    },
+            { "SandSpider",         Enemy.Spider        },
+            { "HoarderBug",         Enemy.HoarderBug    },
             { "Flowerman",          Enemy.Bracken       },
             { "Crawler",            Enemy.Thumper       },
             { "Blob",               Enemy.Slime         },
-            { "Girl",               Enemy.GhostGirl     },
+            { "DressGirl",          Enemy.GhostGirl     },
             { "Puffer",             Enemy.Puffer        },
             { "Nutcracker",         Enemy.Nutcracker    },
             { "MouthDog",           Enemy.EyelessDog    },
             { "ForestGiant",        Enemy.ForestGiant   },
-            { "Earth Leviathan",    Enemy.Worm          },
-            { "Red Locust Bees",    Enemy.Bees          },
-            { "Manticoil",          Enemy.ManticoilBird },
-            { "Docile Locust Bees", Enemy.HarmlessBees  },
-            { "Baboon hawk",        Enemy.BaboonHawk    },
-            { "Spring",             Enemy.Coilhead      },
+            { "SandWorm",           Enemy.Worm          },
+            { "RedLocustBees",      Enemy.Bees          },
+            { "Doublewing",         Enemy.ManticoilBird },
+            { "DocileLocustBees",   Enemy.HarmlessBees  },
+            { "BaboonHawk",         Enemy.BaboonHawk    },
+            { "SpringMan",          Enemy.Coilhead      },
             { "Jester",             Enemy.Jester        },
-            { "Lasso",              Enemy.LassoMan      },
-            { "Masked",             Enemy.Masked        }
+            { "LassoMan",           Enemy.LassoMan      },
+            { "MaskedPlayerEnemy",  Enemy.Masked        },
+            { "Butler",             Enemy.Butler        },
+            { "RadMech",            Enemy.Robot         }
         };
 
         public static Enemy EnemyByName(string name) => EnemyNameMap.GetValueOrDefault(name, Enemy.Custom);
@@ -85,13 +89,19 @@ namespace LittleCompany.helper
             }
         }
 
-        public static List<String> AllEnemyNames
+        public static List<string> SpawnedEnemyNames => RoundManager.Instance.SpawnedEnemies.Select(enemyType => enemyType.enemyType.name).ToList();
+
+        public static List<string> CurrentLevelEnemyNames
         {
             get
             {
+                if (RoundManager.Instance?.currentLevel == null)
+                    return null;
+
                 var list = new List<string>();
-                foreach (var enemyType in UnityEngine.Object.FindObjectsOfType<EnemyType>())
-                    list.Add(enemyType.enemyName);
+                RoundManager.Instance.currentLevel.Enemies.ForEach(enemyType => list.Add(enemyType.enemyType.name));
+                RoundManager.Instance.currentLevel.OutsideEnemies.ForEach(enemyType => list.Add(enemyType.enemyType.name));
+                RoundManager.Instance.currentLevel.DaytimeEnemies.ForEach(enemyType => list.Add(enemyType.enemyType.name));
                 return list;
             }
         }
