@@ -119,6 +119,8 @@ namespace LittleCompany.components
         internal override void OnAwake()
         {
             modelReplacementApiCompatibility = new ModelReplacementApiCompatibility(target);
+            OriginalScale = Vector3.one;
+            RelativeScale = PlayerInfo.SizeOf(target);
         }
 
         public override void ScaleOverTimeTo(float scale, Action onComplete = null)
