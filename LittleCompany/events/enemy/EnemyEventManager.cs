@@ -16,7 +16,8 @@ namespace LittleCompany.events.enemy
             { Enemy.Centipede,  typeof(CentipedeEventHandler)   },
             { Enemy.Spider,     typeof(SpiderEventHandler)      },
             { Enemy.HoarderBug, typeof(HoarderBugEventHandler)  },
-            { Enemy.Bracken,    typeof(BrackenEventHandler)     }
+            { Enemy.Bracken,    typeof(BrackenEventHandler)     },
+            { Enemy.Slime,      typeof(SlimeEventHandler)       }
         };
 
         public static Type EventHandlerByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));

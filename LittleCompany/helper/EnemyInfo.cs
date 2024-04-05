@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.components.GrabbablePlayerObject;
 
@@ -68,6 +69,31 @@ namespace LittleCompany.helper
         public static Enemy EnemyByName(string name) => EnemyNameMap.GetValueOrDefault(name, Enemy.Custom);
 
         public static string EnemyNameOf(Enemy enemy) => EnemyNameMap.FirstOrDefault((x) => x.Value == enemy).Key;
+
+        public static EnemyType EnemyTypeByName(string enemyName = null)
+        {
+            if (enemyName == null || RoundManager.Instance?.currentLevel == null) return null;
+
+            // todo: optimize and store in list that gets updated on level change
+            var enemyList = new List<SpawnableEnemyWithRarity>();
+            enemyList.AddRange(RoundManager.Instance.currentLevel.Enemies);
+            enemyList.AddRange(RoundManager.Instance.currentLevel.OutsideEnemies);
+            enemyList.AddRange(RoundManager.Instance.currentLevel.DaytimeEnemies);
+
+            var index = enemyList.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.enemyName == enemyName);
+            if (index == -1) return null;
+
+            return enemyList[index].enemyType;
+        }
+
+        public static EnemyAI SpawnEnemyAt(Vector3 spawnPosition, float yRot, EnemyType enemyType)
+        {
+            GameObject gameObject = UnityEngine.Object.Instantiate(enemyType.enemyPrefab, spawnPosition, Quaternion.Euler(new Vector3(0f, yRot, 0f)));
+            gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
+            var enemyAI = gameObject.GetComponent<EnemyAI>();
+            RoundManager.Instance.SpawnedEnemies.Add(enemyAI);
+            return enemyAI;
+        }
 
         public static Enemy RandomEnemy
         {

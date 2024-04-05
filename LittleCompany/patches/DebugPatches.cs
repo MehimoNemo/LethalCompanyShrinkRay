@@ -10,8 +10,6 @@ using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
 using static LittleCompany.helper.EnemyInfo;
-using System.Collections.Generic;
-using System;
 
 namespace LittleCompany.patches
 {
@@ -44,7 +42,7 @@ namespace LittleCompany.patches
         {
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnAnyRandomEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Slime);
             }
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
@@ -153,27 +151,11 @@ namespace LittleCompany.patches
             Plugin.Log(enemies != null ? enemies.Join(null, "\n") : "Not in a round.");
         }
 
-        public static EnemyType GetEnemyType(string enemyName = null)
-        {
-            var enemyList = new List<SpawnableEnemyWithRarity>();
-            enemyList.AddRange(RoundManager.Instance.currentLevel.Enemies);
-            enemyList.AddRange(RoundManager.Instance.currentLevel.OutsideEnemies);
-            enemyList.AddRange(RoundManager.Instance.currentLevel.DaytimeEnemies);
-
-            if (enemyName != null)
-            {
-                var index = enemyList.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.enemyName == enemyName);
-                if (index != -1) return enemyList[index].enemyType;
-            }
-
-            return enemyList[UnityEngine.Random.Range(0, enemyList.Count - 1)].enemyType;
-        }
-
         public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, Enemy? enemy = null)
         {
             var enemyName = enemy.HasValue ? EnemyNameOf(enemy.Value) : "";
             Plugin.Log("Enemy name: " + enemyName);
-            var enemyType = GetEnemyType(enemyName);
+            var enemyType = EnemyTypeByName(enemyName);
             if (enemyType == null)
             {
                 Plugin.Log("No enemy found..");
@@ -181,7 +163,8 @@ namespace LittleCompany.patches
             }
 
             var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
-            RoundManager.Instance.SpawnEnemyGameObject(location, 0f, 0, enemyType);
+            SpawnEnemyAt(location, 0f, enemyType);
+            //RoundManager.Instance.SpawnEnemyGameObject(location, 0f, 0, enemyType);
         }
 
         public static void SpawnAnyRandomEnemyInFrontOfPlayer(PlayerControllerB targetPlayer) => SpawnEnemyInFrontOfPlayer(targetPlayer, RandomEnemy);
