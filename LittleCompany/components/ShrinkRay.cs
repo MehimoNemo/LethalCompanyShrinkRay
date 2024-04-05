@@ -192,6 +192,8 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModificationTypeServerRpc(int newType)
         {
+            Plugin.Log(currentModificationType.ToString());
+            Plugin.Log(currentModificationType.Value.ToString());
             Plugin.Log("ShrinkRay modificationType switched to " + (ModificationType)newType);
             currentModificationType.Value = (ModificationType)newType;
         }

@@ -7,6 +7,7 @@ using LittleCompany.helper;
 using LittleCompany.modifications;
 using LittleCompany.patches;
 using LittleCompany.events.enemy;
+using LittleCompany.compatibility;
 
 namespace LittleCompany.components
 {
@@ -113,6 +114,12 @@ namespace LittleCompany.components
     {
         #region Methods
         internal Vector3 armOffset = Vector3.zero;
+        internal ModelReplacementApiCompatibility modelReplacementApiCompatibility;
+
+        internal override void OnAwake()
+        {
+            modelReplacementApiCompatibility = new ModelReplacementApiCompatibility(target);
+        }
 
         public override void ScaleOverTimeTo(float scale, Action onComplete = null)
         {
@@ -121,9 +128,11 @@ namespace LittleCompany.components
 
         public override void ScaleTo(float scale)
         {
+            if (target == null || target.transform == null)
+                return;
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
             base.ScaleTo(scale);
-
+            CompatibilityAfterEachScale(scale);
             if (PlayerInfo.IsCurrentPlayer(target))
             {
                 // scale arms & visor
@@ -149,6 +158,23 @@ namespace LittleCompany.components
             {
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
                 PlayerInfo.RebuildRig(target);
+                CompatibilityAtEndOfScaling();
+            }
+        }
+
+        private void CompatibilityAfterEachScale(float scale)
+        {
+            if (ModelReplacementApiCompatibility.enabled)
+            {
+                modelReplacementApiCompatibility.AdjustToSize(scale);
+            }
+        }
+
+        private void CompatibilityAtEndOfScaling()
+        {
+            if (ModelReplacementApiCompatibility.enabled)
+            {
+                modelReplacementApiCompatibility.ReloadCurrentReplacementModel();
             }
         }
         #endregion

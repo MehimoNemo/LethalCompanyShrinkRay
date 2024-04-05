@@ -32,7 +32,7 @@ namespace LittleCompany.compatibility
             player = pcb;
             ReloadCurrentReplacementModel();
         }
-
+        
         public void ReloadCurrentReplacementModel()
         {
             if (enabled)
@@ -40,7 +40,7 @@ namespace LittleCompany.compatibility
                 GameObject foundModel = FindCurrentReplacementModel();
                 if (foundModel != null)
                 {
-                    if (replacementModel == null || foundModel.name != replacementModel.name)
+                    if(replacementModel == null || foundModel.name != replacementModel.name)
                     {
                         Plugin.Log("Replace original scale");
                         replacementModelOriginalScale = foundModel.transform.localScale;
@@ -59,8 +59,9 @@ namespace LittleCompany.compatibility
 
         public void AdjustToSize(float size)
         {
-            if (enabled && replacementModel != null && replacementModel.transform != null)
+            if(enabled && replacementModel != null && replacementModel.transform != null)
             {
+                Plugin.Log("Adjust to: " + size);
                 replacementModel.transform.localScale = replacementModelOriginalScale * size;
             }
         }

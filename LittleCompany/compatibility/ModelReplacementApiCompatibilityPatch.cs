@@ -1,7 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.components;
-using LittleCompany.helper;
 using System.Collections.Generic;
 namespace LittleCompany.compatibility
 {
@@ -21,7 +20,6 @@ namespace LittleCompany.compatibility
                 // Reload the suit
                 Plugin.Log("Reload the suit");
                 __instance.GetComponent<PlayerScaling>()?.modelReplacementApiCompatibility?.ReloadCurrentReplacementModel();
-                PlayerInfo.RebuildRig(__instance);
                 SuitChangedDetectedLastFrame[__instance.playerClientId] = false;
             }
             else if (PlayerChangedSuit(__instance))
