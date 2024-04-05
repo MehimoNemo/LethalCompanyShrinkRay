@@ -5,25 +5,22 @@ using UnityEngine;
 using LittleCompany.components;
 using LittleCompany.modifications;
 using LittleCompany.helper;
+using static LittleCompany.helper.EnemyInfo;
 
 namespace LittleCompany.events.enemy
 {
     public class EnemyEventManager
     {
-        public static readonly Dictionary<string, Type> EventHandler = new Dictionary<string, Type>
+        internal static readonly Dictionary<Enemy, Type> EventHandler = new Dictionary<Enemy, Type>
         {
-            { "Centipede", typeof(CentipedeEventHandler) },
-            { "Bunker Spider", typeof(SpiderEventHandler) },
-            { "HoarderBug", typeof(HoarderBugEventHandler) },
-            { "Flowerman", typeof(BrackenEventHandler) }/*,
-            { "Crawler", Enemy.Thumper },
-            { "Blob", Enemy.Blob },
-            { "DressGirl", Enemy.GhostGirl },
-            { "Puffer", Enemy.Puffer },
-            { "Nutcracker", Enemy.Nutcracker }*/
+            { Enemy.Custom,     typeof(EnemyEventHandler)       },
+            { Enemy.Centipede,  typeof(CentipedeEventHandler)   },
+            { Enemy.Spider,     typeof(SpiderEventHandler)      },
+            { Enemy.HoarderBug, typeof(HoarderBugEventHandler)  },
+            { Enemy.Bracken,    typeof(BrackenEventHandler)     }
         };
 
-        public static Type EventHandlerByName(string enemyName) => EventHandler.GetValueOrDefault(enemyName, typeof(EnemyEventHandler));
+        public static Type EventHandlerByName(string enemyName) => EventHandler[EnemyByName(enemyName)];
 
         public static EnemyEventHandler EventHandlerOf(EnemyAI enemyAI)
         {
