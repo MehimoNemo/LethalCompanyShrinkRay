@@ -4,9 +4,9 @@ namespace LittleCompany.events.enemy
 {
     internal class HoarderBugEventHandler: EnemyEventHandler
     {
-        public override void OnDeathShrinking()
+        public override void OnDeathShrinking(float previousSize)
         {
-            base.OnDeathShrinking();
+            base.OnDeathShrinking(previousSize);
             Plugin.Log("Hoarderbug shrunken to death");
         }
         public override void Shrunken(bool wasShrunkenBefore) { }

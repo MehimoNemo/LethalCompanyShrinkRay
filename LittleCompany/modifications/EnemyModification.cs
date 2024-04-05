@@ -69,13 +69,14 @@ namespace LittleCompany.modifications
             {
                 case ModificationType.Shrinking:
                     {
+                        var previousScale = ScalingOf(targetEnemy).RelativeScale;
                         var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy);
                         Plugin.Log("Shrinking enemy [" + targetEnemy.name + "] to size: " + nextShrunkenSize);
                         scaling.ScaleOverTimeTo(nextShrunkenSize, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
-                                EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking();
+                                EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking(previousScale);
                                 /*
                                 // Poof Target to death because they are too small to exist
                                 if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetEnemy.transform.position) && targetEnemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)

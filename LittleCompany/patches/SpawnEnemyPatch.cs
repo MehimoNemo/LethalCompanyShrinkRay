@@ -17,7 +17,7 @@ namespace LittleCompany.patches
             var eventHandler = EnemyEventManager.EventHandlerOf(enemyAI);
 #if DEBUG
             if (eventHandler != null)
-                eventHandler.OnDeathShrinking(); // ayoooo SPAWNKILL !!
+                eventHandler.OnDeathShrinking(1f); // ayoooo SPAWNKILL !!
 #endif
         }
     }

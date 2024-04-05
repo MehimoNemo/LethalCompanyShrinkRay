@@ -5,9 +5,14 @@ namespace LittleCompany.events.enemy
 {
     internal class SpiderEventHandler : EnemyEventHandler
     {
-        public override void OnDeathShrinking()
+        void Awake()
         {
-            for(int i = 0; i < 10; i++) // Shoot 10 webs in any direction
+            DeathPoofScale = 0.5f;
+        }
+
+        public override void OnDeathShrinking(float previousSize)
+        {
+            for (int i = 0; i < 10; i++) // Shoot 10 webs in any direction
             {
                 // Taken from SandSpiderAI.AttemptPlaceWebTrap()
                 Vector3 direction = Vector3.Scale(Random.onUnitSphere, new Vector3(1f, Random.Range(0.5f, 1f), 1f));
@@ -27,9 +32,7 @@ namespace LittleCompany.events.enemy
                 }
             }
 
-            base.OnDeathShrinking();
-            if (deathPoof != null)
-                deathPoof.transform.localScale = Vector3.one * 0.5f; // larger death poof
+            base.OnDeathShrinking(previousSize);
         }
         public override void Shrunken(bool wasShrunkenBefore) { }
         public override void Enlarged(bool wasEnlargedBefore) { }

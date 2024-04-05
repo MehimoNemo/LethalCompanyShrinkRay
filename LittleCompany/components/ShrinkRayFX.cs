@@ -17,6 +17,8 @@ namespace LittleCompany.components
         private VisualEffect defaultVisualEffect { get; set; }
         private VisualEffect activeVisualEffect { get; set; }
 
+        public const float DefaultDeathPoofScale = 0.2f;
+
         public float thickness {
             set {
                 SetFloat("Thickness", value);
@@ -236,15 +238,16 @@ namespace LittleCompany.components
             return beam != null;
         }
 
-        public static bool TryCreateDeathPoofAt(out GameObject deathPoof, Vector3 position)
+        public static bool TryCreateDeathPoofAt(out GameObject deathPoof, Vector3 position, float scale = DefaultDeathPoofScale)
         {
             deathPoof = Effects.DeathPoof;
             if (deathPoof == null)
                 return false;
 
             deathPoof.transform.position = position;
-            Destroy(deathPoof, 3f);
+            deathPoof.transform.localScale = Vector3.one * scale;
 
+            Destroy(deathPoof, 3f);
             return deathPoof != null;
         }
 

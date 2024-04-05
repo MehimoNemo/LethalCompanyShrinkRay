@@ -4,9 +4,9 @@ namespace LittleCompany.events.enemy
 {
     internal class BrackenEventHandler : EnemyEventHandler
     {
-        public override void OnDeathShrinking()
+        public override void OnDeathShrinking(float previousSize)
         {
-            base.OnDeathShrinking();
+            base.OnDeathShrinking(previousSize);
             Plugin.Log("Bracken shrunken to death");
         }
         public override void Shrunken(bool wasShrunkenBefore) { }
