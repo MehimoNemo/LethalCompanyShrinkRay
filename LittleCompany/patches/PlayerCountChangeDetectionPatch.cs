@@ -39,11 +39,11 @@ namespace LittleCompany.patches
             // cigarette
             Plugin.Log("\n a,  8a\r\n `8, `8)                            ,adPPRg,\r\n  8)  ]8                        ,ad888888888b\r\n ,8' ,8'                    ,gPPR888888888888\r\n,8' ,8'                 ,ad8\"\"   `Y888888888P\r\n8)  8)              ,ad8\"\"        (8888888\"\"\r\n8,  8,          ,ad8\"\"            d888\"\"\r\n`8, `8,     ,ad8\"\"            ,ad8\"\"\r\n `8, `\" ,ad8\"\"            ,ad8\"\"\r\n    ,gPPR8b           ,ad8\"\"\r\n   dP:::::Yb      ,ad8\"\"\r\n   8):::::(8  ,ad8\"\"\r\n   Yb:;;;:d888\"\"  Yummy\r\n    \"8ggg8P\"      Nummy");
             Plugin.Log("We joined a lobby.");
-            AddPlayerScalingToEveryScaledPlayer();
+            //AddPlayerScalingToEveryScaledPlayer();
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
         }
 
-        private static void AddPlayerScalingToEveryScaledPlayer()
+        /*private static void AddPlayerScalingToEveryScaledPlayer()
         {
             Plugin.Log("Adding Scaling to every scaled player");
             PlayerControllerB[] players = StartOfRound.Instance.allPlayerScripts;
@@ -57,7 +57,7 @@ namespace LittleCompany.patches
                     playerScaling.CurrentScale = size;
                 }
             }
-        }
+        }*/
 
         // When players get revived
         [HarmonyPatch(typeof(StartOfRound), "AllPlayersHaveRevivedClientRpc")]

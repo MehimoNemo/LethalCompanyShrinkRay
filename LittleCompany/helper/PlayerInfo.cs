@@ -105,7 +105,7 @@ namespace LittleCompany.helper
 
         public static Transform SpineOf(PlayerControllerB pcb) => BodyTransformOf(pcb)?.Find("spine");
 
-        public static void RebuildRig(PlayerControllerB pcb)
+        public static void ScaleLocalPlayerBodyParts()
         {
             AdjustLocalVisor();
         }
