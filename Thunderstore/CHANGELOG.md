@@ -1,3 +1,10 @@
+### 0.5.7 ###
++ fixed resizing not working correctly on players who were small before joining
++ updated recommended LethalLib dependency version to 0.15.1 for v50 support
++ Fixed arm offset when resized
++ Lethal Phone compatibility
++ ModelReplacementApi compatibility
+
 ### 0.5.6 ###
 + fixed sometimes falling through ground after using vents
 

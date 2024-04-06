@@ -1,10 +1,10 @@
 {
     "name": "LittleCompany",
-    "version_number": "0.5.6",
+    "version_number": "0.5.7",
     "website_url": "https://github.com/MehimoNemo/LethalCompanyShrinkRay",
     "description": "A Lethal Company mod for a functioning shrink ray!",
     "dependencies": [
         "BepInEx-BepInExPack-5.4.2100",
-		"Evaisa-LethalLib-0.14.2"
+		"Evaisa-LethalLib-0.15.1"
     ]
 }

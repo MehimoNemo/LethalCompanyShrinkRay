@@ -25,13 +25,11 @@ namespace LittleCompany.components
         #region Base Methods
         void Awake()
         {
-            if (gameObject == null)
+            if (gameObject == null || !gameObject.TryGetComponent(out target))
             {
-                Plugin.Log("TargetHighlighting -> no gameObject found!", Plugin.LogType.Error);
+                Plugin.Log("TargetScaling -> target not found!", Plugin.LogType.Error);
                 return;
             }
-
-            target = gameObject.GetComponent<T>();
 
             OriginalSize = gameObject.transform.localScale;
 
@@ -119,6 +117,8 @@ namespace LittleCompany.components
         internal override void OnAwake()
         {
             modelReplacementApiCompatibility = new ModelReplacementApiCompatibility(target);
+            OriginalSize = Vector3.one;
+            CurrentScale = PlayerInfo.SizeOf(target);
         }
 
         public override void ScaleTo(float scale = 1f, bool saveAsIntendedSize = false)
