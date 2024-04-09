@@ -434,7 +434,7 @@ namespace LittleCompany.components
 
                         if(IsOwner)
                             Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value))
+                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -455,7 +455,7 @@ namespace LittleCompany.components
                         if (IsOwner)
                             Plugin.Log("Ray has hit an ITEM -> " + item.name);
 
-                        if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value))
+                        if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value, playerHeldBy))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -483,7 +483,7 @@ namespace LittleCompany.components
                         if (IsOwner)
                             Plugin.Log("Ray has hit an ENEMY -> " + enemyAI.enemyType.name);
 
-                        if(!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value))
+                        if(!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value, playerHeldBy))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -547,7 +547,7 @@ namespace LittleCompany.components
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
             Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
-            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, () =>
+            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, () =>
             {
                 Plugin.Log("Finished player modification with type: " + currentModificationType.Value.ToString());
             });
@@ -580,7 +580,7 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, () =>
+            ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, playerHeldBy, () =>
             {
                 Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
             });
@@ -613,7 +613,7 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            EnemyModification.ApplyModificationTo(targetObject.GetComponentInParent<EnemyAI>(), currentModificationType.Value, () =>
+            EnemyModification.ApplyModificationTo(targetObject.GetComponentInParent<EnemyAI>(), currentModificationType.Value, playerHeldBy, () =>
             {
                 Plugin.Log("Finished enemy modification with type: " + currentModificationType.Value.ToString());
             });

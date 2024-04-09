@@ -8,6 +8,7 @@ using LittleCompany.helper;
 using static LittleCompany.helper.EnemyInfo;
 using Unity.Netcode;
 using System.Collections;
+using GameNetcodeStuff;
 
 namespace LittleCompany.events.enemy
 {
@@ -68,44 +69,33 @@ namespace LittleCompany.events.enemy
 
             void Awake()
             {
-                Plugin.Log("EnemyEventHandler " + name + " has awaken!");
+                Plugin.Log(name + " has awaken!");
                 enemy = GetComponent<EnemyAI>();
-            }
-
-            void Start()
-            {
-                Plugin.Log("EnemyEventHandler " + name + " has started!");
-            }
-
-            public override void OnNetworkSpawn()
-            {
-                base.OnNetworkSpawn();
-                Plugin.Log("EnemyEventHandler " + name + " got spawned!");
 
 #if DEBUG
-                if (PlayerInfo.IsHost)
-                    StartCoroutine(SpawnKillLater());
+                /*if (PlayerInfo.IsHost)
+                    StartCoroutine(SpawnKillLater());*/
 #endif
             }
 
             public IEnumerator SpawnKillLater()
             {
                 yield return new WaitForSeconds(1);
-                OnDeathShrinking(1f); // SPAWNKILL !!
+                OnDeathShrinking(1f, PlayerInfo.CurrentPlayer); // SPAWNKILL !!
             }
 
             public virtual void OnAwake() { }
 
-            public void SizeChanged(float from, float to)
+            public void SizeChanged(float from, float to, PlayerControllerB playerBy)
             {
                 if (Mathf.Approximately(from, to)) return;
                 if (from > to)
-                    Shrunken(from <= 1f);
+                    Shrunken(from <= 1f, playerBy);
                 else
-                    Enlarged(from >= 1f);
+                    Enlarged(from >= 1f, playerBy);
             }
 
-            public virtual void OnDeathShrinking(float previousSize)
+            public virtual void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
             {
                 if (ShrinkRayFX.TryCreateDeathPoofAt(out _, enemy.transform.position, DeathPoofScale) && enemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null && Modification.deathPoofSFX != null)
                     audioSource.PlayOneShot(Modification.deathPoofSFX);
@@ -116,9 +106,9 @@ namespace LittleCompany.events.enemy
                 Plugin.Log("Enemy shrunken to death");
             }
 
-            public virtual void Shrunken(bool wasAlreadyShrunken) { }
-            public virtual void Enlarged(bool wasAlreadyEnlarged) { }
-            public virtual void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged) { }
+            public virtual void Shrunken(bool wasAlreadyShrunken, PlayerControllerB playerShrunkenBy) { }
+            public virtual void Enlarged(bool wasAlreadyEnlarged, PlayerControllerB playerEnlargedBy) { }
+            public virtual void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
         }
     }
 }

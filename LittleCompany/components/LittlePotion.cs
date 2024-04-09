@@ -341,14 +341,14 @@ namespace LittleCompany.components
             if (Consuming || playerHeldBy == null)
                 yield break;
 
-            if (Consumed.Value || playerHeldBy.isClimbingLadder || !PlayerModification.CanApplyModificationTo(playerHeldBy, modificationType))
+            if (Consumed.Value || playerHeldBy.isClimbingLadder || !PlayerModification.CanApplyModificationTo(playerHeldBy, modificationType, playerHeldBy))
             {
                 if (IsOwner && noConsumeSFX != null && audioSource != null)
                     audioSource.PlayOneShot(noConsumeSFX);
                 yield break;
             }
 
-            PlayerModification.ApplyModificationTo(playerHeldBy, modificationType);
+            PlayerModification.ApplyModificationTo(playerHeldBy, modificationType, playerHeldBy);
 
             Consuming = true;
             isBeingUsed = true;

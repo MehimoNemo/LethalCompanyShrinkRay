@@ -46,27 +46,27 @@ namespace LittleCompany.components
 
         #region Methods
         internal virtual void OnAwake() { }
-        public virtual void ScaleTo(float scale)
+        public virtual void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             gameObject.transform.localScale = OriginalScale * scale;
             RelativeScale = scale;
         }
 
-        public virtual void ScaleOverTimeTo(float scale, Action onComplete = null)
+        public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null)
         {
-            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, () =>
+            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, () =>
             {
                 ScaleRoutine = null;
 
                 // Ensure final scale is set to the desired value
-                ScaleTo(scale);
+                ScaleTo(scale, scaledBy);
                 
                 if (onComplete != null)
                     onComplete();
             }));
         }
 
-        private IEnumerator ScaleOverTimeToCoroutine(float scale, Action onComplete = null)
+        private IEnumerator ScaleOverTimeToCoroutine(float scale, PlayerControllerB scaledBy, Action onComplete = null)
         {
             float elapsedTime = 0f;
             var c = RelativeScale;
@@ -79,7 +79,7 @@ namespace LittleCompany.components
                 // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
                 var x = elapsedTime;
                 var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
-                ScaleTo(newScale);
+                ScaleTo(newScale, scaledBy);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
@@ -123,17 +123,17 @@ namespace LittleCompany.components
             RelativeScale = PlayerInfo.SizeOf(target);
         }
 
-        public override void ScaleOverTimeTo(float scale, Action onComplete = null)
+        public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null)
         {
-            base.ScaleOverTimeTo(scale, onComplete);
+            base.ScaleOverTimeTo(scale, scaledBy, onComplete);
         }
 
-        public override void ScaleTo(float scale)
+        public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             if (target == null || target.transform == null)
                 return;
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
-            base.ScaleTo(scale);
+            base.ScaleTo(scale, scaledBy);
             CompatibilityAfterEachScale(scale);
             if (PlayerInfo.IsCurrentPlayer(target))
             {
@@ -185,9 +185,9 @@ namespace LittleCompany.components
     internal class ItemScaling : TargetScaling<GrabbableObject>
     {
         #region Methods
-        public override void ScaleTo(float scale)
+        public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
-            base.ScaleTo(scale);
+            base.ScaleTo(scale, scaledBy);
 
             if (!GettingScaled && target != null)
                 target.originalScale = gameObject.transform.localScale;
@@ -206,13 +206,13 @@ namespace LittleCompany.components
 
     internal class EnemyScaling : TargetScaling<EnemyAI>
     {
-        public override void ScaleTo(float scale)
+        public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             var previousScale = RelativeScale;
-            base.ScaleTo(scale);
+            base.ScaleTo(scale, scaledBy);
 
             if (!GettingScaled)
-                EnemyEventManager.EventHandlerOf(target)?.SizeChanged(previousScale, scale);
+                EnemyEventManager.EventHandlerOf(target)?.SizeChanged(previousScale, scale, scaledBy);
         }
     }
 }

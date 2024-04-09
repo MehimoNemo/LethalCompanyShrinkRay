@@ -4,6 +4,7 @@ using UnityEngine;
 using LittleCompany.components;
 using LittleCompany.Config;
 using LittleCompany.events.enemy;
+using GameNetcodeStuff;
 
 namespace LittleCompany.modifications
 {
@@ -27,7 +28,7 @@ namespace LittleCompany.modifications
             return Mathf.Min(ScalingOf(targetEnemy).RelativeScale + ModConfig.Instance.values.sizeChangeStep, 4f);
         }
 
-        public static bool CanApplyModificationTo(EnemyAI targetEnemy, ModificationType type)
+        public static bool CanApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy)
         {
             if (targetEnemy == null)
                 return false;
@@ -58,7 +59,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(EnemyAI targetEnemy, ModificationType type, Action onComplete = null)
+        public static void ApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
         {
             if (targetEnemy?.gameObject == null) return;
 
@@ -72,11 +73,11 @@ namespace LittleCompany.modifications
                         var previousScale = ScalingOf(targetEnemy).RelativeScale;
                         var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy);
                         Plugin.Log("Shrinking enemy [" + targetEnemy.name + "] to size: " + nextShrunkenSize);
-                        scaling.ScaleOverTimeTo(nextShrunkenSize, () =>
+                        scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
-                                EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking(previousScale);
+                                EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking(previousScale, playerModifiedBy);
                                 /*
                                 // Poof Target to death because they are too small to exist
                                 if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetEnemy.transform.position) && targetEnemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
@@ -97,7 +98,7 @@ namespace LittleCompany.modifications
                     {
                         var nextIncreasedSize = NextIncreasedSizeOf(targetEnemy);
                         Plugin.Log("Enlarging enemy [" + targetEnemy.name + "] to size: " + nextIncreasedSize);
-                        scaling.ScaleOverTimeTo(nextIncreasedSize, () =>
+                        scaling.ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
                                 onComplete();

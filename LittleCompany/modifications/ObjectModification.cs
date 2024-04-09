@@ -1,4 +1,5 @@
-﻿using LittleCompany.components;
+﻿using GameNetcodeStuff;
+using LittleCompany.components;
 using LittleCompany.Config;
 using System;
 using UnityEngine;
@@ -25,7 +26,7 @@ namespace LittleCompany.modifications
             return Mathf.Min(ScalingOf(targetObject).RelativeScale + ModConfig.Instance.values.sizeChangeStep, 4f);
         }
 
-        public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type)
+        public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy)
         {
             if (targetObject == null)
                 return false;
@@ -61,7 +62,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(GrabbableObject targetObject, ModificationType type, Action onComplete = null)
+        public static void ApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
         {
             if (targetObject?.gameObject == null) return;
 
@@ -74,7 +75,7 @@ namespace LittleCompany.modifications
                     {
                         var normalizedSize = 1f;
                         Plugin.Log("Normalizing object [" + targetObject.name + "]");
-                        scaling.ScaleOverTimeTo(normalizedSize, () =>
+                        scaling.ScaleOverTimeTo(normalizedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
                                 onComplete();
@@ -86,7 +87,7 @@ namespace LittleCompany.modifications
                     {
                         var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
                         Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
-                        scaling.ScaleOverTimeTo(nextShrunkenSize, () =>
+                        scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
@@ -108,7 +109,7 @@ namespace LittleCompany.modifications
                     {
                         var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
                         Plugin.Log("Enlarging object [" + targetObject.name + "] to size: " + nextIncreasedSize);
-                        scaling.ScaleOverTimeTo(nextIncreasedSize, () =>
+                        scaling.ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
                                 onComplete();

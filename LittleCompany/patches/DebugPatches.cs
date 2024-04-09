@@ -42,7 +42,7 @@ namespace LittleCompany.patches
         {
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Spider);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Coilhead);
             }
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
@@ -247,11 +247,11 @@ namespace LittleCompany.patches
 
         public static void ApplyModification(ModificationType type)
         {
-            if (!PlayerModification.CanApplyModificationTo(PlayerInfo.CurrentPlayer, type))
+            if (!PlayerModification.CanApplyModificationTo(PlayerInfo.CurrentPlayer, type, PlayerInfo.CurrentPlayer))
                 return;
 
             Executing = true;
-            PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, type, () => Executing = false);
+            PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, type, PlayerInfo.CurrentPlayer, () => Executing = false);
         }
         #endregion
 #endif

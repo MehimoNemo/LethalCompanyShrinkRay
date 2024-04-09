@@ -337,7 +337,7 @@ namespace LittleCompany.components
             Plugin.Log("ResetAnyPlayerModificationsFor");
             if (targetPlayer == null) return;
 
-            PlayerModification.ApplyModificationTo(targetPlayer, Modification.ModificationType.Normalizing);
+            PlayerModification.ApplyModificationTo(targetPlayer, Modification.ModificationType.Normalizing, null);
         }
 
         public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)

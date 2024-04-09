@@ -54,7 +54,7 @@ namespace LittleCompany.modifications
             }
         }
 
-        public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
+        public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy)
         {
             if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder || targetPlayer.inTerminalMenu)
                 return false;
@@ -104,7 +104,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, Action onComplete = null)
+        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
         {
             if (targetPlayer == null) return;
 
@@ -115,7 +115,7 @@ namespace LittleCompany.modifications
                 case ModificationType.Normalizing:
                     {
                         Plugin.Log("Normalizing player [" + targetPlayer.playerClientId + "]");
-                        ScalingOf(targetPlayer).ScaleTo(ModConfig.Instance.values.defaultPlayerSize);
+                        ScalingOf(targetPlayer).ScaleTo(ModConfig.Instance.values.defaultPlayerSize, playerModifiedBy);
 
                         if (onComplete != null)
                             onComplete();
@@ -126,7 +126,7 @@ namespace LittleCompany.modifications
                     {
                         var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
                         Plugin.Log("Shrinking player [" + targetPlayer.playerClientId + "] to size: " + nextShrunkenSize);
-                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextShrunkenSize, () =>
+                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
@@ -153,7 +153,7 @@ namespace LittleCompany.modifications
                         if (nextIncreasedSize >= 1f && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
                             gpo.EnableInteractTrigger(false);
 
-                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, () =>
+                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
                                 onComplete();

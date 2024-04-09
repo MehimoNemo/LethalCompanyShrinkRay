@@ -1,4 +1,5 @@
-﻿using LittleCompany.helper;
+﻿using GameNetcodeStuff;
+using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
 using UnityEngine;
@@ -31,7 +32,7 @@ namespace LittleCompany.events.enemy
 
         internal const float SlimeCloneSize = 0.2f;
         internal const int SlimeCloneAmount = 5;
-        public override void OnDeathShrinking(float previousSize)
+        public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {
             if (enemy.GetComponent<TinySlimeBehaviour>() == null) // Not a tiny slime
             {
@@ -63,11 +64,11 @@ namespace LittleCompany.events.enemy
                 }
             }
 
-            base.OnDeathShrinking(previousSize);
+            base.OnDeathShrinking(previousSize, playerShrunkenBy);
             Plugin.Log("Slime shrunken to death. But at what cost..");
         }
-        public override void Shrunken(bool wasShrunkenBefore) { }
-        public override void Enlarged(bool wasEnlargedBefore) { }
-        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged) { }
+        public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }
+        public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
+        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
     }
 }

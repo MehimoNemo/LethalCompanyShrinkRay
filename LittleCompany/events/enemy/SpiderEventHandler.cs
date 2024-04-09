@@ -1,4 +1,5 @@
-﻿using LittleCompany.helper;
+﻿using GameNetcodeStuff;
+using LittleCompany.helper;
 using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
@@ -12,7 +13,7 @@ namespace LittleCompany.events.enemy
             DeathPoofScale = 0.5f;
         }
 
-        public override void OnDeathShrinking(float previousSize)
+        public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {
             Plugin.Log("Spider event triggered.");
             if (PlayerInfo.IsHost)
@@ -38,10 +39,10 @@ namespace LittleCompany.events.enemy
                 }
             }
 
-            base.OnDeathShrinking(previousSize);
+            base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
-        public override void Shrunken(bool wasShrunkenBefore) { }
-        public override void Enlarged(bool wasEnlargedBefore) { }
-        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged) { }
+        public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }
+        public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
+        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
     }
 }
