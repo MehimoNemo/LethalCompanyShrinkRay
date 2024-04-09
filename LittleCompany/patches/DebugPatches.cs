@@ -42,7 +42,7 @@ namespace LittleCompany.patches
         {
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Slime);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Spider);
             }
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
@@ -164,7 +164,6 @@ namespace LittleCompany.patches
 
             var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
             SpawnEnemyAt(location, 0f, enemyType);
-            //RoundManager.Instance.SpawnEnemyGameObject(location, 0f, 0, enemyType);
         }
 
         public static void SpawnAnyRandomEnemyInFrontOfPlayer(PlayerControllerB targetPlayer) => SpawnEnemyInFrontOfPlayer(targetPlayer, RandomEnemy);

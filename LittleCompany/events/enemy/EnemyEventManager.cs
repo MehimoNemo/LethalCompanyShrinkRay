@@ -6,6 +6,8 @@ using LittleCompany.components;
 using LittleCompany.modifications;
 using LittleCompany.helper;
 using static LittleCompany.helper.EnemyInfo;
+using Unity.Netcode;
+using System.Collections;
 
 namespace LittleCompany.events.enemy
 {
@@ -17,22 +19,47 @@ namespace LittleCompany.events.enemy
             { Enemy.Spider,     typeof(SpiderEventHandler)      },
             { Enemy.HoarderBug, typeof(HoarderBugEventHandler)  },
             { Enemy.Bracken,    typeof(BrackenEventHandler)     },
-            { Enemy.Slime,      typeof(SlimeEventHandler)       }
+            { Enemy.Slime,      typeof(SlimeEventHandler)       },
+            { Enemy.Bees,       typeof(BeesEventHandler)        },
+            { Enemy.Coilhead,   typeof(CoilheadEventHandler)    }
         };
 
-        public static Type EventHandlerByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
+        public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
 
         public static EnemyEventHandler EventHandlerOf(EnemyAI enemyAI)
         {
-            var eventHandlerType = EventHandlerByName(enemyAI.enemyType.enemyName);
+            if (!PlayerInfo.IsHost) return null; // todo: optimize
+
+            var eventHandlerType = EventHandlerTypeByName(enemyAI.enemyType.enemyName);
             Plugin.Log("Found eventHandler with name " + eventHandlerType.ToString() + " for enemy name " + enemyAI.enemyType.enemyName);
             if (enemyAI.TryGetComponent(eventHandlerType, out Component eventHandler))
                 return eventHandler as EnemyEventHandler;
 
-            return enemyAI.gameObject.AddComponent(eventHandlerType) as EnemyEventHandler;
+            Plugin.Log("Enemy had no event handler!", Plugin.LogType.Error);
+            return null;
         }
 
-        public class EnemyEventHandler : MonoBehaviour
+        public static void BindAllEnemyEvents()
+        {
+            int handlersAdded = 0;
+            foreach (var enemyType in EnemyTypes)
+            {
+                var eventHandlerType = EventHandlerTypeByName(enemyType.enemyName);
+                var eventHandler = enemyType.enemyPrefab.AddComponent(eventHandlerType);
+                if (eventHandler != null)
+                    handlersAdded++;
+#if DEBUG
+                if (eventHandler != null)
+                    Plugin.Log("Added event handler \"" + eventHandlerType.Name + "\" for enemy \"" + enemyType.enemyName + "\"");
+                else
+                    Plugin.Log("No enemy handler found for enemy \"" + enemyType.enemyName + "\"");
+#endif
+            }
+
+            Plugin.Log("BindAllEnemyEvents -> Added handler for " + handlersAdded + "/" + EnemyTypes.Count + " enemies.");
+        }
+
+        public class EnemyEventHandler : NetworkBehaviour
         {
             // todo: Make this generic -> public class EnemyEventHandler<T> : MonoBehaviour where T : EnemyAI
             // not working as it can't add the component, as there has to be a type specified...
@@ -41,8 +68,33 @@ namespace LittleCompany.events.enemy
 
             void Awake()
             {
+                Plugin.Log("EnemyEventHandler " + name + " has awaken!");
                 enemy = GetComponent<EnemyAI>();
             }
+
+            void Start()
+            {
+                Plugin.Log("EnemyEventHandler " + name + " has started!");
+            }
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+                Plugin.Log("EnemyEventHandler " + name + " got spawned!");
+
+#if DEBUG
+                if (PlayerInfo.IsHost)
+                    StartCoroutine(SpawnKillLater());
+#endif
+            }
+
+            public IEnumerator SpawnKillLater()
+            {
+                yield return new WaitForSeconds(1);
+                OnDeathShrinking(1f); // SPAWNKILL !!
+            }
+
+            public virtual void OnAwake() { }
 
             public void SizeChanged(float from, float to)
             {

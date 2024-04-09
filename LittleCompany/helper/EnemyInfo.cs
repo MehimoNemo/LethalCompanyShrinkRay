@@ -1,4 +1,5 @@
 ﻿using LittleCompany.components;
+using LittleCompany.events.enemy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace LittleCompany.helper
             BeesHarmless,
             Bracken,
             Butler,
+            ButlerBees,
             Centipede,
             Coilhead,
             EyelessDog,
@@ -47,6 +49,7 @@ namespace LittleCompany.helper
             { "Docile Locust Bees", Enemy.BeesHarmless  },
             { "Flowerman",          Enemy.Bracken       },
             { "Butler",             Enemy.Butler        },
+            { "Butler Bees",        Enemy.ButlerBees    },
             { "Centipede",          Enemy.Centipede     },
             { "Spring",             Enemy.Coilhead      },
             { "MouthDog",           Enemy.EyelessDog    },
@@ -66,32 +69,30 @@ namespace LittleCompany.helper
             { "Earth Leviathan",    Enemy.Worm          },
         };
 
+        public static readonly List<EnemyType> EnemyTypes = Resources.FindObjectsOfTypeAll<EnemyType>().ToList();
+
         public static Enemy EnemyByName(string name) => EnemyNameMap.GetValueOrDefault(name, Enemy.Custom);
 
         public static string EnemyNameOf(Enemy enemy) => EnemyNameMap.FirstOrDefault((x) => x.Value == enemy).Key;
 
         public static EnemyType EnemyTypeByName(string enemyName = null)
         {
-            if (enemyName == null || RoundManager.Instance?.currentLevel == null) return null;
+            if (enemyName == null) return null;
 
-            // todo: optimize and store in list that gets updated on level change
-            var enemyList = new List<SpawnableEnemyWithRarity>();
-            enemyList.AddRange(RoundManager.Instance.currentLevel.Enemies);
-            enemyList.AddRange(RoundManager.Instance.currentLevel.OutsideEnemies);
-            enemyList.AddRange(RoundManager.Instance.currentLevel.DaytimeEnemies);
-
-            var index = enemyList.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.enemyName == enemyName);
+            var index = EnemyTypes.FindIndex(enemyType => enemyType.enemyName == enemyName);
             if (index == -1) return null;
 
-            return enemyList[index].enemyType;
+            return EnemyTypes[index];
         }
 
         public static EnemyAI SpawnEnemyAt(Vector3 spawnPosition, float yRot, EnemyType enemyType)
         {
+            Plugin.Log("Spawn enemy.");
             GameObject gameObject = UnityEngine.Object.Instantiate(enemyType.enemyPrefab, spawnPosition, Quaternion.Euler(new Vector3(0f, yRot, 0f)));
             gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
             var enemyAI = gameObject.GetComponent<EnemyAI>();
             RoundManager.Instance.SpawnedEnemies.Add(enemyAI);
+
             return enemyAI;
         }
 

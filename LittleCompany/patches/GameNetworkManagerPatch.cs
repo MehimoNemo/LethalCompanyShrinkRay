@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using LittleCompany.components;
+using LittleCompany.events.enemy;
 using LittleCompany.helper;
 
 namespace LittleCompany.patches
@@ -12,6 +13,7 @@ namespace LittleCompany.patches
         public static void Init()
         {
             AssetLoader.LoadAllAssets();
+            EnemyEventManager.BindAllEnemyEvents();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
