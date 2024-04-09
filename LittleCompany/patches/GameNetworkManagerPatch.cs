@@ -12,8 +12,8 @@ namespace LittleCompany.patches
         [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
         public static void Init()
         {
-            AssetLoader.LoadAllAssets();
             EnemyEventManager.BindAllEnemyEvents();
+            AssetLoader.LoadAllAssets();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]

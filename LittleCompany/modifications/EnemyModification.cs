@@ -76,16 +76,7 @@ namespace LittleCompany.modifications
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
-                            {
                                 EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking(previousScale, playerModifiedBy);
-                                /*
-                                // Poof Target to death because they are too small to exist
-                                if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetEnemy.transform.position) && targetEnemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
-                                    audioSource.PlayOneShot(deathPoofSFX);
-
-                                if(PlayerInfo.IsHost && targetEnemy.TryGetComponent(out NetworkObject networkObject))
-                                    RoundManager.Instance.DespawnEnemyOnServer(networkObject);*/
-                            }
 
                             if (onComplete != null)
                                 onComplete();

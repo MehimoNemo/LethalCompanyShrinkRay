@@ -9,6 +9,8 @@ using LittleCompany.Config;
 using System.Reflection;
 using LittleCompany.components;
 using LittleCompany.compatibility;
+using LittleCompany.events.enemy;
+using LittleCompany.helper;
 
 namespace LittleCompany
 {
@@ -58,9 +60,12 @@ namespace LittleCompany
             harmony.PatchAll(typeof(ModdedDungeonEntrancePatch));
             harmony.PatchAll(typeof(TerminalPatch));
 
-            // comp
+            // components
             harmony.PatchAll(typeof(Vents));
             harmony.PatchAll(typeof(GrabbablePlayerList));
+
+            // helper
+            harmony.PatchAll(typeof(Effects));
 
             // Compatibility
             if (LethalEmotesApiCompatibility.enabled)

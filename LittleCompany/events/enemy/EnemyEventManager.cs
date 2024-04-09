@@ -29,8 +29,6 @@ namespace LittleCompany.events.enemy
 
         public static EnemyEventHandler EventHandlerOf(EnemyAI enemyAI)
         {
-            if (!PlayerInfo.IsHost) return null; // todo: optimize
-
             var eventHandlerType = EventHandlerTypeByName(enemyAI.enemyType.enemyName);
             Plugin.Log("Found eventHandler with name " + eventHandlerType.ToString() + " for enemy name " + enemyAI.enemyType.enemyName);
             if (enemyAI.TryGetComponent(eventHandlerType, out Component eventHandler))
@@ -69,7 +67,7 @@ namespace LittleCompany.events.enemy
 
             void Awake()
             {
-                Plugin.Log(name + " has awaken!");
+                Plugin.Log(name + " event handler has awaken!");
                 enemy = GetComponent<EnemyAI>();
 
 #if DEBUG
@@ -80,7 +78,7 @@ namespace LittleCompany.events.enemy
 
             public IEnumerator SpawnKillLater()
             {
-                yield return new WaitForSeconds(1);
+                yield return new WaitForSeconds(1f);
                 OnDeathShrinking(1f, PlayerInfo.CurrentPlayer); // SPAWNKILL !!
             }
 
