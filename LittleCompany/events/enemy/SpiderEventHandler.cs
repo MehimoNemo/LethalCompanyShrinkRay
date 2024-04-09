@@ -17,7 +17,6 @@ namespace LittleCompany.events.enemy
             Plugin.Log("Spider event triggered.");
             if (PlayerInfo.IsHost)
             {
-                SomeServerRpc();
                 for (int i = 0; i < 10; i++) // Shoot 10 webs in any direction
                 {
                     // Taken from SandSpiderAI.AttemptPlaceWebTrap()
@@ -44,17 +43,5 @@ namespace LittleCompany.events.enemy
         public override void Shrunken(bool wasShrunkenBefore) { }
         public override void Enlarged(bool wasEnlargedBefore) { }
         public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged) { }
-
-        [ServerRpc(RequireOwnership = false)]
-        public void SomeServerRpc()
-        {
-            SomeClientRpc();
-        }
-
-        [ClientRpc]
-        public void SomeClientRpc()
-        {
-            Plugin.Log("This is a client rpc.");
-        }
     }
 }
