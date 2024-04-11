@@ -70,6 +70,8 @@ namespace LittleCompany.events.enemy
                 Plugin.Log(name + " event handler has awaken!");
                 enemy = GetComponent<EnemyAI>();
 
+                OnAwake();
+
 #if DEBUG
                 /*if (PlayerInfo.IsHost)
                     StartCoroutine(SpawnKillLater());*/
