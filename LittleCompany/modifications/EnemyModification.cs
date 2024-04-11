@@ -73,6 +73,9 @@ namespace LittleCompany.modifications
                         var previousScale = ScalingOf(targetEnemy).RelativeScale;
                         var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy);
                         Plugin.Log("Shrinking enemy [" + targetEnemy.name + "] to size: " + nextShrunkenSize);
+                        if (nextShrunkenSize < DeathShrinkMargin)
+                            EnemyEventManager.EventHandlerOf(targetEnemy)?.AboutToDeathShrink(previousScale, playerModifiedBy);
+
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)

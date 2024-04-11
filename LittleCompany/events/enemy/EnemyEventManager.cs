@@ -22,7 +22,9 @@ namespace LittleCompany.events.enemy
             { Enemy.Bracken,    typeof(BrackenEventHandler)     },
             { Enemy.Slime,      typeof(SlimeEventHandler)       },
             { Enemy.Bees,       typeof(BeesEventHandler)        },
-            { Enemy.Coilhead,   typeof(CoilheadEventHandler)    }
+            { Enemy.Coilhead,   typeof(CoilheadEventHandler)    },
+            { Enemy.BaboonHawk, typeof(BaboonHawkEventHandler)  },
+            { Enemy.Butler,     typeof(ButlerEventHandler)      }
         };
 
         public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
@@ -71,10 +73,9 @@ namespace LittleCompany.events.enemy
                 enemy = GetComponent<EnemyAI>();
 
                 OnAwake();
-
 #if DEBUG
-                /*if (PlayerInfo.IsHost)
-                    StartCoroutine(SpawnKillLater());*/
+                if (PlayerInfo.IsHost)
+                    StartCoroutine(SpawnKillLater());
 #endif
             }
 
@@ -94,6 +95,8 @@ namespace LittleCompany.events.enemy
                 else
                     Enlarged(from >= 1f, playerBy);
             }
+
+            public virtual void AboutToDeathShrink(float currentSize, PlayerControllerB playerShrunkenBy) { }
 
             public virtual void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
             {

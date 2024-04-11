@@ -1,4 +1,6 @@
 ﻿using GameNetcodeStuff;
+using HarmonyLib;
+using LittleCompany.components;
 using LittleCompany.helper;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,9 +11,9 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
+    [HarmonyPatch]
     internal class BrackenEventHandler : EnemyEventHandler
     {
-
         public override void OnAwake()
         {
             base.OnAwake();
@@ -27,19 +29,22 @@ namespace LittleCompany.events.enemy
             Plugin.Log("Bracken shrunken to death");
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
-        public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }
-        public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
-        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
 
         public void SpawnBrackenOrbAt(Vector3 position)
         {
-            var brackenOrb = Instantiate(_brackenOrbPrefab);
-            brackenOrb.GetComponent<NetworkObject>().Spawn();
-            brackenOrb.transform.position = position;
+            if (!PlayerInfo.IsHost) return;
+
+            if (BrackenOrb != null)
+                Destroy(BrackenOrb);
+
+            BrackenOrb = Instantiate(_brackenOrbPrefab);
+            BrackenOrb.GetComponent<NetworkObject>().Spawn();
+            BrackenOrb.transform.position = position;
         }
 
         #region BrackenOrb
         private static GameObject _brackenOrbPrefab = null;
+        private static GameObject BrackenOrb;
 
         public static void LoadBrackenOrbPrefab()
         {
@@ -48,6 +53,17 @@ namespace LittleCompany.events.enemy
             _brackenOrbPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "EnemyEvents/Bracken/BrackenOrb.prefab"));
             if (_brackenOrbPrefab != null)
                 _brackenOrbPrefab.AddComponent<BrackenOrbBehaviour>();
+        }
+
+        // todo: maybe avoid this by binding the gameobject to the scene
+        [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
+        [HarmonyPrefix()]
+        public static void ShipHasLeftPrefix()
+        {
+            if (!PlayerInfo.IsHost) return;
+
+            if (BrackenOrb != null)
+                Destroy(BrackenOrb);
         }
 
         public class BrackenOrbBehaviour : NetworkBehaviour
