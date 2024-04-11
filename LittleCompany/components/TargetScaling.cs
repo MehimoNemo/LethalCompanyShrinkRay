@@ -12,6 +12,7 @@ using System.Collections.Generic;
 
 namespace LittleCompany.components
 {
+    [DisallowMultipleComponent]
     internal abstract class TargetScaling<T> : MonoBehaviour where T : Component
     {
         #region Properties
