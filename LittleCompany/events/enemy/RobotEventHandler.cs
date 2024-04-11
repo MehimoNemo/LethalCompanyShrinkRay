@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.helper;
+using System.IO;
 using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
@@ -18,9 +19,15 @@ namespace LittleCompany.events.enemy
             if (toyRobotIndex == -1) return;
 
             var toyRobotPrefab = ItemInfo.SpawnableItems[toyRobotIndex].spawnPrefab;
-            BurningRobotToyPrefab = LethalLib.Modules.PrefabUtils.ClonePrefab(toyRobotPrefab);
+            BurningRobotToyPrefab = LethalLib.Modules.NetworkPrefabs.CloneNetworkPrefab(toyRobotPrefab);
             var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
-            toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
+            var burningBehaviour = BurningRobotToyPrefab.AddComponent<BurningToyRobotBehaviour>();
+        }
+
+        public override void OnAwake()
+        {
+            base.OnAwake();
+            Plugin.Log("Robot enemy handler has awaken!");
         }
 
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
@@ -31,7 +38,6 @@ namespace LittleCompany.events.enemy
             {
                 var toyRobotObject = Instantiate(BurningRobotToyPrefab, enemy.transform.position, Quaternion.identity, RoundManager.Instance.spawnedScrapContainer);
                 toyRobotObject.GetComponent<NetworkObject>().Spawn();
-                Landmine.SpawnExplosion(enemy.transform.position, true, default, default, default, default, (enemy as RadMechAI).explosionPrefab);
             }
 
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
@@ -47,9 +53,10 @@ namespace LittleCompany.events.enemy
 
             readonly int damagePerTick = 20;
 
-            void Awake()
+            void Start()
             {
-                Plugin.Log("Burning toy robot has awaken!");
+                Plugin.Log("Burning toy robot has spawned!");
+
                 toyRobot = GetComponentInParent<GrabbableObject>();
 
                 toyRobot.itemProperties.itemName = "Burning toy robot";
@@ -60,11 +67,8 @@ namespace LittleCompany.events.enemy
                 if (scanNode != null)
                     scanNode.headerText = toyRobot.itemProperties.itemName;
 
-                if (burningEffect != null)
-                {
-                    burningEffect.transform.position = toyRobot.transform.position;
-                    //burningEffect.transform.SetParent(toyRobot.transform, false);
-                }
+                Landmine.SpawnExplosion(transform.position, true);
+                //radmechai.explosionPrefab
             }
 
             void FixedUpdate()
@@ -74,12 +78,13 @@ namespace LittleCompany.events.enemy
 
                 if (damageFrameCounter == 1)
                 {
+                    Plugin.Log("Position: " + burningEffect.transform.position);
                     if (toyRobot != null && toyRobot.playerHeldBy != null)
                         toyRobot.playerHeldBy.DamagePlayer(damagePerTick, true, false, CauseOfDeath.Burning);
                 }
 
                 if (burningEffect != null)
-                    burningEffect.transform.position = toyRobot.transform.position; // todo: transform parenting...
+                    burningEffect.transform.position = transform.position; // todo: transform parenting...
             }
 
             void OnDestroy()
