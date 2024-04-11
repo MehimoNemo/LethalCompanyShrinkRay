@@ -1,7 +1,5 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.helper;
-using Newtonsoft.Json.Linq;
-using UnityEngine.InputSystem.XR;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
 using static LittleCompany.helper.EnemyInfo;

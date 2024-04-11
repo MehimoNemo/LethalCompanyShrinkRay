@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using static LittleCompany.events.enemy.BrackenEventHandler;
 
 namespace LittleCompany.helper
 {
@@ -27,18 +28,35 @@ namespace LittleCompany.helper
             }
         }
 
-        private static GameObject _deathPoof = null;
+        private static GameObject _deathPoofPrefab = null;
         public static GameObject DeathPoof
         {
             get
             {
-                if (_deathPoof == null)
+                if (_deathPoofPrefab == null)
                 {
-                    _deathPoof = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "grabbable/Poof.prefab"));
-                    if (_deathPoof == null) return null;
+                    _deathPoofPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "grabbable/Poof.prefab"));
+                    if (_deathPoofPrefab == null) return null;
                 }
 
-                var ch = UnityEngine.Object.Instantiate(_deathPoof);
+                var ch = UnityEngine.Object.Instantiate(_deathPoofPrefab);
+                return ch;
+            }
+        }
+
+        private static GameObject _burningEffectPrefab = null;
+
+        public static GameObject BurningEffect
+        {
+            get
+            {
+                if (_burningEffectPrefab == null)
+                {
+                    _burningEffectPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "EnemyEvents/Robot/BurningEffect.prefab"));
+                    if (_burningEffectPrefab == null) return null;
+                }
+
+                var ch = UnityEngine.Object.Instantiate(_burningEffectPrefab);
                 return ch;
             }
         }

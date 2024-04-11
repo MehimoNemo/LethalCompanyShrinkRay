@@ -24,7 +24,8 @@ namespace LittleCompany.events.enemy
             { Enemy.Bees,       typeof(BeesEventHandler)        },
             { Enemy.Coilhead,   typeof(CoilheadEventHandler)    },
             { Enemy.BaboonHawk, typeof(BaboonHawkEventHandler)  },
-            { Enemy.Butler,     typeof(ButlerEventHandler)      }
+            { Enemy.Butler,     typeof(ButlerEventHandler)      },
+            { Enemy.Robot,      typeof(RobotEventHandler)       }
         };
 
         public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
