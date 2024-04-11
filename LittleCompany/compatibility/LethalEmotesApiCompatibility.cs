@@ -10,7 +10,7 @@ namespace LittleCompany.compatibility
 
         private static bool? _enabled;
 
-        public static bool enabled
+        public static bool compatEnabled
         {
             get
             {

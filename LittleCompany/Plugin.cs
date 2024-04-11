@@ -71,12 +71,12 @@ namespace LittleCompany
             harmony.PatchAll(typeof(BrackenEventHandler));
 
             // Compatibility
-            if (LethalEmotesApiCompatibility.enabled)
+            if (LethalEmotesApiCompatibility.compatEnabled)
             {
                 Log("enabling LethalEmotesApiCompatibility");
                 harmony.PatchAll(typeof(LethalEmotesApiCompatibility));
             }
-            if (ModelReplacementApiCompatibility.enabled)
+            if (ModelReplacementApiCompatibilityComponent.compatEnabled)
             {
                 Log("enabling ModelReplacementApiCompatibility");
                 harmony.PatchAll(typeof(ModelReplacementApiCompatibilityPatch));

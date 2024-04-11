@@ -21,6 +21,7 @@ namespace LittleCompany.patches
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
+        [HarmonyPriority(Priority.First)]
         public static void OnUpdate()
         {
             if (Executing) return;

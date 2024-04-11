@@ -8,6 +8,7 @@ using LittleCompany.modifications;
 using LittleCompany.patches;
 using LittleCompany.events.enemy;
 using LittleCompany.compatibility;
+using System.Collections.Generic;
 
 namespace LittleCompany.components
 {
@@ -114,13 +115,32 @@ namespace LittleCompany.components
     {
         #region Methods
         internal Vector3 armOffset = Vector3.zero;
-        internal ModelReplacementApiCompatibility modelReplacementApiCompatibility;
+        internal HashSet<IScalingListener> scalingListeners;
 
         internal override void OnAwake()
         {
-            modelReplacementApiCompatibility = new ModelReplacementApiCompatibility(target);
+            scalingListeners = [];
             OriginalScale = Vector3.one;
             RelativeScale = PlayerInfo.SizeOf(target);
+            DetectAndLoadCurrentListeningComponent();
+        }
+
+        private void DetectAndLoadCurrentListeningComponent()
+        {
+            foreach(Component component in GetComponents(typeof(IScalingListener)))
+            {
+                AddListener((IScalingListener) component);
+            }
+        }
+
+        public void AddListener(IScalingListener listener)
+        {
+            scalingListeners?.Add(listener);
+        }
+
+        public void RemoveListener(IScalingListener listener)
+        {
+            scalingListeners?.Remove(listener);
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null)
@@ -134,7 +154,7 @@ namespace LittleCompany.components
                 return;
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
             base.ScaleTo(scale, scaledBy);
-            CompatibilityAfterEachScale(scale);
+            CallListenersAfterEachScale(scale);
             if (PlayerInfo.IsCurrentPlayer(target))
             {
                 // scale arms & visor
@@ -160,23 +180,22 @@ namespace LittleCompany.components
             {
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
                 PlayerInfo.RebuildRig(target);
-                CompatibilityAtEndOfScaling();
+                CallListenersAtEndOfScaling();
             }
         }
 
-        private void CompatibilityAfterEachScale(float scale)
+        private void CallListenersAfterEachScale(float scale)
         {
-            if (ModelReplacementApiCompatibility.enabled)
-            {
-                modelReplacementApiCompatibility.AdjustToSize(scale);
+            foreach(IScalingListener listener in scalingListeners) {
+                listener.AfterEachScale();
             }
         }
 
-        private void CompatibilityAtEndOfScaling()
+        private void CallListenersAtEndOfScaling()
         {
-            if (ModelReplacementApiCompatibility.enabled)
+            foreach (IScalingListener listener in scalingListeners)
             {
-                modelReplacementApiCompatibility.ReloadCurrentReplacementModel();
+                listener.AtEndOfScaling();
             }
         }
         #endregion

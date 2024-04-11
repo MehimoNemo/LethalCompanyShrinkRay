@@ -43,22 +43,6 @@ namespace LittleCompany.patches
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
         }
 
-        /*private static void AddPlayerScalingToEveryScaledPlayer()
-        {
-            Plugin.Log("Adding Scaling to every scaled player");
-            PlayerControllerB[] players = StartOfRound.Instance.allPlayerScripts;
-            foreach (var player in players)
-            {
-                if (!PlayerInfo.IsNormalSize(player))
-                {
-                    float size = PlayerInfo.SizeOf(player);
-                    PlayerScaling playerScaling = player.gameObject.AddComponent<PlayerScaling>();
-                    playerScaling.OriginalSize = Vector3.one;
-                    playerScaling.CurrentScale = size;
-                }
-            }
-        }*/
-
         // When players get revived
         [HarmonyPatch(typeof(StartOfRound), "AllPlayersHaveRevivedClientRpc")]
         [HarmonyPostfix]
