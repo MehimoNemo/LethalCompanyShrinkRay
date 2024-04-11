@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using UnityEngine;
-
-namespace LittleCompany.compatibility
+﻿namespace LittleCompany.compatibility
 {
     internal interface IScalingListener
     {
