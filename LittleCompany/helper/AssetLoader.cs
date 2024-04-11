@@ -1,4 +1,5 @@
 ﻿using LittleCompany.components;
+using LittleCompany.events.enemy;
 using LittleCompany.modifications;
 using System;
 using System.Collections;
@@ -81,6 +82,7 @@ namespace LittleCompany.helper
             ShrinkRay.LoadAsset();
             LittlePotion.LoadPotionAssets();
             GameNetworkManager.Instance.StartCoroutine(LoadAudioAsync("deathPoof.wav", (item) => Modification.deathPoofSFX = item));
+            EnemyEventManager.LoadEventPrefabs();
         }
     }
 }

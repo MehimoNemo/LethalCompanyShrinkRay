@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.helper;
 using System.Collections.Generic;
@@ -17,8 +18,6 @@ namespace LittleCompany.events.enemy
         public override void OnAwake()
         {
             base.OnAwake();
-
-            LoadBrackenOrbPrefab();
         }
 
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
@@ -32,14 +31,12 @@ namespace LittleCompany.events.enemy
 
         public void SpawnBrackenOrbAt(Vector3 position)
         {
-            if (!PlayerInfo.IsHost) return;
-
             if (BrackenOrb != null)
                 Destroy(BrackenOrb);
 
             BrackenOrb = Instantiate(_brackenOrbPrefab);
+            BrackenOrb.GetComponent<BrackenOrbBehaviour>().origin.Value = position;
             BrackenOrb.GetComponent<NetworkObject>().Spawn();
-            BrackenOrb.transform.position = position;
         }
 
         #region BrackenOrb
@@ -52,7 +49,10 @@ namespace LittleCompany.events.enemy
 
             _brackenOrbPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "EnemyEvents/Bracken/BrackenOrb.prefab"));
             if (_brackenOrbPrefab != null)
+            {
                 _brackenOrbPrefab.AddComponent<BrackenOrbBehaviour>();
+                NetworkManager.Singleton.AddNetworkPrefab(_brackenOrbPrefab);
+            }
         }
 
         // todo: maybe avoid this by binding the gameobject to the scene
@@ -69,18 +69,19 @@ namespace LittleCompany.events.enemy
         public class BrackenOrbBehaviour : NetworkBehaviour
         {
             float damageFrameCounter = 0;
-            NetworkVariable<float> radius = new NetworkVariable<float>(0f);
+            public NetworkVariable<Vector3> origin = new NetworkVariable<Vector3>();
+            public NetworkVariable<float> radius = new NetworkVariable<float>(0f);
 
             List<ulong> fearedPlayers = new List<ulong>();
 
-            void Awake()
+            void Start()
             {
-                Plugin.Log("BrackenOrb has awaken!");
+                transform.position = origin.Value;
                 transform.localScale = Vector3.zero;
 
                 foreach (var player in PlayerInfo.AllPlayers)
                 {
-                    var distanceToPlayer = Vector3.Distance(player.transform.position, transform.position);
+                    var distanceToPlayer = Vector3.Distance(player.transform.position, origin.Value);
                     if (distanceToPlayer < 2f)
                         HUDManager.Instance.ShakeCamera(ScreenShakeType.Big);
                     else if (distanceToPlayer < 10f || player.HasLineOfSightToPosition(transform.position))
@@ -97,7 +98,7 @@ namespace LittleCompany.events.enemy
                 {
                     foreach (var player in PlayerInfo.AllPlayers)
                     {
-                        var distanceToPlayer = Vector3.Distance(player.transform.position, transform.position);
+                        var distanceToPlayer = Vector3.Distance(player.transform.position, origin.Value);
                         if (distanceToPlayer <= radius.Value)
                             player.DamagePlayer(20, true, false, CauseOfDeath.Unknown);
 
@@ -111,7 +112,6 @@ namespace LittleCompany.events.enemy
                             fearedPlayers.Add(player.playerClientId);
                         }
                     }
-                    Plugin.Log("Radius: " + radius.Value + " / LocalScale: " + transform.localScale);
                 }
 
                 if (PlayerInfo.IsHost)

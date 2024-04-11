@@ -61,6 +61,12 @@ namespace LittleCompany.events.enemy
             Plugin.Log("BindAllEnemyEvents -> Added handler for " + handlersAdded + "/" + EnemyTypes.Count + " enemies.");
         }
 
+        public static void LoadEventPrefabs()
+        {
+            BrackenEventHandler.LoadBrackenOrbPrefab();
+            RobotEventHandler.LoadBurningRobotToyPrefab();
+        }
+
         public class EnemyEventHandler : NetworkBehaviour
         {
             // todo: Make this generic -> public class EnemyEventHandler<T> : MonoBehaviour where T : EnemyAI

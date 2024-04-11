@@ -1,5 +1,4 @@
 ﻿using GameNetcodeStuff;
-using LethalLib.Modules;
 using LittleCompany.helper;
 using Unity.Netcode;
 using UnityEngine;
@@ -9,25 +8,30 @@ namespace LittleCompany.events.enemy
 {
     internal class RobotEventHandler : EnemyEventHandler
     {
+        private static GameObject BurningRobotToyPrefab = null;
+
+        public static void LoadBurningRobotToyPrefab()
+        {
+            if (BurningRobotToyPrefab != null) return;
+
+            var toyRobotIndex = ItemInfo.SpawnableItems.FindIndex((scrap) => scrap.name == "RobotToy");
+            if (toyRobotIndex == -1) return;
+
+            var toyRobotPrefab = ItemInfo.SpawnableItems[toyRobotIndex].spawnPrefab;
+            BurningRobotToyPrefab = LethalLib.Modules.PrefabUtils.ClonePrefab(toyRobotPrefab);
+            var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
+            toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
+        }
+
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {
             Plugin.Log("Robot shrunken to death");
 
-            if (PlayerInfo.IsHost)
+            if (PlayerInfo.IsHost && BurningRobotToyPrefab != null)
             {
-                var toyRobotIndex = ItemInfo.SpawnableItems.FindIndex((scrap) => scrap.name == "RobotToy");
-                if (toyRobotIndex != -1)
-                {
-                    var toyRobotPrefab = ItemInfo.SpawnableItems[toyRobotIndex].spawnPrefab;
-                    var toyRobotObject = Instantiate(toyRobotPrefab, enemy.transform.position, Quaternion.identity, RoundManager.Instance.spawnedScrapContainer);
-                    var toyRobot = toyRobotObject.GetComponent<GrabbableObject>();
-                    toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
-                    toyRobotObject.GetComponent<NetworkObject>().Spawn();
-
-                    var robotAI = enemy as RadMechAI;
-                    var explosion = Instantiate(robotAI.explosionPrefab);
-                    Landmine.SpawnExplosion(toyRobot.transform.position, true, default, default, default, default, robotAI.explosionPrefab);
-                }
+                var toyRobotObject = Instantiate(BurningRobotToyPrefab, enemy.transform.position, Quaternion.identity, RoundManager.Instance.spawnedScrapContainer);
+                toyRobotObject.GetComponent<NetworkObject>().Spawn();
+                Landmine.SpawnExplosion(enemy.transform.position, true, default, default, default, default, (enemy as RadMechAI).explosionPrefab);
             }
 
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
@@ -69,12 +73,8 @@ namespace LittleCompany.events.enemy
 
                 if (damageFrameCounter == 1)
                 {
-                    Plugin.Log("BurningToyRobotBehaviour: Checking for damage..");
                     if (toyRobot != null && toyRobot.playerHeldBy != null)
-                    {
-                        Plugin.Log("BurningToyRobotBehaviour: Dealing damage!");
                         toyRobot.playerHeldBy.DamagePlayer(damagePerTick, true, false, CauseOfDeath.Burning);
-                    }
                 }
 
                 if (burningEffect != null)
