@@ -16,6 +16,7 @@ using static LittleCompany.helper.LayerMasks;
 
 namespace LittleCompany.components
 {
+    [DisallowMultipleComponent]
     internal class GrabbablePlayerObject : GrabbableObject
     {
         #region Properties

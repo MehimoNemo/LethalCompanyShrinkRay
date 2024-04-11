@@ -38,6 +38,7 @@ namespace LittleCompany.events.enemy
         }
 
         #region BurningToyRobot
+        [DisallowMultipleComponent]
         public class BurningToyRobotBehaviour : NetworkBehaviour
         {
             GrabbableObject toyRobot = null;

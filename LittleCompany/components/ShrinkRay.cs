@@ -15,6 +15,7 @@ using static LittleCompany.modifications.Modification;
 
 namespace LittleCompany.components
 {
+    [DisallowMultipleComponent]
     public class ShrinkRay : GrabbableObject
     {
         #region Properties

@@ -11,6 +11,7 @@ using LittleCompany.modifications;
 
 namespace LittleCompany.components
 {
+    [DisallowMultipleComponent]
     public class LittleShrinkingPotion : LittlePotion
     {
         internal override string ItemName => "Light Potion";

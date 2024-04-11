@@ -212,6 +212,7 @@ namespace LittleCompany.components
         }
         #endregion
 
+        [DisallowMultipleComponent]
         internal class SussifiedVent : NetworkBehaviour
         {
             #region Properties

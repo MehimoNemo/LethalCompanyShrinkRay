@@ -66,6 +66,7 @@ namespace LittleCompany.events.enemy
                 Destroy(BrackenOrb);
         }
 
+        [DisallowMultipleComponent]
         public class BrackenOrbBehaviour : NetworkBehaviour
         {
             float damageFrameCounter = 0;
