@@ -91,16 +91,15 @@ namespace LittleCompany.events.enemy
             void FixedUpdate()
             {
                 damageFrameCounter++;
-                damageFrameCounter %= 50;
+                damageFrameCounter %= 100;
 
-                if (damageFrameCounter == 1)
+                if (damageFrameCounter == 1 || damageFrameCounter == 50)
                 {
                     if (IsHeld)
                         toyRobot.playerHeldBy.DamagePlayer(damagePerTick, true, false, CauseOfDeath.Burning);
-                    CheckPlayerBindings(true);
                 }
-                else
-                    CheckPlayerBindings();
+
+                CheckPlayerBindings(damageFrameCounter == 1);
 
                 if (burningEffect != null)
                     burningEffect.transform.position = transform.position; // todo: transform parenting...
@@ -117,7 +116,7 @@ namespace LittleCompany.events.enemy
             #endregion
 
             #region Methods
-            void CheckPlayerBindings(bool checkForDamage = false)
+            void CheckPlayerBindings(bool dealDamage = false)
             {
                 for(int i = boundPlayerFX.Count - 1; i >= 0; i--)
                 {
@@ -128,33 +127,32 @@ namespace LittleCompany.events.enemy
                     {
                         Destroy(fx);
                         boundPlayerFX.Remove(binding.Key);
+                        continue;
                     }
-                    else if (checkForDamage)
-                    {
-                        var distance = Vector3.Distance(toyRobot.transform.position, player.transform.position);
-                        if (distance > 5f)
-                        {
-                            player.DamagePlayer(damagePerTick, true, false, CauseOfDeath.Unknown);
-                            fx.colorPrimary = Color.red;
-                            fx.colorSecondary = Color.red;
-                        }
-                        else
-                        {
-                            fx.colorPrimary = Color.black;
-                            fx.colorSecondary = Color.black;
-                        }
 
+                    var distance = Vector3.Distance(toyRobot.transform.position, player.transform.position);
+                    if (distance > 5f)
+                    {
+                        fx.colorPrimary = Color.red;
+                        fx.colorSecondary = Color.red;
+
+                        if (dealDamage)
+                            player.DamagePlayer(damagePerTick / 2, true, false, CauseOfDeath.Unknown);
+                    }
+                    else
+                    {
+                        fx.colorPrimary = Color.black;
+                        fx.colorSecondary = Color.black;
                     }
                 }
             }
 
             void BindPlayer(PlayerControllerB player)
             {
-                Plugin.Log("BurningToyRobotBehaviour.BindPlayer");
                 if (player == null || boundPlayerFX.ContainsKey(player.playerClientId))
                     return;
 
-                Plugin.Log("BurningToyRobotBehaviour.BindPlayer for " + player.name);
+                Plugin.Log("BurningToyRobotBehaviour.BindPlayer with name: " + player.name);
                 var fx = toyRobot.gameObject.AddComponent<ShrinkRayFX>();
                 fx.beamDuration = 0f;
                 fx.bezier2YOffset = 0f;
