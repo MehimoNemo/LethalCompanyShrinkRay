@@ -14,8 +14,10 @@ namespace LittleCompany.events.enemy
 
             Effects.LightningStrikeAtPosition(enemy.transform.position);
 
-            if (PlayerInfo.IsHost)
-                enemy.KillEnemyServerRpc(true);
+            var bees = (enemy as RedLocustBees);
+            bees.OnDisable();
+            bees.EnableEnemyMesh(false);
+            base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
 
         public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }

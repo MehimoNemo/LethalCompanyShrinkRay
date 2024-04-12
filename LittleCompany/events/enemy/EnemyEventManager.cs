@@ -133,7 +133,7 @@ namespace LittleCompany.events.enemy
                 if (waitedFrames == 100)
                     Plugin.Log("Timeout triggered the death shrink event.", Plugin.LogType.Warning);
                 else
-                    Plugin.Log("Syncing the death shrink event took " + waitedFrames + " frames.", Plugin.LogType.Warning);
+                    Plugin.Log("Syncing the death shrink event took " + waitedFrames + " frames.");
 
                 // Now we can despawn it
                 RoundManager.Instance.DespawnEnemyOnServer(enemy.NetworkObject);
