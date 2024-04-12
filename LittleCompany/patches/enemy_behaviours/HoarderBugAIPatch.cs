@@ -4,6 +4,7 @@ using LittleCompany.components;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using UnityEngine;
+using static LittleCompany.events.enemy.HoarderBugEventHandler;
 using static LittleCompany.helper.EnemyInfo.HoarderBug;
 
 namespace LittleCompany.patches.EnemyBehaviours
@@ -19,6 +20,9 @@ namespace LittleCompany.patches.EnemyBehaviours
         {
             if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab || !(__instance is HoarderBugAI))
                 return __result;
+
+            if (IsDieing(__instance)) // about to die.. don't see players as threat
+                return false;
 
             return !PlayerInfo.SmallerThan(playerScript, EnemyInfo.SizeOf(__instance));
         }
@@ -74,8 +78,13 @@ namespace LittleCompany.patches.EnemyBehaviours
             }
         }
 
+        public static bool IsDieing(EnemyAI hoarderBug) => hoarderBug.GetComponent<DieingBugBehaviour> != null;
+
         public static bool IsGrabbablePlayerTargetable(GrabbablePlayerObject gpo, HoarderBugAI hoarderBug)
         {
+            if (IsDieing(hoarderBug))
+                return true;
+
             if (gpo.InLastHoardingBugNestRange.Value)
                 return false;
 
@@ -126,6 +135,7 @@ namespace LittleCompany.patches.EnemyBehaviours
             if (gpo.lastHoarderBugGrabbedBy.isEnemyDead || gpo.lastHoarderBugGrabbedBy.nestPosition == null)
             {
                 gpo.MovedOutOfHoardingBugNestRangeServerRpc(true);
+                return;
             }
 
             var distanceToNest = Vector3.Distance(gpo.lastHoarderBugGrabbedBy.nestPosition, gpo.grabbedPlayer.transform.position);

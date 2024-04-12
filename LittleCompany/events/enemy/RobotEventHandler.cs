@@ -108,7 +108,7 @@ namespace LittleCompany.events.enemy
                     BindPlayer(toyRobot.playerHeldBy);
             }
 
-            void OnDestroy()
+            public override void OnDestroy()
             {
                 Destroy(burningEffect);
                 base.OnDestroy();

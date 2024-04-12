@@ -10,6 +10,7 @@ using UnityEngine;
 using LittleCompany.components;
 using LittleCompany.patches;
 using LittleCompany.modifications;
+using System.Linq;
 
 namespace LittleCompany.components
 {
@@ -282,13 +283,14 @@ namespace LittleCompany.components
 
             if (!PlayerInfo.IsHost) return;
 
-            foreach (var gpo in GrabbablePlayerObjects.Values)
-                RemovePlayerGrabbable(gpo);
+            for(int i = GrabbablePlayerObjects.Count - 1; i >= 0; i--)
+                RemovePlayerGrabbable(GrabbablePlayerObjects.ElementAt(i).Value);
         }
 
-        public static bool SetPlayerGrabbable(ulong playerID)
+        public static bool SetPlayerGrabbable(ulong playerID, out GrabbablePlayerObject gpo)
         {
-            if(!PlayerInfo.IsHost)
+            gpo = null;
+            if (!PlayerInfo.IsHost)
             {
                 Plugin.Log("SetPlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
                 return false;
@@ -297,10 +299,11 @@ namespace LittleCompany.components
             if (GrabbablePlayerObjects.ContainsKey(playerID))
             {
                 Plugin.Log("Player " + playerID + " already grabbable!");
+                gpo = GrabbablePlayerObjects[playerID];
                 return false;
             }
 
-            GrabbablePlayerObject.Instantiate(playerID);
+            gpo = GrabbablePlayerObject.Instantiate(playerID);
             return true;
         }
 
@@ -329,7 +332,7 @@ namespace LittleCompany.components
         {
             RemovePlayerGrabbable(playerID);
             if(PlayerInfo.ControllerFromID(playerID) != null)
-                SetPlayerGrabbable(playerID);
+                SetPlayerGrabbable(playerID, out _);
         }
 
         public static void ResetAnyPlayerModificationsFor(PlayerControllerB targetPlayer)
@@ -367,7 +370,7 @@ namespace LittleCompany.components
                 foreach (var player in PlayerInfo.AllPlayers)
                 {
                     if (PlayerInfo.SmallerThan(player, largestGrabberSize)) // Make anyone grabbable who's smaller than the largest player / enemy
-                        SetPlayerGrabbable(player.playerClientId);
+                        SetPlayerGrabbable(player.playerClientId, out _);
                     else
                         RemovePlayerGrabbable(player.playerClientId);
                 }

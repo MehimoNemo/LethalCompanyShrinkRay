@@ -42,7 +42,6 @@ namespace LittleCompany.helper
         public static Dictionary<string, Enemy> EnemyNameMap = new Dictionary<string, Enemy>()
         {
             { "Custom",             Enemy.Custom        },
-
             { "Baboon hawk",        Enemy.BaboonHawk    },
             { "Red Locust Bees",    Enemy.Bees          },
             { "Docile Locust Bees", Enemy.BeesHarmless  },
@@ -54,7 +53,7 @@ namespace LittleCompany.helper
             { "MouthDog",           Enemy.EyelessDog    },
             { "ForestGiant",        Enemy.ForestGiant   },
             { "Girl",               Enemy.GhostGirl     },
-            { "Hoarding bBug",      Enemy.HoarderBug    },
+            { "Hoarding bug",       Enemy.HoarderBug    },
             { "Jester",             Enemy.Jester        },
             { "Lasso",              Enemy.LassoMan      },
             { "Manticoil",          Enemy.ManticoilBird },

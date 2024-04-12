@@ -128,7 +128,7 @@ namespace LittleCompany.components
             base.OnNetworkDespawn();
         }
 
-        public static void Instantiate(ulong playerID)
+        public static GrabbablePlayerObject Instantiate(ulong playerID)
         {
             var obj = Instantiate(networkPrefab);
             DontDestroyOnLoad(obj);
@@ -137,6 +137,8 @@ namespace LittleCompany.components
 
             var networkObj = obj.GetComponent<NetworkObject>();
             networkObj.Spawn();
+
+            return gpo;
         }
 #endregion
 
