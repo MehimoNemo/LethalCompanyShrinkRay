@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace LittleCompany.helper
@@ -86,6 +87,16 @@ namespace LittleCompany.helper
             m.EnableKeyword("_EMISSION");
             m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             return m;
+        }
+
+        public static List<MeshRenderer> GetMeshRenderers(GameObject g)
+        {
+            List<MeshRenderer> listOfMesh = [];
+            foreach (MeshRenderer mesh in g.GetComponentsInChildren<MeshRenderer>())
+            {
+                listOfMesh.Add(mesh);
+            }
+            return listOfMesh;
         }
     }
 }

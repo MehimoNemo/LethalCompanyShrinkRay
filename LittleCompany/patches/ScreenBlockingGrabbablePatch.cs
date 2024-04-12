@@ -1,7 +1,9 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.helper;
+using LittleCompany.modifications;
 using UnityEngine;
 
 namespace LittleCompany.patches
@@ -43,13 +45,19 @@ namespace LittleCompany.patches
 
             bool tooBig = ItemBiggerThanHalfScreen(item);
             Plugin.Log("TooBig" + tooBig);
+            bool playerShrunk = PlayerInfo.IsShrunk(item.playerHeldBy);
+            bool itemEnlarged = IsItemEnlarged(item);
 
-            if ((PlayerInfo.IsShrunk(item.playerHeldBy) && item.itemProperties.twoHanded) || tooBig)
+            if ((playerShrunk && item.itemProperties.twoHanded) || (tooBig && (playerShrunk || itemEnlarged)))
                 GlassifyItem(item);
             else
                 UnGlassifyItem(item);
         }
 
+        public static bool IsItemEnlarged(GrabbableObject item)
+        {
+            return Modification.Rounded(item.originalScale.x) < Modification.Rounded(item.gameObject.transform.localScale.x);
+        }
         private const float widthItemForScreenBlockWhileNormalSized = 1.3f;
 
         private static bool ItemBiggerThanHalfScreen(GrabbableObject item)
@@ -62,7 +70,7 @@ namespace LittleCompany.patches
         private static float getBiggestWidthFromAllMeshRenderer(GrabbableObject item)
         {
             float biggestX = 0f;
-            foreach (MeshRenderer mesh in item.gameObject.GetComponentsInChildren<MeshRenderer>())
+            foreach (MeshRenderer mesh in Materials.GetMeshRenderers(item.gameObject))
             {
                 float meshSizeX = mesh.localBounds.size.x * getRelativeLocalScaleOfMesh(mesh, item);
                 if (meshSizeX > biggestX)
