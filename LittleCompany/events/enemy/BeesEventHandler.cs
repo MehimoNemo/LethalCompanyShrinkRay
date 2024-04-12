@@ -14,9 +14,7 @@ namespace LittleCompany.events.enemy
 
             Effects.LightningStrikeAtPosition(enemy.transform.position);
 
-            var bees = (enemy as RedLocustBees);
-            bees.OnDisable();
-            bees.EnableEnemyMesh(false);
+            // var bees = (enemy as RedLocustBees);
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
 

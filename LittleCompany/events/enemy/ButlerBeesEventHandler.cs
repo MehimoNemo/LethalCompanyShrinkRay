@@ -9,8 +9,7 @@ namespace LittleCompany.events.enemy
         {
             Plugin.Log("Butler bees shrunken to death");
 
-            var butlerBees = (enemy as ButlerBeesEnemyAI);
-            butlerBees.EnableEnemyMesh(false);
+            //var butlerBees = enemy as ButlerBeesEnemyAI;
 
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }

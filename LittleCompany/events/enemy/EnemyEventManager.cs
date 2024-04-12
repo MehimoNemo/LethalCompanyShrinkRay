@@ -137,6 +137,7 @@ namespace LittleCompany.events.enemy
                     Plugin.Log("Syncing the death shrink event took " + waitedFrames + " frames.");
 
                 // Now we can despawn it
+                enemy.EnableEnemyMesh(false);
                 RoundManager.Instance.DespawnEnemyOnServer(enemy.NetworkObject);
                 DeathShrinkSyncedPlayers = 1;
             }
