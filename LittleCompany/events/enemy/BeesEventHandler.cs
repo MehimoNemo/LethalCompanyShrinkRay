@@ -1,7 +1,5 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.helper;
-using System.Collections;
-using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy

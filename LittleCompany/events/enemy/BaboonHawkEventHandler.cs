@@ -24,7 +24,7 @@ namespace LittleCompany.events.enemy
 
         public void MakeOtherBaboonHawksAngryAt(PlayerControllerB player)
         {
-            var playerThreat = MakePlayerAThreat(player);
+            //var playerThreat = MakePlayerAThreat(player);
 
             var baboonHawkName = EnemyNameOf(Enemy.BaboonHawk);
             foreach (var enemyAI in RoundManager.Instance.SpawnedEnemies)
@@ -34,11 +34,12 @@ namespace LittleCompany.events.enemy
                 Plugin.Log("Found a baboon hawk");
 
                 var baboonHawk = enemy as BaboonBirdAI;
-                baboonHawk.StartFocusOnThreatServerRpc(player.NetworkObject);
+                baboonHawk.SetAggressiveModeClientRpc(2);
+                baboonHawk.StartFocusOnThreatClientRpc(player.NetworkObject);
             }
         }
 
-        public Threat MakePlayerAThreat(PlayerControllerB player)
+        /*public Threat MakePlayerAThreat(PlayerControllerB player)
         {
             var baboonHawk = enemy as BaboonBirdAI;
             if (baboonHawk.threats.TryGetValue(player.transform, out Threat threat))
@@ -66,6 +67,6 @@ namespace LittleCompany.events.enemy
             if (baboonHawk.threats.TryAdd(player.transform, threat))
                 Plugin.Log("Added player as threat");
             return threat;
-        }
+        }*/
     }
 }

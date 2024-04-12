@@ -35,7 +35,8 @@ namespace LittleCompany.helper
             Slime,
             Spider,
             Thumper,
-            Worm
+            Worm,
+            TulipSnake
         }
 
         public static Dictionary<string, Enemy> EnemyNameMap = new Dictionary<string, Enemy>()
@@ -65,6 +66,7 @@ namespace LittleCompany.helper
             { "Bunker Spider",      Enemy.Spider        },
             { "Crawler",            Enemy.Thumper       },
             { "Earth Leviathan",    Enemy.Worm          },
+            { "Tulip Snake",        Enemy.TulipSnake    }
         };
 
         public static readonly List<EnemyType> EnemyTypes = Resources.FindObjectsOfTypeAll<EnemyType>().ToList();
