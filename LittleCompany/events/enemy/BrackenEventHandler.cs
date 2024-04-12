@@ -1,7 +1,5 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LethalLib.Modules;
-using LittleCompany.components;
 using LittleCompany.helper;
 using System.Collections.Generic;
 using System.IO;

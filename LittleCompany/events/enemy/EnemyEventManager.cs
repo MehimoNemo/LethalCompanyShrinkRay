@@ -110,10 +110,42 @@ namespace LittleCompany.events.enemy
                     audioSource.PlayOneShot(Modification.deathPoofSFX);
 
                 if (PlayerInfo.IsHost)
-                    RoundManager.Instance.DespawnEnemyOnServer(enemy.NetworkObject);
+                    StartCoroutine(DespawnAfterEventSync());
+                else
+                    DeathShrinkEventReceivedServerRpc();
 
                 Plugin.Log("Enemy shrunken to death");
             }
+
+            #region DeathShrinkSync
+            // Has to be done to prevent the enemy from despawning before any client got the OnDeathShrinking event
+            private int DeathShrinkSyncedPlayers = 1; // host always got it
+            public IEnumerator DespawnAfterEventSync()
+            {
+                var waitedFrames = 0;
+                var playerCount = PlayerInfo.AllPlayers.Count;
+                while (waitedFrames < 100 && DeathShrinkSyncedPlayers < playerCount)
+                {
+                    waitedFrames++;
+                    yield return null;
+                }
+
+                if (waitedFrames == 100)
+                    Plugin.Log("Timeout triggered the death shrink event.", Plugin.LogType.Warning);
+                else
+                    Plugin.Log("Syncing the death shrink event took " + waitedFrames + " frames.", Plugin.LogType.Warning);
+
+                // Now we can despawn it
+                RoundManager.Instance.DespawnEnemyOnServer(enemy.NetworkObject);
+                DeathShrinkSyncedPlayers = 1;
+            }
+
+            [ServerRpc(RequireOwnership = false)]
+            public void DeathShrinkEventReceivedServerRpc()
+            {
+                DeathShrinkSyncedPlayers++;
+            }
+            #endregion
 
             public virtual void Shrunken(bool wasAlreadyShrunken, PlayerControllerB playerShrunkenBy) { }
             public virtual void Enlarged(bool wasAlreadyEnlarged, PlayerControllerB playerEnlargedBy) { }
