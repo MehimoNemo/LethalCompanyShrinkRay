@@ -12,12 +12,15 @@ namespace LittleCompany.components
     public class ShrinkRayFX : MonoBehaviour
     {
         #region Properties
+        public const float DefaultBeamDuration = 2f;
+
+        public const float DefaultDeathPoofScale = 0.2f;
+
         private static GameObject shrinkRayFX { get; set; }
 
         private VisualEffect defaultVisualEffect { get; set; }
-        private VisualEffect activeVisualEffect { get; set; }
 
-        public const float DefaultDeathPoofScale = 0.2f;
+        private VisualEffect activeVisualEffect { get; set; }
 
         public float thickness {
             set {
@@ -67,14 +70,16 @@ namespace LittleCompany.components
         // Bez 1 is the start, 4 is the end
 
         // Transform & Position properties
-        private const float bezier2YPoint = 0.5f;  // at 50%
-        private const float bezier2YOffset = 0.5f; // Height offset
+        public float bezier2YPoint = 0.5f;  // at 50%
+        public float bezier2YOffset = 0.5f; // Height offset
 
-        private const float bezier3YPoint= 0.80f;  // at 80%
-        private const float bezier3YOffset = 1.5f; // Height offset
+        public float bezier3YPoint= 0.80f;  // at 80%
+        public float bezier3YOffset = 1.5f; // Height offset
 
-        public const float beamDuration = 2f; // If changed then adjust PlayerShrinkAnimation formula!!!
-                                               //private const Color beamColor = Color.blue;
+        public bool usingOffsets = true;
+
+        public float beamDuration = DefaultBeamDuration;    // If changed then adjust PlayerShrinkAnimation formula!!!
+                                                            //private const Color beamColor = Color.blue;
 
         public static AudioClip beamSFX;
         #endregion
@@ -109,7 +114,7 @@ namespace LittleCompany.components
             thickness = 0.1f;
         }
 
-        public IEnumerator RenderRayBeam(Transform holderCamera, Transform target, ModificationType type, AudioSource shrinkRayAudio, Action onComplete = null)
+        public IEnumerator RenderRayBeam(Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null)
         {
             if (!TryCreateNewBeam(out GameObject fxObject))
             {
@@ -128,9 +133,9 @@ namespace LittleCompany.components
                 {
                     Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
                 }
-                else
+                else if(type.HasValue)
                 {
-                    switch (type)
+                    switch (type.Value)
                     {
                         case ModificationType.Shrinking:
                             colorPrimary = new Color(0.61f, 0.04f, 0.04f); // red like shrinkray
@@ -143,6 +148,8 @@ namespace LittleCompany.components
                         case ModificationType.Normalizing:
                             colorPrimary = Color.white;
                             colorSecondary = Color.gray;
+                            break;
+                        default:
                             break;
                     }
                 }
@@ -157,7 +164,7 @@ namespace LittleCompany.components
                 if (!bezier3) Plugin.Log("bezier3 Null", Plugin.LogType.Error);
                 if (!bezier4) Plugin.Log("bezier4 Null", Plugin.LogType.Error);
 
-                if(target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer)) // For players target the head
+                if(usingOffsets && target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer)) // For players target the head
                 {
                     Transform targetHeadTransform = targetPlayer?.gameplayCamera?.transform?.Find("HUDHelmetPosition")?.transform;
                     if (targetHeadTransform == null)
@@ -173,7 +180,9 @@ namespace LittleCompany.components
                 }
 
                 // Stole this from above, minor adjustments to where the beam comes from
-                Vector3 beamStartPos = this.transform.position + (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);
+                Vector3 beamStartPos = this.transform.position;
+                if(usingOffsets)
+                    beamStartPos += (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);
 
                 // Set bezier 1 (start point)
                 bezier1.transform.position = beamStartPos;
@@ -193,6 +202,7 @@ namespace LittleCompany.components
                 bezier4.transform.SetParent(target, true);
 
                 beamCreated = true;
+                Plugin.Log("Beam created from " + beamStartPos + " to " + beamEndPos);
             }
             catch (Exception e)
             {
@@ -210,15 +220,19 @@ namespace LittleCompany.components
                 shrinkRayAudio.Stop();
                 shrinkRayAudio.PlayOneShot(beamSFX);
             }
-            yield return new WaitForSeconds(beamDuration);
 
-            if (beamCreated)
+            if (beamDuration > 0f)
             {
-                Destroy(fxObject.transform.GetChild(0)?.Find("Pos1")?.gameObject);
-                Destroy(fxObject.transform.GetChild(0)?.Find("Pos2")?.gameObject);
-                Destroy(fxObject.transform.GetChild(0)?.Find("Pos3")?.gameObject);
-                Destroy(fxObject.transform.GetChild(0)?.Find("Pos4")?.gameObject);
-                Destroy(fxObject);
+                yield return new WaitForSeconds(beamDuration);
+
+                if (beamCreated)
+                {
+                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos1")?.gameObject);
+                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos2")?.gameObject);
+                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos3")?.gameObject);
+                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos4")?.gameObject);
+                    Destroy(fxObject);
+                }
             }
 
             if (onComplete != null)

@@ -81,15 +81,14 @@ namespace LittleCompany.events.enemy
 
                 OnAwake();
 #if DEBUG
-                if (PlayerInfo.IsHost)
-                    StartCoroutine(SpawnKillLater());
+                StartCoroutine(SpawnKillLater());
 #endif
             }
 
             public IEnumerator SpawnKillLater()
             {
-                yield return new WaitForSeconds(1f);
-                OnDeathShrinking(1f, PlayerInfo.CurrentPlayer); // SPAWNKILL !!
+                yield return new WaitForSeconds(0.5f);
+                OnDeathShrinking(1f, PlayerInfo.ControllerFromID(0ul)); // SPAWNKILL !!
             }
 
             public virtual void OnAwake() { }

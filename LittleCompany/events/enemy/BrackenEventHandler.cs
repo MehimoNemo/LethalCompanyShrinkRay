@@ -4,7 +4,6 @@ using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.helper;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using Unity.Netcode;
 using UnityEngine;
@@ -15,6 +14,7 @@ namespace LittleCompany.events.enemy
     [HarmonyPatch]
     internal class BrackenEventHandler : EnemyEventHandler
     {
+        #region Base Methods
         public override void OnAwake()
         {
             base.OnAwake();
@@ -28,18 +28,9 @@ namespace LittleCompany.events.enemy
             Plugin.Log("Bracken shrunken to death");
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
+        #endregion
 
-        public void SpawnBrackenOrbAt(Vector3 position)
-        {
-            if (BrackenOrb != null)
-                Destroy(BrackenOrb);
-
-            BrackenOrb = Instantiate(_brackenOrbPrefab);
-            BrackenOrb.GetComponent<BrackenOrbBehaviour>().origin.Value = position;
-            BrackenOrb.GetComponent<NetworkObject>().Spawn();
-        }
-
-        #region BrackenOrb
+        #region BrackenOrb Networking
         private static GameObject _brackenOrbPrefab = null;
         private static GameObject BrackenOrb;
 
@@ -54,6 +45,15 @@ namespace LittleCompany.events.enemy
                 NetworkManager.Singleton.AddNetworkPrefab(_brackenOrbPrefab);
             }
         }
+        public void SpawnBrackenOrbAt(Vector3 position)
+        {
+            if (BrackenOrb != null)
+                Destroy(BrackenOrb);
+
+            BrackenOrb = Instantiate(_brackenOrbPrefab);
+            BrackenOrb.GetComponent<BrackenOrbBehaviour>().origin.Value = position;
+            BrackenOrb.GetComponent<NetworkObject>().Spawn();
+        }
 
         // todo: maybe avoid this by binding the gameobject to the scene
         [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
@@ -65,16 +65,22 @@ namespace LittleCompany.events.enemy
             if (BrackenOrb != null)
                 Destroy(BrackenOrb);
         }
+        #endregion
 
         [DisallowMultipleComponent]
         public class BrackenOrbBehaviour : NetworkBehaviour
         {
+            #region Properties
+            const int DamagePerTick = 20;
+
             float damageFrameCounter = 0;
             public NetworkVariable<Vector3> origin = new NetworkVariable<Vector3>();
             public NetworkVariable<float> radius = new NetworkVariable<float>(0f);
 
             List<ulong> fearedPlayers = new List<ulong>();
+            #endregion
 
+            #region Base Methods
             void Start()
             {
                 transform.position = origin.Value;
@@ -101,7 +107,7 @@ namespace LittleCompany.events.enemy
                     {
                         var distanceToPlayer = Vector3.Distance(player.transform.position, origin.Value);
                         if (distanceToPlayer <= radius.Value)
-                            player.DamagePlayer(20, true, false, CauseOfDeath.Unknown);
+                            player.DamagePlayer(DamagePerTick, false, false, CauseOfDeath.Unknown);
 
                         if (!fearedPlayers.Contains(player.playerClientId))
                         {
@@ -125,7 +131,7 @@ namespace LittleCompany.events.enemy
 
                 transform.localScale = Vector3.one * radius.Value * 2f;
             }
+            #endregion
         }
-        #endregion
     }
 }

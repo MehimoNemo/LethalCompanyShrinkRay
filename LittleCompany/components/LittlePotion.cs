@@ -366,7 +366,7 @@ namespace LittleCompany.components
             if (Cap != null)
                 Destroy(Cap);
 
-            var duration = ShrinkRayFX.beamDuration;
+            var duration = ShrinkRayFX.DefaultBeamDuration;
             yield return new WaitForSeconds(duration / 5);
             duration -= duration / 5;
 

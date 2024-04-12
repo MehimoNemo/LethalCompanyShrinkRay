@@ -1,6 +1,8 @@
 ﻿using GameNetcodeStuff;
+using LittleCompany.components;
 using LittleCompany.helper;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
@@ -9,8 +11,11 @@ namespace LittleCompany.events.enemy
 {
     internal class RobotEventHandler : EnemyEventHandler
     {
+        #region Properties
         private static GameObject BurningRobotToyPrefab = null;
+        #endregion
 
+        #region Networking
         public static void LoadBurningRobotToyPrefab()
         {
             if (BurningRobotToyPrefab != null) return;
@@ -23,7 +28,9 @@ namespace LittleCompany.events.enemy
             var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
             var burningBehaviour = BurningRobotToyPrefab.AddComponent<BurningToyRobotBehaviour>();
         }
+        #endregion
 
+        #region Base Methods
         public override void OnAwake()
         {
             base.OnAwake();
@@ -34,25 +41,35 @@ namespace LittleCompany.events.enemy
         {
             Plugin.Log("Robot shrunken to death");
 
+            var explosionPrefab = (enemy as RadMechAI).explosionPrefab;
+            base.OnDeathShrinking(previousSize, playerShrunkenBy);
+            Landmine.SpawnExplosion(transform.position, true, default, default, default, default, explosionPrefab);
+
             if (PlayerInfo.IsHost && BurningRobotToyPrefab != null)
             {
                 var toyRobotObject = Instantiate(BurningRobotToyPrefab, enemy.transform.position, Quaternion.identity, RoundManager.Instance.spawnedScrapContainer);
+                toyRobotObject.GetComponent<BurningToyRobotBehaviour>().playerWhoKilledRobot.Value = playerShrunkenBy.playerClientId;
                 toyRobotObject.GetComponent<NetworkObject>().Spawn();
             }
-
-            base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
+        #endregion
 
-        #region BurningToyRobot
         [DisallowMultipleComponent]
         public class BurningToyRobotBehaviour : NetworkBehaviour
         {
+            #region Properties
             GrabbableObject toyRobot = null;
             GameObject burningEffect = Effects.BurningEffect;
             float damageFrameCounter = 0;
+            public NetworkVariable<ulong> playerWhoKilledRobot = new NetworkVariable<ulong>();
+            Dictionary<ulong, ShrinkRayFX> boundPlayerFX = new Dictionary<ulong, ShrinkRayFX>();
 
             readonly int damagePerTick = 20;
 
+            bool IsHeld => toyRobot != null && toyRobot.playerHeldBy != null;
+            #endregion
+
+            #region Base Methods
             void Start()
             {
                 Plugin.Log("Burning toy robot has spawned!");
@@ -67,8 +84,8 @@ namespace LittleCompany.events.enemy
                 if (scanNode != null)
                     scanNode.headerText = toyRobot.itemProperties.itemName;
 
-                Landmine.SpawnExplosion(transform.position, true);
-                //radmechai.explosionPrefab
+                var player = PlayerInfo.ControllerFromID(playerWhoKilledRobot.Value);
+                BindPlayer(player);
             }
 
             void FixedUpdate()
@@ -78,18 +95,83 @@ namespace LittleCompany.events.enemy
 
                 if (damageFrameCounter == 1)
                 {
-                    Plugin.Log("Position: " + burningEffect.transform.position);
-                    if (toyRobot != null && toyRobot.playerHeldBy != null)
+                    if (IsHeld)
                         toyRobot.playerHeldBy.DamagePlayer(damagePerTick, true, false, CauseOfDeath.Burning);
+                    CheckPlayerBindings(true);
                 }
+                else
+                    CheckPlayerBindings();
 
                 if (burningEffect != null)
                     burningEffect.transform.position = transform.position; // todo: transform parenting...
+
+                if (IsHeld)
+                    BindPlayer(toyRobot.playerHeldBy);
             }
 
             void OnDestroy()
             {
                 Destroy(burningEffect);
+                base.OnDestroy();
+            }
+            #endregion
+
+            #region Methods
+            void CheckPlayerBindings(bool checkForDamage = false)
+            {
+                for(int i = boundPlayerFX.Count - 1; i >= 0; i--)
+                {
+                    var binding = boundPlayerFX.ElementAt(i);
+                    var player = PlayerInfo.ControllerFromID(binding.Key);
+                    var fx = binding.Value;
+                    if (player == null || player.isPlayerDead || !player.isPlayerControlled)
+                    {
+                        Destroy(fx);
+                        boundPlayerFX.Remove(binding.Key);
+                    }
+                    else if (checkForDamage)
+                    {
+                        var distance = Vector3.Distance(toyRobot.transform.position, player.transform.position);
+                        if (distance > 5f)
+                        {
+                            player.DamagePlayer(damagePerTick, true, false, CauseOfDeath.Unknown);
+                            fx.colorPrimary = Color.red;
+                            fx.colorSecondary = Color.red;
+                        }
+                        else
+                        {
+                            fx.colorPrimary = Color.black;
+                            fx.colorSecondary = Color.black;
+                        }
+
+                    }
+                }
+            }
+
+            void BindPlayer(PlayerControllerB player)
+            {
+                Plugin.Log("BurningToyRobotBehaviour.BindPlayer");
+                if (player == null || boundPlayerFX.ContainsKey(player.playerClientId))
+                    return;
+
+                Plugin.Log("BurningToyRobotBehaviour.BindPlayer for " + player.name);
+                var fx = toyRobot.gameObject.AddComponent<ShrinkRayFX>();
+                fx.beamDuration = 0f;
+                fx.bezier2YOffset = 0f;
+                fx.bezier3YOffset = 0f;
+                fx.bezier2YPoint = 0f;
+                fx.bezier3YPoint = 0f;
+                fx.usingOffsets = false;
+
+                StartCoroutine(fx.RenderRayBeam(toyRobot.transform, PlayerInfo.SpineOf(player)));
+
+                fx.sparksSize = 0f;
+                fx.colorPrimary = Color.black;
+                fx.colorSecondary = Color.black;
+                fx.noiseSpeed = 1f;
+                fx.noisePower = 0.1f;
+
+                boundPlayerFX.Add(player.playerClientId, fx);
             }
             #endregion
         }

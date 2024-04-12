@@ -76,7 +76,7 @@ namespace LittleCompany.components
             float a = Mathf.Abs(c - scale); // difference
             const float b = -0.5f;
 
-            while (elapsedTime < ShrinkRayFX.beamDuration)
+            while (elapsedTime < ShrinkRayFX.DefaultBeamDuration)
             {
                 // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
                 var x = elapsedTime;
