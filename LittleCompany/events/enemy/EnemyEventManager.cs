@@ -82,7 +82,7 @@ namespace LittleCompany.events.enemy
 
                 OnAwake();
 #if DEBUG
-                StartCoroutine(SpawnKillLater());
+                //StartCoroutine(SpawnKillLater());
 #endif
             }
 
@@ -103,7 +103,9 @@ namespace LittleCompany.events.enemy
                     Enlarged(from >= 1f, playerBy);
             }
 
-            public virtual void AboutToDeathShrink(float currentSize, PlayerControllerB playerShrunkenBy) { }
+            public virtual void AboutToDeathShrink(float currentSize, PlayerControllerB playerShrunkenBy) {
+                Plugin.Log("AboutToDeathShrink");
+            }
 
             public virtual void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
             {

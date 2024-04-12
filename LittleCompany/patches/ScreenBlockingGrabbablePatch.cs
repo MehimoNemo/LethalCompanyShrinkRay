@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
 using LittleCompany.components;
 using LittleCompany.helper;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace LittleCompany.patches
         {
             if(!CanBlockOurScreen(__instance)) return;
 
-            TransformItemRelativeTo(__instance, PlayerInfo.SizeOf(__instance.playerHeldBy));
+            //TransformItemRelativeTo(__instance, PlayerInfo.SizeOf(__instance.playerHeldBy));
             CheckForGlassify(__instance);
         }
 
@@ -40,12 +41,52 @@ namespace LittleCompany.patches
         {
             if (item == null) return;
 
-            bool isScaled = item.TryGetComponent(out ItemScaling scaling) && !scaling.Unchanged;
+            bool tooBig = ItemBiggerThanHalfScreen(item);
+            Plugin.Log("TooBig" + tooBig);
 
-            if((PlayerInfo.IsShrunk(item.playerHeldBy) && item.itemProperties.twoHanded) || (isScaled && PlayerInfo.SmallerThan(item.playerHeldBy, scaling.RelativeScale)))
+            if ((PlayerInfo.IsShrunk(item.playerHeldBy) && item.itemProperties.twoHanded) || tooBig)
                 GlassifyItem(item);
             else
                 UnGlassifyItem(item);
+        }
+
+        private const float widthItemForScreenBlockWhileNormalSized = 1.3f;
+
+        private static bool ItemBiggerThanHalfScreen(GrabbableObject item)
+        {
+            float sizeX = getBiggestWidthFromAllMeshRenderer(item);
+            Plugin.Log("SizeX: " + sizeX);
+            return PlayerInfo.SizeOf(item.playerHeldBy) * widthItemForScreenBlockWhileNormalSized <= sizeX;
+        }
+
+        private static float getBiggestWidthFromAllMeshRenderer(GrabbableObject item)
+        {
+            float biggestX = 0f;
+            foreach (MeshRenderer mesh in item.gameObject.GetComponentsInChildren<MeshRenderer>())
+            {
+                float meshSizeX = mesh.localBounds.size.x * getRelativeLocalScaleOfMesh(mesh, item);
+                if (meshSizeX > biggestX)
+                {
+                    biggestX = meshSizeX;
+                }
+            }
+            return biggestX;
+        }
+
+        private static float getRelativeLocalScaleOfMesh(MeshRenderer mesh, GrabbableObject item)
+        {
+            Transform parentTransform = mesh.transform;
+            float relativeLocalScale = parentTransform.localScale.x;
+            int counter = 0;
+            // Counter to make sure we don't have an infinite loop. If the mesh is 10 deep it's too much anyway
+            while(parentTransform != item.transform && counter < 10)
+            {
+                parentTransform = parentTransform.parent;
+                relativeLocalScale *= parentTransform.localScale.x;
+                counter++;
+            }
+            Plugin.Log("RelativeLocalScale: " + relativeLocalScale);
+            return relativeLocalScale;
         }
 
         public static void OnItemNormalize(GrabbableObject item)
@@ -79,6 +120,7 @@ namespace LittleCompany.patches
 
         public static void GlassifyItem(GrabbableObject item)
         {
+            Plugin.Log("GlassifyItem");
             if (item == null) return;
 
             if (!item.gameObject.TryGetComponent<TargetGlassification>(out _))

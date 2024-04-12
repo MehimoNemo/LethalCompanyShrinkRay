@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
 using LittleCompany.Config;
+using LittleCompany.modifications;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -71,9 +72,7 @@ namespace LittleCompany.helper
 
         public static ulong? CurrentPlayerID => CurrentPlayer?.playerClientId;
 
-        public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
-
-        public static float SizeOf(PlayerControllerB player) => Rounded(player.transform.localScale.y);
+        public static float SizeOf(PlayerControllerB player) => Modification.Rounded(player.transform.localScale.y);
 
         public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 

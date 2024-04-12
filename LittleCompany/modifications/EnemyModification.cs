@@ -20,12 +20,12 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(EnemyAI targetEnemy)
         {
-            return Mathf.Max(ScalingOf(targetEnemy).RelativeScale - ModConfig.Instance.values.sizeChangeStep, 0f);
+            return Mathf.Max(Rounded(ScalingOf(targetEnemy).RelativeScale - ModConfig.Instance.values.sizeChangeStep), 0f);
         }
 
         public static float NextIncreasedSizeOf(EnemyAI targetEnemy)
         {
-            return Mathf.Min(ScalingOf(targetEnemy).RelativeScale + ModConfig.Instance.values.sizeChangeStep, 4f);
+            return Mathf.Min(Rounded(ScalingOf(targetEnemy).RelativeScale + ModConfig.Instance.values.sizeChangeStep), 4f);
         }
 
         public static bool CanApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy)
@@ -79,7 +79,10 @@ namespace LittleCompany.modifications
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
+                            {
+                                Plugin.Log("Death Shrinking: " + nextShrunkenSize + " : " + DeathShrinkMargin);
                                 EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking(previousScale, playerModifiedBy);
+                            }
 
                             if (onComplete != null)
                                 onComplete();
