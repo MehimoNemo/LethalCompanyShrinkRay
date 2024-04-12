@@ -25,6 +25,7 @@ namespace LittleCompany.events.enemy
             { Enemy.Coilhead,   typeof(CoilheadEventHandler)    },
             { Enemy.BaboonHawk, typeof(BaboonHawkEventHandler)  },
             { Enemy.Butler,     typeof(ButlerEventHandler)      },
+            { Enemy.ButlerBees, typeof(ButlerBeesEventHandler)  },
             { Enemy.Robot,      typeof(RobotEventHandler)       }
         };
 
