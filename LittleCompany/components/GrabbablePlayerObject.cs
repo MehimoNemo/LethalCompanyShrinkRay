@@ -463,6 +463,7 @@ namespace LittleCompany.components
 
                 if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
                     HoarderBugAIPatch.DropHeldItem(enemyHeldBy as HoarderBugAI);
+                enemyHeldBy = null;
 
                 if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
                     playerHeldBy.DiscardHeldObject(); // Can lead to problems

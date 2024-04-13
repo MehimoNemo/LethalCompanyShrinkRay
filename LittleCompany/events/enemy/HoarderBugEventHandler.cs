@@ -27,39 +27,19 @@ namespace LittleCompany.events.enemy
                 if (hoarderBug?.agent != null)
                     hoarderBug.agent.speed = 10f;
 
-                if(hoarderBug.targetItem != null)
+                if(hoarderBug.heldItem != null)
                 {
                     if (GrabbedPlayer == null)
                     {
                         // Grabbed something
-                        var gpo = hoarderBug.targetItem as GrabbablePlayerObject;
+                        var gpo = hoarderBug.heldItem.itemGrabbableObject as GrabbablePlayerObject;
                         if (gpo != null)
-                        {
                             GrabbedPlayer = gpo.grabbedPlayer;
-                            Plugin.Log(gpo.grabbedPlayer.name + " got grabbed by a dieing hoarding bug");
-                        }
                     }
 
                     if(GrabbedPlayer != null)
                     {
                         GrabbedPlayer.transform.localScale = Vector3.one * EnemyModification.ScalingOf(hoarderBug).RelativeScale;
-                        
-                        // Scaling with hoarder bug
-                        /*var relativeBugScale = new Vector3()
-                        {
-                            x = 1f / bugScaleOnGrab.x * hoarderBug.transform.localScale.x,
-                            y = 1f / bugScaleOnGrab.y * hoarderBug.transform.localScale.y,
-                            z = 1f / bugScaleOnGrab.z * hoarderBug.transform.localScale.z
-                        };
-                        Plugin.Log("Multiplier: " + relativeBugScale);
-
-                        var player = PlayerInfo.ControllerFromID(grabbedPlayerID.Value);
-                        player.transform.localScale = new Vector3()
-                        {
-                            x = targetItemGrabScale.x * relativeBugScale.x,
-                            y = targetItemGrabScale.y * relativeBugScale.y,
-                            z = targetItemGrabScale.z * relativeBugScale.z,
-                        };*/
                     }
                 }
             }
@@ -76,8 +56,11 @@ namespace LittleCompany.events.enemy
         }
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {
-            if(enemy.TryGetComponent(out DieingBugBehaviour behaviour))
-                    behaviour.GrabbedPlayer?.KillPlayer(Vector3.down, false, CauseOfDeath.Unknown);
+            if (enemy.TryGetComponent(out DieingBugBehaviour behaviour))
+            {
+                behaviour.GrabbedPlayer?.KillPlayer(Vector3.down, false, CauseOfDeath.Unknown);
+                Destroy(behaviour);
+            }
 
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
             Plugin.Log("Hoarderbug shrunken to death");
