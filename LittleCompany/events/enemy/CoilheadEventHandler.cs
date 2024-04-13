@@ -57,7 +57,7 @@ namespace LittleCompany.events.enemy
             enemy.transform.position = position;
 
             var scaling = EnemyModification.ScalingOf(enemy);
-            scaling.StopScaling();
+            //scaling.StopScaling();
             scaling.ScaleOverTimeTo(scale, PlayerInfo.ControllerFromID(playerModifiedByID));
         }
     }
