@@ -1,3 +1,6 @@
+### 0.5.8 ###
++ fixed a bug where vents couldn't be found if a previous error occured, leading to being unable to exit the lobby
+
 ### 0.5.7 ###
 + fixed resizing not working correctly on players who were small before joining
 + updated recommended LethalLib dependency version to 0.15.1 for v50 support

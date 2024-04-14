@@ -48,7 +48,7 @@ namespace LittleCompany.components
         #region Methods
         private static EnemyVent[] GetAllVents()
         {
-            if (RoundManager.Instance.allEnemyVents != null && RoundManager.Instance.allEnemyVents.Length > 0)
+            if (RoundManager.Instance?.allEnemyVents != null && RoundManager.Instance.allEnemyVents.Length > 0)
                 return RoundManager.Instance.allEnemyVents;
 
             return Object.FindObjectsOfType<EnemyVent>();
