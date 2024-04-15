@@ -204,14 +204,49 @@ namespace LittleCompany.components
 
     internal class ItemScaling : TargetScaling<GrabbableObject>
     {
+        public Item originalItemProperties;
+
+        internal override void OnAwake()
+        {
+            originalItemProperties = target.itemProperties;
+        }
+
         #region Methods
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             base.ScaleTo(scale, scaledBy);
+            if (originalItemProperties != null)
+            {
+                if (Modification.Rounded(scale) == 1)
+                {
+                    // If normalized, reset to original item properties
+                    target.itemProperties = originalItemProperties;
+                }
+                else
+                {
+                    OverrideItemProperties();
+                    RecalculateOffset(scale);
+                }
+            }
 
             if (!GettingScaled && target != null)
                 target.originalScale = gameObject.transform.localScale;
         }
+
+        private void OverrideItemProperties()
+        {
+            if (target.itemProperties == originalItemProperties)
+            {
+                // itemProperties is not overriden, overrides it
+                target.itemProperties = Instantiate(originalItemProperties);
+            }
+        }
+
+        private void RecalculateOffset(float scale)
+        {
+            target.itemProperties.positionOffset = originalItemProperties.positionOffset * scale;
+        }
+
         public void ScaleTemporarlyTo(float scale)
         {
             gameObject.transform.localScale = OriginalScale * scale;

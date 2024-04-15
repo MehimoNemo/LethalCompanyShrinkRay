@@ -92,7 +92,14 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)
             {
-                LogPosition();
+                
+                Item itemToSpawn = ItemInfo.SpawnableItems[itemIndex];
+                SpawnItemInFront(itemToSpawn.spawnPrefab);
+                itemIndex++;
+                if(itemIndex >= ItemInfo.SpawnableItems.Count)
+                {
+                    itemIndex = 0;
+                }
             }
 
             else if (Keyboard.current.f10Key.wasPressedThisFrame)
@@ -115,6 +122,7 @@ namespace LittleCompany.patches
 
             return true;
         }
+        private static int itemIndex = 0;
         #region Methods
         public static GameObject CreateCube(Color color, Transform parent = null)
         {
@@ -151,7 +159,7 @@ namespace LittleCompany.patches
 
             var item = UnityEngine.Object.Instantiate(networkPrefab);
             UnityEngine.Object.DontDestroyOnLoad(item);
-            item.GetComponent<NetworkObject>().Spawn();
+            item.GetComponent<NetworkObject>()?.Spawn();
             item.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 1.5f;
         }
 
