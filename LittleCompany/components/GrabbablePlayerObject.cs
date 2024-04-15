@@ -274,7 +274,7 @@ namespace LittleCompany.components
             SetIsGrabbableToEnemies(false);
             SetControlTips();
 
-            foreach (var player in PlayerInfo.AllPlayers)
+            foreach (var player in PlayerInfo.AlivePlayers)
             {
                 if (grabbedPlayer != player)
                     IgnoreColliderWith(player.playerCollider);
@@ -306,7 +306,7 @@ namespace LittleCompany.components
             if(IsCurrentPlayer)
                 PlayerInfo.EnableCameraVisor();
 
-            foreach (var player in PlayerInfo.AllPlayers)
+            foreach (var player in PlayerInfo.AlivePlayers)
             {
                 if (grabbedPlayer != player)
                     IgnoreColliderWith(player.playerCollider, false);
@@ -925,6 +925,20 @@ namespace LittleCompany.components
         internal void MovedOutOfHoardingBugNestRangeClientRpc()
         {
             lastHoarderBugGrabbedBy = null;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void DamageGrabbedPlayerServerRpc(int damageNumber, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false, Vector3 force = default(Vector3))
+        {
+            DamageGrabbedPlayerClientRpc(damageNumber, causeOfDeath, deathAnimation, fallDamage);
+        }
+
+        [ClientRpc]
+        public void DamageGrabbedPlayerClientRpc(int damageNumber, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false)
+        {
+            if (!IsCurrentPlayer) return;
+
+            grabbedPlayer.DamagePlayer(damageNumber, false, false, causeOfDeath, deathAnimation, fallDamage, default);
         }
         #endregion
     }

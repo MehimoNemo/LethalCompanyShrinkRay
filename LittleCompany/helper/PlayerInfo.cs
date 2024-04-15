@@ -38,15 +38,14 @@ namespace LittleCompany.helper
             get
             {
                 var scale = 0f;
-                foreach (var player in AllPlayers)
+                foreach (var player in AlivePlayers)
                     scale = Mathf.Max(scale, SizeOf(player));
                 return scale;
             }
         }
 
-        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled && !pcb.isPlayerDead).ToList();
-
-        public static List<GameObject> AllPlayerObjects => AllPlayers.Select(pcb => pcb.gameObject).ToList();
+        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb != null).ToList();
+        public static List<PlayerControllerB> AlivePlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled && !pcb.isPlayerDead).ToList();
 
         public static PlayerControllerB ControllerFromID(ulong playerID)
         {

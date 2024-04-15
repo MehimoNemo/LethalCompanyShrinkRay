@@ -8,7 +8,7 @@
  + Item scaling is purely visual as of now. Effects will be added in later updates.
 
 **Tweaks**
-+ Throw force of grabbable players is now dependant on the size difference. *Anything above 0.66 in difference is strong than before.*
++ Throw force of grabbable players is now dependant on the size difference. *Anything above 0.66 in difference is stronger than before.*
 
 **Fixes**
 + Fixed arms and visor being misplaced or having wrong offset after being scaled

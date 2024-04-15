@@ -84,7 +84,7 @@ namespace LittleCompany.events.enemy
                 transform.position = origin.Value;
                 transform.localScale = Vector3.zero;
 
-                foreach (var player in PlayerInfo.AllPlayers)
+                foreach (var player in PlayerInfo.AlivePlayers)
                 {
                     var distanceToPlayer = Vector3.Distance(player.transform.position, origin.Value);
                     if (distanceToPlayer < 2f)
@@ -101,7 +101,7 @@ namespace LittleCompany.events.enemy
 
                 if(damageFrameCounter == 1)
                 {
-                    foreach (var player in PlayerInfo.AllPlayers)
+                    foreach (var player in PlayerInfo.AlivePlayers)
                     {
                         var distanceToPlayer = Vector3.Distance(player.transform.position, origin.Value);
                         if (distanceToPlayer <= radius.Value)

@@ -29,23 +29,30 @@ namespace LittleCompany.components
         #region Patches
         [HarmonyPatch(typeof(PlayerControllerB), "DamagePlayer")]
         [HarmonyPrefix]
-        public static void DamagePlayer(PlayerControllerB __instance, int damageNumber, bool hasDamageSFX = true, bool callRPC = true, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false, Vector3 force = default(Vector3))
+        public static void DamagePlayer(PlayerControllerB __instance, int damageNumber, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false)
         {
+            // Local method
             if (__instance == null || !TryFindGrabbableObjectByHolder(__instance.playerClientId, out GrabbablePlayerObject gpo)) return;
+
+            // todo: check if grabbed player is drowning or suffocating too
             if (causeOfDeath == CauseOfDeath.Suffocation || causeOfDeath == CauseOfDeath.Drowning || causeOfDeath == CauseOfDeath.Abandoned) return;
 
             // Grabbed player takes half the damage
-            gpo.grabbedPlayer.DamagePlayer(damageNumber / 2, hasDamageSFX, callRPC, causeOfDeath, deathAnimation, fallDamage, force);
+            gpo.DamageGrabbedPlayerServerRpc(damageNumber / 2, causeOfDeath, deathAnimation, fallDamage);
         }
         
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
         [HarmonyPrefix]
-        public static void KillPlayerClientRpcPrefix(int playerId/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
+        public static void KillPlayerClientRpcPrefix(int playerId, PlayerControllerB __instance/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
         {
             Plugin.Log("KillPlayerClientRpcPrefix");
 
             var targetPlayer = PlayerInfo.ControllerFromID((ulong)playerId);
-            if (targetPlayer == null) return;
+            if(targetPlayer == null)
+            {
+                Plugin.Log("Unable to find player script for dying player", Plugin.LogType.Error);
+                return;
+            }
 
             ResetAnyPlayerModificationsFor(targetPlayer);
 
@@ -367,7 +374,7 @@ namespace LittleCompany.components
             if(PlayerInfo.IsHost)
             {
                 var largestGrabberSize = Mathf.Max(PlayerInfo.LargestPlayerSize, EnemyInfo.LargestGrabbingEnemy);
-                foreach (var player in PlayerInfo.AllPlayers)
+                foreach (var player in PlayerInfo.AlivePlayers)
                 {
                     if (PlayerInfo.SmallerThan(player, largestGrabberSize)) // Make anyone grabbable who's smaller than the largest player / enemy
                         SetPlayerGrabbable(player.playerClientId, out _);

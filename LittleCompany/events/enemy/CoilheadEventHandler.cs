@@ -14,12 +14,12 @@ namespace LittleCompany.events.enemy
             Plugin.Log("Coilhead shrunken to death");
             if (PlayerInfo.IsHost)
             {
-                var allPlayers = PlayerInfo.AllPlayers;
-                var startPos = Random.Range(0, allPlayers.Count - 1); // Start with a random player, so the coilhead won't always spawn on the same player
+                var alivePlayers = PlayerInfo.AlivePlayers;
+                var startPos = Random.Range(0, alivePlayers.Count - 1); // Start with a random player, so the coilhead won't always spawn on the same player
 
-                for(int i = startPos; i < allPlayers.Count + startPos; i++)
+                for(int i = startPos; i < alivePlayers.Count + startPos; i++)
                 {
-                    var player = allPlayers[i % allPlayers.Count];
+                    var player = alivePlayers[i % alivePlayers.Count];
                     if (!player.isInsideFactory || player.playerClientId == playerShrunkenBy.playerClientId)
                         continue;
 

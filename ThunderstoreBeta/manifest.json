@@ -5,6 +5,6 @@
     "description": "A beta version of our Lethal Company mod, that may contain bugs.",
     "dependencies": [
         "BepInEx-BepInExPack-5.4.2100",
-		"Evaisa-LethalLib-0.14.2"
+		"Evaisa-LethalLib-0.15.1"
     ]
 }
