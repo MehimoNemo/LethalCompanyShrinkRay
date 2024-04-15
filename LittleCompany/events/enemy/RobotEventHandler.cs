@@ -29,9 +29,11 @@ namespace LittleCompany.events.enemy
             BurningRobotToyPrefab = LethalLib.Modules.NetworkPrefabs.CloneNetworkPrefab(toyRobotPrefab);
             var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
 
+            toyRobot.itemProperties = Instantiate(toyRobot.itemProperties);
+            toyRobot.itemProperties.itemId = 2047483647;
             toyRobot.itemProperties.itemName = "Burning toy robot";
             toyRobot.fallTime = 0f;
-
+            
             var burningBehaviour = toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
             toyRobot.gameObject.AddComponent<ShrinkRayFX>();
 
