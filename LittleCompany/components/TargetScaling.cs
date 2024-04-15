@@ -220,7 +220,7 @@ namespace LittleCompany.components
                 if (Modification.Rounded(scale) == 1)
                 {
                     // If normalized, reset to original item properties
-                    target.itemProperties = originalItemProperties;
+                    ResetItemProperties();
                 }
                 else
                 {
@@ -231,6 +231,14 @@ namespace LittleCompany.components
 
             if (!GettingScaled && target != null)
                 target.originalScale = gameObject.transform.localScale;
+        }
+        private void ResetItemProperties()
+        {
+            if (target.itemProperties != originalItemProperties)
+            {
+                Destroy(target.itemProperties);
+            }
+            target.itemProperties = originalItemProperties;
         }
 
         private void OverrideItemProperties()
