@@ -5,7 +5,6 @@ using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.modifications
 {
@@ -22,7 +21,7 @@ namespace LittleCompany.modifications
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - ModConfig.Instance.values.sizeChangeStep), 0f);
+            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - ModConfig.Instance.values.playerSizeChangeStep), 0f);
             if ((nextShrunkenSize + (ModConfig.SmallestSizeChange / 2)) <= DeathShrinkMargin)
                 return 0f;
             else
@@ -33,7 +32,7 @@ namespace LittleCompany.modifications
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
             Plugin.Log("NextEnlargedSizeOf -> " + playerSize);
-            return Mathf.Min(Rounded(playerSize + ModConfig.Instance.values.sizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
+            return Mathf.Min(Rounded(playerSize + ModConfig.Instance.values.playerSizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
         }
 
         public static void TransitionedToShrunk(PlayerControllerB targetPlayer)

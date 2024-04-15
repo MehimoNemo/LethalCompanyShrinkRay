@@ -158,6 +158,7 @@ namespace LittleCompany.components
                 
 
         [HarmonyPatch(typeof(StartOfRound), "UpdatePlayerVoiceEffects")]
+        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyBefore(["MoreCompany"])]
         [HarmonyPostfix]
         public static void SetPlayerVoiceFilters()

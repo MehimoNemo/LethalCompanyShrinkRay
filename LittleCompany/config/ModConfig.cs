@@ -64,7 +64,11 @@ namespace LittleCompany.Config
 
             public bool deathShrinking { get; set; }
 
-            public float sizeChangeStep { get; set; }
+            public float playerSizeChangeStep { get; set; }
+
+            public float itemSizeChangeStep { get; set; }
+
+            public float enemySizeChangeStep { get; set; }
 
             public float maximumPlayerSize { get; set; }
 
@@ -104,13 +108,16 @@ namespace LittleCompany.Config
         #region Methods
         public void Setup()
         {
-            values.defaultPlayerSize            = Plugin.BepInExConfig().Bind("General", "DefaultPlayerSize", 1f, "The default player size when joining a lobby or reviving.").Value;
             values.shrinkRayCost                = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
             values.deathShrinking               = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
-            values.sizeChangeStep               = Plugin.BepInExConfig().Bind("General", "SizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
             values.shrinkRayTargetHighlighting  = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnHit, "Defines, when a target gets highlighted. Set to OnLoading if you encounter performance issues.").Value;
-            values.maximumPlayerSize            = Plugin.BepInExConfig().Bind("General", "MaximumPlayerSize", 1.7f, new ConfigDescription("Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)", new AcceptableValueRange<float>(1f, 10f))).Value;
-
+            
+            values.defaultPlayerSize            = Plugin.BepInExConfig().Bind("Sizing", "DefaultPlayerSize", 1f, "The default player size when joining a lobby or reviving.").Value;
+            values.maximumPlayerSize            = Plugin.BepInExConfig().Bind("Sizing", "MaximumPlayerSize", 1.7f, new ConfigDescription("Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)", new AcceptableValueRange<float>(1f, 10f))).Value;
+            values.playerSizeChangeStep         = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
+            values.itemSizeChangeStep           = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.5f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step.", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
+            values.enemySizeChangeStep          = Plugin.BepInExConfig().Bind("Sizing", "EnemySizeChangeStep", 0.5f, new ConfigDescription("Defines how much an enemy shrinks/enlarges in one step.", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
+            
             values.movementSpeedMultiplier      = Plugin.BepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.3f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (very slow) to 1.5 (very fast).", new AcceptableValueRange<float>(0.5f, 1.5f))).Value;
             values.jumpHeightMultiplier         = Plugin.BepInExConfig().Bind("Shrunken", "JumpHeightMultiplier", 1.3f, new ConfigDescription("Jump-height multiplier for shrunken players, ranging from 0.5 (very low) to 2 (very high).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
             values.weightMultiplier             = Plugin.BepInExConfig().Bind("Shrunken", "WeightMultiplier", 1.5f, new ConfigDescription("Weight multiplier on held items for shrunken players, ranging from 0.5 (lighter) to 2 (heavier).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
