@@ -44,7 +44,7 @@ namespace LittleCompany.events.enemy
         public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
         public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
 
-        [ServerRpc]
+        [ServerRpc(RequireOwnership = false)]
         public void TeleportAndScaleCoilheadToServerRpc(Vector3 position, float scale, ulong playerModifiedByID)
         {
             TeleportAndScaleCoilheadToClientRpc(position, scale, playerModifiedByID);
