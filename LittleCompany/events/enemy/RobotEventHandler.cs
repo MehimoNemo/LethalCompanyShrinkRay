@@ -1,4 +1,6 @@
 ﻿using GameNetcodeStuff;
+using HarmonyLib;
+using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.helper;
 using System.Collections.Generic;
@@ -26,7 +28,14 @@ namespace LittleCompany.events.enemy
             var toyRobotPrefab = ItemInfo.SpawnableItems[toyRobotIndex].spawnPrefab;
             BurningRobotToyPrefab = LethalLib.Modules.NetworkPrefabs.CloneNetworkPrefab(toyRobotPrefab);
             var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
-            var burningBehaviour = BurningRobotToyPrefab.AddComponent<BurningToyRobotBehaviour>();
+
+            toyRobot.itemProperties.itemName = "Burning toy robot";
+            toyRobot.fallTime = 0f;
+
+            var burningBehaviour = toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
+            toyRobot.gameObject.AddComponent<ShrinkRayFX>();
+
+            Items.RegisterItem(toyRobot.itemProperties);
         }
         #endregion
 
@@ -48,8 +57,14 @@ namespace LittleCompany.events.enemy
             if (PlayerInfo.IsHost && BurningRobotToyPrefab != null)
             {
                 var toyRobotObject = Instantiate(BurningRobotToyPrefab, enemy.transform.position, Quaternion.identity, RoundManager.Instance.spawnedScrapContainer);
-                toyRobotObject.GetComponent<BurningToyRobotBehaviour>().playerWhoKilledRobot.Value = playerShrunkenBy.playerClientId;
-                toyRobotObject.GetComponent<NetworkObject>().Spawn();
+                var toyRobot = toyRobotObject.GetComponent<GrabbableObject>();
+                if (toyRobotObject.TryGetComponent(out BurningToyRobotBehaviour behaviour))
+                {
+                    behaviour.playerWhoKilledRobot.Value = playerShrunkenBy.playerClientId;
+                    behaviour.scrapValue.Value = Random.Range(250, 330);
+                }
+                toyRobot.NetworkObject.Spawn();
+                toyRobot.hideFlags = HideFlags.None;
             }
         }
         #endregion
@@ -58,10 +73,12 @@ namespace LittleCompany.events.enemy
         public class BurningToyRobotBehaviour : NetworkBehaviour
         {
             #region Properties
+            public NetworkVariable<ulong> playerWhoKilledRobot = new NetworkVariable<ulong>();
+            public NetworkVariable<int> scrapValue = new NetworkVariable<int>();
+
             GrabbableObject toyRobot = null;
             GameObject burningEffect = Effects.BurningEffect;
             float damageFrameCounter = 0;
-            public NetworkVariable<ulong> playerWhoKilledRobot = new NetworkVariable<ulong>();
             Dictionary<ulong, ShrinkRayFX> boundPlayerFX = new Dictionary<ulong, ShrinkRayFX>();
 
             readonly int damagePerTick = 20;
@@ -70,16 +87,28 @@ namespace LittleCompany.events.enemy
             #endregion
 
             #region Base Methods
+            public override void OnNetworkSpawn()
+            {
+                Plugin.Log("Burning toy robot has spawned");
+                base.OnNetworkSpawn();
+            }
+
+            public override void OnNetworkDespawn()
+            {
+                Plugin.Log("Burning toy robot has despawned");
+
+                DestroyImmediate(burningEffect);
+
+                ClearBindings();
+
+                base.OnNetworkSpawn();
+            }
+
             void Start()
             {
-                Plugin.Log("Burning toy robot has spawned!");
-
                 toyRobot = GetComponentInParent<GrabbableObject>();
 
-                toyRobot.itemProperties.itemName = "Burning toy robot";
-                toyRobot.transform.rotation = Quaternion.Euler(toyRobot.itemProperties.restingRotation);
-                toyRobot.fallTime = 0f;
-                toyRobot.SetScrapValue(Random.Range(250, 330));
+                toyRobot.SetScrapValue(scrapValue.Value);
                 var scanNode = toyRobot.gameObject.GetComponentInChildren<ScanNodeProperties>();
                 if (scanNode != null)
                     scanNode.headerText = toyRobot.itemProperties.itemName;
@@ -107,12 +136,6 @@ namespace LittleCompany.events.enemy
                 if (IsHeld)
                     BindPlayer(toyRobot.playerHeldBy);
             }
-
-            public override void OnDestroy()
-            {
-                Destroy(burningEffect);
-                base.OnDestroy();
-            }
             #endregion
 
             #region Methods
@@ -125,7 +148,8 @@ namespace LittleCompany.events.enemy
                     var fx = binding.Value;
                     if (player == null || player.isPlayerDead || !player.isPlayerControlled)
                     {
-                        Destroy(fx);
+                        Plugin.Log("Attempt to destroy fx of player from burning robot toy");
+                        DestroyImmediate(fx);
                         boundPlayerFX.Remove(binding.Key);
                         continue;
                     }
@@ -149,7 +173,13 @@ namespace LittleCompany.events.enemy
 
             void BindPlayer(PlayerControllerB player)
             {
-                if (player == null || boundPlayerFX.ContainsKey(player.playerClientId))
+                if (player == null || !player.isPlayerControlled || player.isPlayerDead)
+                    return;
+
+                if (StartOfRound.Instance == null || StartOfRound.Instance.inShipPhase)
+                    return;
+
+                if (boundPlayerFX.ContainsKey(player.playerClientId))
                     return;
 
                 Plugin.Log("BurningToyRobotBehaviour.BindPlayer with name: " + player.name);
@@ -161,7 +191,7 @@ namespace LittleCompany.events.enemy
                 fx.bezier3YPoint = 0f;
                 fx.usingOffsets = false;
 
-                StartCoroutine(fx.RenderRayBeam(toyRobot.transform, PlayerInfo.SpineOf(player)));
+                fx.RenderRayBeam(toyRobot.transform, PlayerInfo.SpineOf(player));
 
                 fx.sparksSize = 0f;
                 fx.colorPrimary = Color.black;
@@ -171,7 +201,27 @@ namespace LittleCompany.events.enemy
 
                 boundPlayerFX.Add(player.playerClientId, fx);
             }
+
+            public void ClearBindings()
+            {
+                foreach (var fx in boundPlayerFX.Values)
+                {
+                    Plugin.Log("Destroyed fx.");
+                    DestroyImmediate(fx);
+                }
+                boundPlayerFX.Clear();
+            }
             #endregion
         }
+
+        #region Patches
+        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "EndGameClientRpc")]
+        public static void ClearRobotBindings()
+        {
+            var robotBehaviours = Resources.FindObjectsOfTypeAll<BurningToyRobotBehaviour>();
+            foreach (var behaviour in robotBehaviours)
+                behaviour.ClearBindings();
+        }
+        #endregion
     }
 }

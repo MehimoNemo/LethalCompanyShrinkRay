@@ -74,7 +74,7 @@ namespace LittleCompany.events.enemy
             // todo: Make this generic -> public class EnemyEventHandler<T> : MonoBehaviour where T : EnemyAI
             // not working as it can't add the component, as there has to be a type specified...
             internal EnemyAI enemy = null;
-            internal float DeathPoofScale = ShrinkRayFX.DefaultDeathPoofScale;
+            internal float DeathPoofScale = Effects.DefaultDeathPoofScale;
 
             void Awake()
             {
@@ -110,7 +110,8 @@ namespace LittleCompany.events.enemy
 
             public virtual void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
             {
-                if (ShrinkRayFX.TryCreateDeathPoofAt(out _, enemy.transform.position, DeathPoofScale) && enemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null && Modification.deathPoofSFX != null)
+
+                if (Effects.TryCreateDeathPoofAt(out _, enemy.transform.position, DeathPoofScale) && enemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null && Modification.deathPoofSFX != null)
                     audioSource.PlayOneShot(Modification.deathPoofSFX);
 
                 if (PlayerInfo.IsHost)
@@ -128,6 +129,7 @@ namespace LittleCompany.events.enemy
             {
                 var waitedFrames = 0;
                 var playerCount = PlayerInfo.AllPlayers.Count;
+                Plugin.Log("EnemyEventManager.PlayerCount: " + playerCount);
                 while (waitedFrames < 100 && DeathShrinkSyncedPlayers < playerCount)
                 {
                     waitedFrames++;

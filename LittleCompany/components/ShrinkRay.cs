@@ -83,6 +83,12 @@ namespace LittleCompany.components
 
             // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
+            // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
+            shrinkRayFX.noiseSpeed = 5;
+            shrinkRayFX.noisePower = 0.1f;
+            shrinkRayFX.sparksSize = 1f;
+            shrinkRayFX.thickness = 0.1f;
+
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>()); // todo: make this not needed
@@ -511,11 +517,11 @@ namespace LittleCompany.components
                 return;
             }
 
-            StartCoroutine(shrinkRayFX.RenderRayBeam(playerHeldBy.gameplayCamera.transform, targetObject.transform, currentModificationType.Value, audioSource, () =>
+            shrinkRayFX.RenderRayBeam(playerHeldBy.gameplayCamera.transform, targetObject.transform, currentModificationType.Value, audioSource, () =>
             {
                 Plugin.Log("Ray beam, has finished.");
                 SwitchModeClientRpc((int)Mode.Unloading);
-            }));
+            });
         }
         #endregion
 

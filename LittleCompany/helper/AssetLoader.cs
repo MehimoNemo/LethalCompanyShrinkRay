@@ -79,6 +79,7 @@ namespace LittleCompany.helper
 #endif
 
             GrabbablePlayerObject.LoadAsset();
+            ShrinkRayFX.LoadAsset();
             ShrinkRay.LoadAsset();
             LittlePotion.LoadPotionAssets();
             GameNetworkManager.Instance.StartCoroutine(LoadAudioAsync("deathPoof.wav", (item) => Modification.deathPoofSFX = item));

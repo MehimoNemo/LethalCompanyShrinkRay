@@ -19,12 +19,13 @@ namespace LittleCompany.helper
                     if (_circleHighlightPrefab == null) return null;
                 }
 
-                var ch = UnityEngine.Object.Instantiate(_circleHighlightPrefab);
+                var ch = Object.Instantiate(_circleHighlightPrefab);
                 return ch;
             }
         }
 
         private static GameObject _deathPoofPrefab = null;
+        public const float DefaultDeathPoofScale = 0.2f;
         public static GameObject DeathPoof
         {
             get
@@ -38,6 +39,19 @@ namespace LittleCompany.helper
                 var ch = UnityEngine.Object.Instantiate(_deathPoofPrefab);
                 return ch;
             }
+        }
+
+        public static bool TryCreateDeathPoofAt(out GameObject deathPoof, Vector3 position, float scale = DefaultDeathPoofScale)
+        {
+            deathPoof = DeathPoof;
+            if (deathPoof == null)
+                return false;
+
+            deathPoof.transform.position = position;
+            deathPoof.transform.localScale = Vector3.one * scale;
+
+            Object.Destroy(deathPoof, 3f);
+            return deathPoof != null;
         }
 
         private static GameObject _burningEffectPrefab = null;

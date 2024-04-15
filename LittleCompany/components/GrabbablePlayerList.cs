@@ -96,16 +96,22 @@ namespace LittleCompany.components
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
-        public static void DespawnPropsAtEndOfRoundPre()
+        public static void DespawnPropsAtEndOfRoundPre(RoundManager __instance)
         {
+			if (!__instance.IsServer)
+			                return;
+			
             var gpoList = Resources.FindObjectsOfTypeAll(typeof(GrabbablePlayerObject)); // Don't destroy these. Workaround
             foreach (var gpo in gpoList)
                 gpo.hideFlags = HideFlags.HideAndDontSave;
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
-        public static void DespawnPropsAtEndOfRoundPost()
+        public static void DespawnPropsAtEndOfRoundPost(RoundManager __instance)
         {
+            if (!__instance.IsServer)
+                return;
+
             var gpoList = Resources.FindObjectsOfTypeAll(typeof(GrabbablePlayerObject)); // reset to default
             foreach (var gpo in gpoList)
                 gpo.hideFlags = HideFlags.None;

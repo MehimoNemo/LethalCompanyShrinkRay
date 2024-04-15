@@ -19,7 +19,19 @@ namespace LittleCompany.helper
             _cameraVisor = null;
         }
 
-        public static bool IsHost => NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+        public static bool IsHost
+        {
+            get
+            {
+                if (NetworkManager.Singleton != null)
+                    return NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+
+                if (CurrentPlayerID.HasValue)
+                    return CurrentPlayerID.Value == 0ul;
+
+                return false;
+            }
+        }
 
         public static bool IsCurrentPlayerGrabbed()
         {
@@ -44,8 +56,8 @@ namespace LittleCompany.helper
             }
         }
 
-        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb != null).ToList();
-        public static List<PlayerControllerB> AlivePlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled && !pcb.isPlayerDead).ToList();
+        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb != null && (pcb.isPlayerControlled || pcb.isPlayerDead)).ToList();
+        public static List<PlayerControllerB> AlivePlayers => AllPlayers.Where(pcb => !pcb.isPlayerDead).ToList();
 
         public static PlayerControllerB ControllerFromID(ulong playerID)
         {

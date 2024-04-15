@@ -69,6 +69,7 @@ namespace LittleCompany
 
             // events
             harmony.PatchAll(typeof(BrackenEventHandler));
+            harmony.PatchAll(typeof(RobotEventHandler));
 
             // Compatibility
             if (LethalEmotesApiCompatibility.compatEnabled)

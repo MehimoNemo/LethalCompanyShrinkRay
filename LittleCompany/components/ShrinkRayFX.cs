@@ -2,7 +2,9 @@ using GameNetcodeStuff;
 using LittleCompany.helper;
 using System;
 using System.Collections;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.VFX;
 using static LittleCompany.modifications.Modification;
@@ -14,55 +16,67 @@ namespace LittleCompany.components
         #region Properties
         public const float DefaultBeamDuration = 2f;
 
-        public const float DefaultDeathPoofScale = 0.2f;
+        private static GameObject fxPrefab { get; set; }
 
-        private static GameObject shrinkRayFX { get; set; }
+        private static VisualEffect defaultVisualEffect { get; set; }
 
-        private VisualEffect defaultVisualEffect { get; set; }
+        private VisualEffect visualEffect { get; set; }
 
-        private VisualEffect activeVisualEffect { get; set; }
-
-        public float thickness {
-            set {
+        public float thickness
+        {
+            set
+            {
                 SetFloat("Thickness", value);
             }
         }
 
-        public Color colorPrimary {
-            set {
+        public Color colorPrimary
+        {
+            set
+            {
                 SetVector4("Color", value);
             }
         }
-        
-        public Color colorSecondary {
-            set {
+
+        public Color colorSecondary
+        {
+            set
+            {
                 SetVector4("SecondaryColor", value);
             }
         }
-        
-        public float noiseSpeed {
-            set {
+
+        public float noiseSpeed
+        {
+            set
+            {
                 SetFloat("NoiseSpeed", value);
             }
         }
-        
-        public float noisePower {
-            set {
+
+        public float noisePower
+        {
+            set
+            {
                 SetFloat("NoisePower", value);
             }
         }
-        
-        public float sparksSize {
-            set {
+
+        public float sparksSize
+        {
+            set
+            {
                 SetFloat("SparksSize", value);
             }
         }
-        
+
         /// <summary>
         /// Keep between 1 and 8
         /// </summary>
-        public int noiseSmoothing {
-            set {
+        public int noiseSmoothing
+        {
+            set
+            {
                 SetInt("NoiseSmoothing", value);
             }
         }
@@ -73,7 +87,7 @@ namespace LittleCompany.components
         public float bezier2YPoint = 0.5f;  // at 50%
         public float bezier2YOffset = 0.5f; // Height offset
 
-        public float bezier3YPoint= 0.80f;  // at 80%
+        public float bezier3YPoint = 0.80f;  // at 80%
         public float bezier3YOffset = 1.5f; // Height offset
 
         public bool usingOffsets = true;
@@ -82,138 +96,142 @@ namespace LittleCompany.components
                                                             //private const Color beamColor = Color.blue;
 
         public static AudioClip beamSFX;
+
+        private Dictionary<GameObject, Coroutine> activeBeams = new Dictionary<GameObject, Coroutine>();
         #endregion
 
-        ShrinkRayFX()
+        #region Networking
+        public static void LoadAsset()
         {
-            if (shrinkRayFX != null) return;
+            if (fxPrefab != null) return;
 
             Plugin.Log("Adding ShrinRayFX asset.");
 
             // The name of the unity gameobject (prefabbed) is "Shrink Ray VFX"
-            shrinkRayFX = AssetLoader.fxAsset?.LoadAsset<GameObject>("Shrink Ray VFX");
-            if (shrinkRayFX == null)
+            fxPrefab = AssetLoader.fxAsset?.LoadAsset<GameObject>("Shrink Ray VFX");
+            if (fxPrefab == null)
             {
                 Plugin.Log("ShrinkRayFX Null Error: Tried to get shrinkRayFXPrefab but couldn't", Plugin.LogType.Error);
                 return;
             }
 
-            //NetworkManager.Singleton.AddNetworkPrefab(shrinkRayFX);
-            
             // Get the visual effect unity component if it's not set yet
+            defaultVisualEffect = fxPrefab.GetComponentInChildren<VisualEffect>();
             if (!defaultVisualEffect)
-            {
-                defaultVisualEffect = shrinkRayFX.GetComponentInChildren<VisualEffect>();
-                if (!defaultVisualEffect) Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
-            }
+                Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
+        }
+        #endregion
 
-            // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
-            noiseSpeed = 5;
-            noisePower = 0.1f;
-            sparksSize = 1f;
-            thickness = 0.1f;
+        #region Methods
+        void OnDestroy()
+        {
+            for (int i = activeBeams.Count - 1; i >= 0; i--)
+                RemoveBeam(activeBeams.ElementAt(i).Key);
         }
 
-        public IEnumerator RenderRayBeam(Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null)
+        void OnDisable()
         {
-            if (!TryCreateNewBeam(out GameObject fxObject))
-            {
-                Plugin.Log("FX Object Null", Plugin.LogType.Error);
+            for (int i = activeBeams.Count - 1; i >= 0; i--)
+                RemoveBeam(activeBeams.ElementAt(i).Key);
+        }
 
-                if (onComplete != null)
-                    onComplete();
+        public void RemoveBeam(GameObject beam)
+        {
+            if (!activeBeams.TryGetValue(beam, out Coroutine coroutine))
+                return;
+
+            if(coroutine != null)
+                StopCoroutine(coroutine);
+            Destroy(beam);
+        }
+
+        public GameObject RenderRayBeam(Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null)
+        {
+            var beam = Instantiate(fxPrefab);
+            //DontDestroyOnLoad(fx);
+
+            var coroutine = StartCoroutine(RenderRayBeamCoroutine(beam, holderCamera, target, type, shrinkRayAudio, onComplete));
+            activeBeams.Add(beam, coroutine);
+
+            return beam;
+        }
+
+        private IEnumerator RenderRayBeamCoroutine(GameObject beam, Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null)
+        {
+            visualEffect = beam.GetComponentInChildren<VisualEffect>();
+            if (!visualEffect)
+            {
+                Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
+                RemoveBeam(beam);
                 yield break;
             }
 
-            bool beamCreated = false;
-            try
+            switch (type.GetValueOrDefault())
             {
-                activeVisualEffect = fxObject.GetComponentInChildren<VisualEffect>();
-                if (!activeVisualEffect)
-                {
-                    Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
-                }
-                else if(type.HasValue)
-                {
-                    switch (type.Value)
-                    {
-                        case ModificationType.Shrinking:
-                            colorPrimary = new Color(0.61f, 0.04f, 0.04f); // red like shrinkray
-                            colorSecondary = new Color(1f, 1f, 0f); // yellow
-                            break;
-                        case ModificationType.Enlarging:
-                            colorPrimary = new Color(0f, 0.3f, 0f); // darkgreen
-                            colorSecondary = new Color(1f, 1f, 0f); // yellow
-                            break;
-                        case ModificationType.Normalizing:
-                            colorPrimary = Color.white;
-                            colorSecondary = Color.gray;
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                case ModificationType.Shrinking:
+                    colorPrimary = new Color(0.61f, 0.04f, 0.04f); // red like shrinkray
+                    colorSecondary = new Color(1f, 1f, 0f); // yellow
+                    break;
+                case ModificationType.Enlarging:
+                    colorPrimary = new Color(0f, 0.3f, 0f); // darkgreen
+                    colorSecondary = new Color(1f, 1f, 0f); // yellow
+                    break;
+                case ModificationType.Normalizing:
+                    colorPrimary = Color.white;
+                    colorSecondary = Color.gray;
+                    break;
+                default:
+                    break;
+            }
 
-                Transform bezier1 = fxObject.transform.GetChild(0)?.Find("Pos1");
-                Transform bezier2 = fxObject.transform.GetChild(0)?.Find("Pos2");
-                Transform bezier3 = fxObject.transform.GetChild(0)?.Find("Pos3");
-                Transform bezier4 = fxObject.transform.GetChild(0)?.Find("Pos4");
-
-                if (!bezier1) Plugin.Log("bezier1 Null", Plugin.LogType.Error);
-                if (!bezier2) Plugin.Log("bezier2 Null", Plugin.LogType.Error);
-                if (!bezier3) Plugin.Log("bezier3 Null", Plugin.LogType.Error);
-                if (!bezier4) Plugin.Log("bezier4 Null", Plugin.LogType.Error);
-
-                if(usingOffsets && target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer)) // For players target the head
-                {
-                    Transform targetHeadTransform = targetPlayer?.gameplayCamera?.transform?.Find("HUDHelmetPosition")?.transform;
-                    if (targetHeadTransform == null)
-                    {
-                        Plugin.Log("Failed to get target players helmet position for shrink ray vfx", Plugin.LogType.Warning);
-
-                        if (onComplete != null)
-                            onComplete();
-                        yield break;
-                    }
-
+            if (usingOffsets && target.gameObject.TryGetComponent(out PlayerControllerB targetPlayer)) // For players target the head
+            {
+                Transform targetHeadTransform = targetPlayer?.gameplayCamera?.transform?.Find("HUDHelmetPosition")?.transform;
+                if (targetHeadTransform != null)
                     target = targetHeadTransform;
-                }
+                else
+                    Plugin.Log("Failed to get target players helmet position for shrink ray vfx", Plugin.LogType.Warning);
+            }
 
-                // Stole this from above, minor adjustments to where the beam comes from
-                Vector3 beamStartPos = this.transform.position;
-                if(usingOffsets)
-                    beamStartPos += (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);
+            // Stole this from above, minor adjustments to where the beam comes from
+            Vector3 beamStartPos = this.transform.position;
+            if (usingOffsets)
+                beamStartPos += (Vector3.up * 0.25f) + (holderCamera.forward * -0.1f);
 
-                // Set bezier 1 (start point)
+            // Set bezier 1 (start point)
+            Transform bezier1 = beam.transform.GetChild(0)?.Find("Pos1");
+            if (bezier1 != null)
+            {
                 bezier1.transform.position = beamStartPos;
                 bezier1.transform.SetParent(this.transform, true);
+            }
 
-                // Set bezier 2 (curve)
+            // Set bezier 2 (curve)
+            Transform bezier2 = beam.transform.GetChild(0)?.Find("Pos2");
+            if (bezier2 != null)
+            {
                 bezier2.transform.position = Vector3.Lerp(beamStartPos, target.position, bezier2YPoint) + (Vector3.up * bezier2YOffset);
                 bezier2.transform.SetParent(this.transform, true);
+            }
 
-                // Set bezier 3 (curve)
+            // Set bezier 3 (curve)
+            Transform bezier3 = beam.transform.GetChild(0)?.Find("Pos3");
+            if (bezier3 != null)
+            {
                 bezier3.transform.position = Vector3.Lerp(beamStartPos, target.position, bezier3YPoint) + (Vector3.up * bezier3YOffset);
                 bezier3.transform.SetParent(target, true);
+            }
 
-                // Set Bezier 4 (final endpoint)
-                Vector3 beamEndPos = (target.position);
+            // Set Bezier 4 (final endpoint)
+            Vector3 beamEndPos = target.position;
+            Transform bezier4 = beam.transform.GetChild(0)?.Find("Pos4");
+            if (bezier4 != null)
+            {
                 bezier4.transform.position = beamEndPos;
                 bezier4.transform.SetParent(target, true);
-
-                beamCreated = true;
-                Plugin.Log("Beam created from " + beamStartPos + " to " + beamEndPos);
             }
-            catch (Exception e)
-            {
-                Plugin.Log("error trying to render beam: " + e.Message, Plugin.LogType.Error);
-                Plugin.Log("error source: " + e.Source);
-                Plugin.Log("error stack: " + e.StackTrace);
 
-                if (onComplete != null)
-                    onComplete();
-                yield break;
-            }
+            Plugin.Log("Beam created from " + beamStartPos + " to " + beamEndPos);
 
             if (shrinkRayAudio != null)
             {
@@ -224,69 +242,38 @@ namespace LittleCompany.components
             if (beamDuration > 0f)
             {
                 yield return new WaitForSeconds(beamDuration);
-
-                if (beamCreated)
-                {
-                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos1")?.gameObject);
-                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos2")?.gameObject);
-                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos3")?.gameObject);
-                    Destroy(fxObject.transform.GetChild(0)?.Find("Pos4")?.gameObject);
-                    Destroy(fxObject);
-                }
+                RemoveBeam(beam);
             }
 
             if (onComplete != null)
                 onComplete();
         }
+        #endregion
 
-        public static bool TryCreateNewBeam(out GameObject beam)
-        {
-            if (shrinkRayFX == null)
-            {
-                beam = null;
-                return false;
-            }
-
-            beam = Instantiate(shrinkRayFX);
-            DontDestroyOnLoad(beam);
-            return beam != null;
-        }
-
-        public static bool TryCreateDeathPoofAt(out GameObject deathPoof, Vector3 position, float scale = DefaultDeathPoofScale)
-        {
-            deathPoof = Effects.DeathPoof;
-            if (deathPoof == null)
-                return false;
-
-            deathPoof.transform.position = position;
-            deathPoof.transform.localScale = Vector3.one * scale;
-
-            Destroy(deathPoof, 3f);
-            return deathPoof != null;
-        }
-
+        #region Setter
         private void SetFloat(string name, float value)
         {
-            if (activeVisualEffect == null)
+            if (visualEffect == null)
                 defaultVisualEffect.SetFloat(name, value);
             else
-                activeVisualEffect.SetFloat(name, value);
+                visualEffect.SetFloat(name, value);
         }
-        
+
         private void SetVector4(string name, Vector4 value)
         {
-            if (activeVisualEffect == null)
+            if (visualEffect == null)
                 defaultVisualEffect.SetVector4(name, value);
             else
-                activeVisualEffect.SetVector4(name, value);
+                visualEffect.SetVector4(name, value);
         }
-        
+
         private void SetInt(string name, int value)
         {
-            if (activeVisualEffect == null)
+            if (visualEffect == null)
                 defaultVisualEffect.SetInt(name, value);
             else
-                activeVisualEffect.SetInt(name, value);
+                visualEffect.SetInt(name, value);
         }
+        #endregion
     }
 }

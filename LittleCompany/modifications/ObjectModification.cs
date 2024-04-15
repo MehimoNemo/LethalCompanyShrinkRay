@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
 using LittleCompany.Config;
+using LittleCompany.helper;
 using System;
 using UnityEngine;
 
@@ -92,7 +93,7 @@ namespace LittleCompany.modifications
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
                                 // Poof Target to death because they are too small to exist
-                                if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetObject.transform.position) && targetObject.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
+                                if (Effects.TryCreateDeathPoofAt(out GameObject deathPoof, targetObject.transform.position) && targetObject.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
                                     audioSource.PlayOneShot(deathPoofSFX);
 
                                 targetObject.DestroyObjectInHand(targetObject.playerHeldBy);
