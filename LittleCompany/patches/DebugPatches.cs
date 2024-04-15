@@ -10,6 +10,7 @@ using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
 using static LittleCompany.helper.EnemyInfo;
+using UnityEngine.SceneManagement;
 
 namespace LittleCompany.patches
 {
@@ -17,6 +18,14 @@ namespace LittleCompany.patches
     internal class DebugPatches
     {
 #if DEBUG
+        [HarmonyPatch(typeof(SceneManager), "LoadScene", [typeof(string)])]
+        [HarmonyPrefix]
+        public static void LoadScenePrefix(ref string sceneName)
+        {
+            if (sceneName == "ColdOpen1")
+                sceneName = "MainMenu";
+        }
+
         private static bool Executing = false;
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
@@ -43,7 +52,7 @@ namespace LittleCompany.patches
         {
             if (Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Bracken);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Robot);
             }
 
             else if (Keyboard.current.f2Key.wasPressedThisFrame)
