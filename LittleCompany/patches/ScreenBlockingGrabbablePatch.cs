@@ -16,11 +16,11 @@ namespace LittleCompany.patches
         {
             if(!CanBlockOurScreen(__instance)) return;
 
-            // Check for glassification after the pickup anim is funished
+            // Check for glassification after the pickup anim is finished
             __instance.StartCoroutine(CheckForGlassifyLater(__instance));
         }
 
-        public const float DurationOfGrabAnimationInSeconds = 0.3f;
+        private const float DurationOfGrabAnimationInSeconds = 0.3f;
 
         public static IEnumerator CheckForGlassifyLater(GrabbableObject item)
         {
@@ -51,11 +51,12 @@ namespace LittleCompany.patches
         public static void CheckForGlassify(GrabbableObject item)
         {
             if (item == null) return;
+            if (item.playerHeldBy == null) return;
 
             // If item relative scale is equal or smaller than the player scale then don't glassify
             if (CompareItemScaleToPlayerScale(item, item.playerHeldBy) <= 0) return;
 
-            bool tooBig = IsItemBlockingCenterScreen(item);
+            bool tooBig = IsItemBlockingMostOfScreen(item);
             bool playerShrunk = PlayerInfo.IsShrunk(item.playerHeldBy);
 
             if ((playerShrunk && item.itemProperties.twoHanded) || (tooBig))
@@ -74,17 +75,40 @@ namespace LittleCompany.patches
             return (itemRelativeScale - playerScale);
         }
 
-        private static bool IsItemBlockingCenterScreen(GrabbableObject item)
+        private static bool IsItemBlockingMostOfScreen(GrabbableObject item)
         {
             Camera main = item.playerHeldBy.gameplayCamera;
-
-            RaycastHit[] hits;
             item.EnablePhysics(true);
-            hits = Physics.RaycastAll(main.transform.position + main.transform.forward*10, -main.transform.forward, 10, ToInt([Mask.Props]));
+            int numberOfPointsAxisY = 5;
+            int numberOfPointsAxisX = 6;
+
+
+            int numberOfRay = 0;
+            int numberOfHits = 0;
+            for (float stepY = numberOfPointsAxisY; stepY > 0; stepY--)
+            {
+                for (float stepX = 1; stepX <= numberOfPointsAxisX; stepX++)
+                {
+                    if(ScreenPosHitCollider(stepX * Screen.width / numberOfPointsAxisX+1, stepY * Screen.height / numberOfPointsAxisY+1, main.nearClipPlane, main, item.gameObject))
+                    {
+                        numberOfHits++;
+                    }
+                    numberOfRay++;
+                }
+            }
             item.EnablePhysics(false);
+
+            // Plugin.Log("Percent: " + ((float)numberOfHits / numberOfRay)*100 + "%");
+            return ((float) numberOfHits / numberOfRay) > 0.75f;
+        }
+
+        private static bool ScreenPosHitCollider(float x, float y, float focusDistance, Camera cam, GameObject target)
+        {
+            Vector3 origin = cam.ScreenToWorldPoint(new Vector3(x, y, focusDistance));
+            RaycastHit[] hits = Physics.RaycastAll(origin + cam.transform.forward * 8, -cam.transform.forward, 10, ToInt([Mask.Props]));
             foreach (RaycastHit hit in hits)
             {
-                if(hit.collider.gameObject == item.gameObject)
+                if (hit.collider.gameObject == target)
                 {
                     return true;
                 }
@@ -123,7 +147,6 @@ namespace LittleCompany.patches
 
         public static void GlassifyItem(GrabbableObject item)
         {
-            Plugin.Log("GlassifyItem");
             if (item == null) return;
 
             if (!item.gameObject.TryGetComponent<TargetGlassification>(out _))
