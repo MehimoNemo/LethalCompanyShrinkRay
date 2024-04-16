@@ -90,6 +90,7 @@ namespace LittleCompany.events.enemy
             public IEnumerator SpawnKillLater()
             {
                 yield return new WaitForSeconds(0.5f);
+                enemy.transform.localScale = Vector3.zero;
                 OnDeathShrinking(1f, PlayerInfo.ControllerFromID(0ul)); // SPAWNKILL !!
             }
 
@@ -141,9 +142,13 @@ namespace LittleCompany.events.enemy
                 else
                     Plugin.Log("Syncing the death shrink event took " + waitedFrames + " frames.");
 
+                DeathShrinkSyncedPlayers = 1;
+
                 // Now we can despawn it
                 enemy.KillEnemyServerRpc(true);
-                DeathShrinkSyncedPlayers = 1;
+                enemy.enabled = false;
+                yield return new WaitForSeconds(3f);
+                RoundManager.Instance.DespawnEnemyOnServer(enemy.NetworkObject);
             }
 
             [ServerRpc(RequireOwnership = false)]

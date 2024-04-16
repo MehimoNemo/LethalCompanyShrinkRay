@@ -115,6 +115,14 @@ namespace LittleCompany.events.enemy
                 if (scanNode != null)
                     scanNode.headerText = toyRobot.itemProperties.itemName;
 
+                foreach (MeshRenderer mesh in Materials.GetMeshRenderers(toyRobot.gameObject))
+                {
+                    List<Material> materials = new List<Material>();
+                    foreach (var m in mesh.materials)
+                        materials.Add(Materials.BurntMaterial);
+                    mesh.materials = materials.ToArray();
+                }
+
                 var player = PlayerInfo.ControllerFromID(playerWhoKilledRobot.Value);
                 BindPlayer(player);
             }

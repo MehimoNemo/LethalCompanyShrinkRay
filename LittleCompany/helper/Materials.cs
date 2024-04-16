@@ -89,6 +89,17 @@ namespace LittleCompany.helper
             return m;
         }
 
+        private static readonly Color _burntColor = new Color(0.4f, 0.2f, 0.2f);
+        public static Material BurntMaterial
+        {
+            get
+            {
+                var m = new Material(Shader.Find("HDRP/Lit"));
+                m.color = _burntColor;
+                return m;
+            }
+        }
+
         public static List<MeshRenderer> GetMeshRenderers(GameObject g)
         {
             List<MeshRenderer> listOfMesh = [];
