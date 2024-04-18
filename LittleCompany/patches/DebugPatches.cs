@@ -18,6 +18,21 @@ namespace LittleCompany.patches
     internal class DebugPatches
     {
 #if DEBUG
+        public const string ImperiumReferenceChain = "giosuel.Imperium";
+
+        private static bool? _ImperiumEnabled;
+
+        public static bool ImperiumEnabled
+        {
+            get
+            {
+                if (_ImperiumEnabled == null)
+                    _ImperiumEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(ImperiumReferenceChain);
+
+                return _ImperiumEnabled.GetValueOrDefault(false);
+            }
+        }
+
         [HarmonyPatch(typeof(SceneManager), "LoadScene", [typeof(string)])]
         [HarmonyPrefix]
         public static void LoadScenePrefix(ref string sceneName)
@@ -50,32 +65,32 @@ namespace LittleCompany.patches
 
         public static bool CheckFunctionKeys()
         {
-            if (Keyboard.current.f1Key.wasPressedThisFrame)
+            if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Robot);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Thumper);
             }
 
-            else if (Keyboard.current.f2Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)
             {
                 ApplyModification(ModificationType.Shrinking);
             }
 
-            else if (Keyboard.current.f3Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f3Key.wasPressedThisFrame)
             {
                 ApplyModification(ModificationType.Enlarging);
             }
 
-            else if (Keyboard.current.f4Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f4Key.wasPressedThisFrame)
             {
                 Plugin.Log(GrabbablePlayerList.Log);
             }
 
-            else if (Keyboard.current.f5Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f5Key.wasPressedThisFrame)
             {
                 SpawnItemInFront(LittleShrinkingPotion.networkPrefab);
             }
 
-            else if (Keyboard.current.f6Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f6Key.wasPressedThisFrame)
             {
                 SpawnItemInFront(LittleEnlargingPotion.networkPrefab);
             }

@@ -80,7 +80,7 @@ namespace LittleCompany.events.enemy
 
                 OnAwake();
 #if DEBUG
-                StartCoroutine(SpawnKillLater());
+                //StartCoroutine(SpawnKillLater());
 #endif
             }
 

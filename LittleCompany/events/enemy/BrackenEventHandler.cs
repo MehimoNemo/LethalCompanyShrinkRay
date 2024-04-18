@@ -138,7 +138,7 @@ namespace LittleCompany.events.enemy
                     if (radius.Value < 0.5f)
                         radius.Value += Time.deltaTime;
                     else
-                        radius.Value += Time.deltaTime * 0.3f;
+                        radius.Value += Time.deltaTime * 0.1f;
                 }
 
                 transform.localScale = Vector3.one * radius.Value * 2f;
