@@ -7,7 +7,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class SlimeEventHandler : EnemyEventHandler<BlobAI>
+    internal class SlimeEventHandler : EnemyEventHandler
     {
         [DisallowMultipleComponent]
         public class TinySlimeBehaviour : MonoBehaviour

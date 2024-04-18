@@ -7,7 +7,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class HoarderBugEventHandler: EnemyEventHandler<HoarderBugAI>
+    internal class HoarderBugEventHandler: EnemyEventHandler
     {
         [DisallowMultipleComponent]
         public class DieingBugBehaviour : MonoBehaviour

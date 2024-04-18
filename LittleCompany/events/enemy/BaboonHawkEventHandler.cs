@@ -1,11 +1,12 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.helper;
+using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
 using static LittleCompany.helper.EnemyInfo;
 
 namespace LittleCompany.events.enemy
 {
-    internal class BaboonHawkEventHandler : EnemyEventHandler<BaboonBirdAI>
+    internal class BaboonHawkEventHandler : EnemyEventHandler
     {
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {
@@ -28,8 +29,9 @@ namespace LittleCompany.events.enemy
 
                 Plugin.Log("Found a baboon hawk");
 
-                enemy.SetAggressiveModeClientRpc(2);
-                enemy.StartFocusOnThreatClientRpc(player.NetworkObject);
+                var baboonHawk = enemy as BaboonBirdAI;
+                baboonHawk.SetAggressiveModeClientRpc(2);
+                baboonHawk.StartFocusOnThreatClientRpc(player.NetworkObject);
             }
         }
 

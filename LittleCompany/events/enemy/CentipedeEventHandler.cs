@@ -3,7 +3,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class CentipedeEventHandler : EnemyEventHandler<CentipedeAI>
+    internal class CentipedeEventHandler : EnemyEventHandler
     {
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {

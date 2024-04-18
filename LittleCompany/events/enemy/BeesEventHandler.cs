@@ -4,7 +4,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class BeesEventHandler : EnemyEventHandler<RedLocustBees>
+    internal class BeesEventHandler : EnemyEventHandler
     {
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {

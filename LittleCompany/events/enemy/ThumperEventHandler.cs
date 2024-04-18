@@ -7,7 +7,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class ThumperEventHandler : EnemyEventHandler<CrawlerAI>
+    internal class ThumperEventHandler : EnemyEventHandler
     {
         internal class ResistantQuicksandTrigger : MonoBehaviour
         {
@@ -70,8 +70,9 @@ namespace LittleCompany.events.enemy
         public override void AboutToDeathShrink(float currentSize, PlayerControllerB playerShrunkenBy)
         {
             // todo: Screaming sound
-            int num = Random.Range(0, enemy.longRoarSFX.Length);
-            enemy.creatureVoice.PlayOneShot(enemy.longRoarSFX[num]);
+            var thumper = enemy as CrawlerAI;
+            int num = Random.Range(0, thumper.longRoarSFX.Length);
+            thumper.creatureVoice.PlayOneShot(thumper.longRoarSFX[num]);
 
             base.AboutToDeathShrink(currentSize, playerShrunkenBy);
         }
@@ -80,7 +81,8 @@ namespace LittleCompany.events.enemy
         {
             Plugin.Log("Thumper shrunken to death");
 
-            // todo: thumping sound (enemy.hitWallSFX)
+            var thumper = enemy as CrawlerAI;
+            // todo: thumping sound (thumper.hitWallSFX)
 
             GameObject quicksand = Instantiate(RoundManager.Instance.quicksandPrefab, enemy.transform.position + Vector3.up, Quaternion.identity, RoundManager.Instance.mapPropsContainer.transform);
 
@@ -102,6 +104,7 @@ namespace LittleCompany.events.enemy
             var trigger = quicksand.GetComponentInChildren<QuicksandTrigger>();
             if (trigger != null)
             {
+                Plugin.Log("Replacing QuicksandTrigger");
                 trigger.gameObject.AddComponent<ResistantQuicksandTrigger>();
                 Destroy(trigger);
             }
@@ -130,7 +133,10 @@ namespace LittleCompany.events.enemy
         public static bool CheckConditionsForSinkingInQuicksand(bool __result, PlayerControllerB __instance)
         {
             if (ResistantQuicksandTrigger.sinkingLocalPlayer && __instance == PlayerInfo.CurrentPlayer)
+            {
+                Plugin.Log("CheckConditionsForSinkingInQuicksand true");
                 return true;
+            }
 
             return __result;
         }
