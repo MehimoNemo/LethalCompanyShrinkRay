@@ -8,6 +8,7 @@ using static LittleCompany.helper.EnemyInfo;
 using Unity.Netcode;
 using System.Collections;
 using GameNetcodeStuff;
+using LittleCompany.components;
 
 namespace LittleCompany.events.enemy
 {
@@ -68,7 +69,7 @@ namespace LittleCompany.events.enemy
             RobotEventHandler.LoadBurningRobotToyPrefab();
         }
 
-        public class EnemyEventHandler : NetworkBehaviour
+        public class EnemyEventHandler : NetworkBehaviour, IScalingListener
         {
             internal EnemyAI enemy = null;
             internal float DeathPoofScale = Effects.DefaultDeathPoofScale;
@@ -91,9 +92,11 @@ namespace LittleCompany.events.enemy
                 OnDeathShrinking(1f, PlayerInfo.ControllerFromID(0ul)); // SPAWNKILL !!
             }
 
-            public virtual void OnAwake() { }
+            public virtual void OnAwake() {
+                GetComponent<EnemyScaling>()?.AddListener(this);
+            }
 
-            public void SizeChanged(float from, float to, PlayerControllerB playerBy)
+            public void AfterEachScale(float from, float to, PlayerControllerB playerBy)
             {
                 if (Mathf.Approximately(from, to)) return;
                 if (from > to)

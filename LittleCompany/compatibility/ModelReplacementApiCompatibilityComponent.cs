@@ -100,9 +100,9 @@ namespace LittleCompany.compatibility
             return null;
         }
 
-        public void AfterEachScale()
+        public void AfterEachScale(float from, float to, PlayerControllerB playerBy)
         {
-            AdjustToSize(PlayerInfo.SizeOf(player));
+            AdjustToSize(to);
         }
 
         public void AtEndOfScaling()

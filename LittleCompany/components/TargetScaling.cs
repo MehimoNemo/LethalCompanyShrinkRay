@@ -7,7 +7,6 @@ using LittleCompany.helper;
 using LittleCompany.modifications;
 using LittleCompany.patches;
 using LittleCompany.events.enemy;
-using LittleCompany.compatibility;
 using System.Collections.Generic;
 
 namespace LittleCompany.components
@@ -20,6 +19,7 @@ namespace LittleCompany.components
         internal Vector3 OriginalScale = Vector3.one;
 
         public float RelativeScale = 1f;
+        internal HashSet<IScalingListener> scalingListeners;
 
         public bool GettingScaled => ScaleRoutine != null;
         private Coroutine ScaleRoutine = null;
@@ -40,6 +40,9 @@ namespace LittleCompany.components
 
             OriginalScale = gameObject.transform.localScale;
 
+            scalingListeners = [];
+            DetectAndLoadCurrentListeningComponent();
+
             OnAwake();
         }
 
@@ -50,8 +53,10 @@ namespace LittleCompany.components
         internal virtual void OnAwake() { }
         public virtual void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
+            float previousScale = RelativeScale;
             gameObject.transform.localScale = OriginalScale * scale;
             RelativeScale = scale;
+            CallListenersAfterEachScale(previousScale, scale, scaledBy);
         }
 
         public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null)
@@ -64,7 +69,10 @@ namespace LittleCompany.components
                 ScaleTo(scale, scaledBy);
                 
                 if (onComplete != null)
+                {
+                    CallListenersAtEndOfScaling();
                     onComplete();
+                }
             }));
         }
 
@@ -109,28 +117,12 @@ namespace LittleCompany.components
             gameObject.transform.localScale = OriginalScale;
             RelativeScale = 1f;
         }
-        #endregion
-    }
-
-    internal class PlayerScaling : TargetScaling<PlayerControllerB>
-    {
-        #region Methods
-        internal Vector3 armOffset = Vector3.zero;
-        internal HashSet<IScalingListener> scalingListeners;
-
-        internal override void OnAwake()
-        {
-            scalingListeners = [];
-            OriginalScale = Vector3.one;
-            RelativeScale = PlayerInfo.SizeOf(target);
-            DetectAndLoadCurrentListeningComponent();
-        }
 
         private void DetectAndLoadCurrentListeningComponent()
         {
-            foreach(Component component in GetComponents(typeof(IScalingListener)))
+            foreach (Component component in GetComponents(typeof(IScalingListener)))
             {
-                AddListener((IScalingListener) component);
+                AddListener((IScalingListener)component);
             }
         }
 
@@ -144,9 +136,33 @@ namespace LittleCompany.components
             scalingListeners?.Remove(listener);
         }
 
-        public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null)
+        public void CallListenersAfterEachScale(float from, float to, PlayerControllerB playerBy)
         {
-            base.ScaleOverTimeTo(scale, scaledBy, onComplete);
+            foreach (IScalingListener listener in scalingListeners)
+            {
+                listener.AfterEachScale(from, to, playerBy);
+            }
+        }
+
+        public void CallListenersAtEndOfScaling()
+        {
+            foreach (IScalingListener listener in scalingListeners)
+            {
+                listener.AtEndOfScaling();
+            }
+        }
+        #endregion
+    }
+
+    internal class PlayerScaling : TargetScaling<PlayerControllerB>
+    {
+        #region Methods
+        internal Vector3 armOffset = Vector3.zero;
+
+        internal override void OnAwake()
+        {
+            OriginalScale = Vector3.one;
+            RelativeScale = PlayerInfo.SizeOf(target);
         }
 
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
@@ -155,7 +171,6 @@ namespace LittleCompany.components
                 return;
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
             base.ScaleTo(scale, scaledBy);
-            CallListenersAfterEachScale(scale);
             if (PlayerInfo.IsCurrentPlayer(target))
             {
                 // scale arms & visor
@@ -181,22 +196,6 @@ namespace LittleCompany.components
             {
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
                 PlayerInfo.RebuildRig(target);
-                CallListenersAtEndOfScaling();
-            }
-        }
-
-        private void CallListenersAfterEachScale(float scale)
-        {
-            foreach(IScalingListener listener in scalingListeners) {
-                listener.AfterEachScale();
-            }
-        }
-
-        private void CallListenersAtEndOfScaling()
-        {
-            foreach (IScalingListener listener in scalingListeners)
-            {
-                listener.AtEndOfScaling();
             }
         }
         #endregion
@@ -269,13 +268,5 @@ namespace LittleCompany.components
 
     internal class EnemyScaling : TargetScaling<EnemyAI>
     {
-        public override void ScaleTo(float scale, PlayerControllerB scaledBy)
-        {
-            var previousScale = RelativeScale;
-            base.ScaleTo(scale, scaledBy);
-
-            if (!GettingScaled)
-                EnemyEventManager.EventHandlerOf(target)?.SizeChanged(previousScale, scale, scaledBy);
-        }
     }
 }
