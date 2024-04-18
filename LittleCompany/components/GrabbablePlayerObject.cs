@@ -180,10 +180,10 @@ namespace LittleCompany.components
                 if (this.isHeld)
                 {
                     //this looks like trash unfortunately .. change this
-                    Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
-                    Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
-                    Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
-                    grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
+                    //Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
+                    //Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
+                    //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
+                    //grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
                 }
             }
@@ -267,6 +267,9 @@ namespace LittleCompany.components
 
             Plugin.Log("Okay, let's grab " + name);
             base.GrabItem();
+
+            float size = PlayerInfo.SizeOf(grabbedPlayerController);
+            itemProperties.positionOffset = new Vector3(-0.75f * size, 0.15f, 0.05f);
 
             grabbedPlayer.playerCollider.enabled = false;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
@@ -469,37 +472,6 @@ namespace LittleCompany.components
                     playerHeldBy.DiscardHeldObject(); // Can lead to problems
             }
             catch { };
-        }
-
-        public void SetPlayerControlled(bool playerControlled = true)
-        {
-            var playerSpine = PlayerInfo.SpineOf(grabbedPlayer);
-
-            PlayerControlled = playerControlled;
-            Plugin.Log("SetPlayerControlled -> " + PlayerControlled, Plugin.LogType.Warning);
-            if (PlayerControlled) // GrabbableObject follows Player (normal case)
-            {
-                //grabbedPlayer.transform.SetParent(GrabbedPlayerParent, false);
-                transform.localPosition = Vector3.zero;
-                if (grabbedPlayer.TryGetComponent(out BoxCollider playerCollider))
-                {
-                    transform.localScale = playerCollider.bounds.size;
-                    transform.SetParent(playerCollider.transform, false);
-                }
-                else
-                {
-                    Plugin.Log("SetPlayerControlled -> Fallback triggered.", Plugin.LogType.Warning);
-                    transform.localScale = Vector3.one;
-                    transform.SetParent(grabbedPlayer.transform, false);
-                }
-
-            }
-            else // Player follows GrabbableObject (e.g. when grabbed)
-            {
-                GrabbedPlayerParent = grabbedPlayer.transform.parent;
-                grabbedPlayer.transform.SetParent(transform, false);
-                grabbedPlayer.transform.localPosition = Vector3.zero;
-            }
         }
 
         public void UpdateScanNodeVisibility()
