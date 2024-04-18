@@ -85,6 +85,7 @@ namespace LittleCompany.events.enemy
             // todo: thumping sound (thumper.hitWallSFX)
 
             GameObject quicksand = Instantiate(RoundManager.Instance.quicksandPrefab, enemy.transform.position + Vector3.up, Quaternion.identity, RoundManager.Instance.mapPropsContainer.transform);
+            enemy.GetComponent<AudioSource>().PlayOneShot(thumper.hitWallSFX[0]);
 
             if (!IsQuicksandableSurfaceBelow(enemy.transform.position))
             {
