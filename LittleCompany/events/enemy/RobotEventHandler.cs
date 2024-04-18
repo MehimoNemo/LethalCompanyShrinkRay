@@ -11,7 +11,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class RobotEventHandler : EnemyEventHandler
+    internal class RobotEventHandler : EnemyEventHandler<RadMechAI>
     {
         #region Properties
         private static GameObject BurningRobotToyPrefab = null;

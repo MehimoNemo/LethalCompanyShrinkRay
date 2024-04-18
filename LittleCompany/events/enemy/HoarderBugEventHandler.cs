@@ -1,15 +1,13 @@
 ﻿using GameNetcodeStuff;
-using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.helper;
 using LittleCompany.modifications;
-using System.Drawing;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class HoarderBugEventHandler: EnemyEventHandler
+    internal class HoarderBugEventHandler: EnemyEventHandler<HoarderBugAI>
     {
         [DisallowMultipleComponent]
         public class DieingBugBehaviour : MonoBehaviour
@@ -65,8 +63,5 @@ namespace LittleCompany.events.enemy
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
             Plugin.Log("Hoarderbug shrunken to death");
         }
-        public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }
-        public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
-        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
     }
 }

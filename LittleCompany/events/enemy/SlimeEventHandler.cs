@@ -7,7 +7,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class SlimeEventHandler : EnemyEventHandler
+    internal class SlimeEventHandler : EnemyEventHandler<BlobAI>
     {
         [DisallowMultipleComponent]
         public class TinySlimeBehaviour : MonoBehaviour
@@ -68,8 +68,5 @@ namespace LittleCompany.events.enemy
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
             Plugin.Log("Slime shrunken to death. But at what cost..");
         }
-        public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }
-        public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
-        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
     }
 }

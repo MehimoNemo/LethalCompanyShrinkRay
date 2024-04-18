@@ -10,7 +10,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 namespace LittleCompany.events.enemy
 {
     [HarmonyPatch]
-    internal class BrackenEventHandler : EnemyEventHandler
+    internal class BrackenEventHandler : EnemyEventHandler<FlowermanAI>
     {
         #region Base Methods
         public override void OnAwake()

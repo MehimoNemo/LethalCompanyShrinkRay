@@ -7,7 +7,7 @@ using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
-    internal class CoilheadEventHandler : EnemyEventHandler
+    internal class CoilheadEventHandler : EnemyEventHandler<SpringManAI>
     {
         public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
         {

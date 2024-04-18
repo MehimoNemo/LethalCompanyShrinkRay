@@ -2,13 +2,14 @@
 using System;
 using UnityEngine;
 
-using LittleCompany.components;
 using LittleCompany.modifications;
 using LittleCompany.helper;
 using static LittleCompany.helper.EnemyInfo;
 using Unity.Netcode;
 using System.Collections;
 using GameNetcodeStuff;
+using static Unity.Netcode.CustomMessagingManager;
+using Unity.Collections;
 
 namespace LittleCompany.events.enemy
 {
@@ -16,28 +17,29 @@ namespace LittleCompany.events.enemy
     {
         internal static readonly Dictionary<Enemy, Type> EventHandler = new Dictionary<Enemy, Type>
         {
-            { Enemy.Centipede,  typeof(CentipedeEventHandler)   },
-            { Enemy.Spider,     typeof(SpiderEventHandler)      },
-            { Enemy.HoarderBug, typeof(HoarderBugEventHandler)  },
-            { Enemy.Bracken,    typeof(BrackenEventHandler)     },
-            { Enemy.Slime,      typeof(SlimeEventHandler)       },
-            { Enemy.Bees,       typeof(BeesEventHandler)        },
-            { Enemy.Coilhead,   typeof(CoilheadEventHandler)    },
-            { Enemy.BaboonHawk, typeof(BaboonHawkEventHandler)  },
-            { Enemy.Butler,     typeof(ButlerEventHandler)      },
-            { Enemy.ButlerBees, typeof(ButlerBeesEventHandler)  },
-            { Enemy.Thumper,    typeof(ThumperEventHandler)     },
-            { Enemy.Robot,      typeof(RobotEventHandler)       }
+            { Enemy.Custom,     typeof(DefaultEnemyEventHandler) },
+            { Enemy.Centipede,  typeof(CentipedeEventHandler)    },
+            { Enemy.Spider,     typeof(SpiderEventHandler)       },
+            { Enemy.HoarderBug, typeof(HoarderBugEventHandler)   },
+            { Enemy.Bracken,    typeof(BrackenEventHandler)      },
+            { Enemy.Slime,      typeof(SlimeEventHandler)        },
+            { Enemy.Bees,       typeof(BeesEventHandler)         },
+            { Enemy.Coilhead,   typeof(CoilheadEventHandler)     },
+            { Enemy.BaboonHawk, typeof(BaboonHawkEventHandler)   },
+            { Enemy.Butler,     typeof(ButlerEventHandler)       },
+            { Enemy.ButlerBees, typeof(ButlerBeesEventHandler)   },
+            { Enemy.Thumper,    typeof(ThumperEventHandler)      },
+            { Enemy.Robot,      typeof(RobotEventHandler)        }
         };
 
-        public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
+        public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(DefaultEnemyEventHandler));
 
-        public static EnemyEventHandler EventHandlerOf(EnemyAI enemyAI)
+        public static EnemyEventHandler<T> EventHandlerOf<T>(T enemyAI) where T : EnemyAI
         {
             var eventHandlerType = EventHandlerTypeByName(enemyAI.enemyType.enemyName);
             Plugin.Log("Found eventHandler with name " + eventHandlerType.ToString() + " for enemy name " + enemyAI.enemyType.enemyName);
             if (enemyAI.TryGetComponent(eventHandlerType, out Component eventHandler))
-                return eventHandler as EnemyEventHandler;
+                return eventHandler as EnemyEventHandler<T>;
 
             Plugin.Log("Enemy had no event handler!", Plugin.LogType.Error);
             return null;
@@ -69,17 +71,26 @@ namespace LittleCompany.events.enemy
             RobotEventHandler.LoadBurningRobotToyPrefab();
         }
 
-        public class EnemyEventHandler : NetworkBehaviour
+        public class EnemyEventHandler<T> : NetworkBehaviour where T : EnemyAI
         {
             // todo: Make this generic -> public class EnemyEventHandler<T> : MonoBehaviour where T : EnemyAI
             // not working as it can't add the component, as there has to be a type specified...
-            internal EnemyAI enemy = null;
+            internal T enemy = null;
             internal float DeathPoofScale = Effects.DefaultDeathPoofScale;
+            private string deathShrinkEventName = null;
 
             void Awake()
             {
                 Plugin.Log(name + " event handler has awaken!");
-                enemy = GetComponent<EnemyAI>();
+                enemy = GetComponent<T>();
+
+                deathShrinkEventName = "DeathShrinkEventHandled_" + enemy.enemyType.enemyName;
+
+                if (PlayerInfo.IsHost)
+                {
+                    Plugin.Log("Current player is the host.");
+                    NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(deathShrinkEventName, new HandleNamedMessageDelegate(DeathShrinkEventHandled));
+                }
 
                 OnAwake();
 #if DEBUG
@@ -111,14 +122,13 @@ namespace LittleCompany.events.enemy
 
             public virtual void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
             {
-
                 if (Effects.TryCreateDeathPoofAt(out _, enemy.transform.position, DeathPoofScale) && enemy.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null && Modification.deathPoofSFX != null)
                     audioSource.PlayOneShot(Modification.deathPoofSFX);
 
                 if (PlayerInfo.IsHost)
                     StartCoroutine(DespawnAfterEventSync());
                 else
-                    DeathShrinkEventReceivedServerRpc();
+                    NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(deathShrinkEventName, 0uL, new FastBufferWriter(0, Allocator.Temp), NetworkDelivery.ReliableSequenced);
 
                 Plugin.Log("Enemy shrunken to death");
             }
@@ -126,6 +136,17 @@ namespace LittleCompany.events.enemy
             #region DeathShrinkSync
             // Has to be done to prevent the enemy from despawning before any client got the OnDeathShrinking event
             private int DeathShrinkSyncedPlayers = 1; // host always got it
+
+            public void DeathShrinkEventHandled(ulong clientId, FastBufferReader reader)
+            {
+                if (!PlayerInfo.IsHost) // Current player is not the host and therefor not the one who should react
+                    return;
+
+                Plugin.Log("DeathShrinkEventHandled");
+
+                DeathShrinkSyncedPlayers++;
+            }
+
             public IEnumerator DespawnAfterEventSync()
             {
                 var waitedFrames = 0;
@@ -149,12 +170,6 @@ namespace LittleCompany.events.enemy
                 enemy.enabled = false;
                 yield return new WaitForSeconds(3f);
                 RoundManager.Instance.DespawnEnemyOnServer(enemy.NetworkObject);
-            }
-
-            [ServerRpc(RequireOwnership = false)]
-            public void DeathShrinkEventReceivedServerRpc()
-            {
-                DeathShrinkSyncedPlayers++;
             }
             #endregion
 
