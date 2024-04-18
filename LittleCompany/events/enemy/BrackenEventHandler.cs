@@ -1,6 +1,8 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LittleCompany.components;
 using LittleCompany.helper;
+using LittleCompany.modifications;
 using System.Collections.Generic;
 using System.IO;
 using Unity.Netcode;
@@ -39,6 +41,7 @@ namespace LittleCompany.events.enemy
             _brackenOrbPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "EnemyEvents/Bracken/BrackenOrb.prefab"));
             if (_brackenOrbPrefab != null)
             {
+                _brackenOrbPrefab.name = "Bracken Orb";
                 _brackenOrbPrefab.AddComponent<BrackenOrbBehaviour>();
                 NetworkManager.Singleton.AddNetworkPrefab(_brackenOrbPrefab);
             }
@@ -76,11 +79,22 @@ namespace LittleCompany.events.enemy
             public NetworkVariable<float> radius = new NetworkVariable<float>(0f);
 
             List<ulong> fearedPlayers = new List<ulong>();
+
+            GameObject mapDotFlat = null;
+            ScanNodeProperties scanNodeProperties = null;
             #endregion
 
             #region Base Methods
             void Start()
             {
+                mapDotFlat = transform.Find("MapDotFlat").gameObject; // Map dot that's visible on radar regardless of the height (y scale)
+                if (mapDotFlat != null)
+                {
+                    Plugin.Log("BrackenOrb has a flat map dot!");
+                    mapDotFlat.transform.parent = null;
+                    mapDotFlat.transform.position = origin.Value;
+                }
+
                 transform.position = origin.Value;
                 transform.localScale = Vector3.zero;
 
@@ -124,10 +138,12 @@ namespace LittleCompany.events.enemy
                     if (radius.Value < 0.5f)
                         radius.Value += Time.deltaTime;
                     else
-                        radius.Value += Time.deltaTime * 0.1f;
+                        radius.Value += Time.deltaTime * 0.3f;
                 }
 
                 transform.localScale = Vector3.one * radius.Value * 2f;
+                if (mapDotFlat != null)
+                    mapDotFlat.transform.localScale = new Vector3(transform.localScale.x, 1f, transform.localScale.z);
             }
             #endregion
         }

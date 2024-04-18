@@ -2,7 +2,6 @@
 using System;
 using UnityEngine;
 
-using LittleCompany.components;
 using LittleCompany.modifications;
 using LittleCompany.helper;
 using static LittleCompany.helper.EnemyInfo;
@@ -81,7 +80,7 @@ namespace LittleCompany.events.enemy
 
                 OnAwake();
 #if DEBUG
-                //StartCoroutine(SpawnKillLater());
+                StartCoroutine(SpawnKillLater());
 #endif
             }
 

@@ -3,12 +3,15 @@ using LittleCompany.components;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LittleCompany.modifications
 {
     public class ObjectModification : Modification
     {
+        public static List<string> UnscalableObjects = new List<string>();
+
         #region Methods
         internal static ItemScaling ScalingOf(GrabbableObject target)
         {
@@ -45,14 +48,20 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
-                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.RelativeScale);
                     if (nextShrunkenSize == scaling.RelativeScale)
                         return false;
+
+                    if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
+                        return false;
+
                     break;
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
                     if (nextIncreasedSize == scaling.RelativeScale)
+                        return false;
+
+                    if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
                         return false;
                     break;
 

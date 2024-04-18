@@ -356,7 +356,7 @@ namespace LittleCompany.components
                         return targetPlayerObject.grabbedPlayer.gameObject;
 
                     var targetObject = target.GetComponentInParent<GrabbableObject>();
-                    if (targetObject != null)
+                    if (targetObject != null && !ObjectModification.UnscalableObjects.Contains(targetObject.itemProperties.itemName))
                         return targetObject.gameObject;
                     break;
 

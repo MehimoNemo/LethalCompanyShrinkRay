@@ -3,6 +3,7 @@ using HarmonyLib;
 using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.helper;
+using LittleCompany.modifications;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -15,6 +16,7 @@ namespace LittleCompany.events.enemy
     {
         #region Properties
         private static GameObject BurningRobotToyPrefab = null;
+        private static readonly string BurningToyRobotName = "Burning toy robot";
         #endregion
 
         #region Networking
@@ -26,18 +28,21 @@ namespace LittleCompany.events.enemy
             if (toyRobotIndex == -1) return;
 
             var toyRobotPrefab = ItemInfo.SpawnableItems[toyRobotIndex].spawnPrefab;
-            BurningRobotToyPrefab = LethalLib.Modules.NetworkPrefabs.CloneNetworkPrefab(toyRobotPrefab);
+            BurningRobotToyPrefab = LethalLib.Modules.NetworkPrefabs.CloneNetworkPrefab(toyRobotPrefab, BurningToyRobotName);
             var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
 
             toyRobot.itemProperties = Instantiate(toyRobot.itemProperties);
             toyRobot.itemProperties.itemId = 2047483647;
-            toyRobot.itemProperties.itemName = "Burning toy robot";
+            toyRobot.itemProperties.itemName = BurningToyRobotName;
+            toyRobot.name = BurningToyRobotName;
             toyRobot.fallTime = 0f;
-            
+
             var burningBehaviour = toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
             toyRobot.gameObject.AddComponent<ShrinkRayFX>();
 
             Items.RegisterItem(toyRobot.itemProperties);
+
+            ObjectModification.UnscalableObjects.Add(BurningToyRobotName);
         }
         #endregion
 
