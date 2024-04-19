@@ -82,18 +82,27 @@ namespace LittleCompany.events.enemy
             Plugin.Log("Thumper shrunken to death");
 
             var thumper = enemy as CrawlerAI;
-            // todo: thumping sound (thumper.hitWallSFX)
 
-            GameObject quicksand = Instantiate(RoundManager.Instance.quicksandPrefab, enemy.transform.position + Vector3.up, Quaternion.identity, RoundManager.Instance.mapPropsContainer.transform);
+            // Thumping
             enemy.GetComponent<AudioSource>().PlayOneShot(thumper.hitWallSFX[0]);
 
+            var distanceToPlayer = Vector3.Distance(PlayerInfo.CurrentPlayer.transform.position, thumper.transform.position);
+            if (distanceToPlayer < 2f)
+                HUDManager.Instance.ShakeCamera(ScreenShakeType.VeryStrong);
+            else if (distanceToPlayer < 5f)
+                HUDManager.Instance.ShakeCamera(ScreenShakeType.Big);
+            else if (distanceToPlayer < 10f)
+                HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+
+            // Quicksand
+            var quicksand = Instantiate(RoundManager.Instance.quicksandPrefab, enemy.transform.position + Vector3.up, Quaternion.identity, RoundManager.Instance.mapPropsContainer.transform);
             if (!IsQuicksandableSurfaceBelow(enemy.transform.position))
             {
-                // Have to adjust it ..
+                // Adjust to make it visible..
                 var quicksandProjector = quicksand.GetComponentInChildren<DecalProjector>();
                 if (quicksandProjector != null)
                 {
-                    quicksandProjector.material.color = new Color(0.5f, 0.2f, 0.2f); // QuicksandTex
+                    quicksandProjector.material.color = new Color(0.4f, 0.2f, 0.2f); // QuicksandTex
                     quicksandProjector.decalLayerMask = DecalLayerEnum.Everything;
                     quicksandProjector.drawDistance = 1f;
                     quicksandProjector.endAngleFade = 1f;
@@ -102,10 +111,10 @@ namespace LittleCompany.events.enemy
                 }
             }
 
+            //Trigger
             var trigger = quicksand.GetComponentInChildren<QuicksandTrigger>();
             if (trigger != null)
             {
-                Plugin.Log("Replacing QuicksandTrigger");
                 trigger.gameObject.AddComponent<ResistantQuicksandTrigger>();
                 Destroy(trigger);
             }
@@ -134,10 +143,7 @@ namespace LittleCompany.events.enemy
         public static bool CheckConditionsForSinkingInQuicksand(bool __result, PlayerControllerB __instance)
         {
             if (ResistantQuicksandTrigger.sinkingLocalPlayer && __instance == PlayerInfo.CurrentPlayer)
-            {
-                Plugin.Log("CheckConditionsForSinkingInQuicksand true");
                 return true;
-            }
 
             return __result;
         }
