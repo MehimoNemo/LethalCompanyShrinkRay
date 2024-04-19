@@ -1,14 +1,11 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LethalLib.Modules;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using LittleCompany.components;
-using LittleCompany.patches;
 using LittleCompany.modifications;
 using System.Linq;
 

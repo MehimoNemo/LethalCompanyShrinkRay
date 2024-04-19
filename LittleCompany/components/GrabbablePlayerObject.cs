@@ -8,11 +8,11 @@ using LittleCompany.helper;
 using Unity.Netcode;
 using System.IO;
 using System.Collections;
-using LethalLib.Modules;
 
 using LittleCompany.patches.EnemyBehaviours;
 using static LittleCompany.helper.Moons;
 using static LittleCompany.helper.LayerMasks;
+using LittleCompany.dependency;
 
 namespace LittleCompany.components
 {
@@ -92,7 +92,7 @@ namespace LittleCompany.components
             }
 
             networkPrefab = assetItem.spawnPrefab;
-            Utilities.FixMixerGroups(networkPrefab);
+            ScrapManagementFacade.FixMixerGroups(networkPrefab);
 
             var component = networkPrefab.AddComponent<GrabbablePlayerObject>();
 

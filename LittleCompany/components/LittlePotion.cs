@@ -1,6 +1,5 @@
 ﻿using LittleCompany.Config;
 using LittleCompany.helper;
-using LethalLib.Modules;
 using System;
 using System.Collections;
 using System.IO;
@@ -8,6 +7,7 @@ using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.modifications.Modification;
 using LittleCompany.modifications;
+using LittleCompany.dependency;
 
 namespace LittleCompany.components
 {
@@ -32,7 +32,7 @@ namespace LittleCompany.components
 
             var potion = item.spawnPrefab.AddComponent<LittleShrinkingPotion>();
             networkPrefab = item.spawnPrefab;
-            Utilities.FixMixerGroups(networkPrefab);
+            ScrapManagementFacade.FixMixerGroups(networkPrefab);
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
             potion.itemProperties = item;
@@ -76,7 +76,7 @@ namespace LittleCompany.components
 
             var potion = item.spawnPrefab.AddComponent<LittleEnlargingPotion>();
             networkPrefab = item.spawnPrefab;
-            Utilities.FixMixerGroups(networkPrefab);
+            ScrapManagementFacade.FixMixerGroups(networkPrefab);
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
             Destroy(networkPrefab.GetComponent<PhysicsProp>());
             potion.itemProperties = item;
@@ -190,12 +190,12 @@ namespace LittleCompany.components
         {
             if (Rarity > 0 && !IsScrapItem) // Add as scrap
             {
-                Items.RegisterScrap(itemProperties, Rarity, Levels.LevelTypes.All);
+                ScrapManagementFacade.RegisterScrap(itemProperties, Rarity, ScrapManagementFacade.LevelTypes.All);
                 IsScrapItem = true;
             }
             else if (IsScrapItem) // Remove from scrap
             {
-                Items.RemoveScrapFromLevels(itemProperties, Levels.LevelTypes.All);
+                ScrapManagementFacade.RemoveScrapFromLevels(itemProperties, ScrapManagementFacade.LevelTypes.All);
                 IsScrapItem = false;
             }
 
@@ -204,12 +204,12 @@ namespace LittleCompany.components
                 AdjustStoreAndScrapValues();
                 var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
                 terminalNode.displayText = TerminalDescription;
-                Items.RegisterShopItem(itemProperties, null, null, terminalNode, StorePrice);
+                ScrapManagementFacade.RegisterShopItem(itemProperties, null, null, terminalNode, StorePrice);
                 IsStoreItem = true;
             }
             else if(IsStoreItem) // Remove from store
             {
-                Items.RemoveShopItem(itemProperties);
+                ScrapManagementFacade.RemoveShopItem(itemProperties);
                 IsStoreItem = false;
             }
         }

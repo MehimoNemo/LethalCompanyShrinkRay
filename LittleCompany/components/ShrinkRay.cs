@@ -1,7 +1,6 @@
 ﻿using GameNetcodeStuff;
 using UnityEngine;
 using Unity.Netcode;
-using LethalLib.Modules;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using UnityEngine.InputSystem;
@@ -12,6 +11,7 @@ using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.helper.LayerMasks;
 using static LittleCompany.modifications.Modification;
+using LittleCompany.dependency;
 
 namespace LittleCompany.components
 {
@@ -67,7 +67,7 @@ namespace LittleCompany.components
             }
 
             networkPrefab = assetItem.spawnPrefab;
-            Utilities.FixMixerGroups(networkPrefab);
+            ScrapManagementFacade.FixMixerGroups(networkPrefab);
             assetItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
             assetItem.weight = 1.05f;
             assetItem.canBeGrabbedBeforeGameStart = true;
@@ -105,7 +105,7 @@ namespace LittleCompany.components
 
             var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
             terminalNode.displayText = shrinkRay.name + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
-            Items.RegisterShopItem(shrinkRay.itemProperties, null, null, terminalNode, shrinkRay.itemProperties.creditsWorth);
+            ScrapManagementFacade.RegisterShopItem(shrinkRay.itemProperties, null, null, terminalNode, shrinkRay.itemProperties.creditsWorth);
         }
         #endregion
 

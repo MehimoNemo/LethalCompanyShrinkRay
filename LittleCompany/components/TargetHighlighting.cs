@@ -1,7 +1,5 @@
-﻿using LethalLib.Modules;
-using LittleCompany.helper;
+﻿using LittleCompany.helper;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace LittleCompany.components
