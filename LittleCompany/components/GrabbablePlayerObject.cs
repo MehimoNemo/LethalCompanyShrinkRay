@@ -171,26 +171,15 @@ namespace LittleCompany.components
 
             if (IsOnSellCounter.Value || enemyHeldBy != null || this.isHeld)
             {
-                /*if(PlayerControlled)
-                    SetPlayerControlled(false);*/
                 grabbedPlayer.transform.position = this.transform.position;
 
                 grabbedPlayer.ResetFallGravity();
 
                 if (this.isHeld)
-                {
-                    //this looks like trash unfortunately .. change this
-                    //Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
-                    //Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
-                    //Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
-                    //grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
                     grabbedPlayer.playerCollider.enabled = false;
-                }
             }
             else
             {
-                /*if (!PlayerControlled)
-                    SetPlayerControlled(true);*/
                 transform.position = grabbedPlayer.transform.position;
             }
         }
@@ -229,15 +218,6 @@ namespace LittleCompany.components
             {
                 if(PlayerInfo.IsHost && GrabbablePlayerList.RemovePlayerGrabbable(this))
                     DeleteNextFrame = false;
-            }
-
-            if(frameCounter % 500 == 1)
-            {
-                /*Plugin.Log("Position -> Player" + grabbedPlayer.transform.position + ", GPO" + transform.position);
-                Plugin.Log("LocalPos -> Player" + grabbedPlayer.transform.localPosition + ", GPO" + transform.localPosition);
-                Plugin.Log("LocScale -> Player" + grabbedPlayer.transform.localScale + ", GPO" + transform.localScale);
-                Plugin.Log("Parent of Player: " + grabbedPlayer.transform.parent?.name + ", of GPO: " + transform.parent?.name);
-                Plugin.Log("-------------------------------------------");*/
             }
         }
         
