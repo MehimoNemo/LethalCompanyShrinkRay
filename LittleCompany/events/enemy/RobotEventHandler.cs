@@ -127,7 +127,8 @@ namespace LittleCompany.events.enemy
                         materials.Add(Materials.BurntMaterial);
                     mesh.materials = materials.ToArray();
                 }
-
+                if (playerWhoKilledRobot == null)
+                    return;
                 var player = PlayerInfo.ControllerFromID(playerWhoKilledRobot.Value);
                 BindPlayer(player);
             }

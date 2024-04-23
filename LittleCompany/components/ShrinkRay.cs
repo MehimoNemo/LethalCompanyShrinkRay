@@ -103,9 +103,7 @@ namespace LittleCompany.components
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
-            var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
-            terminalNode.displayText = shrinkRay.name + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
-            ScrapManagementFacade.RegisterShopItem(shrinkRay.itemProperties, null, null, terminalNode, shrinkRay.itemProperties.creditsWorth);
+            ScrapManagementFacade.RegisterItem(shrinkRay.itemProperties, false, true, -1, shrinkRay.name + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!");
         }
         #endregion
 

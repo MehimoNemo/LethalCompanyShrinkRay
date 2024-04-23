@@ -188,9 +188,9 @@ namespace LittleCompany.components
 
         internal void RegisterPotion(ref bool IsScrapItem, ref bool IsStoreItem)
         {
-            if (Rarity > 0 && !IsScrapItem) // Add as scrap
+            bool alreadyRegistered = false;
+            if (Rarity > 0 && !IsScrapItem) // Added as scrap
             {
-                ScrapManagementFacade.RegisterScrap(itemProperties, Rarity, ScrapManagementFacade.LevelTypes.All);
                 IsScrapItem = true;
             }
             else if (IsScrapItem) // Remove from scrap
@@ -198,19 +198,30 @@ namespace LittleCompany.components
                 ScrapManagementFacade.RemoveScrapFromLevels(itemProperties, ScrapManagementFacade.LevelTypes.All);
                 IsScrapItem = false;
             }
-
-            if (StorePrice > 0 && !IsStoreItem) // Add to store
+            else
             {
-                AdjustStoreAndScrapValues();
-                var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
-                terminalNode.displayText = TerminalDescription;
-                ScrapManagementFacade.RegisterShopItem(itemProperties, null, null, terminalNode, StorePrice);
+                alreadyRegistered = true;
+            }
+
+            if (StorePrice > 0 && !IsStoreItem) // Added to store
+            {
                 IsStoreItem = true;
             }
             else if(IsStoreItem) // Remove from store
             {
                 ScrapManagementFacade.RemoveShopItem(itemProperties);
                 IsStoreItem = false;
+            }
+            else
+            {
+                alreadyRegistered = true;
+            }
+
+            if(!alreadyRegistered && (IsStoreItem || IsScrapItem))
+            {
+                //Then register it!
+                AdjustStoreAndScrapValues(); ;
+                ScrapManagementFacade.RegisterItem(itemProperties, IsScrapItem, IsStoreItem, Rarity, TerminalDescription);
             }
         }
 

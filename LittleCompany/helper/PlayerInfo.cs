@@ -56,12 +56,13 @@ namespace LittleCompany.helper
             }
         }
 
-        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb != null && (pcb.isPlayerControlled || pcb.isPlayerDead)).ToList();
+        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance?.allPlayerScripts?.Where(pcb => pcb != null && (pcb.isPlayerControlled || pcb.isPlayerDead)).ToList();
         public static List<PlayerControllerB> AlivePlayers => AllPlayers.Where(pcb => !pcb.isPlayerDead).ToList();
 
         public static PlayerControllerB ControllerFromID(ulong playerID)
         {
-            foreach(var player in AllPlayers)
+            if (AllPlayers == null) return null;//
+            foreach (var player in AllPlayers)
             {
                 if (player.playerClientId == playerID)
                     return player;

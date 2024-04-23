@@ -67,7 +67,7 @@ namespace LittleCompany.patches
         {
             if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Thumper);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Robot);
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)
