@@ -158,7 +158,9 @@ namespace LittleCompany.dependency
             [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             internal LethalLevelLoaderScrapManagement()
             {
-                LittleCompanyMod = ExtendedMod.Create("LittleCompany", "Toybox");
+                ExtendedMod extendedMod = ExtendedMod.Create("LittleCompany", "Toybox");
+                LittleCompanyMod = extendedMod;
+                PatchedContent.ExtendedMods.Add(extendedMod);
             }
 
             [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
