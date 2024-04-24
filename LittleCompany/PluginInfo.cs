@@ -2,8 +2,8 @@
 {
     internal class PluginInfo
     {
-        public const string PLUGIN_GUID = "LittleCompany.BETA";
+        public const string PLUGIN_GUID = "Toybox.LittleCompany";
         public const string PLUGIN_NAME = "LittleCompany";
-        public const string PLUGIN_VERSION = "0.5.7";
+        public const string PLUGIN_VERSION = "1.0.0";
     }
 }

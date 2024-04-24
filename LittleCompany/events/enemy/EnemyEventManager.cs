@@ -27,7 +27,8 @@ namespace LittleCompany.events.enemy
             { Enemy.Butler,     typeof(ButlerEventHandler)      },
             { Enemy.ButlerBees, typeof(ButlerBeesEventHandler)  },
             { Enemy.Thumper,    typeof(ThumperEventHandler)     },
-            { Enemy.Robot,      typeof(RobotEventHandler)       }
+            { Enemy.Robot,      typeof(RobotEventHandler)       },
+            { Enemy.Worm,       typeof(WormEventHandler)        }
         };
 
         public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
@@ -48,6 +49,12 @@ namespace LittleCompany.events.enemy
             int handlersAdded = 0;
             foreach (var enemyType in EnemyTypes)
             {
+                if (enemyType.enemyPrefab == null)
+                {
+                    Plugin.Log("Enemy " + enemyType.enemyName + " had no enemyPrefab. Unable to connect enemy event handler.", Plugin.LogType.Warning);
+                    continue;
+                }
+
                 var eventHandlerType = EventHandlerTypeByName(enemyType.enemyName);
                 var eventHandler = enemyType.enemyPrefab.AddComponent(eventHandlerType);
                 if (eventHandler != null)
@@ -99,7 +106,8 @@ namespace LittleCompany.events.enemy
             public void AfterEachScale(float from, float to, PlayerControllerB playerBy)
             {
                 if (Mathf.Approximately(from, to)) return;
-                if (from > to)
+                Scaled(from, to, playerBy);
+				if (from > to)
                     Shrunken(from <= 1f, playerBy);
                 else
                     Enlarged(from >= 1f, playerBy);
@@ -157,6 +165,8 @@ namespace LittleCompany.events.enemy
                 DeathShrinkSyncedPlayers++;
             }
             #endregion
+
+			public virtual void Scaled(float from, float to, PlayerControllerB playerShrunkenBy) { }
 
             public virtual void Shrunken(bool wasAlreadyShrunken, PlayerControllerB playerShrunkenBy) { }
             public virtual void Enlarged(bool wasAlreadyEnlarged, PlayerControllerB playerEnlargedBy) { }

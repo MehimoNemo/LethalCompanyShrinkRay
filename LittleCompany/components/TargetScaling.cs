@@ -6,7 +6,6 @@ using UnityEngine;
 using LittleCompany.helper;
 using LittleCompany.modifications;
 using LittleCompany.patches;
-using LittleCompany.events.enemy;
 using System.Collections.Generic;
 
 namespace LittleCompany.components
@@ -25,6 +24,14 @@ namespace LittleCompany.components
         private Coroutine ScaleRoutine = null;
 
         internal T target;
+
+        public float ScalingProgress { get; private set; } = 0f; // progress from 0 to 1
+
+        public enum Mode
+        {
+            Wave = 0,
+            Linear
+        }
         #endregion
 
         #region Base Methods
@@ -53,47 +60,63 @@ namespace LittleCompany.components
         internal virtual void OnAwake() { }
         public virtual void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
+            scale = Mathf.Max(scale, 0f);
+
             float previousScale = RelativeScale;
             gameObject.transform.localScale = OriginalScale * scale;
             RelativeScale = scale;
             CallListenersAfterEachScale(previousScale, scale, scaledBy);
         }
 
-        public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null)
+        public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float ? duration = null, Mode? mode = null)
         {
-            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, () =>
+            Plugin.Log("Duration: " + duration);
+            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, duration.GetValueOrDefault(ShrinkRayFX.DefaultBeamDuration), mode.GetValueOrDefault(Mode.Wave), () =>
             {
                 ScaleRoutine = null;
 
                 // Ensure final scale is set to the desired value
                 ScaleTo(scale, scaledBy);
-                
+
+                CallListenersAtEndOfScaling();
+
                 if (onComplete != null)
-                {
-                    CallListenersAtEndOfScaling();
                     onComplete();
-                }
+
+                ScalingProgress = 0f;
             }));
         }
 
-        private IEnumerator ScaleOverTimeToCoroutine(float scale, PlayerControllerB scaledBy, Action onComplete = null)
+        private IEnumerator ScaleOverTimeToCoroutine(float scale, PlayerControllerB scaledBy, float duration, Mode mode, Action onComplete)
         {
             float elapsedTime = 0f;
-            var c = RelativeScale;
-            var direction = scale < c ? -1f : 1f;
-            float a = Mathf.Abs(c - scale); // difference
-            const float b = -0.5f;
 
-            while (elapsedTime < ShrinkRayFX.DefaultBeamDuration)
+            var startingScale = RelativeScale;
+            var direction = scale < startingScale ? -1f : 1f;
+            float scaleDiff = Mathf.Abs(startingScale - scale); // difference
+
+            while (elapsedTime < duration)
             {
-                // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
-                var x = elapsedTime;
-                var newScale = direction * (a + 1f) * Mathf.Pow(x / 2f, 2f) + (x * b * direction) + c;
+                ScalingProgress = Mathf.Min(1f / duration * elapsedTime, 1f);
+                float newScale = 0f;
+                switch(mode)
+                {
+                    case Mode.Wave:
+                        // f(x) = -(a+1)(x/2)^2+bx+c [Shrinking] <-> (a+1)(x/2)^2-bx+c [Enlarging]
+                        newScale = direction * (scaleDiff + 1f) * Mathf.Pow(elapsedTime / 2f, 2f) + (elapsedTime * -0.5f * direction) + startingScale; // todo: duration not accurate rn
+                        break;
+                    case Mode.Linear:
+                        newScale = Mathf.Lerp(startingScale, scale, elapsedTime / duration);
+                        break;
+                }
+
                 ScaleTo(newScale, scaledBy);
 
                 elapsedTime += Time.deltaTime;
                 yield return null; // Wait for the next frame
             }
+
+            ScalingProgress = 1f;
 
             if (onComplete != null)
                 onComplete();
@@ -102,7 +125,10 @@ namespace LittleCompany.components
         public void StopScaling()
         {
             if (GettingScaled)
+            {
                 StopCoroutine(ScaleRoutine);
+                ScalingProgress = 0f;
+            }
         }
 
         public virtual Vector3 SizeAt(float percentage)
