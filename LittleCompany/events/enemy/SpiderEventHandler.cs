@@ -50,9 +50,5 @@ namespace LittleCompany.events.enemy
             yield return new WaitForSeconds(0.3f);
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
-
-        public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }
-        public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
-        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
     }
 }

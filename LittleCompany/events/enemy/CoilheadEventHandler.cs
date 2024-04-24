@@ -40,9 +40,6 @@ namespace LittleCompany.events.enemy
 
             //base.OnDeathShrinking(previousSize, playerShrunkenBy);
         }
-        public override void Shrunken(bool wasShrunkenBefore, PlayerControllerB playerShrunkenBy) { }
-        public override void Enlarged(bool wasEnlargedBefore, PlayerControllerB playerEnlargedBy) { }
-        public override void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }
 
         [ServerRpc(RequireOwnership = false)]
         public void TeleportAndScaleCoilheadToServerRpc(Vector3 position, float scale, ulong playerModifiedByID)

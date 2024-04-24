@@ -81,7 +81,6 @@ namespace LittleCompany.events.enemy
             List<ulong> fearedPlayers = new List<ulong>();
 
             GameObject mapDotFlat = null;
-            ScanNodeProperties scanNodeProperties = null;
             #endregion
 
             #region Base Methods
