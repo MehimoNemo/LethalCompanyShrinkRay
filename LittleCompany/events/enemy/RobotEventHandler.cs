@@ -24,10 +24,8 @@ namespace LittleCompany.events.enemy
         {
             if (BurningRobotToyPrefab != null) return;
 
-            var toyRobotIndex = ItemInfo.SpawnableItems.FindIndex((scrap) => scrap.name == "RobotToy");
-            if (toyRobotIndex == -1) return;
-
-            var toyRobotPrefab = ItemInfo.SpawnableItems[toyRobotIndex].spawnPrefab;
+            var spawnableItem = AssetLoader.littleCompanyAsset.LoadAsset<Item>("ShrinkingPotionItem.asset");
+            var toyRobotPrefab = spawnableItem.spawnPrefab;
             BurningRobotToyPrefab = ScrapManagementFacade.CloneNetworkPrefab(toyRobotPrefab, BurningToyRobotName);
             var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
 

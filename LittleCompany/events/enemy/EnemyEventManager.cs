@@ -49,15 +49,18 @@ namespace LittleCompany.events.enemy
             foreach (var enemyType in EnemyTypes)
             {
                 var eventHandlerType = EventHandlerTypeByName(enemyType.enemyName);
-                var eventHandler = enemyType.enemyPrefab.AddComponent(eventHandlerType);
-                if (eventHandler != null)
-                    handlersAdded++;
+                if(enemyType.enemyPrefab != null)
+                {
+                    var eventHandler = enemyType.enemyPrefab.AddComponent(eventHandlerType);
+                    if (eventHandler != null)
+                        handlersAdded++;
 #if DEBUG
-                if (eventHandler != null)
-                    Plugin.Log("Added event handler \"" + eventHandlerType.Name + "\" for enemy \"" + enemyType.enemyName + "\"");
-                else
-                    Plugin.Log("No enemy handler found for enemy \"" + enemyType.enemyName + "\"");
+                    if (eventHandler != null)
+                        Plugin.Log("Added event handler \"" + eventHandlerType.Name + "\" for enemy \"" + enemyType.enemyName + "\"");
+                    else
+                        Plugin.Log("No enemy handler found for enemy \"" + enemyType.enemyName + "\"");
 #endif
+                }
             }
 
             Plugin.Log("BindAllEnemyEvents -> Added handler for " + handlersAdded + "/" + EnemyTypes.Count + " enemies.");
