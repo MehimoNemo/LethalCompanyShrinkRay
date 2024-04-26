@@ -9,6 +9,7 @@ using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
+using System.IO;
 
 namespace LittleCompany.events.enemy
 {
@@ -16,7 +17,6 @@ namespace LittleCompany.events.enemy
     {
         #region Properties
         private static GameObject BurningRobotToyPrefab = null;
-        private static readonly string BurningToyRobotName = "Burning toy robot";
         #endregion
 
         #region Networking
@@ -24,23 +24,21 @@ namespace LittleCompany.events.enemy
         {
             if (BurningRobotToyPrefab != null) return;
 
-            var spawnableItem = AssetLoader.littleCompanyAsset.LoadAsset<Item>("ShrinkingPotionItem.asset");
-            var toyRobotPrefab = spawnableItem.spawnPrefab;
-            BurningRobotToyPrefab = ScrapManagementFacade.CloneNetworkPrefab(toyRobotPrefab, BurningToyRobotName);
+            var spawnableItem = AssetLoader.littleCompanyAsset.LoadAsset<Item>(Path.Combine(AssetLoader.BaseAssetPath, "EnemyEvents/Robot/BurningRobotToy.asset"));
+            if(spawnableItem == null)
+            {
+                Plugin.Log("BurningRobotToy.asset not found.", Plugin.LogType.Error);
+                return;
+            }
+
+            BurningRobotToyPrefab = spawnableItem.spawnPrefab;
+
             var toyRobot = BurningRobotToyPrefab.GetComponent<GrabbableObject>();
-
-            toyRobot.itemProperties = Instantiate(toyRobot.itemProperties);
-            toyRobot.itemProperties.itemId = 2047483647;
-            toyRobot.itemProperties.itemName = BurningToyRobotName;
-            toyRobot.name = BurningToyRobotName;
-            toyRobot.fallTime = 0f;
-
-            var burningBehaviour = toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
-            toyRobot.gameObject.AddComponent<ShrinkRayFX>();
+            toyRobot.gameObject.AddComponent<BurningToyRobotBehaviour>();
 
             ScrapManagementFacade.RegisterItem(toyRobot.itemProperties);
 
-            ObjectModification.UnscalableObjects.Add(BurningToyRobotName);
+            ObjectModification.UnscalableObjects.Add(toyRobot.itemProperties.itemName);
         }
         #endregion
 
@@ -63,13 +61,10 @@ namespace LittleCompany.events.enemy
             {
                 var toyRobotObject = Instantiate(BurningRobotToyPrefab, enemy.transform.position, Quaternion.identity, RoundManager.Instance.spawnedScrapContainer);
                 var toyRobot = toyRobotObject.GetComponent<GrabbableObject>();
-                if (toyRobotObject.TryGetComponent(out BurningToyRobotBehaviour behaviour))
-                {
+                if (toyRobot.TryGetComponent(out BurningToyRobotBehaviour behaviour))
                     behaviour.playerWhoKilledRobot.Value = playerShrunkenBy.playerClientId;
-                    behaviour.scrapValue.Value = Random.Range(250, 330);
-                }
+
                 toyRobot.NetworkObject.Spawn();
-                toyRobot.hideFlags = HideFlags.None;
             }
         }
         #endregion
@@ -79,10 +74,8 @@ namespace LittleCompany.events.enemy
         {
             #region Properties
             public NetworkVariable<ulong> playerWhoKilledRobot = new NetworkVariable<ulong>();
-            public NetworkVariable<int> scrapValue = new NetworkVariable<int>();
 
             GrabbableObject toyRobot = null;
-            GameObject burningEffect = Effects.BurningEffect;
             float damageFrameCounter = 0;
             Dictionary<ulong, ShrinkRayFX> boundPlayerFX = new Dictionary<ulong, ShrinkRayFX>();
 
@@ -92,43 +85,23 @@ namespace LittleCompany.events.enemy
             #endregion
 
             #region Base Methods
-            public override void OnNetworkSpawn()
-            {
-                Plugin.Log("Burning toy robot has spawned");
-                base.OnNetworkSpawn();
-            }
 
             public override void OnNetworkDespawn()
             {
                 Plugin.Log("Burning toy robot has despawned");
-
-                DestroyImmediate(burningEffect);
 
                 ClearBindings();
 
                 base.OnNetworkSpawn();
             }
 
-            void Start()
+            void Awake()
             {
+                Plugin.Log("Burning toy robot has awaken");
+
                 toyRobot = GetComponentInParent<GrabbableObject>();
 
-                toyRobot.SetScrapValue(scrapValue.Value);
-                var scanNode = toyRobot.gameObject.GetComponentInChildren<ScanNodeProperties>();
-                if (scanNode != null)
-                    scanNode.headerText = toyRobot.itemProperties.itemName;
-
-                foreach (MeshRenderer mesh in Materials.GetMeshRenderers(toyRobot.gameObject))
-                {
-                    List<Material> materials = new List<Material>();
-                    foreach (var m in mesh.materials)
-                        materials.Add(Materials.BurntMaterial);
-                    mesh.materials = materials.ToArray();
-                }
-                if (playerWhoKilledRobot == null)
-                    return;
-                var player = PlayerInfo.ControllerFromID(playerWhoKilledRobot.Value);
-                BindPlayer(player);
+                BindPlayer(PlayerInfo.ControllerFromID(playerWhoKilledRobot.Value));
             }
 
             void FixedUpdate()
@@ -143,9 +116,6 @@ namespace LittleCompany.events.enemy
                 }
 
                 CheckPlayerBindings(damageFrameCounter == 1);
-
-                if (burningEffect != null)
-                    burningEffect.transform.position = transform.position; // todo: transform parenting...
 
                 if (IsHeld)
                     BindPlayer(toyRobot.playerHeldBy);

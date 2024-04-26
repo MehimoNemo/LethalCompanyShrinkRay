@@ -32,7 +32,7 @@ namespace LittleCompany.helper
             {
                 if (_deathPoofPrefab == null)
                 {
-                    _deathPoofPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "grabbable/Poof.prefab"));
+                    _deathPoofPrefab = AssetLoader.littleCompanyAsset?.LoadAsset<GameObject>(Path.Combine(AssetLoader.BaseAssetPath, "Poof/Poof.prefab"));
                     if (_deathPoofPrefab == null) return null;
                 }
 

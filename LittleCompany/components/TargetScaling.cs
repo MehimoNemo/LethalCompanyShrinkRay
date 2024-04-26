@@ -259,10 +259,9 @@ namespace LittleCompany.components
         }
         private void ResetItemProperties()
         {
-            if (target.itemProperties != originalItemProperties)
-            {
-                Destroy(target.itemProperties);
-            }
+            if (target.itemProperties == originalItemProperties) return;
+
+            Destroy(target.itemProperties);
             target.itemProperties = originalItemProperties;
         }
 
