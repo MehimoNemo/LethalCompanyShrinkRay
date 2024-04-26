@@ -8,45 +8,30 @@ using UnityEngine;
 using static LittleCompany.modifications.Modification;
 using LittleCompany.modifications;
 using LittleCompany.dependency;
+using LethalLib.Modules;
 
 namespace LittleCompany.components
 {
     [DisallowMultipleComponent]
     public class LittleShrinkingPotion : LittlePotion
     {
+        internal const string AssetPath = "ShrinkingPotionItem.asset";
+        internal static int StorePriceConfig = ModConfig.Instance.values.ShrinkPotionStorePrice;
+        internal static int RarityConfig = ModConfig.Instance.values.ShrinkPotionScrapRarity;
+
         internal override string ItemName => "Light Potion";
         internal override string TerminalDescription => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a negative way. Lightweight and tastes like potato..";
-        internal override int StorePrice => ModConfig.Instance.values.ShrinkPotionStorePrice;
-        internal override int Rarity => ModConfig.Instance.values.ShrinkPotionScrapRarity;
+        internal override int StorePrice => StorePriceConfig;
+        internal override int Rarity => RarityConfig;
         internal override ModificationType modificationType => ModificationType.Shrinking;
-        public static GameObject networkPrefab { get; private set; }
-
-        internal static bool IsStoreItem = false;
-
-        internal static bool IsScrapItem = false;
+        public static GameObject NetworkPrefab { get; private set; }
 
         internal static void LoadAsset()
         {
-            if(networkPrefab != null || !TryLoadItem(AssetLoader.littleCompanyAsset, "ShrinkingPotionItem.asset", out Item item) || item.spawnPrefab == null)
+            if (!TryLoadItem(AssetLoader.littleCompanyAsset, AssetPath, out Item item) || item.spawnPrefab == null)
                 return;
 
-            var potion = item.spawnPrefab.AddComponent<LittleShrinkingPotion>();
-            networkPrefab = item.spawnPrefab;
-            ScrapManagementFacade.FixMixerGroups(networkPrefab);
-            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
-            Destroy(networkPrefab.GetComponent<PhysicsProp>());
-            potion.itemProperties = item;
-            potion.SetProperties();
-            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
-        }
-
-        public static void Sync()
-        {
-            if (networkPrefab == null || networkPrefab.TryGetComponent(out LittleShrinkingPotion potion)) return;
-
-            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
-            if(IsScrapItem || IsStoreItem)
-                potion.AdjustStoreAndScrapValues();
+            NetworkPrefab = RegisterPrefab<LittleShrinkingPotion>(item);
         }
 
         public override void Start()
@@ -58,40 +43,23 @@ namespace LittleCompany.components
 
     public class LittleEnlargingPotion : LittlePotion
     {
+        internal const string AssetPath = "EnlargingPotionItem.asset";
+        internal static int StorePriceConfig = ModConfig.Instance.values.EnlargePotionStorePrice;
+        internal static int RarityConfig = ModConfig.Instance.values.EnlargePotionScrapRarity;
+
         internal override string ItemName => "Heavy Potion";
         internal override string TerminalDescription => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a positive way. Heavy and tastes like cheesecake..";
-        internal override int StorePrice => ModConfig.Instance.values.EnlargePotionStorePrice;
-        internal override int Rarity => ModConfig.Instance.values.EnlargePotionScrapRarity;
+        internal override int StorePrice => StorePriceConfig;
+        internal override int Rarity => RarityConfig;
         internal override ModificationType modificationType => ModificationType.Enlarging;
-        public static GameObject networkPrefab { get; private set; }
-
-        internal static bool IsStoreItem = false;
-
-        internal static bool IsScrapItem = false;
+        public static GameObject NetworkPrefab { get; private set; }
 
         internal static void LoadAsset()
         {
-            if (networkPrefab != null || !TryLoadItem(AssetLoader.littleCompanyAsset, "EnlargingPotionItem.asset", out Item item) || item.spawnPrefab == null)
+            if (!TryLoadItem(AssetLoader.littleCompanyAsset, AssetPath, out Item item) || item.spawnPrefab == null)
                 return;
 
-            var potion = item.spawnPrefab.AddComponent<LittleEnlargingPotion>();
-            networkPrefab = item.spawnPrefab;
-            ScrapManagementFacade.FixMixerGroups(networkPrefab);
-            NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
-            Destroy(networkPrefab.GetComponent<PhysicsProp>());
-            potion.itemProperties = item;
-            potion.SetProperties();
-            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
-        }
-
-        public static void Sync()
-        {
-            if (networkPrefab == null || networkPrefab.TryGetComponent(out LittleEnlargingPotion potion)) return;
-
-            potion.RegisterPotion(ref IsScrapItem, ref IsStoreItem);
-
-            if (IsScrapItem || IsStoreItem)
-                potion.AdjustStoreAndScrapValues();
+            NetworkPrefab = RegisterPrefab<LittleEnlargingPotion>(item);
         }
 
         public override void Start()
@@ -160,12 +128,6 @@ namespace LittleCompany.components
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionConsume.wav", (item) => consumeSFX = item));
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("potionNoConsume.wav", (item) => noConsumeSFX = item));
         }
-
-        public static void ConfigSynced()
-        {
-            LittleShrinkingPotion.Sync();
-            LittleEnlargingPotion.Sync();
-        }
         #endregion
 
         #region Initializing
@@ -186,43 +148,25 @@ namespace LittleCompany.components
             return true;
         }
 
-        internal void RegisterPotion(ref bool IsScrapItem, ref bool IsStoreItem)
+        internal static GameObject RegisterPrefab<T>(Item item) where T : LittlePotion
         {
-            bool alreadyRegistered = false;
-            if (Rarity > 0 && !IsScrapItem) // Added as scrap
-            {
-                IsScrapItem = true;
-            }
-            else if (IsScrapItem) // Remove from scrap
-            {
-                ScrapManagementFacade.RemoveScrapFromLevels(itemProperties, ScrapManagementFacade.LevelTypes.All);
-                IsScrapItem = false;
-            }
-            else
-            {
-                alreadyRegistered = true;
-            }
+            T potion = ConfigurePotion<T>(item);
+            item.creditsWorth = potion.StorePrice;
+            item.minValue = Math.Max(potion.StorePrice / 2, 0);
+            item.maxValue = Math.Max(potion.StorePrice, 0);
+            ScrapManagementFacade.RegisterItem(item, potion.Rarity > 0, potion.StorePrice > 0, potion.Rarity, potion.TerminalDescription);
+            return item.spawnPrefab;
+        }
 
-            if (StorePrice > 0 && !IsStoreItem) // Added to store
-            {
-                IsStoreItem = true;
-            }
-            else if(IsStoreItem) // Remove from store
-            {
-                ScrapManagementFacade.RemoveShopItem(itemProperties);
-                IsStoreItem = false;
-            }
-            else
-            {
-                alreadyRegistered = true;
-            }
-
-            if(!alreadyRegistered && (IsStoreItem || IsScrapItem))
-            {
-                //Then register it!
-                AdjustStoreAndScrapValues(); ;
-                ScrapManagementFacade.RegisterItem(itemProperties, IsScrapItem, IsStoreItem, Rarity, TerminalDescription);
-            }
+        internal static T ConfigurePotion<T>(Item item) where T : LittlePotion
+        {
+            T potion = item.spawnPrefab.AddComponent<T>();
+            ScrapManagementFacade.FixMixerGroups(item.spawnPrefab);
+            NetworkManager.Singleton.AddNetworkPrefab(item.spawnPrefab);
+            Destroy(item.spawnPrefab.GetComponent<PhysicsProp>());
+            potion.itemProperties = item;
+            potion.SetProperties();
+            return potion;
         }
 
         internal void SetProperties()
@@ -241,15 +185,6 @@ namespace LittleCompany.components
             itemProperties.syncGrabFunction = false;
             itemProperties.syncDiscardFunction = false;
         }
-
-        internal void AdjustStoreAndScrapValues()
-        {
-            itemProperties.creditsWorth = StorePrice;
-            itemProperties.minValue = Math.Max(StorePrice / 2, 0);
-            itemProperties.maxValue = Math.Max(StorePrice, 0);
-            System.Random rnd = new System.Random();
-            SetScrapValue(rnd.Next(StorePrice / 2, StorePrice + 1));
-        }
         #endregion
 
         #region Base Methods
@@ -263,7 +198,7 @@ namespace LittleCompany.components
             if (ScanNodeProperties != null)
             {
                 ScanNodeProperties.headerText = ItemName;
-                ScanNodeProperties.scrapValue = itemProperties.creditsWorth;
+                ScanNodeProperties.scrapValue = scrapValue;
             }
 
             if (!TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
@@ -298,7 +233,7 @@ namespace LittleCompany.components
                 StartCoroutine(Consume());
             }
             catch (Exception e) {
-                Plugin.Log("Error while shooting ray: " + e.Message, Plugin.LogType.Error);
+                Plugin.Log("Error while consuming potion: " + e.Message, Plugin.LogType.Error);
                 Plugin.Log($"Stack Trace: {e.StackTrace}");
             }
         }

@@ -54,16 +54,6 @@ namespace LittleCompany.dependency
             ScrapManager.RegisterItem(item, isScrap, isBuyableItem, rarity, terminalDescription);
         }
 
-        public static void RemoveScrapFromLevels(Item scrapItem, LevelTypes levelFlags = LevelTypes.None, string[] levelOverrides = null)
-        {
-            ScrapManager.RemoveScrapFromLevels(scrapItem, levelFlags, levelOverrides);
-        }
-
-        public static void RemoveShopItem(Item shopItem)
-        {
-            ScrapManager.RemoveShopItem(shopItem);
-        }
-
         public enum LevelTypes
         {
             None = 1,
@@ -86,9 +76,6 @@ namespace LittleCompany.dependency
 
             public void FixMixerGroups(GameObject prefab);
             public void RegisterItem(Item item, bool isScrap, bool IsBuyableItem, int rarity, string terminalDescription);
-            public void RemoveScrapFromLevels(Item scrapItem, LevelTypes levelFlags = LevelTypes.None, string[] levelOverrides = null);
-
-            public void RemoveShopItem(Item shopItem);
         }
 
         internal class LethalLibScrapManagement : IScrapManagement
@@ -125,28 +112,6 @@ namespace LittleCompany.dependency
                     Items.RegisterShopItem(item, null, null, terminalNode, item.creditsWorth);
                 }
                     
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-            public void RemoveScrapFromLevels(Item scrapItem, LevelTypes levelFlags = LevelTypes.None, string[] levelOverrides = null)
-            {
-                Items.RemoveScrapFromLevels(scrapItem, ConvertToLethalLibLevelTypes(levelFlags), levelOverrides);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-            public void RemoveShopItem(Item shopItem)
-            {
-                Items.RemoveShopItem(shopItem);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-            private Levels.LevelTypes ConvertToLethalLibLevelTypes(LevelTypes levelType)
-            {
-                if (Enum.IsDefined(typeof(Levels.LevelTypes), levelType))
-                {
-                    return (Levels.LevelTypes)levelType;
-                }
-                return Levels.LevelTypes.None;
             }
         }
 
@@ -189,16 +154,6 @@ namespace LittleCompany.dependency
                     levelMatchingProperties.levelTags.Add(new StringWithRarity("Custom", rarity));
                     ex.LevelMatchingProperties = levelMatchingProperties;
                 }
-            }
-
-            public void RemoveScrapFromLevels(Item scrapItem, LevelTypes levelFlags = LevelTypes.None, string[] levelOverrides = null)
-            {
-                // Not supported yet?, sucks to be you, don't reuse the same save with a different config
-            }
-
-            public void RemoveShopItem(Item shopItem)
-            {
-                // Not supported yet?, sucks to be you, don't reuse the same save with a different config
             }
 
             // Reimplementation of CloneNetworkPrefab since it doesnt exist in LethalLevelLoader

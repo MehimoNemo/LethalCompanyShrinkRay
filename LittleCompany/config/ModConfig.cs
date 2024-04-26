@@ -146,11 +146,6 @@ namespace LittleCompany.Config
             Plugin.Log("Initial config: " + JsonConvert.SerializeObject(Instance.values));
 #endif
         }
-
-        public void Synced()
-        {
-            LittlePotion.ConfigSynced(); // Add or remove potions from store / as scrap
-        }
         #endregion
 
         [HarmonyPatch]
@@ -216,7 +211,6 @@ namespace LittleCompany.Config
                 PlayerCosmetics.RegularizeCosmetics();
 
                 Instance.values = hostValues;
-                Instance.Synced();
             }
             #endregion
         }

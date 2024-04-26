@@ -87,12 +87,12 @@ namespace LittleCompany.patches
 
             else if (!ImperiumEnabled && Keyboard.current.f5Key.wasPressedThisFrame)
             {
-                SpawnItemInFront(LittleShrinkingPotion.networkPrefab);
+                SpawnItemInFront(LittleShrinkingPotion.NetworkPrefab);
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f6Key.wasPressedThisFrame)
             {
-                SpawnItemInFront(LittleEnlargingPotion.networkPrefab);
+                SpawnItemInFront(LittleEnlargingPotion.NetworkPrefab);
             }
 
             else if (Keyboard.current.f7Key.wasPressedThisFrame)
@@ -172,8 +172,8 @@ namespace LittleCompany.patches
                 return;
             }
 
-            var item = UnityEngine.Object.Instantiate(networkPrefab);
-            UnityEngine.Object.DontDestroyOnLoad(item);
+            var item = Object.Instantiate(networkPrefab);
+            Object.DontDestroyOnLoad(item);
             item.GetComponent<NetworkObject>()?.Spawn();
             item.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 1.5f;
         }
