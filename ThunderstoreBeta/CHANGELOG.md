@@ -2,13 +2,18 @@
 **What's new**
 + Added "DefaultPlayerSize" config option. Players start with this size.
 + Players can now only grab smaller players. This includes enlarged players grabbing normal (or any smaller) sized ones!
-+ Enemy & Item Scaling!
- + Enemies can be shrunken to death.. but be warned.. there might be consequences (not for any yet, wip).
++ Enemy scaling!
+ + Configurable
+ + Enemies can be shrunken to death.. but be warned.. there might be consequences.
  + Hoarding bugs can only grab smaller sized players. *Maybe it's not wise to enlarge them..*
- + Item scaling is purely visual as of now. Effects will be added in later updates.
++ Item scaling!
+ + Configurable
+ + Scaling items will affect their weight and scrap value.
+ + Shrinking items will be instantly, while enlarging items will take effect over time. *To prevent people from only using this in front of the sell counter, while not fully blocking it*
 
 **Tweaks**
 + Throw force of grabbable players is now dependant on the size difference. *Anything above 0.66 in difference is stronger than before.*
++ Support for LethalLevelLoader
 
 **Fixes**
 + Fixed arms and visor being misplaced or having wrong offset after being scaled
