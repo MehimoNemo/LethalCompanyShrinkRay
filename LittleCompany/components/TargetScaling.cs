@@ -285,7 +285,6 @@ namespace LittleCompany.components
         #region Methods
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
-            Plugin.Log("Scale item " + target.name + " to " + scale);
             scale = Mathf.Max(scale, 0f);
             playerLastScaledBy = scaledBy;
 
@@ -328,7 +327,6 @@ namespace LittleCompany.components
             target.itemProperties.weight = 1f + ((originalItemProperties.weight - 1f) * RelativeScale);
             var diff = target.itemProperties.weight - lastWeight;
 
-            Plugin.Log("Weight diff: " + diff);
             if (target.playerHeldBy != null)
                 target.playerHeldBy.carryWeight += diff;
 
@@ -343,14 +341,18 @@ namespace LittleCompany.components
 
         private IEnumerator HologramScaleCoroutine()
         {
-            Plugin.Log("Starting hologram scale routine");
+            Plugin.Log("Starting hologram scale routine for " + target.name);
             hologram.SetActive(true);
 
             while(RelativeScale < DesiredScale)
             {
                 //Plugin.Log("Going from scale " + RelativeScale + " to desired scale " + DesiredScale);
                 float previousScale = RelativeScale;
+#if DEBUG
                 RelativeScale += Time.deltaTime / 20;
+#else
+                RelativeScale += Time.deltaTime / 50;
+#endif
 
                 gameObject.transform.localScale = OriginalScale * RelativeScale;
 
@@ -361,7 +363,7 @@ namespace LittleCompany.components
                 yield return null;
             }
 
-            Plugin.Log("Finished hologram scale routine");
+            Plugin.Log("Finished hologram scale routine for " + target.name);
 
             target.originalScale = gameObject.transform.localScale;
 
@@ -403,7 +405,7 @@ namespace LittleCompany.components
         {
             gameObject.transform.localScale = target.originalScale;
         }
-        #endregion
+#endregion
     }
 
     internal class EnemyScaling : TargetScaling<EnemyAI>
