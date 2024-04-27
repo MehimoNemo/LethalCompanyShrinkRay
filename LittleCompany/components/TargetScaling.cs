@@ -7,6 +7,9 @@ using LittleCompany.helper;
 using LittleCompany.modifications;
 using LittleCompany.patches;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Netcode;
+using UnityEngine.PlayerLoop;
 
 namespace LittleCompany.components
 {
@@ -68,10 +71,11 @@ namespace LittleCompany.components
             CallListenersAfterEachScale(previousScale, scale, scaledBy);
         }
 
-        public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float ? duration = null, Mode? mode = null)
+        // TODO: Rework.. this has too many parameters..
+        public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float ? duration = null, Mode? mode = null, float? startingFromScale = null)
         {
             Plugin.Log("Duration: " + duration);
-            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, duration.GetValueOrDefault(ShrinkRayFX.DefaultBeamDuration), mode.GetValueOrDefault(Mode.Wave), () =>
+            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, duration.GetValueOrDefault(ShrinkRayFX.DefaultBeamDuration), mode.GetValueOrDefault(Mode.Wave), startingFromScale, () =>
             {
                 ScaleRoutine = null;
 
@@ -87,11 +91,11 @@ namespace LittleCompany.components
             }));
         }
 
-        private IEnumerator ScaleOverTimeToCoroutine(float scale, PlayerControllerB scaledBy, float duration, Mode mode, Action onComplete)
+        private IEnumerator ScaleOverTimeToCoroutine(float scale, PlayerControllerB scaledBy, float duration, Mode mode, float? startingFromScale = null, Action onComplete = null)
         {
             float elapsedTime = 0f;
 
-            var startingScale = RelativeScale;
+            var startingScale = startingFromScale.GetValueOrDefault(RelativeScale);
             var direction = scale < startingScale ? -1f : 1f;
             float scaleDiff = Mathf.Abs(startingScale - scale); // difference
 
@@ -231,18 +235,83 @@ namespace LittleCompany.components
     {
         public Item originalItemProperties;
 
+        public GameObject hologram = null;
+        public Coroutine hologramCoroutine = null;
+
+        public float DesiredScale = 0f;
+        public PlayerControllerB playerLastScaledBy = null;
+
+        public int originalScrapValue = 0;
+
         internal override void OnAwake()
         {
+            DesiredScale = RelativeScale;
             originalItemProperties = target.itemProperties;
+            originalScrapValue = target.scrapValue;
+
+            // Hologram
+            Plugin.Log("Instantiating hologram of " + target.name);
+            hologram = Instantiate(target.itemProperties.spawnPrefab);
+            if (hologram.TryGetComponent(out NetworkObject networkObject))
+                Destroy(networkObject);
+            if (hologram.TryGetComponent(out GrabbableObject item))
+                Destroy(item);
+            if (hologram.TryGetComponent(out Collider collider))
+                Destroy(collider);
+
+            //hologram.transform.SetParent(target.transform, true);
+
+            var meshRenderer = Materials.GetMeshRenderers(hologram.gameObject);
+            foreach (var mr in meshRenderer)
+            {
+                var materials = new List<Material>();
+                foreach (var m in mr.materials)
+                    materials.Add(Materials.Wireframe);
+                mr.materials = materials.ToArray();
+            }
+
+            hologram.SetActive(false);
+        }
+
+        private void Update()
+        {
+            if (hologram != null)
+            {
+                hologram.transform.position = target.transform.position;
+                hologram.transform.rotation = target.transform.rotation;
+            }
         }
 
         #region Methods
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
-            base.ScaleTo(scale, scaledBy);
+            Plugin.Log("Scale item " + target.name + " to " + scale);
+            scale = Mathf.Max(scale, 0f);
+            playerLastScaledBy = scaledBy;
+
+            DesiredScale = scale;
+            hologram.transform.localScale = OriginalScale * DesiredScale;
+
+            if (DesiredScale > RelativeScale)
+            {
+                if (hologramCoroutine == null)
+                    hologramCoroutine = StartCoroutine(HologramScaleCoroutine());
+            }
+            else
+            {
+                base.ScaleTo(scale, scaledBy);
+                UpdatePropertiesBasedOnScale();
+            }
+        }
+
+        private void UpdatePropertiesBasedOnScale()
+        {
+            //Plugin.Log("UpdatePropertiesBasedOnScale");
+
+            // Item properties
             if (originalItemProperties != null)
             {
-                if (Modification.Rounded(scale) == 1)
+                if (Modification.Rounded(RelativeScale) == 1)
                 {
                     // If normalized, reset to original item properties
                     ResetItemProperties();
@@ -250,13 +319,59 @@ namespace LittleCompany.components
                 else
                 {
                     OverrideItemProperties();
-                    RecalculateOffset(scale);
+                    RecalculateOffset(RelativeScale);
                 }
             }
 
-            if (!GettingScaled && target != null)
-                target.originalScale = gameObject.transform.localScale;
+            // Weight
+            var lastWeight = target.itemProperties.weight;
+            target.itemProperties.weight = 1f + ((originalItemProperties.weight - 1f) * RelativeScale);
+            var diff = target.itemProperties.weight - lastWeight;
+
+            Plugin.Log("Weight diff: " + diff);
+            if (target.playerHeldBy != null)
+                target.playerHeldBy.carryWeight += diff;
+
+            // Scrap value
+            target.SetScrapValue((int)(originalScrapValue * RelativeScale));
         }
+
+        public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
+        {
+            base.ScaleOverTimeTo(scale, scaledBy, onComplete, duration, mode, DesiredScale);
+        }
+
+        private IEnumerator HologramScaleCoroutine()
+        {
+            Plugin.Log("Starting hologram scale routine");
+            hologram.SetActive(true);
+
+            while(RelativeScale < DesiredScale)
+            {
+                //Plugin.Log("Going from scale " + RelativeScale + " to desired scale " + DesiredScale);
+                float previousScale = RelativeScale;
+                RelativeScale += Time.deltaTime / 20;
+
+                gameObject.transform.localScale = OriginalScale * RelativeScale;
+
+                UpdatePropertiesBasedOnScale();
+
+                CallListenersAfterEachScale(previousScale, RelativeScale, playerLastScaledBy);
+
+                yield return null;
+            }
+
+            Plugin.Log("Finished hologram scale routine");
+
+            target.originalScale = gameObject.transform.localScale;
+
+            hologram.SetActive(false);
+
+            hologramCoroutine = null;
+
+            yield return null;
+        }
+
         private void ResetItemProperties()
         {
             if (target.itemProperties == originalItemProperties) return;

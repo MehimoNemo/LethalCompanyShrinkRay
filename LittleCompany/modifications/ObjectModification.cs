@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+using static LittleCompany.components.TargetScaling<GrabbableObject>;
+
 namespace LittleCompany.modifications
 {
     public class ObjectModification : Modification
@@ -22,12 +24,12 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Max(Rounded(ScalingOf(targetObject).RelativeScale - ModConfig.Instance.values.itemSizeChangeStep), 0f);
+            return Mathf.Max(Rounded(ScalingOf(targetObject).DesiredScale - ModConfig.Instance.values.itemSizeChangeStep), 0f);
         }
 
         public static float NextIncreasedSizeOf(GrabbableObject targetObject)
         {
-            return Rounded(ScalingOf(targetObject).RelativeScale + ModConfig.Instance.values.itemSizeChangeStep);
+            return Rounded(ScalingOf(targetObject).DesiredScale + ModConfig.Instance.values.itemSizeChangeStep);
         }
 
         public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy)
@@ -42,13 +44,13 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (scaling.RelativeScale == 1f)
+                    if (scaling.DesiredScale == 1f)
                         return false;
                     break;
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
-                    if (nextShrunkenSize == scaling.RelativeScale)
+                    if (nextShrunkenSize == scaling.DesiredScale)
                         return false;
 
                     if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
@@ -58,7 +60,7 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
-                    if (nextIncreasedSize == scaling.RelativeScale)
+                    if (nextIncreasedSize == scaling.DesiredScale)
                         return false;
 
                     if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
@@ -110,7 +112,7 @@ namespace LittleCompany.modifications
 
                             if (onComplete != null)
                                 onComplete();
-                        });
+                        }, default, Mode.Linear);
 
                         break;
                     }
@@ -123,7 +125,7 @@ namespace LittleCompany.modifications
                         {
                             if (onComplete != null)
                                 onComplete();
-                        });
+                        }, default, Mode.Linear);
 
                         break;
                     }

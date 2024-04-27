@@ -11,6 +11,8 @@ using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
 using static LittleCompany.helper.EnemyInfo;
 using UnityEngine.SceneManagement;
+using static LittleCompany.components.GrabbablePlayerObject;
+using LittleCompany.events.enemy;
 
 namespace LittleCompany.patches
 {
@@ -18,6 +20,8 @@ namespace LittleCompany.patches
     internal class DebugPatches
     {
 #if DEBUG
+        private static int itemIndex = Random.Range(0, 20);
+
         public const string ImperiumReferenceChain = "giosuel.Imperium";
 
         private static bool? _ImperiumEnabled;
@@ -82,7 +86,7 @@ namespace LittleCompany.patches
 
             else if (!ImperiumEnabled && Keyboard.current.f4Key.wasPressedThisFrame)
             {
-                Plugin.Log(GrabbablePlayerList.Log);
+                GameNetworkManager.Instance.StartCoroutine(WormEventHandler.WormTest());
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f5Key.wasPressedThisFrame)
@@ -107,7 +111,6 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)
             {
-                
                 Item itemToSpawn = ItemInfo.SpawnableItems[itemIndex];
                 SpawnItemInFront(itemToSpawn.spawnPrefab);
                 itemIndex++;
@@ -137,7 +140,6 @@ namespace LittleCompany.patches
 
             return true;
         }
-        private static int itemIndex = 0;
         #region Methods
         public static GameObject CreateCube(Color color, Transform parent = null)
         {
