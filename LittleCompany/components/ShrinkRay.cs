@@ -287,9 +287,7 @@ namespace LittleCompany.components
             var direction = LaserLight.transform.forward;
             var endPoint = Vector3.zero;
 
-            //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
-            var layerMask = ToInt([Mask.Player, Mask.Props, Mask.Enemies]);
-            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, LayerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
                 endPoint.z = distance;
@@ -313,6 +311,19 @@ namespace LittleCompany.components
                 ChangeTarget(null);
             }
             LaserLine.SetPosition(1, endPoint);
+        }
+
+        internal int LayerMask
+        {
+            get
+            {
+                var layerMasks = new List<Mask>() { Mask.Player };
+                if (ModConfig.Instance.values.itemSizeChangeStep > Mathf.Epsilon)
+                    layerMasks.Add(Mask.Props);
+                if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
+                    layerMasks.Add(Mask.Enemies);
+                return ToInt(layerMasks.ToArray());
+            }
         }
 
         public void ChangeTarget(GameObject newTarget)
