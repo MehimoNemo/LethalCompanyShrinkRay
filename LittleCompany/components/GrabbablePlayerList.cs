@@ -8,6 +8,7 @@ using Unity.Netcode;
 using UnityEngine;
 using LittleCompany.modifications;
 using System.Linq;
+using System.Collections;
 
 namespace LittleCompany.components
 {
@@ -90,6 +91,26 @@ namespace LittleCompany.components
                     grabbables.holderGPO.playerHeldBy = null;
                 }
             }
+        }
+
+        [HarmonyPrefix, HarmonyPatch(typeof(StartOfRound), "FirePlayersAfterDeadlineClientRpc")]
+        public static void FirePlayersAfterDeadlineClientRpc()
+        {
+            StartOfRound.Instance.StartCoroutine(ResetLocalPlayerOnShipDoorOpen());
+        }
+
+        public static IEnumerator ResetLocalPlayerOnShipDoorOpen()
+        {
+            yield return new WaitUntil(() => StartOfRound.Instance.suckingPlayersOutOfShip);
+            yield return new WaitForSeconds(0.5f);
+
+            if (PlayerInfo.CurrentPlayerHeldItem is GrabbablePlayerObject)
+                PlayerInfo.CurrentPlayer.DiscardHeldObject();
+
+            yield return new WaitWhile(() => StartOfRound.Instance.suckingFurnitureOutOfShip);
+
+            foreach (var player in PlayerInfo.AllPlayers)
+                ResetAnyPlayerModificationsFor(player);
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
@@ -351,7 +372,8 @@ namespace LittleCompany.components
             Plugin.Log("ResetAnyPlayerModificationsFor");
             if (targetPlayer == null) return;
 
-            PlayerModification.ApplyModificationTo(targetPlayer, Modification.ModificationType.Normalizing, null);
+            if (!PlayerInfo.IsDefaultSize(targetPlayer))
+                PlayerModification.ApplyModificationTo(targetPlayer, Modification.ModificationType.Normalizing, null);
         }
 
         public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)

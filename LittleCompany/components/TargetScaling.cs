@@ -199,6 +199,7 @@ namespace LittleCompany.components
         {
             if (target == null || target.transform == null)
                 return;
+
             var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
             base.ScaleTo(scale, scaledBy);
             if (PlayerInfo.IsCurrentPlayer(target))
@@ -212,16 +213,17 @@ namespace LittleCompany.components
                     if (!GettingScaled) // Only check at the very end
                         ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
                 }
-
-                var isShrunk = PlayerInfo.IsShrunk(target);
-                if (wasShrunkenBefore != isShrunk)
-                {
-                    if (isShrunk)
-                        PlayerModification.TransitionedToShrunk(target);
-                    else
-                        PlayerModification.TransitionedFromShrunk(target);
-                }
             }
+
+            var isShrunk = PlayerInfo.IsShrunk(target);
+            if (wasShrunkenBefore != isShrunk)
+            {
+                if (isShrunk)
+                    PlayerModification.TransitionedToShrunk(target);
+                else
+                    PlayerModification.TransitionedFromShrunk(target);
+            }
+
             if (!GettingScaled) // Execute at the very end
             {
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);

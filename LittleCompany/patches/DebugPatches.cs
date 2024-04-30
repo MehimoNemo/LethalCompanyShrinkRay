@@ -86,7 +86,7 @@ namespace LittleCompany.patches
 
             else if (!ImperiumEnabled && Keyboard.current.f4Key.wasPressedThisFrame)
             {
-                GameNetworkManager.Instance.StartCoroutine(WormEventHandler.WormTest());
+                StartOfRound.Instance.ManuallyEjectPlayersServerRpc();
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f5Key.wasPressedThisFrame)
