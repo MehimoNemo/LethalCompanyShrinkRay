@@ -16,6 +16,7 @@ namespace LittleCompany.events.enemy
     {
         internal static readonly Dictionary<Enemy, Type> EventHandler = new Dictionary<Enemy, Type>
         {
+            { Enemy.Custom,     typeof(CustomEnemyEventHandler) },
             { Enemy.Centipede,  typeof(CentipedeEventHandler)   },
             { Enemy.Spider,     typeof(SpiderEventHandler)      },
             { Enemy.HoarderBug, typeof(HoarderBugEventHandler)  },
@@ -31,7 +32,7 @@ namespace LittleCompany.events.enemy
             { Enemy.Worm,       typeof(WormEventHandler)        }
         };
 
-        public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(EnemyEventHandler));
+        public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(CustomEnemyEventHandler));
 
         public static EnemyEventHandler EventHandlerOf(EnemyAI enemyAI)
         {
