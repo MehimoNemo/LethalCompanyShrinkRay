@@ -2,14 +2,20 @@
 
 In this more than cosmetic Lethal Company mod, players can experience the game from a new perspective. The pros and cons of being small are many, and unique interactions are yet to be discovered...
 
+## Wiki ##
+A wiki containing the list of features this mod adds can be found [here on github](https://github.com/MehimoNemo/LethalCompanyShrinkRay/wiki/LittleCompany-wiki)
+
 ## Configuration ##
 |  Group       |          Option             |                           Description                                                     | Possible values                        | Default |
 | ------------ | --------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------- | ------- |
 | General      | ShrinkRayCost               | Store cost of the shrink ray                                                              | any number                             | 0 (BETA)|
 |              | DeathShrinking              | If true, a player can be shrunk below 0.2, resulting in an instant death.                 | true / false                           | false   |
-|              | SizeChangeStep              | Defines how much a player shrinks/enlarges in one step.                                   | 0.05 - 0.8                             | 0.4     |
 |              | ShrinkRayTargetHighlighting | Defines, when a target gets highlighted. Set to OnLoading on performance issues.          | Off, OnHit, OnLoading                  | OnHit   |
-|              | MaximumPlayerSize           | Defines, how tall a player can become (1.7 is the maximum for the ship inside and doors!) | 1 - 10                                 | 1.7     |
+| Sizing       | DefaultPlayerSize           | The default player size when joining a lobby or reviving.                                 | 0.2 - 1.7                              | 1       |
+|              | MaximumPlayerSize           | Defines, how tall a player can become (1.7 is the maximum for the ship inside and doors!) | Max(1, DefaultPlayerSize) - 10         | 1.7     |
+|              | PlayerSizeChangeStep        | Defines how much a player shrinks/enlarges.                                               | 0.05 - 0.8                             | 0.4     |
+|              | ItemSizeChangeStep          | Defines how much an item shrinks/enlarges. Set to 0 for disabling item scaling.           | 0 - 0.8                                | 0.5     |
+|              | EnemySizeChangeStep         | Defines how much an enemy shrinks/enlarges. Set to 0 for disabling item scaling.          | 0 - 0.8                                | 0.5     |
 | Shrunken     | MovementSpeedMultiplier     | Speed multiplier for shrunken players                                                     | 0.5 (slow) - 1.5 (fast)                | 1.3     |
 |              | JumpHeightMultiplier        | Jump-height multiplier for shrunken players                                               | 0.5 (lower) - 2 (higher)               | 1.3     |
 |              | WeightMultiplier            | Weight multiplier applied on held items of shrunken players                               | 0.5 (lighter) - 2 (heavier)            | 1.5     |

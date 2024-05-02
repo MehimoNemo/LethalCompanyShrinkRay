@@ -8,6 +8,7 @@ using GameNetcodeStuff;
 using LittleCompany.helper;
 using LittleCompany.components;
 using LittleCompany.compatibility;
+using UnityEngine;
 
 namespace LittleCompany.Config
 {
@@ -108,11 +109,11 @@ namespace LittleCompany.Config
         #region Methods
         public void Setup()
         {
-            values.shrinkRayCost                = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 0, "Store cost of the shrink ray").Value;
+            values.shrinkRayCost                = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 1000, "Store cost of the shrink ray").Value;
             values.deathShrinking               = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
             values.shrinkRayTargetHighlighting  = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnHit, "Defines, when a target gets highlighted. Set to OnLoading if you encounter performance issues.").Value;
             
-            values.defaultPlayerSize            = Plugin.BepInExConfig().Bind("Sizing", "DefaultPlayerSize", 1f, "The default player size when joining a lobby or reviving.").Value;
+            values.defaultPlayerSize            = Plugin.BepInExConfig().Bind("Sizing", "DefaultPlayerSize", 1f, new ConfigDescription("The default player size when joining a lobby or reviving.", new AcceptableValueRange<float>(0.2f, 1.7f))).Value;
             values.maximumPlayerSize            = Plugin.BepInExConfig().Bind("Sizing", "MaximumPlayerSize", 1.7f, new ConfigDescription("Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)", new AcceptableValueRange<float>(1f, 10f))).Value;
             values.playerSizeChangeStep         = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
             values.itemSizeChangeStep           = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.5f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
@@ -145,6 +146,12 @@ namespace LittleCompany.Config
 #if DEBUG
             Plugin.Log("Initial config: " + JsonConvert.SerializeObject(Instance.values));
 #endif
+            FixWrongEntries();
+        }
+
+        public void FixWrongEntries()
+        {
+            values.maximumPlayerSize = Mathf.Max(values.maximumPlayerSize, values.defaultPlayerSize);
         }
         #endregion
 
@@ -211,6 +218,7 @@ namespace LittleCompany.Config
                 PlayerCosmetics.RegularizeCosmetics();
 
                 Instance.values = hostValues;
+                Instance.FixWrongEntries();
             }
             #endregion
         }
