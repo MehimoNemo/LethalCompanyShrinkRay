@@ -18,6 +18,8 @@ namespace LittleCompany.modifications
         internal static AudioClip deathPoofSFX;
         #endregion
 
+        public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
+
         /*#region Methods
         public static float NextShrunkenSizeOf(GameObject target) { throw new NotImplementedException(); }
 

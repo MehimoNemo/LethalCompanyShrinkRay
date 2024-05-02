@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using System;
 using UnityEngine.InputSystem;
 using GameNetcodeStuff;
 using LittleCompany.helper;
@@ -10,6 +9,10 @@ using Unity.Netcode;
 using System.Collections;
 using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
+using static LittleCompany.helper.EnemyInfo;
+using UnityEngine.SceneManagement;
+using static LittleCompany.components.GrabbablePlayerObject;
+using LittleCompany.events.enemy;
 
 namespace LittleCompany.patches
 {
@@ -17,66 +20,83 @@ namespace LittleCompany.patches
     internal class DebugPatches
     {
 #if DEBUG
+        private static int itemIndex = Random.Range(0, 20);
+
+        public const string ImperiumReferenceChain = "giosuel.Imperium";
+
+        private static bool? _ImperiumEnabled;
+
+        public static bool ImperiumEnabled
+        {
+            get
+            {
+                if (_ImperiumEnabled == null)
+                    _ImperiumEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(ImperiumReferenceChain);
+
+                return _ImperiumEnabled.GetValueOrDefault(false);
+            }
+        }
+
+        [HarmonyPatch(typeof(SceneManager), "LoadScene", [typeof(string)])]
+        [HarmonyPrefix]
+        public static void LoadScenePrefix(ref string sceneName)
+        {
+            if (sceneName == "ColdOpen1")
+                sceneName = "MainMenu";
+        }
+
         private static bool Executing = false;
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
-        public static void OnUpdate(PlayerControllerB __instance)
+        [HarmonyPriority(Priority.First)]
+        public static void OnUpdate()
         {
-            try
-            {
-                if (!Executing && CheckFunctionKeys())
-                    GameNetworkManager.Instance?.StartCoroutine(WaitAfterKeyPress());
-            }
-            catch (Exception e)
-            {
-                Plugin.Log("[DebugPatches] Error: " + e.Message, Plugin.LogType.Error);
-            }
+            if (Executing) return;
+
+            if(CheckFunctionKeys())
+                GameNetworkManager.Instance?.StartCoroutine(WaitAfterKeyPress());
         }
 
         public static IEnumerator WaitAfterKeyPress()
         {
-            if (Executing)
-                yield return new WaitWhile(() => Executing);
-            else
-            {
-                Executing = true;
-                yield return new WaitForSeconds(0.2f);
-                Executing = false;
-            }
+            if (Executing) yield break;
+
+            Executing = true;
+            yield return new WaitForSeconds(0.2f);
+            Executing = false;
         }
 
         public static bool CheckFunctionKeys()
         {
-            if (Keyboard.current.f1Key.wasPressedThisFrame)
+            if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                LogInsideEnemyNames();
-                SpawnEnemyInFrontOfPlayer("Hoarder Bug", PlayerInfo.CurrentPlayer);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Robot);
             }
 
-            else if (Keyboard.current.f2Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)
             {
                 ApplyModification(ModificationType.Shrinking);
             }
 
-            else if (Keyboard.current.f3Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f3Key.wasPressedThisFrame)
             {
                 ApplyModification(ModificationType.Enlarging);
             }
 
-            else if (Keyboard.current.f4Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f4Key.wasPressedThisFrame)
             {
-                Plugin.Log(GrabbablePlayerList.Log);
+                StartOfRound.Instance.ManuallyEjectPlayersServerRpc();
             }
 
-            else if (Keyboard.current.f5Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f5Key.wasPressedThisFrame)
             {
-                SpawnItemInFront(LittleShrinkingPotion.networkPrefab);
+                SpawnItemInFront(LittleShrinkingPotion.NetworkPrefab);
             }
 
-            else if (Keyboard.current.f6Key.wasPressedThisFrame)
+            else if (!ImperiumEnabled && Keyboard.current.f6Key.wasPressedThisFrame)
             {
-                SpawnItemInFront(LittleEnlargingPotion.networkPrefab);
+                SpawnItemInFront(LittleEnlargingPotion.NetworkPrefab);
             }
 
             else if (Keyboard.current.f7Key.wasPressedThisFrame)
@@ -91,7 +111,13 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)
             {
-                LogPosition();
+                Item itemToSpawn = ItemInfo.SpawnableItems[itemIndex];
+                SpawnItemInFront(itemToSpawn.spawnPrefab);
+                itemIndex++;
+                if(itemIndex >= ItemInfo.SpawnableItems.Count)
+                {
+                    itemIndex = 0;
+                }
             }
 
             else if (Keyboard.current.f10Key.wasPressedThisFrame)
@@ -119,14 +145,14 @@ namespace LittleCompany.patches
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             if(parent != null)
-                cube.transform.SetParent(parent);
+                cube.transform.SetParent(parent, false);
 
             if (cube.TryGetComponent(out BoxCollider boxCollider))
                 boxCollider.enabled = false;
 
             if (cube.TryGetComponent(out MeshRenderer meshRenderer))
             {
-                meshRenderer.material = new Material(Shader.Find("HDRP/Lit"));
+                meshRenderer.material = color.a < 1f ? Materials.Glass : new Material(Shader.Find("HDRP/Lit"));
                 meshRenderer.material.color = color;
                 meshRenderer.enabled = true;
             }
@@ -148,30 +174,34 @@ namespace LittleCompany.patches
                 return;
             }
 
-            var item = UnityEngine.Object.Instantiate(networkPrefab);
-            UnityEngine.Object.DontDestroyOnLoad(item);
-            item.GetComponent<NetworkObject>().Spawn();
+            var item = Object.Instantiate(networkPrefab);
+            Object.DontDestroyOnLoad(item);
+            item.GetComponent<NetworkObject>()?.Spawn();
             item.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 1.5f;
         }
 
-        public static void LogInsideEnemyNames()
+        public static void LogCurrentLevelEnemyNames()
         {
-            string enemyTypes = "";
-            RoundManager.Instance.currentLevel.Enemies.ForEach(enemyType => { enemyTypes += " " + enemyType.enemyType.name; });
-            Plugin.Log("EnemyTypes:" + enemyTypes); // Centipede SandSpider HoarderBug Flowerman Crawler Blob DressGirl Puffer Nutcracker
+            var enemies = CurrentLevelEnemyNames;
+            Plugin.Log(enemies != null ? enemies.Join(null, "\n") : "Not in a round.");
         }
 
-        public static void SpawnEnemyInFrontOfPlayer(string enemyName, PlayerControllerB targetPlayer)
+        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, Enemy? enemy = null)
         {
-            int enemyIndex = RoundManager.Instance.currentLevel.Enemies.FindIndex(spawnableEnemy => spawnableEnemy.enemyType.name == enemyName);
-            if (enemyIndex != -1)
+            var enemyName = enemy.HasValue ? EnemyNameOf(enemy.Value) : "";
+            Plugin.Log("Enemy name: " + enemyName);
+            var enemyType = EnemyTypeByName(enemyName);
+            if (enemyType == null)
             {
-                var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
-                RoundManager.Instance.SpawnEnemyOnServer(location, 0f, enemyIndex);
-
-                // I tried so hard and got so far, but in the end... there's still an errooooorrrrr
+                Plugin.Log("No enemy found..");
+                return;
             }
+
+            var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
+            SpawnEnemyAt(location, 0f, enemyType);
         }
+
+        public static void SpawnAnyRandomEnemyInFrontOfPlayer(PlayerControllerB targetPlayer) => SpawnEnemyInFrontOfPlayer(targetPlayer, RandomEnemy);
 
         public static void LogPosition()
         {
@@ -252,11 +282,11 @@ namespace LittleCompany.patches
 
         public static void ApplyModification(ModificationType type)
         {
-            if (!PlayerModification.CanApplyModificationTo(PlayerInfo.CurrentPlayer, type))
+            if (!PlayerModification.CanApplyModificationTo(PlayerInfo.CurrentPlayer, type, PlayerInfo.CurrentPlayer))
                 return;
 
             Executing = true;
-            PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, type, () => Executing = false);
+            PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, type, PlayerInfo.CurrentPlayer, () => Executing = false);
         }
         #endregion
 #endif

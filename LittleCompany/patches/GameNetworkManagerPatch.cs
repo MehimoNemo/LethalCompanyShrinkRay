@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using LittleCompany.components;
+using LittleCompany.events.enemy;
 using LittleCompany.helper;
 
 namespace LittleCompany.patches
@@ -8,9 +9,11 @@ namespace LittleCompany.patches
     {
         public static bool IsGameInitialized = false;
 
-        [HarmonyPostfix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        [HarmonyPriority(Priority.First)]
         public static void Init()
         {
+            EnemyEventManager.BindAllEnemyEvents();
             AssetLoader.LoadAllAssets();
         }
 

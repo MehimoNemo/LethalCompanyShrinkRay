@@ -2,6 +2,7 @@
 using LittleCompany.components;
 using LittleCompany.Config;
 using LittleCompany.helper;
+using LittleCompany.patches;
 using System;
 using UnityEngine;
 
@@ -20,7 +21,7 @@ namespace LittleCompany.modifications
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var nextShrunkenSize = Mathf.Max(PlayerInfo.Rounded(playerSize - ModConfig.Instance.values.sizeChangeStep), 0f);
+            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - ModConfig.Instance.values.playerSizeChangeStep), 0f);
             if ((nextShrunkenSize + (ModConfig.SmallestSizeChange / 2)) <= DeathShrinkMargin)
                 return 0f;
             else
@@ -30,18 +31,37 @@ namespace LittleCompany.modifications
         public static float NextEnlargedSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            return Mathf.Min(PlayerInfo.Rounded(playerSize + ModConfig.Instance.values.sizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
+            Plugin.Log("NextEnlargedSizeOf -> " + playerSize);
+            return Mathf.Min(Rounded(playerSize + ModConfig.Instance.values.playerSizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
         }
 
-        public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type)
+        public static void TransitionedToShrunk(PlayerControllerB targetPlayer)
         {
-            if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder)
+            if (PlayerInfo.IsCurrentPlayer(targetPlayer))
+            {
+                PlayerMultiplierPatch.Modify();
+                Vents.EnableVents();
+            }
+        }
+
+        public static void TransitionedFromShrunk(PlayerControllerB targetPlayer)
+        {
+            if (PlayerInfo.IsCurrentPlayer(targetPlayer))
+            {
+                PlayerMultiplierPatch.Reset();
+                Vents.DisableVents();
+            }
+        }
+
+        public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy)
+        {
+            if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder || targetPlayer.inTerminalMenu)
                 return false;
 
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (PlayerInfo.IsNormalSize(targetPlayer))
+                    if (PlayerInfo.IsDefaultSize(targetPlayer))
                         return false;
                     break;
 
@@ -83,34 +103,21 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, Action onComplete = null)
+        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
         {
             if (targetPlayer == null) return;
 
-            bool targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
+            bool targetingUs = PlayerInfo.IsCurrentPlayer(targetPlayer);
 
             switch (type)
             {
                 case ModificationType.Normalizing:
                     {
-                        var normalizedSize = 1f;
                         Plugin.Log("Normalizing player [" + targetPlayer.playerClientId + "]");
-                        ScalingOf(targetPlayer).ScaleOverTimeTo(normalizedSize, () =>
-                        {
-                            Plugin.Log("Finished ray shoot with type: " + type.ToString());
-                            if (PlayerInfo.IsHost)
-                                GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
+                        ScalingOf(targetPlayer).ScaleTo(ModConfig.Instance.values.defaultPlayerSize, playerModifiedBy);
 
-                            if (targetingUs)
-                                Vents.DisableVents();
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
-                            GrabbablePlayerList.ResetAnyPlayerModificationsFor(targetPlayer);
-
-                            if (onComplete != null)
-                                onComplete();
-                        });
+                        if (onComplete != null)
+                            onComplete();
                         break;
                     }
 
@@ -118,25 +125,17 @@ namespace LittleCompany.modifications
                     {
                         var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
                         Plugin.Log("Shrinking player [" + targetPlayer.playerClientId + "] to size: " + nextShrunkenSize);
-                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextShrunkenSize, () =>
+                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
                                 // Poof Target to death because they are too small to exist
-                                if(ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position) && targetPlayer.movementAudio != null)
+                                if(Effects.TryCreateDeathPoofAt(out GameObject deathPoof, targetPlayer.transform.position) && targetPlayer.movementAudio != null)
                                     targetPlayer.movementAudio.PlayOneShot(deathPoofSFX);
 
                                 if (targetingUs)
                                     targetPlayer.KillPlayer(Vector3.down, false, CauseOfDeath.Crushing);
                             }
-
-                            if (targetingUs && PlayerInfo.IsShrunk(nextShrunkenSize))
-                                    Vents.EnableVents();
-
-                            if (nextShrunkenSize < 1f && nextShrunkenSize > 0f && PlayerInfo.IsHost) // todo: create a mechanism that only allows larger players to grab small ones
-                                GrabbablePlayerList.SetPlayerGrabbable(targetPlayer.playerClientId);
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
 
                             if (onComplete != null)
                                 onComplete();
@@ -153,19 +152,8 @@ namespace LittleCompany.modifications
                         if (nextIncreasedSize >= 1f && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
                             gpo.EnableInteractTrigger(false);
 
-                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, () =>
+                        ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {
-                            if (nextIncreasedSize >= 1f)
-                            {
-                                if (PlayerInfo.IsHost)
-                                    GrabbablePlayerList.RemovePlayerGrabbable(targetPlayer.playerClientId);
-
-                                if (targetingUs)
-                                    Vents.DisableVents();
-                            }
-
-                            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(targetPlayer);
-
                             if (onComplete != null)
                                 onComplete();
                         });

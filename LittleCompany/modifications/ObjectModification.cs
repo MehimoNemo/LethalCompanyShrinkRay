@@ -1,12 +1,19 @@
-﻿using LittleCompany.components;
+﻿using GameNetcodeStuff;
+using LittleCompany.components;
 using LittleCompany.Config;
+using LittleCompany.helper;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+
+using static LittleCompany.components.TargetScaling<GrabbableObject>;
 
 namespace LittleCompany.modifications
 {
     public class ObjectModification : Modification
     {
+        public static List<string> UnscalableObjects = new List<string>();
+
         #region Methods
         internal static ItemScaling ScalingOf(GrabbableObject target)
         {
@@ -17,15 +24,15 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Max(ScalingOf(targetObject).CurrentScale - ModConfig.Instance.values.sizeChangeStep, 0f);
+            return Mathf.Max(Rounded(ScalingOf(targetObject).DesiredScale - ModConfig.Instance.values.itemSizeChangeStep), 0f);
         }
 
         public static float NextIncreasedSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Min(ScalingOf(targetObject).CurrentScale + ModConfig.Instance.values.sizeChangeStep, 4f);
+            return Rounded(ScalingOf(targetObject).DesiredScale + ModConfig.Instance.values.itemSizeChangeStep);
         }
 
-        public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type)
+        public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy)
         {
             if (targetObject == null)
                 return false;
@@ -37,20 +44,26 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (scaling.CurrentScale == 1f)
+                    if (scaling.DesiredScale == 1f)
                         return false;
                     break;
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
-                    Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.CurrentScale);
-                    if (nextShrunkenSize == scaling.CurrentScale)
+                    if (nextShrunkenSize == scaling.DesiredScale)
                         return false;
+
+                    if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
+                        return false;
+
                     break;
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
-                    if (nextIncreasedSize == scaling.CurrentScale)
+                    if (nextIncreasedSize == scaling.DesiredScale)
+                        return false;
+
+                    if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
                         return false;
                     break;
 
@@ -61,7 +74,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(GrabbableObject targetObject, ModificationType type, Action onComplete = null)
+        public static void ApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
         {
             if (targetObject?.gameObject == null) return;
 
@@ -74,11 +87,11 @@ namespace LittleCompany.modifications
                     {
                         var normalizedSize = 1f;
                         Plugin.Log("Normalizing object [" + targetObject.name + "]");
-                        scaling.ScaleOverTimeTo(normalizedSize, () =>
+                        scaling.ScaleOverTimeTo(normalizedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        });
                         break;
                     }
 
@@ -86,12 +99,12 @@ namespace LittleCompany.modifications
                     {
                         var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
                         Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
-                        scaling.ScaleOverTimeTo(nextShrunkenSize, () =>
+                        scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (nextShrunkenSize < DeathShrinkMargin)
                             {
                                 // Poof Target to death because they are too small to exist
-                                if (ShrinkRayFX.TryCreateDeathPoofAt(out GameObject deathPoof, targetObject.transform.position) && targetObject.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
+                                if (Effects.TryCreateDeathPoofAt(out GameObject deathPoof, targetObject.transform.position) && targetObject.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
                                     audioSource.PlayOneShot(deathPoofSFX);
 
                                 targetObject.DestroyObjectInHand(targetObject.playerHeldBy);
@@ -99,7 +112,7 @@ namespace LittleCompany.modifications
 
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        }, default, Mode.Linear);
 
                         break;
                     }
@@ -108,11 +121,11 @@ namespace LittleCompany.modifications
                     {
                         var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
                         Plugin.Log("Enlarging object [" + targetObject.name + "] to size: " + nextIncreasedSize);
-                        scaling.ScaleOverTimeTo(nextIncreasedSize, () =>
+                        scaling.ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
                                 onComplete();
-                        }, true);
+                        }, default, Mode.Linear);
 
                         break;
                     }

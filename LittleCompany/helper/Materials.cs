@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace LittleCompany.helper
@@ -86,6 +87,27 @@ namespace LittleCompany.helper
             m.EnableKeyword("_EMISSION");
             m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             return m;
+        }
+
+        private static readonly Color _burntColor = new Color(0.4f, 0.2f, 0.2f);
+        public static Material BurntMaterial
+        {
+            get
+            {
+                var m = new Material(Shader.Find("HDRP/Lit"));
+                m.color = _burntColor;
+                return m;
+            }
+        }
+
+        public static List<MeshRenderer> GetMeshRenderers(GameObject g)
+        {
+            List<MeshRenderer> listOfMesh = [];
+            foreach (MeshRenderer mesh in g.GetComponentsInChildren<MeshRenderer>())
+            {
+                listOfMesh.Add(mesh);
+            }
+            return listOfMesh;
         }
     }
 }

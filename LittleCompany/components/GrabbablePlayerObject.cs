@@ -6,15 +6,17 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using LittleCompany.helper;
 using Unity.Netcode;
-using LittleCompany.patches.EnemyBehaviours;
 using System.IO;
 using System.Collections;
+
+using LittleCompany.patches.EnemyBehaviours;
 using static LittleCompany.helper.Moons;
 using static LittleCompany.helper.LayerMasks;
-using LethalLib.Modules;
+using LittleCompany.dependency;
 
 namespace LittleCompany.components
 {
+    [DisallowMultipleComponent]
     internal class GrabbablePlayerObject : GrabbableObject
     {
         #region Properties
@@ -59,6 +61,8 @@ namespace LittleCompany.components
         internal float previousCarryWeight = 1f;
 
         internal bool DeleteNextFrame = false;
+        internal bool PlayerControlled = true;
+        internal Transform GrabbedPlayerParent = null;
 
         public enum TargetPlayer
         {
@@ -88,7 +92,7 @@ namespace LittleCompany.components
             }
 
             networkPrefab = assetItem.spawnPrefab;
-            Utilities.FixMixerGroups(networkPrefab);
+            ScrapManagementFacade.FixMixerGroups(networkPrefab);
 
             var component = networkPrefab.AddComponent<GrabbablePlayerObject>();
 
@@ -102,25 +106,29 @@ namespace LittleCompany.components
             component.itemProperties.isConductiveMetal = false;
             component.itemProperties.itemIcon = Icon;
             component.itemProperties.canBeGrabbedBeforeGameStart = true;
-            component.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
+            //component.itemProperties.positionOffset = new Vector3(-0.5f, 0.1f, 0f);
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
         }
 
         public override void OnNetworkDespawn()
         {
-            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value);
+            GrabbablePlayerList.GrabbablePlayerObjects.Remove(grabbedPlayerID.Value);
+            Plugin.Log("Despawning gpo for player: " + grabbedPlayerID.Value + ". " + GrabbablePlayerList.GrabbablePlayerObjects.Count + " grabbable players now.");
             CleanUp();
+
             base.OnNetworkDespawn();
         }
 
         public override void OnNetworkSpawn()
         {
-            Plugin.Log("Spawning gpo for player: " + grabbedPlayerID.Value);
+            GrabbablePlayerList.GrabbablePlayerObjects.Add(grabbedPlayerID.Value, this);
+            Plugin.Log("Spawning gpo for player: " + grabbedPlayerID.Value + ". " + GrabbablePlayerList.GrabbablePlayerObjects.Count + " grabbable players now.");
+
             base.OnNetworkDespawn();
         }
 
-        public static NetworkObject Instantiate(ulong playerID)
+        public static GrabbablePlayerObject Instantiate(ulong playerID)
         {
             var obj = Instantiate(networkPrefab);
             DontDestroyOnLoad(obj);
@@ -130,7 +138,7 @@ namespace LittleCompany.components
             var networkObj = obj.GetComponent<NetworkObject>();
             networkObj.Spawn();
 
-            return networkObj;
+            return gpo;
         }
 #endregion
 
@@ -141,8 +149,14 @@ namespace LittleCompany.components
 
             if (grabbedPlayer == null)
                 return;
+            
+            if (!TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
 
-            EnableInteractTrigger();
+            UpdateInteractTrigger();
         }
 
         public override void Update()
@@ -152,12 +166,6 @@ namespace LittleCompany.components
             if (grabbedPlayer == null)
                 return;
 
-            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
-            {
-                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
-                audioSource = gameObject.AddComponent<AudioSource>();
-            }
-
             if (grabbedPlayer.carryWeight != previousCarryWeight)
                 WeightChangedBy(grabbedPlayer.carryWeight - previousCarryWeight);
 
@@ -165,16 +173,10 @@ namespace LittleCompany.components
             {
                 grabbedPlayer.transform.position = this.transform.position;
 
-                if(this.isHeld)
-                {
-                    //this looks like trash unfortunately .. change this
-                    Vector3 targetPosition = playerHeldBy.localItemHolder.transform.position;
-                    Vector3 targetUp = -(grabbedPlayer.transform.position - targetPosition).normalized;
-                    Quaternion targetRotation = Quaternion.FromToRotation(grabbedPlayer.transform.up, targetUp) * grabbedPlayer.transform.rotation;
-                    grabbedPlayer.transform.rotation = Quaternion.Slerp(grabbedPlayer.transform.rotation, targetRotation, 50 * Time.deltaTime);
+                grabbedPlayer.ResetFallGravity();
+
+                if (this.isHeld)
                     grabbedPlayer.playerCollider.enabled = false;
-                    grabbedPlayer.ResetFallGravity();
-                }
             }
             else
             {
@@ -212,10 +214,10 @@ namespace LittleCompany.components
                 playerHeldBy.DiscardHeldObject();
             }
 
-            if(DeleteNextFrame && PlayerInfo.IsHost)
+            if(DeleteNextFrame)
             {
-                DeleteNextFrame = false;
-                GrabbablePlayerList.DespawnGrabbablePlayer(grabbedPlayerID.Value);
+                if(PlayerInfo.IsHost && GrabbablePlayerList.RemovePlayerGrabbable(this))
+                    DeleteNextFrame = false;
             }
         }
         
@@ -227,8 +229,9 @@ namespace LittleCompany.components
 
                 if (ModConfig.Instance.values.throwablePlayers)
                 {
-                    Plugin.Log("Throw grabbed player");
-                    ThrowPlayerServerRpc(direction);
+                    var sizeDifference = Mathf.Abs(PlayerInfo.SizeOf(playerHeldBy) - PlayerInfo.SizeOf(grabbedPlayer));
+                    var force = Mathf.Max(sizeDifference * 15f, 10f);
+                    ThrowPlayerServerRpc(direction, force);
                 }
             }
             catch (Exception e)
@@ -245,20 +248,22 @@ namespace LittleCompany.components
             Plugin.Log("Okay, let's grab " + name);
             base.GrabItem();
 
+            float size = PlayerInfo.SizeOf(grabbedPlayerController);
+            itemProperties.positionOffset = new Vector3(-0.75f * size, 0.15f, 0.05f);
+
             grabbedPlayer.playerCollider.enabled = false;
             grabbedPlayer.playerRigidbody.detectCollisions = false;
 
             SetIsGrabbableToEnemies(false);
             SetControlTips();
 
-            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            foreach (var player in PlayerInfo.AlivePlayers)
             {
                 if (grabbedPlayer != player)
                     IgnoreColliderWith(player.playerCollider);
             }
 
-            if (IsCurrentPlayer && !ModConfig.Instance.values.friendlyFlight)
-                SetHolderGrabbable(false);
+            UpdateInteractTrigger();
 
             if (IsCurrentPlayer)
                 PlayerInfo.EnableCameraVisor(false);
@@ -275,9 +280,6 @@ namespace LittleCompany.components
             else if(dropSFX != null && audioSource != null)
                 audioSource.PlayOneShot(dropSFX);
 
-            if (!ModConfig.Instance.values.friendlyFlight)
-                SetHolderGrabbable(true);
-
             grabbedPlayer.ResetFallGravity();
 
             base.DiscardItem();
@@ -287,7 +289,7 @@ namespace LittleCompany.components
             if(IsCurrentPlayer)
                 PlayerInfo.EnableCameraVisor();
 
-            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            foreach (var player in PlayerInfo.AlivePlayers)
             {
                 if (grabbedPlayer != player)
                     IgnoreColliderWith(player.playerCollider, false);
@@ -295,10 +297,13 @@ namespace LittleCompany.components
 
             SetIsGrabbableToEnemies(true);
             ResetControlTips();
+
+            UpdateInteractTrigger();
         }
 
         public override void GrabItemFromEnemy(EnemyAI enemyAI)
         {
+            base.GrabItemFromEnemy(enemyAI);
             Plugin.Log("Player " + grabbedPlayerID.Value + " got grabbed by enemy " + enemyAI.name);
             enemyHeldBy = enemyAI;
 
@@ -317,7 +322,8 @@ namespace LittleCompany.components
 
         public override void DiscardItemFromEnemy()
         {
-            if(enemyHeldBy == null)
+            base.DiscardItemFromEnemy();
+            if (enemyHeldBy == null)
             {
                 Plugin.Log("Lost enemyHeldBy on grabbable player " + grabbedPlayerID.Value, Plugin.LogType.Warning);
                 return;
@@ -407,7 +413,7 @@ namespace LittleCompany.components
             this.grabbable = true;
             itemProperties = Instantiate(itemProperties);
 
-            EnableInteractTrigger();
+            UpdateInteractTrigger();
             CalculateScrapValue();
 
             itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight;
@@ -416,6 +422,7 @@ namespace LittleCompany.components
             Plugin.Log("gpo weight: " + itemProperties.weight);
 
             SetIsGrabbableToEnemies(true);
+            //SetPlayerControlled(true);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -439,6 +446,7 @@ namespace LittleCompany.components
 
                 if (PlayerInfo.IsHost && enemyHeldBy != null && enemyHeldBy is HoarderBugAI)
                     HoarderBugAIPatch.DropHeldItem(enemyHeldBy as HoarderBugAI);
+                enemyHeldBy = null;
 
                 if (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
                     playerHeldBy.DiscardHeldObject(); // Can lead to problems
@@ -455,10 +463,6 @@ namespace LittleCompany.components
             }
 
             bool IsCompanyMoon = Enum.TryParse(RoundManager.Instance.currentLevel.levelID.ToString(), out Moon level) && level == Moon.CompanyBuilding;
-            if (IsCompanyMoon)
-                Plugin.Log("UpdateScanNodeVisibility: We're on company moon!");
-            if (IsCurrentPlayer)
-                Plugin.Log("UpdateScanNodeVisibility: That's us!");
             EnableScanNode(IsCompanyMoon && !IsCurrentPlayer);
         }
 
@@ -475,10 +479,7 @@ namespace LittleCompany.components
             scanNode.enabled = enable;
 
             if (scanNode.TryGetComponent(out BoxCollider collider))
-            {
-                Plugin.Log("Found BoxCollider for scanNode");
                 collider.enabled = enable;
-            }
         }
 
         public void IgnoreColliderWith(Collider otherCollider, bool ignore = true)
@@ -494,10 +495,26 @@ namespace LittleCompany.components
             Physics.IgnoreCollision(thisCollider, otherCollider, ignore);
         }
 
+        public void UpdateInteractTrigger()
+        {
+            Plugin.Log("UpdateInteractTrigger");
+            if (propColliders.Length == 0) return;
+
+            var enable = true;
+            if (IsCurrentPlayer ||                                                                                  // This is our gpo
+                (playerHeldBy != null && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayer.playerClientId) || // We're the holder
+                PlayerInfo.SizeOf(grabbedPlayer) >= PlayerInfo.CurrentPlayerScale ||								// We're smaller than the player of this grabbableObject
+				grabbedPlayer.isClimbingLadder || grabbedPlayer.inSpecialInteractAnimation)                         // Player is in an animation
+                    enable = false;
+
+            EnableInteractTrigger(enable);
+        }
+
+        // Makes the player grabbable / ungrabbable
         public void EnableInteractTrigger(bool enable = true)
         {
-            EnablePhysics(enable && !IsCurrentPlayer && !grabbedPlayer.isClimbingLadder && !grabbedPlayer.inSpecialInteractAnimation);
-            //EnableItemMeshes(enable && !IsCurrentPlayer);
+            Plugin.Log("EnableInteractTrigger: " + enable);
+            propColliders[0].enabled = enable;
             UpdateScanNodeVisibility(); // also a collider that gets enabled through EnablePhysics()
         }
 
@@ -602,14 +619,6 @@ namespace LittleCompany.components
             return null;
         }
 
-        private void SetHolderGrabbable(bool isGrabbable = true)
-        {
-            if (!IsCurrentPlayer || playerHeldBy == null) return; // Only do this from the perspective of the currently held player, not the holder himself
-
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(playerHeldBy.playerClientId, out GrabbablePlayerObject gpo))
-                gpo.EnableInteractTrigger(isGrabbable);
-        }
-
         private void SetControlTips()
         {
             HUDManager.Instance.ClearControlTips();
@@ -672,13 +681,13 @@ namespace LittleCompany.components
 
         #region RPCs
         [ServerRpc(RequireOwnership = false)]
-        public void ThrowPlayerServerRpc(Vector3 direction)
+        public void ThrowPlayerServerRpc(Vector3 direction, float force)
         {
-            ThrowPlayerClientRpc(direction);
+            ThrowPlayerClientRpc(direction, force);
         }
 
         [ClientRpc]
-        public void ThrowPlayerClientRpc(Vector3 direction)
+        public void ThrowPlayerClientRpc(Vector3 direction, float force)
         {
             Plugin.Log("ThrowPlayerClientRpc");
             Thrown = true;
@@ -693,8 +702,8 @@ namespace LittleCompany.components
 
             if (grabbedPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
             {
-                Plugin.Log("We got thrown!");
-                coroutines.PlayerThrowAnimation.StartRoutine(grabbedPlayer, direction, 10f);
+                Plugin.Log("We got thrown with a force of " + force);
+                coroutines.PlayerThrowAnimation.StartRoutine(grabbedPlayer, direction, force);
             }
         }
 
@@ -868,6 +877,20 @@ namespace LittleCompany.components
         internal void MovedOutOfHoardingBugNestRangeClientRpc()
         {
             lastHoarderBugGrabbedBy = null;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void DamageGrabbedPlayerServerRpc(int damageNumber, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false, Vector3 force = default(Vector3))
+        {
+            DamageGrabbedPlayerClientRpc(damageNumber, causeOfDeath, deathAnimation, fallDamage);
+        }
+
+        [ClientRpc]
+        public void DamageGrabbedPlayerClientRpc(int damageNumber, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false)
+        {
+            if (!IsCurrentPlayer) return;
+
+            grabbedPlayer.DamagePlayer(damageNumber, false, false, causeOfDeath, deathAnimation, fallDamage, default);
         }
         #endregion
     }

@@ -1,20 +1,21 @@
 ﻿using GameNetcodeStuff;
 using UnityEngine;
 using Unity.Netcode;
-using LethalLib.Modules;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
-using static LittleCompany.helper.LayerMasks;
-using static LittleCompany.modifications.Modification;
 using System.IO;
 using System.Collections;
+
 using LittleCompany.modifications;
-using static LittleCompany.components.GrabbablePlayerObject;
+using static LittleCompany.helper.LayerMasks;
+using static LittleCompany.modifications.Modification;
+using LittleCompany.dependency;
 
 namespace LittleCompany.components
 {
+    [DisallowMultipleComponent]
     public class ShrinkRay : GrabbableObject
     {
         #region Properties
@@ -66,7 +67,7 @@ namespace LittleCompany.components
             }
 
             networkPrefab = assetItem.spawnPrefab;
-            Utilities.FixMixerGroups(networkPrefab);
+            ScrapManagementFacade.FixMixerGroups(networkPrefab);
             assetItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
             assetItem.weight = 1.05f;
             assetItem.canBeGrabbedBeforeGameStart = true;
@@ -82,6 +83,12 @@ namespace LittleCompany.components
 
             // Add the FX component for controlling beam fx
             ShrinkRayFX shrinkRayFX = networkPrefab.AddComponent<ShrinkRayFX>();
+            // Customize the ShrinkRayFX (I just found some good settings by tweaking in game. Easier done here than in the prefab, which is why I made properties on the script)
+            shrinkRayFX.noiseSpeed = 5;
+            shrinkRayFX.noisePower = 0.1f;
+            shrinkRayFX.sparksSize = 1f;
+            shrinkRayFX.thickness = 0.1f;
+
             GameNetworkManager.Instance.StartCoroutine(AssetLoader.LoadAudioAsync("shrinkRayBeam.wav", (item) => ShrinkRayFX.beamSFX = item));
 
             Destroy(networkPrefab.GetComponent<PhysicsProp>()); // todo: make this not needed
@@ -96,9 +103,7 @@ namespace LittleCompany.components
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
-            var terminalNode = ScriptableObject.CreateInstance<TerminalNode>();
-            terminalNode.displayText = shrinkRay.name + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!";
-            Items.RegisterShopItem(shrinkRay.itemProperties, null, null, terminalNode, shrinkRay.itemProperties.creditsWorth);
+            ScrapManagementFacade.RegisterItem(shrinkRay.itemProperties, false, true, -1, shrinkRay.name + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!");
         }
         #endregion
 
@@ -110,6 +115,12 @@ namespace LittleCompany.components
             LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
             LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
             LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
+
+            if (!TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
+            {
+                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
 
             DisableLaserForHolder();
         }
@@ -127,12 +138,6 @@ namespace LittleCompany.components
         public override void Update()
         {
             base.Update();
-
-            if (audioSource == null && !TryGetComponent(out audioSource)) // fallback that likely won't happen nowadays
-            {
-                Plugin.Log("AudioSource of " + gameObject.name + " was null. Adding a new one..", Plugin.LogType.Error);
-                audioSource = gameObject.AddComponent<AudioSource>();
-            }
 
             if (LaserEnabled)
                 UpdateLaser();
@@ -192,6 +197,8 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModificationTypeServerRpc(int newType)
         {
+            Plugin.Log(currentModificationType.ToString());
+            Plugin.Log(currentModificationType.Value.ToString());
             Plugin.Log("ShrinkRay modificationType switched to " + (ModificationType)newType);
             currentModificationType.Value = (ModificationType)newType;
         }
@@ -280,9 +287,7 @@ namespace LittleCompany.components
             var direction = LaserLight.transform.forward;
             var endPoint = Vector3.zero;
 
-            //var layerMask = ToInt([Mask.Player, Mask.Props, Mask.InteractableObject, Mask.Enemies, Mask.EnemiesNotRendered]);
-            var layerMask = ToInt([Mask.Player]);
-            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, layerMask))
+            if (Physics.Raycast(startPoint, direction, out RaycastHit hit, beamSearchDistance, LayerMask))
             {
                 var distance = Vector3.Distance(hit.point, startPoint);
                 endPoint.z = distance;
@@ -306,6 +311,19 @@ namespace LittleCompany.components
                 ChangeTarget(null);
             }
             LaserLine.SetPosition(1, endPoint);
+        }
+
+        internal int LayerMask
+        {
+            get
+            {
+                var layerMasks = new List<Mask>() { Mask.Player };
+                if (ModConfig.Instance.values.itemSizeChangeStep > Mathf.Epsilon)
+                    layerMasks.Add(Mask.Props);
+                if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
+                    layerMasks.Add(Mask.Enemies);
+                return ToInt(layerMasks.ToArray());
+            }
         }
 
         public void ChangeTarget(GameObject newTarget)
@@ -347,7 +365,7 @@ namespace LittleCompany.components
                         return targetPlayerObject.grabbedPlayer.gameObject;
 
                     var targetObject = target.GetComponentInParent<GrabbableObject>();
-                    if (targetObject != null)
+                    if (targetObject != null && !ObjectModification.UnscalableObjects.Contains(targetObject.itemProperties.itemName))
                         return targetObject.gameObject;
                     break;
 
@@ -432,7 +450,7 @@ namespace LittleCompany.components
 
                         if(IsOwner)
                             Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value))
+                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -453,7 +471,7 @@ namespace LittleCompany.components
                         if (IsOwner)
                             Plugin.Log("Ray has hit an ITEM -> " + item.name);
 
-                        if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value))
+                        if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value, playerHeldBy))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -479,9 +497,17 @@ namespace LittleCompany.components
                             return false;
 
                         if (IsOwner)
-                            Plugin.Log("Ray has hit an ENEMY -> \"" + enemyAI.enemyType.name);
-                        //Plugin.Log("WIP");
-                        return false;
+                            Plugin.Log("Ray has hit an ENEMY -> " + enemyAI.enemyType.name);
+
+                        if(!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value, playerHeldBy))
+                        {
+                            if (IsOwner)
+                                Plugin.Log("... but would do nothing.");
+                            return false;
+                        }
+
+                        OnEnemyModificationServerRpc(enemyAI.NetworkObjectId, playerHeldBy.playerClientId);
+                        return true;
                     }
                 default:
                     if (IsOwner)
@@ -500,11 +526,11 @@ namespace LittleCompany.components
                 return;
             }
 
-            StartCoroutine(shrinkRayFX.RenderRayBeam(playerHeldBy.gameplayCamera.transform, targetObject.transform, currentModificationType.Value, audioSource, () =>
+            shrinkRayFX.RenderRayBeam(playerHeldBy.gameplayCamera.transform, targetObject.transform, currentModificationType.Value, audioSource, () =>
             {
                 Plugin.Log("Ray beam, has finished.");
                 SwitchModeClientRpc((int)Mode.Unloading);
-            }));
+            });
         }
         #endregion
 
@@ -537,7 +563,7 @@ namespace LittleCompany.components
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
             Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
-            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, () =>
+            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, () =>
             {
                 Plugin.Log("Finished player modification with type: " + currentModificationType.Value.ToString());
             });
@@ -570,9 +596,42 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, () =>
+            ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, playerHeldBy, () =>
             {
                 Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
+            });
+
+            if (IsOwner)
+                SwitchModeServerRpc((int)Mode.Shooting);
+        }
+        #endregion
+
+        #region EnemyTargeting
+        // ------ Ray hitting Enemy ------
+        [ServerRpc(RequireOwnership = false)]
+        public void OnEnemyModificationServerRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
+        {
+            Plugin.Log("OnEnemyModification");
+            OnEnemyModificationClientRpc(targetEnemyNetworkID, playerHeldByID);
+        }
+
+        [ClientRpc]
+        public void OnEnemyModificationClientRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
+        {
+            playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
+
+            if (!TryGetObjectByNetworkID(targetEnemyNetworkID, out targetObject))
+            {
+                Plugin.Log("OnEnemyModification: Enemy not found", Plugin.LogType.Error);
+                if (IsOwner)
+                    SwitchModeServerRpc((int)Mode.Missing);
+                return;
+            }
+
+            Plugin.Log("Ray has hit " + targetObject.name + "!");
+            EnemyModification.ApplyModificationTo(targetObject.GetComponentInParent<EnemyAI>(), currentModificationType.Value, playerHeldBy, () =>
+            {
+                Plugin.Log("Finished enemy modification with type: " + currentModificationType.Value.ToString());
             });
 
             if (IsOwner)

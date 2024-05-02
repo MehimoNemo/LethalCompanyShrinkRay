@@ -1,7 +1,11 @@
-﻿using HarmonyLib;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
 using LittleCompany.components;
 using LittleCompany.helper;
+using LittleCompany.modifications;
+using System.Collections;
 using UnityEngine;
+using static LittleCompany.helper.LayerMasks;
 
 namespace LittleCompany.patches
 {
@@ -12,8 +16,16 @@ namespace LittleCompany.patches
         {
             if(!CanBlockOurScreen(__instance)) return;
 
-            TransformItemRelativeTo(__instance, PlayerInfo.SizeOf(__instance.playerHeldBy));
-            CheckForGlassify(__instance);
+            // Check for glassification after the pickup anim is finished
+            __instance.StartCoroutine(CheckForGlassifyLater(__instance));
+        }
+
+        private const float DurationOfGrabAnimationInSeconds = 0.3f;
+
+        public static IEnumerator CheckForGlassifyLater(GrabbableObject item)
+        {
+            yield return new WaitForSeconds(DurationOfGrabAnimationInSeconds);
+            CheckForGlassify(item);
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
@@ -39,15 +51,69 @@ namespace LittleCompany.patches
         public static void CheckForGlassify(GrabbableObject item)
         {
             if (item == null) return;
+            if (item.playerHeldBy == null) return;
 
-            bool isScaled = item.TryGetComponent(out ItemScaling scaling) && !scaling.Unchanged;
+            // If item relative scale is equal or smaller than the player scale then don't glassify
+            if (CompareItemScaleToPlayerScale(item, item.playerHeldBy) <= 0) return;
 
-            if (PlayerInfo.IsNormalSize(item.playerHeldBy) && !isScaled) return;
+            bool tooBig = IsItemBlockingMostOfScreen(item);
+            bool playerShrunk = PlayerInfo.IsShrunk(item.playerHeldBy);
 
-            if (item.itemProperties.twoHanded || isScaled && scaling.CurrentScale > 1f)
+            if ((playerShrunk && item.itemProperties.twoHanded) || (tooBig))
                 GlassifyItem(item);
             else
                 UnGlassifyItem(item);
+        }
+
+        public static float CompareItemScaleToPlayerScale(GrabbableObject item, PlayerControllerB pcb)
+        {
+            ItemScaling itemScaling = item.GetComponent<ItemScaling>();
+            PlayerScaling playerScaling = pcb.GetComponent<PlayerScaling>();
+
+            float itemRelativeScale = Modification.Rounded(itemScaling == null ? 1 : itemScaling.RelativeScale);
+            float playerScale = Modification.Rounded(playerScaling == null ? 1 : playerScaling.RelativeScale);
+            return (itemRelativeScale - playerScale);
+        }
+
+        private static bool IsItemBlockingMostOfScreen(GrabbableObject item)
+        {
+            Camera main = item.playerHeldBy.gameplayCamera;
+            item.EnablePhysics(true);
+            int numberOfPointsAxisY = 5;
+            int numberOfPointsAxisX = 6;
+
+
+            int numberOfRay = 0;
+            int numberOfHits = 0;
+            for (float stepY = numberOfPointsAxisY; stepY > 0; stepY--)
+            {
+                for (float stepX = 1; stepX <= numberOfPointsAxisX; stepX++)
+                {
+                    if(ScreenPosHitCollider(stepX * Screen.width / numberOfPointsAxisX+1, stepY * Screen.height / numberOfPointsAxisY+1, main.nearClipPlane, main, item.gameObject))
+                    {
+                        numberOfHits++;
+                    }
+                    numberOfRay++;
+                }
+            }
+            item.EnablePhysics(false);
+
+            // Plugin.Log("Percent: " + ((float)numberOfHits / numberOfRay)*100 + "%");
+            return ((float) numberOfHits / numberOfRay) > 0.75f;
+        }
+
+        private static bool ScreenPosHitCollider(float x, float y, float focusDistance, Camera cam, GameObject target)
+        {
+            Vector3 origin = cam.ScreenToWorldPoint(new Vector3(x, y, focusDistance));
+            RaycastHit[] hits = Physics.RaycastAll(origin + cam.transform.forward * 8, -cam.transform.forward, 10, ToInt([Mask.Props]));
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.collider.gameObject == target)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static void OnItemNormalize(GrabbableObject item)
@@ -67,7 +133,7 @@ namespace LittleCompany.patches
             if (!item.gameObject.TryGetComponent(out ItemScaling scaling))
                 scaling = item.gameObject.AddComponent<ItemScaling>();
 
-            scaling.ScaleTo(scale, false, additionalOffset);
+            scaling.ScaleTemporarlyTo(scale);
         }
 
         public static void UnGlassifyItem(GrabbableObject item)

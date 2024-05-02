@@ -9,12 +9,17 @@ using LittleCompany.Config;
 using System.Reflection;
 using LittleCompany.components;
 using LittleCompany.compatibility;
+using LittleCompany.events.enemy;
+using LittleCompany.helper;
+using LittleCompany.dependency;
 
 namespace LittleCompany
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("me.swipez.melonloader.morecompany", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalEmotesApiCompatibility.LethalEmotesApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(ScrapManagementFacade.LethalLevelLoaderReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(ScrapManagementFacade.LethalLibReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         #region Properties
@@ -58,17 +63,25 @@ namespace LittleCompany
             harmony.PatchAll(typeof(ModdedDungeonEntrancePatch));
             harmony.PatchAll(typeof(TerminalPatch));
 
-            // comp
+            // components
             harmony.PatchAll(typeof(Vents));
             harmony.PatchAll(typeof(GrabbablePlayerList));
 
+            // helper
+            harmony.PatchAll(typeof(Effects));
+
+            // events
+            harmony.PatchAll(typeof(BrackenEventHandler));
+            harmony.PatchAll(typeof(RobotEventHandler));
+            harmony.PatchAll(typeof(ThumperEventHandler));
+
             // Compatibility
-            if (LethalEmotesApiCompatibility.enabled)
+            if (LethalEmotesApiCompatibility.compatEnabled)
             {
                 Log("enabling LethalEmotesApiCompatibility");
                 harmony.PatchAll(typeof(LethalEmotesApiCompatibility));
             }
-            if (ModelReplacementApiCompatibility.enabled)
+            if (ModelReplacementApiCompatibilityComponent.compatEnabled)
             {
                 Log("enabling ModelReplacementApiCompatibility");
                 harmony.PatchAll(typeof(ModelReplacementApiCompatibilityPatch));

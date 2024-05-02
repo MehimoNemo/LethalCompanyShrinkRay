@@ -1,78 +1,31 @@
 ﻿using LittleCompany.helper;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace LittleCompany.components
 {
     internal class TargetCircle : TargetHighlighting
     {
-        void Awake()
-        {
-            HighlightUsing(HighlightMethod.Circle);
-        }
-    }
-
-    internal class TargetGlassification : TargetHighlighting
-    {
-        internal override Material ChangedMaterial(Material origin)
-        {
-            return Materials.Glass;
-        }
-
-        void Awake()
-        {
-            HighlightUsing(HighlightMethod.Material);
-        }
-    }
-
-    internal class TargetHighlighting : MonoBehaviour
-    {
-        public enum HighlightMethod
-        {
-            None,
-            Material,
-            Circle
-        }
-        internal HighlightMethod method;
-        internal List<Material> originalMaterials = null;
         internal GameObject highlightingGameObject = null;
 
-        public void HighlightUsing(HighlightMethod method = HighlightMethod.Material)
+        void Awake()
         {
-            if (gameObject == null)
+            if(HighLightingIsValid())
+                HighlightCircle();
+        }
+
+        void HighlightCircle()
+        {
+            highlightingGameObject = Effects.CircleHighlight;
+            if (highlightingGameObject == null)
             {
-                Plugin.Log("TargetHighlighting -> no gameObject found!", Plugin.LogType.Error);
+                Plugin.Log("Unable to load highlight.", Plugin.LogType.Error);
                 return;
             }
 
-            if (this.method != HighlightMethod.None)
-                Revert();
+            SetScaleAndPosition();
 
-
-            this.method = method;
-            switch(method)
-            {
-                case HighlightMethod.Material:
-                    var renderer = gameObject.GetComponent<MeshRenderer>();
-                    if (renderer == null) return;
-                    originalMaterials = renderer.materials.ToList();
-                    ChangeMaterials();
-                    break;
-                case HighlightMethod.Circle:
-                    highlightingGameObject = Effects.CircleHighlight;
-                    if (highlightingGameObject == null)
-                    {
-                        Plugin.Log("Unable to load highlight.", Plugin.LogType.Error);
-                        return;
-                    }
-
-                    SetScaleAndPosition();
-
-                    highlightingGameObject.transform.SetParent(gameObject.transform, true);
-                    break;
-                default: break;
-            }
+            highlightingGameObject.transform.SetParent(gameObject.transform, true);
         }
 
         internal bool CircleWouldBeInvisible(Vector3 size) => size.x <= 0f || size.y <= 0f || size.z <= 0f;
@@ -94,19 +47,65 @@ namespace LittleCompany.components
         {
             position.y -= groundPositionOffset;
             var maxRadius = Mathf.Max(scale.x, scale.z);
-            if(maxRadius < 0.8f)
+            if (maxRadius < 0.8f)
                 highlightingGameObject.transform.localScale = new Vector3(maxRadius, Mathf.Clamp(scale.y, 0.2f, 0.8f), maxRadius);
             else
                 highlightingGameObject.transform.localScale = new Vector3(scale.x, Mathf.Clamp(scale.y, 0.2f, 0.8f), scale.z);
             highlightingGameObject.transform.position = new Vector3(position.x, position.y, position.z);
-            Plugin.Log("Position: " + highlightingGameObject.transform.position + " / Scale: " + highlightingGameObject.transform.localScale);
         }
 
-        internal virtual void ChangeMaterials()
+        public override void Revert()
         {
-            if (!gameObject.TryGetComponent(out MeshRenderer renderer)) return;
-            
-            List<Material> targetedMaterials = new List<Material>();
+            if (highlightingGameObject != null)
+                Destroy(highlightingGameObject);
+        }
+    }
+
+    internal class TargetGlassification : TargetMaterialHighlighting
+    {
+        internal override Material ChangedMaterial(Material origin)
+        {
+            return Materials.Glass;
+        }
+    }
+
+    internal class TargetMaterialHighlighting : TargetHighlighting
+    {
+        internal Dictionary<MeshRenderer, Material[]> meshesAndOriginalMaterials = null;
+
+        void Awake()
+        {
+            if (HighLightingIsValid())
+                HighlightMaterial();
+        }
+
+        void HighlightMaterial()
+        {
+            LoadMeshRenderersAndOriginalMaterials();
+            if (meshesAndOriginalMaterials.Count == 0) return;
+            ChangeMaterials();
+        }
+
+        internal void LoadMeshRenderersAndOriginalMaterials()
+        {
+            meshesAndOriginalMaterials = [];
+            foreach (MeshRenderer mesh in Materials.GetMeshRenderers(gameObject))
+            {
+                meshesAndOriginalMaterials.Add(mesh, mesh.materials);
+            }
+        }
+
+        internal void ChangeMaterials()
+        {
+            foreach (MeshRenderer mesh in meshesAndOriginalMaterials.Keys)
+            {
+                ChangeMaterialForMeshRenderer(mesh);
+            }
+        }
+
+        internal void ChangeMaterialForMeshRenderer(MeshRenderer renderer)
+        {
+            List<Material> targetedMaterials = [];
             for (int i = 0; i < renderer.materials.Length; i++)
                 targetedMaterials.Add(ChangedMaterial(renderer.materials[i]));
             renderer.materials = targetedMaterials.ToArray();
@@ -117,20 +116,29 @@ namespace LittleCompany.components
             return Materials.TargetedMaterial(origin);
         }
 
-        internal void Revert()
+        public override void Revert()
         {
-            if (highlightingGameObject != null)
-                Destroy(highlightingGameObject);
-
-            switch (method)
+            foreach (KeyValuePair<MeshRenderer, Material[]> meshAndOriginalMaterial in meshesAndOriginalMaterials)
             {
-                case HighlightMethod.Material:
-                    if (gameObject.TryGetComponent(out MeshRenderer renderer))
-                        renderer.materials = originalMaterials.ToArray();
-                    break;
-                default: break;
+                meshAndOriginalMaterial.Key.materials = meshAndOriginalMaterial.Value;
             }
         }
+    }
+
+    abstract internal class TargetHighlighting : MonoBehaviour
+    {
+
+        public bool HighLightingIsValid()
+        {
+            if (gameObject == null)
+            {
+                Plugin.Log("TargetHighlighting -> no gameObject found!", Plugin.LogType.Error);
+                return false;
+            }
+            return true;
+        }
+
+        public abstract void Revert();
 
         void OnDestroy()
         {

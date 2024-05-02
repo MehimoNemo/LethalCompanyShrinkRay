@@ -1,14 +1,14 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LethalLib.Modules;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using static LittleCompany.components.GrabbablePlayerObject;
+using LittleCompany.modifications;
+using System.Linq;
+using System.Collections;
 
 namespace LittleCompany.components
 {
@@ -16,7 +16,7 @@ namespace LittleCompany.components
     internal class GrabbablePlayerList
     {
         #region Properties
-        public static Dictionary<ulong, NetworkObject> networkObjects = new Dictionary<ulong, NetworkObject>();
+        public static Dictionary<ulong, GrabbablePlayerObject> GrabbablePlayerObjects = new Dictionary<ulong, GrabbablePlayerObject>();
         internal struct FoundGrabbables
         {
             internal GrabbablePlayerObject holderGPO { get; set; }
@@ -25,27 +25,32 @@ namespace LittleCompany.components
         #endregion
 
         #region Patches
-
-
         [HarmonyPatch(typeof(PlayerControllerB), "DamagePlayer")]
         [HarmonyPrefix]
-        public static void DamagePlayer(PlayerControllerB __instance, int damageNumber, bool hasDamageSFX = true, bool callRPC = true, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false, Vector3 force = default(Vector3))
+        public static void DamagePlayer(PlayerControllerB __instance, int damageNumber, CauseOfDeath causeOfDeath = CauseOfDeath.Unknown, int deathAnimation = 0, bool fallDamage = false)
         {
+            // Local method
             if (__instance == null || !TryFindGrabbableObjectByHolder(__instance.playerClientId, out GrabbablePlayerObject gpo)) return;
+
+            // todo: check if grabbed player is drowning or suffocating too
             if (causeOfDeath == CauseOfDeath.Suffocation || causeOfDeath == CauseOfDeath.Drowning || causeOfDeath == CauseOfDeath.Abandoned) return;
 
             // Grabbed player takes half the damage
-            gpo.grabbedPlayer.DamagePlayer(damageNumber / 2, hasDamageSFX, callRPC, causeOfDeath, deathAnimation, fallDamage, force);
+            gpo.DamageGrabbedPlayerServerRpc(damageNumber / 2, causeOfDeath, deathAnimation, fallDamage);
         }
         
         [HarmonyPatch(typeof(PlayerControllerB), "KillPlayerClientRpc")]
         [HarmonyPrefix]
-        public static void KillPlayerClientRpcPrefix(int playerId/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
+        public static void KillPlayerClientRpcPrefix(int playerId, PlayerControllerB __instance/*, bool spawnBody, Vector3 bodyVelocity, int causeOfDeath, int deathAnimation*/)
         {
             Plugin.Log("KillPlayerClientRpcPrefix");
 
             var targetPlayer = PlayerInfo.ControllerFromID((ulong)playerId);
-            if (targetPlayer == null) return;
+            if(targetPlayer == null)
+            {
+                Plugin.Log("Unable to find player script for dying player", Plugin.LogType.Error);
+                return;
+            }
 
             ResetAnyPlayerModificationsFor(targetPlayer);
 
@@ -88,17 +93,43 @@ namespace LittleCompany.components
             }
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
-        public static void DespawnPropsAtEndOfRoundPre()
+        [HarmonyPrefix, HarmonyPatch(typeof(StartOfRound), "FirePlayersAfterDeadlineClientRpc")]
+        public static void FirePlayersAfterDeadlineClientRpc()
         {
+            StartOfRound.Instance.StartCoroutine(ResetLocalPlayerOnShipDoorOpen());
+        }
+
+        public static IEnumerator ResetLocalPlayerOnShipDoorOpen()
+        {
+            yield return new WaitUntil(() => StartOfRound.Instance.suckingPlayersOutOfShip);
+            yield return new WaitForSeconds(0.5f);
+
+            if (PlayerInfo.CurrentPlayerHeldItem is GrabbablePlayerObject)
+                PlayerInfo.CurrentPlayer.DiscardHeldObject();
+
+            yield return new WaitWhile(() => StartOfRound.Instance.suckingFurnitureOutOfShip);
+
+            foreach (var player in PlayerInfo.AllPlayers)
+                ResetAnyPlayerModificationsFor(player);
+        }
+
+        [HarmonyPrefix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
+        public static void DespawnPropsAtEndOfRoundPre(RoundManager __instance)
+        {
+			if (!__instance.IsServer)
+			                return;
+			
             var gpoList = Resources.FindObjectsOfTypeAll(typeof(GrabbablePlayerObject)); // Don't destroy these. Workaround
             foreach (var gpo in gpoList)
                 gpo.hideFlags = HideFlags.HideAndDontSave;
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(RoundManager), "DespawnPropsAtEndOfRound")]
-        public static void DespawnPropsAtEndOfRoundPost()
+        public static void DespawnPropsAtEndOfRoundPost(RoundManager __instance)
         {
+            if (!__instance.IsServer)
+                return;
+
             var gpoList = Resources.FindObjectsOfTypeAll(typeof(GrabbablePlayerObject)); // reset to default
             foreach (var gpo in gpoList)
                 gpo.hideFlags = HideFlags.None;
@@ -121,7 +152,7 @@ namespace LittleCompany.components
                 if (grabbables.grabbedGPO.playerHeldBy != null && grabbables.grabbedGPO.playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID) // Player who teleports is grabbed
                 {
                     Plugin.Log("We're holding the person who teleported.");
-                    grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.GrabbedPlayer));
+                    grabbables.grabbedGPO.StartCoroutine(grabbables.grabbedGPO.UpdateRegionAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.GrabbedPlayer));
                 }
             }
 
@@ -130,7 +161,7 @@ namespace LittleCompany.components
                 if (grabbables.holderGPO.grabbedPlayerID.Value == PlayerInfo.CurrentPlayerID)
                 {
                     Plugin.Log("We're held by person who teleported.");
-                    grabbables.holderGPO.StartCoroutine(grabbables.holderGPO.UpdateRegionAfterTeleportEnsured(TargetPlayer.Holder));
+                    grabbables.holderGPO.StartCoroutine(grabbables.holderGPO.UpdateRegionAfterTeleportEnsured(GrabbablePlayerObject.TargetPlayer.Holder));
                 }
             }
         }
@@ -140,29 +171,27 @@ namespace LittleCompany.components
         public static void IsInSpecialAnimationClientRpc(PlayerControllerB __instance)
         {
             if(TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo)) // Used to disable trigger when climbing ladders
-                gpo.EnableInteractTrigger();
+                gpo.UpdateInteractTrigger();
         }
                 
 
         [HarmonyPatch(typeof(StartOfRound), "UpdatePlayerVoiceEffects")]
+        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyBefore(["MoreCompany"])]
         [HarmonyPostfix]
         public static void SetPlayerVoiceFilters()
         {
             if (SoundManager.Instance == null) return;
 
-            foreach (var pcb in StartOfRound.Instance.allPlayerScripts)
+            foreach (var pcb in PlayerInfo.AllPlayers)
             {
-                if(pcb != null && pcb.isPlayerControlled && !pcb.isPlayerDead)
-                {
-                    float playerScale = PlayerInfo.SizeOf(pcb);
-                    float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
+                float playerScale = PlayerInfo.SizeOf(pcb);
+                float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
 
-                    float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
+                float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
 
-                    SoundManager.Instance.playerVoicePitchTargets[pcb.playerClientId] = modifiedPitch;
-                    SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
-                }
+                SoundManager.Instance.playerVoicePitchTargets[pcb.playerClientId] = modifiedPitch;
+                SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
             }
         }
 
@@ -237,11 +266,11 @@ namespace LittleCompany.components
             get
             {
                 string output = "GrabbablePlayerList:\n";
-                foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+                foreach (var (playerID, gpo) in GrabbablePlayerObjects)
                 {
                     output += ("------------------------------\n");
 
-                    output += ("GPO: " + (gpo.grabbedPlayer != null ? gpo.grabbedPlayer.name : "No player") + ".\n");
+                    output += ("GPO for player " + playerID + ".\n");
                     output += ("ItemProperties: " + gpo.itemProperties?.itemName + ", " + gpo.itemProperties?.weight + "lb" + ".\n");
                     output += ("IDs: ItemPorperties[" + gpo.itemProperties.GetInstanceID() + "] - " +
                                     "AudioSource[" + (gpo.TryGetComponent(out AudioSource audioSource) ? audioSource.GetInstanceID() : "none") + "] - " +
@@ -256,32 +285,24 @@ namespace LittleCompany.components
 
         public static bool TryFindGrabbableObjectForPlayer(ulong playerID, out GrabbablePlayerObject result)
         {
-            var grabbables = FindGrabbableObjectsFor(playerID);
-            result = grabbables.grabbedGPO;
-            return result != null;
+            return GrabbablePlayerObjects.TryGetValue(playerID, out result);
         }
 
         public static bool TryFindGrabbableObjectByHolder(ulong playerHeldByID, out GrabbablePlayerObject result)
         {
-            var grabbables = FindGrabbableObjectsFor(playerHeldByID);
-            result = grabbables.holderGPO;
+            result = FindGrabbableObjectsFor(playerHeldByID).holderGPO;
             return result != null;
         }
 
-        public static FoundGrabbables FindGrabbableObjectsFor(ulong playerID)
+        public static FoundGrabbables FindGrabbableObjectsFor(ulong targetPlayerID)
         {
             var grabbables = new FoundGrabbables();
-            var gpos = Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>();
-            Plugin.Log("FindGrabbableObjectsFor " + playerID + " -> " + gpos.Length);
-            foreach (var gpo in gpos)
+            foreach (var (playerID, gpo) in GrabbablePlayerObjects)
             {
-                if (gpo != null)
-                {
-                    if (gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == playerID)
-                        grabbables.holderGPO = gpo;
-                    if (gpo.grabbedPlayerID.Value == playerID)
-                        grabbables.grabbedGPO = gpo;
-                }
+                if (gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == targetPlayerID)
+                    grabbables.holderGPO = gpo;
+                if (playerID == targetPlayerID)
+                    grabbables.grabbedGPO = gpo;
             }
             return grabbables;
         }
@@ -294,73 +315,56 @@ namespace LittleCompany.components
 
             if (!PlayerInfo.IsHost) return;
 
-            List<ulong> playerIDs = new List<ulong>(networkObjects.Keys);
-            foreach (var playerID in playerIDs)
-                RemovePlayerGrabbable(playerID);
+            for(int i = GrabbablePlayerObjects.Count - 1; i >= 0; i--)
+                RemovePlayerGrabbable(GrabbablePlayerObjects.ElementAt(i).Value);
         }
 
-        public static void SetPlayerGrabbable(ulong playerID)
+        public static bool SetPlayerGrabbable(ulong playerID, out GrabbablePlayerObject gpo)
         {
-            if(!PlayerInfo.IsHost)
-            {
-                Plugin.Log("SetPlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
-                return;
-            }
-
-            if (networkObjects.ContainsKey(playerID))
-            {
-                if (networkObjects[playerID] == null)
-                    networkObjects.Remove(playerID);
-                else if (networkObjects[playerID].IsSpawned)
-                {
-                    Plugin.Log("Player " + playerID + " already grabbable!");
-                    return;
-                }
-                else
-                    UnityEngine.Object.Destroy(networkObjects[playerID]);
-            }
-
-            networkObjects[playerID] = GrabbablePlayerObject.Instantiate(playerID);
-            Plugin.Log("NEW GRABBALEPLAYER COUNT: " + networkObjects.Count);
-        }
-
-        public static void RemovePlayerGrabbable(ulong playerID)
-        {
+            gpo = null;
             if (!PlayerInfo.IsHost)
             {
-                Plugin.Log("RemovePlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
-                return;
+                Plugin.Log("SetPlayerGrabbable called from client. This shouldn't happen!", Plugin.LogType.Warning);
+                return false;
             }
 
-            Plugin.Log("RemovePlayerGrabbable");
-            if (!networkObjects.TryGetValue(playerID, out NetworkObject networkObject))
+            if (GrabbablePlayerObjects.ContainsKey(playerID))
             {
-                Plugin.Log("Player " + playerID + " wasn't grabbable!");
-                return;
+                Plugin.Log("Player " + playerID + " already grabbable!");
+                gpo = GrabbablePlayerObjects[playerID];
+                return false;
             }
 
-            if (!TryFindGrabbableObjectForPlayer(playerID, out GrabbablePlayerObject gpo)) // todo: make it so the tryFind is not needed
-            {
-                Plugin.Log("Player " + playerID + " didn't had a grabbableObject!");
-                return;
-            }
-
-            DespawnGrabbablePlayer(playerID);
+            gpo = GrabbablePlayerObject.Instantiate(playerID);
+            return true;
         }
 
-        public static void DespawnGrabbablePlayer(ulong playerID)
+        public static bool RemovePlayerGrabbable(ulong playerID)
         {
-            if (PlayerInfo.IsHost && networkObjects[playerID].IsSpawned)
-                networkObjects[playerID].Despawn();
+            if (!PlayerInfo.IsHost) return false;
+            if (!GrabbablePlayerObjects.TryGetValue(playerID, out GrabbablePlayerObject gpo))
+            {
+                Plugin.Log("RemovePlayerGrabbable -> Player wasn't grabbable.");
+                return false;
+            }
 
-            networkObjects.Remove(playerID);
+            return RemovePlayerGrabbable(gpo);
+        }
+
+        public static bool RemovePlayerGrabbable(GrabbablePlayerObject gpo)
+        {
+            if (!gpo.TryGetComponent(out NetworkObject networkObject) || !networkObject.IsSpawned)
+                return false;
+
+            networkObject.Despawn();
+            return true;
         }
 
         public static void ReInitializePlayerGrabbable(ulong playerID)
         {
             RemovePlayerGrabbable(playerID);
             if(PlayerInfo.ControllerFromID(playerID) != null)
-                SetPlayerGrabbable(playerID);
+                SetPlayerGrabbable(playerID, out _);
         }
 
         public static void ResetAnyPlayerModificationsFor(PlayerControllerB targetPlayer)
@@ -368,39 +372,42 @@ namespace LittleCompany.components
             Plugin.Log("ResetAnyPlayerModificationsFor");
             if (targetPlayer == null) return;
 
-            if (targetPlayer.gameObject != null)
-            {
-                targetPlayer.gameObject.transform.localScale = Vector3.one;
-
-                if(targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID)
-                    PlayerInfo.ScaleLocalPlayerBodyParts();
-            }
-
-            SoundManager.Instance.SetPlayerPitch(1f, (int)targetPlayer.playerClientId);
+            if (!PlayerInfo.IsDefaultSize(targetPlayer))
+                PlayerModification.ApplyModificationTo(targetPlayer, Modification.ModificationType.Normalizing, null);
         }
 
         public static void UpdateWhoIsGrabbableFromPerspectiveOf(PlayerControllerB targetPlayer)
         {
-            /*Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
+            Plugin.Log("UpdateWhoIsGrabbableFromPerspectiveOf");
             if(targetPlayer == null) return;
 
             if(targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID)
             {
                 // Someone else's size changed
                 if(TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
-                    gpo.EnableInteractTrigger(PlayerInfo.SizeOf(targetPlayer) < PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer));
+                    gpo.UpdateInteractTrigger();
             }
             else
             {
                 // We changed size
-                var currentSize = PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer);
-
-                foreach (var gpo in Resources.FindObjectsOfTypeAll<GrabbablePlayerObject>())
+                foreach (var gpo in GrabbablePlayerObjects.Values)
                 {
-                    if (gpo == null || gpo.grabbedPlayerID.Value == ulong.MaxValue) continue;
-                    gpo.EnableInteractTrigger(PlayerInfo.SizeOf(gpo.grabbedPlayer) < currentSize);
+                    if (gpo == null) continue;
+                    gpo.UpdateInteractTrigger();
                 }
-            }*/
+            }
+
+            if(PlayerInfo.IsHost)
+            {
+                var largestGrabberSize = Mathf.Max(PlayerInfo.LargestPlayerSize, EnemyInfo.LargestGrabbingEnemy);
+                foreach (var player in PlayerInfo.AlivePlayers)
+                {
+                    if (PlayerInfo.SmallerThan(player, largestGrabberSize)) // Make anyone grabbable who's smaller than the largest player / enemy
+                        SetPlayerGrabbable(player.playerClientId, out _);
+                    else
+                        RemovePlayerGrabbable(player.playerClientId);
+                }
+            }
         }
         #endregion
     }

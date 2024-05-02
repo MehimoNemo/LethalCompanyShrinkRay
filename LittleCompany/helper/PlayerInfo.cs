@@ -1,5 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
+using LittleCompany.Config;
+using LittleCompany.modifications;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -10,12 +12,26 @@ namespace LittleCompany.helper
 {
     internal class PlayerInfo
     {
+        public static readonly float VanillaPlayerSize = 1f;
+        public static float DefaultPlayerSize => ModConfig.Instance.values.defaultPlayerSize;
         public static void Cleanup()
         {
             _cameraVisor = null;
         }
 
-        public static bool IsHost => NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+        public static bool IsHost
+        {
+            get
+            {
+                if (NetworkManager.Singleton != null)
+                    return NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+
+                if (CurrentPlayerID.HasValue)
+                    return CurrentPlayerID.Value == 0ul;
+
+                return false;
+            }
+        }
 
         public static bool IsCurrentPlayerGrabbed()
         {
@@ -27,14 +43,29 @@ namespace LittleCompany.helper
             return false;
         }
 
-        public static List<GameObject> AllPlayers => StartOfRound.Instance.allPlayerScripts.Where(pcb => pcb.isPlayerControlled).Select(pcb => pcb.gameObject).ToList();
+        public static bool IsCurrentPlayer(PlayerControllerB player) => player?.playerClientId == CurrentPlayer?.playerClientId;
+
+        public static float LargestPlayerSize
+        {
+            get
+            {
+                var scale = 0f;
+                foreach (var player in AlivePlayers)
+                    scale = Mathf.Max(scale, SizeOf(player));
+                return scale;
+            }
+        }
+
+        public static List<PlayerControllerB> AllPlayers => StartOfRound.Instance?.allPlayerScripts?.Where(pcb => pcb != null && (pcb.isPlayerControlled || pcb.isPlayerDead)).ToList();
+        public static List<PlayerControllerB> AlivePlayers => AllPlayers.Where(pcb => !pcb.isPlayerDead).ToList();
 
         public static PlayerControllerB ControllerFromID(ulong playerID)
         {
-            foreach(var pcb in StartOfRound.Instance.allPlayerScripts)
+            if (AllPlayers == null) return null;//
+            foreach (var player in AllPlayers)
             {
-                if (pcb.playerClientId == playerID)
-                    return pcb;
+                if (player.playerClientId == playerID)
+                    return player;
             }
             return null;
         }
@@ -53,27 +84,21 @@ namespace LittleCompany.helper
 
         public static ulong? CurrentPlayerID => CurrentPlayer?.playerClientId;
 
+        public static float SizeOf(PlayerControllerB player) => Modification.Rounded(player.transform.localScale.y);
+
         public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 
-        public static float SizeOf(PlayerControllerB player) => SizeOf(player?.gameObject);
+        public static bool LargerThan(PlayerControllerB player, float size) => (SizeOf(player) - (ModConfig.SmallestSizeChange / 2)) > size;
 
-        public static float SizeOf(GameObject playerObject) => playerObject == null ? 1f : Rounded(playerObject.transform.localScale.y);
+        public static bool SmallerThan(PlayerControllerB player, float size) => (SizeOf(player) + (ModConfig.SmallestSizeChange / 2)) < size;
 
-        public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
+        public static bool IsShrunk(PlayerControllerB player) => SmallerThan(player, VanillaPlayerSize);
 
-        public static bool IsShrunk(PlayerControllerB player) => IsShrunk(player.gameObject);
+        public static bool IsDefaultVanillaSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), VanillaPlayerSize);
 
-        public static bool IsShrunk(GameObject playerObject)
-        {
-            if (playerObject == null)
-                return false;
+        public static bool IsDefaultSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), DefaultPlayerSize);
 
-            return IsShrunk(playerObject.transform.localScale.x);
-        }
-
-        public static bool IsShrunk(float size) => Rounded(size) < 1f;
-
-        public static bool IsNormalSize(PlayerControllerB player) => SizeOf(player) == 1f;
+        public static bool IsEnlarged(PlayerControllerB player) => LargerThan(player, VanillaPlayerSize);
 
         public static bool IsCurrentPlayerShrunk => IsShrunk(CurrentPlayer);
 

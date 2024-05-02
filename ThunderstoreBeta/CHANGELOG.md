@@ -1,9 +1,37 @@
 ## BETA ##
 **What's new**
-+
++ Added "DefaultPlayerSize" config option. Players start with this size.
++ Players can now only grab smaller players. This includes enlarged players grabbing normal (or any smaller) sized ones!
++ Enemy scaling!
+ + Configurable
+ + Enemies can be shrunken to death.. but be warned.. there might be consequences.
+ + Hoarding bugs can only grab smaller sized players. *Maybe it's not wise to enlarge them..*
++ Item scaling!
+ + Configurable
+ + Scaling items will affect their weight and scrap value.
+ + Shrinking items will be instantly, while enlarging items will take effect over time. *To prevent people from only using this in front of the sell counter, while not fully blocking it*
+
+**Tweaks**
++ Throw force of grabbable players is now dependant on the size difference. *Anything above 0.66 in difference is stronger than before.*
++ Support for LethalLevelLoader
 
 **Fixes**
-+
++ Fixed arms and visor being misplaced or having wrong offset after being scaled
+
+### 0.5.5 ###
++ compatibility for v50 public beta
++ fixed terminal window not visible for enlarged players (at the cost of not moving the player up/down from the perspective of others. will get a full rework later on)
+
+### 0.5.4 ###
++ fixed desync from taking potion while getting hit by ShrinkRay
++ fixed clipping through ground sometimes when taking vents while being tiny
++ fixed being grabbable while climbing ladders, leading to weird behaviours. let them climb in peace c:
++ attempt to fix "Ungrab : [E]" being displayed while not grabbed
++ attempt to fix increased movement speed & jump height bug, even while being normal sized
++ fixed Potions & ShrinkRay disappearing on reloading a savefile
+
+### 0.5.3 ###
++ fixed audio error leading to bugged interaction state (previous fix was a workaround, this fixes the cause)
 
 ### 0.5.2 ###
 + Added a new config option "CantOpenStorageCloset" in section "Shrunken"
