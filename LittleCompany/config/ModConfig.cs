@@ -84,11 +84,11 @@ namespace LittleCompany.Config
             public HoardingBugBehaviour hoardingBugBehaviour { get; set; }
 
             // Potions
-            public int ShrinkPotionStorePrice { get; set; }
-            public int ShrinkPotionScrapRarity { get; set; }
+            public int shrinkPotionStorePrice { get; set; }
+            public int shrinkPotionScrapRarity { get; set; }
 
-            public int EnlargePotionStorePrice { get; set; }
-            public int EnlargePotionScrapRarity { get; set; }
+            public int enlargePotionStorePrice { get; set; }
+            public int enlargePotionScrapRarity { get; set; }
         }
 
         public ConfigValues values = new ConfigValues();
@@ -129,19 +129,17 @@ namespace LittleCompany.Config
             
             values.jumpOnShrunkenPlayers        = Plugin.BepInExConfig().Bind("Interactions", "JumpOnShrunkenPlayers", true, "If true, normal-sized players can harm shrunken players by jumping on them.").Value;
             values.throwablePlayers             = Plugin.BepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
-            values.sellablePlayers              = Plugin.BepInExConfig().Bind("Interactions", "sellablePlayers", true, "If true, shrunken players can be sold to the company").Value;
-
+            values.sellablePlayers              = Plugin.BepInExConfig().Bind("Interactions", "SellablePlayers", true, "If true, shrunken players can be sold to the company").Value;
 
             values.hoardingBugBehaviour         = Plugin.BepInExConfig().Bind("Enemies", "HoarderBugBehaviour", HoardingBugBehaviour.Default, "Defines if hoarding bugs should be able to grab you and how likely that is.").Value;
             values.thumperBehaviour             = Plugin.BepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Bumper, "Defines the way Thumpers react on shrunken players.").Value;
             
-            values.ShrinkPotionStorePrice       = Plugin.BepInExConfig().Bind("Potions", "ShrinkPotionShopPrice", 30, new ConfigDescription("Sets the store price. 0 to removed potion from store.", new AcceptableValueRange<int>(0, 500))).Value;
-            values.ShrinkPotionScrapRarity      = Plugin.BepInExConfig().Bind("Potions", "ShrinkPotionScrapRarity", 10, new ConfigDescription("Sets the scrap rarity. 0 makes it unable to spawn inside.", new AcceptableValueRange<int>(0, 100))).Value;
+            values.shrinkPotionStorePrice       = Plugin.BepInExConfig().Bind("Potions", "ShrinkPotionShopPrice", 30, new ConfigDescription("Sets the store price. 0 to removed potion from store.", new AcceptableValueRange<int>(0, 500))).Value;
+            values.shrinkPotionScrapRarity      = Plugin.BepInExConfig().Bind("Potions", "ShrinkPotionScrapRarity", 10, new ConfigDescription("Sets the scrap rarity. 0 makes it unable to spawn inside.", new AcceptableValueRange<int>(0, 100))).Value;
+            values.enlargePotionStorePrice      = Plugin.BepInExConfig().Bind("Potions", "EnlargePotionStorePrice", 50, new ConfigDescription("Sets the store price. 0 to removed potion from store.", new AcceptableValueRange<int>(0, 500))).Value;
+            values.enlargePotionScrapRarity     = Plugin.BepInExConfig().Bind("Potions", "EnlargePotionScrapRarity", 5, new ConfigDescription("Sets the scrap rarity. 0 makes it unable to spawn inside.", new AcceptableValueRange<int>(0, 100))).Value;
 
-            values.EnlargePotionStorePrice      = Plugin.BepInExConfig().Bind("Potions", "EnlargePotionStorePrice", 50, new ConfigDescription("Sets the store price. 0 to removed potion from store.", new AcceptableValueRange<int>(0, 500))).Value;
-            values.EnlargePotionScrapRarity     = Plugin.BepInExConfig().Bind("Potions", "EnlargePotionScrapRarity", 5, new ConfigDescription("Sets the scrap rarity. 0 makes it unable to spawn inside.", new AcceptableValueRange<int>(0, 100))).Value;
-
-            DebugLog                            = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", true, "Additional logging to help identifying issues in the beta version of this mod.").Value;
+            DebugLog                            = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", false, "Additional logging to help identifying issues of this mod.").Value;
 
 #if DEBUG
             Plugin.Log("Initial config: " + JsonConvert.SerializeObject(Instance.values));

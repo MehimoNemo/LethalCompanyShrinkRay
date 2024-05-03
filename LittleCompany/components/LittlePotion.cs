@@ -16,8 +16,8 @@ namespace LittleCompany.components
     public class LittleShrinkingPotion : LittlePotion
     {
         internal const string AssetPath = "ShrinkingPotionItem.asset";
-        internal static int StorePriceConfig = ModConfig.Instance.values.ShrinkPotionStorePrice;
-        internal static int RarityConfig = ModConfig.Instance.values.ShrinkPotionScrapRarity;
+        internal static int StorePriceConfig = ModConfig.Instance.values.shrinkPotionStorePrice;
+        internal static int RarityConfig = ModConfig.Instance.values.shrinkPotionScrapRarity;
 
         internal override string ItemName => "Light Potion";
         internal override string TerminalDescription => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a negative way. Lightweight and tastes like potato..";
@@ -44,8 +44,8 @@ namespace LittleCompany.components
     public class LittleEnlargingPotion : LittlePotion
     {
         internal const string AssetPath = "EnlargingPotionItem.asset";
-        internal static int StorePriceConfig = ModConfig.Instance.values.EnlargePotionStorePrice;
-        internal static int RarityConfig = ModConfig.Instance.values.EnlargePotionScrapRarity;
+        internal static int StorePriceConfig = ModConfig.Instance.values.enlargePotionStorePrice;
+        internal static int RarityConfig = ModConfig.Instance.values.enlargePotionScrapRarity;
 
         internal override string ItemName => "Heavy Potion";
         internal override string TerminalDescription => ItemName + "\nA mysteric potion that glows in the dark. Rumours say that it affects the size of the consumer in a positive way. Heavy and tastes like cheesecake..";
