@@ -1,4 +1,4 @@
-## BETA ##
+# 1.0.0 #
 **What's new**
 + Added "DefaultPlayerSize" config option. Players start with this size.
 + Players can now only grab smaller players. This includes enlarged players grabbing normal (or any smaller) sized ones!
@@ -17,6 +17,20 @@
 
 **Fixes**
 + Fixed arms and visor being misplaced or having wrong offset after being scaled
++ Fixed holding players at gameOver animation causing the held player to glue at the holder without being held
+
+### 0.5.8 ###
++ fixed a bug where vents couldn't be found if a previous error occured, leading to being unable to exit the lobby
+
+### 0.5.7 ###
++ fixed resizing not working correctly on players who were small before joining
++ updated recommended LethalLib dependency version to 0.15.1 for v50 support
++ Fixed arm offset when resized
++ Lethal Phone compatibility
++ ModelReplacementApi compatibility
+
+### 0.5.6 ###
++ fixed sometimes falling through ground after using vents
 
 ### 0.5.5 ###
 + compatibility for v50 public beta
@@ -45,10 +59,10 @@
 **What's new**
 + ShrinkRay Targeting is finally here! The holder will see a laser pointer and targets will get highlighted (on activate by default, configurable).
 + 4 new config options:
- + deathShrinking: Same as multipleShrinking was before. Allows shrinking players to death if set.
- + shrinkRayTargetHighlighting: A performance option that manages, when targets should be highlighted.
- + sizeChangeStep: The size change of a single modification *Enlarging has no benefits currently and won't make normal sized players grabbable. This is planned for 0.6.0!*
- + maxPlayerSize: Defines how tall a player can become. 1.7 is the default and also the highest value for standing inside the ship and going through doors.
+ + DeathShrinking: Same as multipleShrinking was before. Allows shrinking players to death if set. Players below 0.2 in size will die.
+ + ShrinkRayTargetHighlighting: A performance option that manages, when targets should be highlighted.
+ + SizeChangeStep: The size change of a single modification *Enlarging has no benefits currently and won't make normal sized players grabbable. This is planned for 0.6.0!*
+ + MaxPlayerSize: Defines how tall a player can become. 1.7 is the default and also the highest value for standing inside the ship and going through doors.
 + Smoke VFX when being shrunken to death
 
 **Fixes**

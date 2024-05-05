@@ -2,6 +2,7 @@
 using HarmonyLib;
 using LittleCompany.components;
 using LittleCompany.helper;
+using LittleCompany.modifications;
 using Vector3 = UnityEngine.Vector3;
 
 namespace LittleCompany.patches
@@ -17,7 +18,11 @@ namespace LittleCompany.patches
             if (placedItem == null) return;
 
             var placedPlayer = (placedItem as GrabbablePlayerObject);
-            if (placedPlayer == null) return;
+            if (placedPlayer == null)
+            {
+                ObjectModification.ScalingOf(placedItem).RemoveHologram();
+                return;
+            }
 
             if(!Config.ModConfig.Instance.values.sellablePlayers)
             {

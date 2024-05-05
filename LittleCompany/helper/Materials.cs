@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -108,6 +109,21 @@ namespace LittleCompany.helper
                 listOfMesh.Add(mesh);
             }
             return listOfMesh;
+        }
+
+        public static void ReplaceAllMaterialsWith(GameObject g, Func<Material, Material> materialReplacer)
+        {
+            var meshRenderer = GetMeshRenderers(g);
+            foreach (var mr in meshRenderer)
+                ReplaceAllMaterialsWith(mr, materialReplacer);
+        }
+
+        public static void ReplaceAllMaterialsWith(MeshRenderer mr, Func<Material, Material> materialReplacer)
+        {
+            var materials = new List<Material>();
+            foreach (var m in mr.materials)
+                materials.Add(materialReplacer(m));
+            mr.materials = materials.ToArray();
         }
     }
 }

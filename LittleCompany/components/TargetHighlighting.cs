@@ -97,6 +97,7 @@ namespace LittleCompany.components
 
         internal void ChangeMaterials()
         {
+            //Materials.ReplaceAllMaterialsWith(gameObject, (Material origin) => Materials.TargetedMaterial(origin));
             foreach (MeshRenderer mesh in meshesAndOriginalMaterials.Keys)
             {
                 ChangeMaterialForMeshRenderer(mesh);
@@ -105,10 +106,7 @@ namespace LittleCompany.components
 
         internal void ChangeMaterialForMeshRenderer(MeshRenderer renderer)
         {
-            List<Material> targetedMaterials = [];
-            for (int i = 0; i < renderer.materials.Length; i++)
-                targetedMaterials.Add(ChangedMaterial(renderer.materials[i]));
-            renderer.materials = targetedMaterials.ToArray();
+            Materials.ReplaceAllMaterialsWith(renderer, Materials.TargetedMaterial);
         }
 
         internal virtual Material ChangedMaterial(Material origin)

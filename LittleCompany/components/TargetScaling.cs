@@ -253,35 +253,37 @@ namespace LittleCompany.components
 
             // Hologram
             Plugin.Log("Instantiating hologram of " + target.name);
-            hologram = Instantiate(target.itemProperties.spawnPrefab);
-            if (hologram.TryGetComponent(out NetworkObject networkObject))
-                Destroy(networkObject);
-            if (hologram.TryGetComponent(out GrabbableObject item))
-                Destroy(item);
-            if (hologram.TryGetComponent(out Collider collider))
-                Destroy(collider);
-
+            hologram = ItemInfo.visualCopyOf(originalItemProperties);
             //hologram.transform.SetParent(target.transform, true);
 
-            var meshRenderer = Materials.GetMeshRenderers(hologram.gameObject);
-            foreach (var mr in meshRenderer)
-            {
-                var materials = new List<Material>();
-                foreach (var m in mr.materials)
-                    materials.Add(Materials.Wireframe);
-                mr.materials = materials.ToArray();
-            }
+            Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
 
             hologram.SetActive(false);
         }
 
         private void Update()
         {
-            if (hologram != null)
+            if (hologram != null && target != null)
             {
                 hologram.transform.position = target.transform.position;
                 hologram.transform.rotation = target.transform.rotation;
             }
+        }
+
+        private void OnDestroy()
+        {
+            Plugin.Log("TargetScaling.ondestroy");
+            RemoveHologram();
+        }
+
+        public void RemoveHologram()
+        {
+            if (hologramCoroutine == null) return; // Not getting scaled
+
+            DestroyImmediate(hologram);
+            StopCoroutine(hologramCoroutine);
+            hologramCoroutine = null;
+            DesiredScale = RelativeScale;
         }
 
         #region Methods
@@ -353,7 +355,7 @@ namespace LittleCompany.components
 #if DEBUG
                 RelativeScale += Time.deltaTime / 20;
 #else
-                RelativeScale += Time.deltaTime / 50;
+                RelativeScale += Time.deltaTime / 20 * RelativeScale;
 #endif
 
                 gameObject.transform.localScale = OriginalScale * RelativeScale;

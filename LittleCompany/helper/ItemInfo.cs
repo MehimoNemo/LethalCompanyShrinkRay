@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using Unity.Netcode;
 
 namespace LittleCompany.helper
 {
@@ -84,5 +85,19 @@ namespace LittleCompany.helper
         // ZapGun
         // CardboardBox
         public static readonly List<Item> SpawnableItems = Resources.FindObjectsOfTypeAll<Item>().ToList();
+
+        public static GameObject visualCopyOf(Item item)
+        {
+            var copy = Object.Instantiate(item.spawnPrefab);
+
+            if (copy.TryGetComponent(out NetworkObject networkObject))
+                Object.DestroyImmediate(networkObject);
+            if (copy.TryGetComponent(out GrabbableObject grabbableObject))
+                Object.DestroyImmediate(grabbableObject);
+            if (copy.TryGetComponent(out Collider collider))
+                Object.DestroyImmediate(collider);
+
+            return copy;
+        }
     }
 }
