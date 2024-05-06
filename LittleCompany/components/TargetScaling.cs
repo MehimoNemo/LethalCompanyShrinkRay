@@ -335,7 +335,8 @@ namespace LittleCompany.components
                 target.playerHeldBy.carryWeight += diff;
 
             // Scrap value
-            target.SetScrapValue((int)(originalScrapValue * RelativeScale));
+            if(originalScrapValue > 0)
+                target.SetScrapValue((int)(originalScrapValue * RelativeScale));
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
@@ -352,11 +353,8 @@ namespace LittleCompany.components
             {
                 //Plugin.Log("Going from scale " + RelativeScale + " to desired scale " + DesiredScale);
                 float previousScale = RelativeScale;
-#if DEBUG
-                RelativeScale += Time.deltaTime / 20;
-#else
-                RelativeScale += Time.deltaTime / 20 * RelativeScale;
-#endif
+
+                RelativeScale += Time.deltaTime / (20 * RelativeScale);
 
                 gameObject.transform.localScale = OriginalScale * RelativeScale;
 

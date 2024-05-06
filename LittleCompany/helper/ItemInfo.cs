@@ -97,6 +97,11 @@ namespace LittleCompany.helper
             if (copy.TryGetComponent(out Collider collider))
                 Object.DestroyImmediate(collider);
 
+            if(!copy.TryGetComponent(out ScanNodeProperties scanNode))
+                scanNode = copy.GetComponentInChildren<ScanNodeProperties>();
+            if(scanNode != null)
+                Object.DestroyImmediate(scanNode);
+
             return copy;
         }
     }
