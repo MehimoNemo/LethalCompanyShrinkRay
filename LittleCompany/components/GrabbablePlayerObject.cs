@@ -655,10 +655,7 @@ namespace LittleCompany.components
         private void ResetControlTips()
         {
             if (base.IsOwner)
-            {
-                Plugin.Log("IsOwner");
                 return; // happens automatically
-            }
 
             if(IsCurrentPlayer)
             {

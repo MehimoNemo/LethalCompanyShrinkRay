@@ -44,6 +44,8 @@ namespace LittleCompany.components
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
+
+        private bool onCooldown = false;
         internal enum Mode
         {
             Default,
@@ -142,10 +144,10 @@ namespace LittleCompany.components
             if (LaserEnabled)
                 UpdateLaser();
 
-            if (isPocketed || currentMode.Value != Mode.Default)
+            if (!isHeld || playerHeldBy != PlayerInfo.CurrentPlayer || isPocketed || currentMode.Value != Mode.Default)
                 return;
 
-            if (Mouse.current.middleButton.wasPressedThisFrame && IsOwner) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
+            if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
             {
                 SwitchModificationTypeServerRpc((int)ModificationType.Enlarging);
                 SwitchModeServerRpc((int)Mode.Loading);
@@ -197,7 +199,6 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModificationTypeServerRpc(int newType)
         {
-            Plugin.Log(currentModificationType.ToString());
             Plugin.Log(currentModificationType.Value.ToString());
             Plugin.Log("ShrinkRay modificationType switched to " + (ModificationType)newType);
             currentModificationType.Value = (ModificationType)newType;
@@ -355,7 +356,7 @@ namespace LittleCompany.components
             {
                 case Mask.Player: /*case Mask.DecalStickableSurface:*/
                     var targetPlayer = target.GetComponentInParent<PlayerControllerB>();
-                    if (targetPlayer != null && targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID)
+                    if (targetPlayer != null && targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID && !PlayerModification.IsGettingScaled(targetPlayer))
                         return targetPlayer.gameObject;
                     break;
 

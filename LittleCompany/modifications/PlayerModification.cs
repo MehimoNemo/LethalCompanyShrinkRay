@@ -18,6 +18,14 @@ namespace LittleCompany.modifications
             return scaling;
         }
 
+        internal static bool IsGettingScaled(PlayerControllerB target)
+        {
+            if (!target.TryGetComponent(out PlayerScaling scaling))
+                return false;
+
+            return scaling.GettingScaled;
+        }
+
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
@@ -86,19 +94,12 @@ namespace LittleCompany.modifications
                     return false; // Not supported yet
             }
 
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
-            {
-                if (gpo.playerHeldBy != null && gpo.playerHeldBy.playerClientId == targetPlayer.playerClientId)
-                {
-                    Plugin.Log("Attempting to shrink the player who holds us. Bad idea!");
-                    return false;
-                }
-                if (gpo.IsOnSellCounter.Value)
-                {
-                    Plugin.Log("Attempting to shrink a player who is on the sell counter. Poor soul is already doomed, let's not do this..");
-                    return false;
-                }
-            }
+            var grabbables = GrabbablePlayerList.FindGrabbableObjectsFor(targetPlayer.playerClientId);
+            if (grabbables.holderGPO != null)
+                return false;
+
+            if(grabbables.grabbedGPO != null && (grabbables.grabbedGPO.playerHeldBy != null || grabbables.grabbedGPO.IsOnSellCounter.Value))
+                return false;
 
             return true;
         }
@@ -148,9 +149,6 @@ namespace LittleCompany.modifications
                     {
                         var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
                         Plugin.Log("Enlarging player [" + targetPlayer.playerClientId + "] to size: " + nextIncreasedSize);
-
-                        if (nextIncreasedSize >= 1f && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
-                            gpo.EnableInteractTrigger(false);
 
                         ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {

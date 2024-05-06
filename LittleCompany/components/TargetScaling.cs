@@ -74,7 +74,6 @@ namespace LittleCompany.components
         // TODO: Rework.. this has too many parameters..
         public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float ? duration = null, Mode? mode = null, float? startingFromScale = null)
         {
-            Plugin.Log("Duration: " + duration);
             ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, duration.GetValueOrDefault(ShrinkRayFX.DefaultBeamDuration), mode.GetValueOrDefault(Mode.Wave), startingFromScale, () =>
             {
                 ScaleRoutine = null;
@@ -229,6 +228,14 @@ namespace LittleCompany.components
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
                 PlayerInfo.RebuildRig(target);
             }
+        }
+
+        public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
+        {
+            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(target.playerClientId, out GrabbablePlayerObject gpo))
+                gpo.EnableInteractTrigger(false); // UpdateInteractTrigger happening in UpdateWhoIsGrabbableFromPerspectiveOf after scaling already
+
+            base.ScaleOverTimeTo(scale, scaledBy, onComplete, duration, mode, startingFromScale);
         }
         #endregion
     }

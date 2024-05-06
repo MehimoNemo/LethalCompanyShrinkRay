@@ -12,7 +12,7 @@ namespace LittleCompany.modifications
 {
     public class ObjectModification : Modification
     {
-        public static List<string> UnscalableObjects = new List<string>();
+        public static List<string> UnscalableObjects = ["DeadPlayerBody"];
 
         #region Methods
         internal static ItemScaling ScalingOf(GrabbableObject target)
