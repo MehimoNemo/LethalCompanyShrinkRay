@@ -44,8 +44,6 @@ namespace LittleCompany.components
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
-
-        private bool onCooldown = false;
         internal enum Mode
         {
             Default,
