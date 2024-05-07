@@ -71,7 +71,7 @@ namespace LittleCompany.patches
         {
             if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Robot);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Jester);
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)
@@ -191,7 +191,7 @@ namespace LittleCompany.patches
             var enemyName = enemy.HasValue ? EnemyNameOf(enemy.Value) : "";
             Plugin.Log("Enemy name: " + enemyName);
             var enemyType = EnemyTypeByName(enemyName);
-            if (enemyType == null)
+            if (enemyType is null)
             {
                 Plugin.Log("No enemy found..");
                 return;

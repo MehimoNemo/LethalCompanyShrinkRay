@@ -2,6 +2,7 @@
 using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
+using Unity.Netcode;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
 
@@ -60,13 +61,19 @@ namespace LittleCompany.events.enemy
                             Plugin.Log("Unable to create slime clone from event.", Plugin.LogType.Error);
                             continue;
                         }
-                        slime.gameObject.AddComponent<TinySlimeBehaviour>();
+                        slime.GetComponent<SlimeEventHandler>()?.AddTinySlimeBehaviorClientRpc();
                     }
                 }
             }
 
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
             Plugin.Log("Slime shrunken to death. But at what cost..");
+        }
+
+        [ClientRpc]
+        public void AddTinySlimeBehaviorClientRpc()
+        {
+            gameObject.AddComponent<TinySlimeBehaviour>();
         }
     }
 }

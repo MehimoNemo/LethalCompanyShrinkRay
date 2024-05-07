@@ -68,7 +68,7 @@ namespace LittleCompany.helper
             { "Tulip Snake",        Enemy.TulipSnake    }
         };
 
-        public static readonly List<EnemyType> EnemyTypes = Resources.FindObjectsOfTypeAll<EnemyType>().ToList();
+        public static List<EnemyType> EnemyTypes => Resources.FindObjectsOfTypeAll<EnemyType>().ToList();
 
         public static Enemy EnemyByName(string name) => EnemyNameMap.GetValueOrDefault(name, Enemy.Custom);
 
@@ -77,22 +77,26 @@ namespace LittleCompany.helper
         public static EnemyType EnemyTypeByName(string enemyName = null)
         {
             if (enemyName == null) return null;
-
-            var index = EnemyTypes.FindIndex(enemyType => enemyType.enemyName == enemyName);
-            if (index == -1) return null;
-
-            return EnemyTypes[index];
+            foreach (EnemyType enemyType in EnemyTypes)
+            {
+                if (enemyName == enemyType.enemyName)
+                    return enemyType;
+            }
+            return null;
         }
 
         public static EnemyAI SpawnEnemyAt(Vector3 spawnPosition, float yRot, EnemyType enemyType)
         {
-            Plugin.Log("Spawn enemy.");
-            GameObject gameObject = UnityEngine.Object.Instantiate(enemyType.enemyPrefab, spawnPosition, Quaternion.Euler(new Vector3(0f, yRot, 0f)));
-            gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
-            var enemyAI = gameObject.GetComponent<EnemyAI>();
-            RoundManager.Instance.SpawnedEnemies.Add(enemyAI);
-
-            return enemyAI;
+            if (PlayerInfo.IsHost)
+            {
+                Plugin.Log("Spawn enemy.");
+                GameObject gameObject = UnityEngine.Object.Instantiate(enemyType.enemyPrefab, spawnPosition, Quaternion.Euler(new Vector3(0f, yRot, 0f)));
+                gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
+                var enemyAI = gameObject.GetComponent<EnemyAI>();
+                RoundManager.Instance.SpawnedEnemies.Add(enemyAI);
+                return enemyAI;
+            }
+            return null;
         }
 
         public static Enemy RandomEnemy
