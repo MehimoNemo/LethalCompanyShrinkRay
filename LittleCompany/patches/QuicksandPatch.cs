@@ -1,10 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.helper;
-using LittleCompany.modifications;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace LittleCompany.patches
@@ -24,7 +20,7 @@ namespace LittleCompany.patches
         [HarmonyPostfix]
         private static void Update(PlayerControllerB __instance)
         {
-            if ((__instance.IsOwner && __instance.isPlayerControlled && (!__instance.IsServer || __instance.isHostPlayerObject)) || __instance.isTestingPlayer)
+            if ( __instance.isPlayerControlled && __instance.isSinking)
             {
                 var adjustedMaxDepth = 2.8f + (PlayerInfo.SizeOf(__instance) - 1f) * 2.8f;
                 __instance.meshContainer.position = Vector3.Lerp(__instance.transform.position, __instance.transform.position - Vector3.up * adjustedMaxDepth, StartOfRound.Instance.playerSinkingCurve.Evaluate(__instance.sinkingValue));
