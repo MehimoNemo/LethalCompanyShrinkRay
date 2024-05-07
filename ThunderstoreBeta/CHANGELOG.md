@@ -10,14 +10,20 @@
  + Configurable
  + Scaling items will affect their weight and scrap value.
  + Shrinking items will be instantly, while enlarging items will take effect over time. *To prevent people from only using this in front of the sell counter, while not fully blocking it*
+ + The limit for scrap value is x2, reached at x10 size. Size however isn't limited, but scaling will slow down the larger the item gets
++ Support for LethalLevelLoader
++ Our own [Wiki](https://github.com/MehimoNemo/LethalCompanyShrinkRay/wiki)!
 
 **Tweaks**
 + Throw force of grabbable players is now dependant on the size difference. *Anything above 0.66 in difference is stronger than before.*
-+ Support for LethalLevelLoader
++ Glassification of held items is now based on their screen position (center = glassify), instead of being only applied on two-handed items
 
 **Fixes**
 + Fixed arms and visor being misplaced or having wrong offset after being scaled
 + Fixed holding players at gameOver animation causing the held player to glue at the holder without being held
++ Fixed any ShrinkRay triggering when one is shoot in enlarging mode
++ Adjusted quicksand sinking depth relative to player size
++ Fixed players being grabbable while being scaled
 
 ### 0.5.8 ###
 + fixed a bug where vents couldn't be found if a previous error occured, leading to being unable to exit the lobby

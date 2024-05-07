@@ -344,7 +344,7 @@ namespace LittleCompany.components
 
             // Scrap value
             if(originalScrapValue > 0)
-                target.SetScrapValue((int)(originalScrapValue * RelativeScale));
+                target.SetScrapValue((int)(originalScrapValue * Mathf.Max(1f + (RelativeScale - 1f) * 0.1f, 2f))); // Maximum twice the value at 10x size
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
