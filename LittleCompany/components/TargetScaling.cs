@@ -23,8 +23,7 @@ namespace LittleCompany.components
         public float RelativeScale = 1f;
         internal HashSet<IScalingListener> scalingListeners;
 
-        public bool GettingScaled => ScaleRoutine != null;
-        private Coroutine ScaleRoutine = null;
+        public bool GettingScaled { get; private set; } = false;
 
         internal T target;
 
@@ -74,9 +73,10 @@ namespace LittleCompany.components
         // TODO: Rework.. this has too many parameters..
         public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float ? duration = null, Mode? mode = null, float? startingFromScale = null)
         {
-            ScaleRoutine = StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, duration.GetValueOrDefault(ShrinkRayFX.DefaultBeamDuration), mode.GetValueOrDefault(Mode.Wave), startingFromScale, () =>
+            GettingScaled = true;
+            StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, duration.GetValueOrDefault(ShrinkRayFX.DefaultBeamDuration), mode.GetValueOrDefault(Mode.Wave), startingFromScale, () =>
             {
-                ScaleRoutine = null;
+                GettingScaled = false;
 
                 // Ensure final scale is set to the desired value
                 ScaleTo(scale, scaledBy);
@@ -129,7 +129,7 @@ namespace LittleCompany.components
         {
             if (GettingScaled)
             {
-                StopCoroutine(ScaleRoutine);
+                StopAllCoroutines();
                 ScalingProgress = 0f;
             }
         }
@@ -225,6 +225,7 @@ namespace LittleCompany.components
 
             if (!GettingScaled) // Execute at the very end
             {
+                Plugin.Log("Reached end of scaling");
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
                 PlayerInfo.RebuildRig(target);
             }
