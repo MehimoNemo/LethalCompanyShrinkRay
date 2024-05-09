@@ -345,6 +345,14 @@ namespace LittleCompany.components
             // Scrap value
             if(originalScrapValue > 0)
                 target.SetScrapValue((int)(originalScrapValue * Mathf.Max(1f + (RelativeScale - 1f) * 0.1f, 2f))); // Maximum twice the value at 10x size
+
+            // Hands
+
+            int holderRequired = (originalItemProperties.twoHanded ? 1 : 0) + (int)RelativeScale;
+            target.itemProperties.twoHanded = holderRequired >= 2;
+            target.itemProperties.twoHandedAnimation = holderRequired >= 2;
+            if(target.TryGetComponent(out MultiHolderItemBehaviour multiHolderItemBehaviour))
+                multiHolderItemBehaviour.SetHolderRequired(holderRequired);
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
