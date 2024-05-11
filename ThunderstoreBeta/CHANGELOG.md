@@ -17,6 +17,7 @@
 **Tweaks**
 + Throw force of grabbable players is now dependant on the size difference. *Anything above 0.66 in difference is stronger than before.*
 + Glassification of held items is now based on their screen position (center = glassify), instead of being only applied on two-handed items
++ Config folder is now called Toybox.LittleCompany without the additional "BETA" inside the name. **Old config settings will be lost with this version!**
 
 **Fixes**
 + Fixed arms and visor being misplaced or having wrong offset after being scaled
