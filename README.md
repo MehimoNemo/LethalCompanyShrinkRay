@@ -34,22 +34,24 @@ A wiki containing the list of features this mod adds can be found [here on githu
 A list of known bugs can be found on our Github repository in the [issues section](https://github.com/MehimoNemo/LethalCompanyShrinkRay/issues)
 
 ## Planned features ##
-- Animations for holding / throwing players
-- Make sandworms unlikely targeting shrunken players
+A list of planned features can be found on our Github wiki in the [content ideas section](https://github.com/MehimoNemo/LethalCompanyShrinkRay/wiki/Content-ideas)
 
 ## Got more ideas? ##
 Send us a message on discord
 + big_nemo
 + niro1996
++ abovefire
 
-or write it in our threads on the unofficial lethal companys mod discords:
+or leave a message in the following discord server:
+[LittleCompany Discord](https://discord.gg/63KdxhQ2Dn)
 [Unofficial Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1169792572382773318/1190100786357743646)
 [Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1168655651455639582/1206337352608256010)
 
 ## Special Thanks To
-[AboveFire](https://github.com/AboveFire) & [MissScarlett](https://github.com/QueenScarlett23) for development help!
+[AboveFire](https://github.com/AboveFire) for development help!
 [@peppermint_2859](https://twitter.com/ItsJOEYthe) on discord for the ShrinkRay model!
 [Sakiskid](https://github.com/Sakiskid) for the ShrinkRay beam!
+[MissScarlett](https://github.com/QueenScarlett23) for contributing to the mod.
 Ellethwen on discord for the potion & player item icons!
 Spinmaster on discord for creating all the sounds this mod includes!
 

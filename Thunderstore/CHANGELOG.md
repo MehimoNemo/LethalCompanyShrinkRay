@@ -25,6 +25,7 @@
 + Fixed any ShrinkRay triggering when one is shoot in enlarging mode
 + Adjusted quicksand sinking depth relative to player size
 + Fixed players being grabbable while being scaled
++ Fixed bought potions being sellable
 
 ### 0.5.8 ###
 + fixed a bug where vents couldn't be found if a previous error occured, leading to being unable to exit the lobby
