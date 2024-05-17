@@ -295,7 +295,11 @@ namespace LittleCompany.components
                 yield break;
             }
 
-            PlayerModification.ApplyModificationTo(playerHeldBy, modificationType, playerHeldBy);
+            var duration = ModConfig.Instance.values.potionEffectDuration;
+            if (duration > 0)
+                PlayerModification.ApplyTimedModificationTo(playerHeldBy, modificationType, playerHeldBy, duration);
+            else
+                PlayerModification.ApplyModificationTo(playerHeldBy, modificationType, playerHeldBy);
 
             Consuming = true;
             isBeingUsed = true;

@@ -4,6 +4,8 @@ using LittleCompany.Config;
 using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LittleCompany.modifications
@@ -102,6 +104,23 @@ namespace LittleCompany.modifications
                 return false;
 
             return true;
+        }
+
+        public static void ApplyTimedModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy, float minutesTillExpire, Action onComplete = null)
+        {
+            if (TryGetTimedModification(targetPlayer, type, out TimedModification timedModification))
+            {
+                timedModification.remainingTime += minutesTillExpire * 60;
+                return;
+            }
+
+            timedModification = new TimedModification(targetPlayer, playerModifiedBy, minutesTillExpire * 60, type);
+            timedModification.target = targetPlayer;
+            timedModification.remainingTime = minutesTillExpire * 60;
+            timedModification.type = type;
+            timedModifications.Add(timedModification);
+
+            timedModification.Start();
         }
 
         public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
