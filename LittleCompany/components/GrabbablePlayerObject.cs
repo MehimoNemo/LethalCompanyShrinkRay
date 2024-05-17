@@ -713,11 +713,24 @@ namespace LittleCompany.components
         [ClientRpc]
         public void DemandDropFromPlayerClientRpc(ulong holdingPlayerID, ulong heldPlayerID)
         {
-            var currentPlayerID = PlayerInfo.CurrentPlayerID;
+            var currentPlayer = PlayerInfo.CurrentPlayer;
+            if (currentPlayer == null)
+            {
+                Plugin.Log("DemandDropFromPlayerClientRpc: Local player controller not found.", Plugin.LogType.Error);
+                return;
+            }
+
+            var currentPlayerID = currentPlayer.playerClientId;
             if (currentPlayerID == holdingPlayerID)
             {
                 Plugin.Log("Player " + heldPlayerID + " demanded to be dropped from you .. so it shall be!");
-                StartOfRound.Instance.localPlayerController.DiscardHeldObject();
+                if(currentPlayer.currentlyHeldObjectServer == null)
+                {
+                    Plugin.Log("Player demanded to be dropped from us, but we aren't holding anyone.", Plugin.LogType.Warning);
+                    return;
+                }
+
+                currentPlayer.DiscardHeldObject();
             }
             else if (currentPlayerID == heldPlayerID)
                 Plugin.Log("You demanded to be dropped from player " + holdingPlayerID);
