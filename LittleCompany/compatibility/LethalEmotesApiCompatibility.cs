@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using LittleCompany.helper;
 using System.Runtime.CompilerServices;
 
 namespace LittleCompany.compatibility
@@ -22,12 +23,18 @@ namespace LittleCompany.compatibility
             }
         }
 
+        private static bool ThirdPersonFixed = false;
+
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         [HarmonyPatch(typeof(BoneMapper), "TurnOnThirdPerson")]
         [HarmonyPostfix]
         public static void TurnOnThirdPersonPostFix()
         {
-            PlayerCosmetics.RegularizeCosmetics();
+            if (!ThirdPersonFixed)
+            {
+                PlayerCosmetics.RegularizePlayerCosmetics(PlayerInfo.CurrentPlayer);
+                ThirdPersonFixed = true;
+            }
         }
     }
 }

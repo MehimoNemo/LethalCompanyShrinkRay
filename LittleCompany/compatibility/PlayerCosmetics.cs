@@ -11,21 +11,20 @@ namespace LittleCompany.compatibility
     {
         internal static string[] BasePartsException => ["commando(Clone)", "ArmsRotationTarget(Clone)", "scavEmoteSkeleton(Clone)"];
         internal static string[] ModdedPartsCompatibilityException = ["LocalPhoneModel(Clone)"];
-        internal static Dictionary<String, Vector3> DefaultScale = [];
 
-        public static void RegularizeCosmetics()
+        public static void RegularizeAllCosmeticsWhenLoading()
         {
             Plugin.Log("RegularizeCosmetics");
             foreach (var player in PlayerInfo.AllPlayers)
             {
-                foreach (Transform cosmetic in GetAllCosmeticsOfPlayer(player))
-                {
-                    if (!DefaultScale.ContainsKey(cosmetic.name))
-                    {
-                        DefaultScale[cosmetic.name] = cosmetic.localScale;
-                    }
-                    cosmetic.localScale = DefaultScale[cosmetic.name];
-                }
+                RegularizePlayerCosmetics(player);
+            }
+        }
+        public static void RegularizePlayerCosmetics(PlayerControllerB player)
+        {
+            foreach (Transform cosmetic in GetAllCosmeticsOfPlayer(player))
+            {
+                cosmetic.localScale = cosmetic.localScale * PlayerInfo.SizeOf(player);
             }
         }
 
