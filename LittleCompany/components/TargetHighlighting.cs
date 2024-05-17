@@ -106,7 +106,7 @@ namespace LittleCompany.components
 
         internal void ChangeMaterialForMeshRenderer(MeshRenderer renderer)
         {
-            Materials.ReplaceAllMaterialsWith(renderer, Materials.TargetedMaterial);
+            Materials.ReplaceAllMaterialsWith(renderer, ChangedMaterial);
         }
 
         internal virtual Material ChangedMaterial(Material origin)
