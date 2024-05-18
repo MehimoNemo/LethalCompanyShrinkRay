@@ -1,3 +1,8 @@
+### 1.0.2 ###
+**Fixes**
+- Fixed glassification not working
+- Fixed cases where MoreCompany cosmetics didnt scale accordingly
+
 ### 1.0.1 ###
 **What's new**
 - Added "ItemScalingVisualOnly" option. If true, scaling items doesn't change their weight & value.

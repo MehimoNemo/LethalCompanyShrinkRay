@@ -24,7 +24,10 @@ namespace LittleCompany.patches.EnemyBehaviours
             if (IsDieing(__instance)) // about to die.. don't see players as threat
                 return false;
 
-            return !PlayerInfo.SmallerThan(playerScript, EnemyInfo.SizeOf(__instance));
+            if (PlayerInfo.SmallerThan(playerScript, EnemyInfo.SizeOf(__instance)))
+                return false;
+
+            return __result;
         }
 
         [HarmonyPatch(typeof(HoarderBugAI), "RefreshGrabbableObjectsInMapList")]
@@ -196,14 +199,14 @@ namespace LittleCompany.patches.EnemyBehaviours
                 __instance.SwitchToBehaviourState((int)BehaviourState.Nest);
             }
 
-            if (!foundObject.TryGetComponent(out GrabbablePlayerObject gpo))
+            /*if (!foundObject.TryGetComponent(out GrabbablePlayerObject gpo))
                 return;
 
             if (!IsGrabbablePlayerTargetable(gpo, __instance))
             {
                 Plugin.Log("SetGoTowardsTargetObject: Player not targetable for hoarding bug");
                 return;
-            }
+            }*/
         }
 
         // ------------------ DEBUG FROM HERE ON ------------------
