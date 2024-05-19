@@ -55,11 +55,12 @@ namespace LittleCompany.patches
 
         public static void AdjustPitchIntensityOf(EnemyAI enemyAI)
         {
-            if (PlayerInfo.CurrentPlayer == null || enemyAI == null) return;
+            if (PlayerInfo.CurrentPlayer == null || enemyAI == null || enemyAI.creatureVoice == null) return;
 
             var sizeDifference = PlayerInfo.CurrentPlayerScale - EnemyInfo.SizeOf(enemyAI);
             var pitchIntensity = ModConfig.Instance.values.enemyPitchDistortionIntensity;
             var pitch = Mathf.Clamp(1f + (sizeDifference * pitchIntensity), 0.5f, 1.5f);
+
             enemyAI.creatureVoice.pitch = pitch;
         }
     }
