@@ -218,6 +218,7 @@ namespace LittleCompany.Config
 
                 // Adjust client-sided options (WIP -> replace later with e.g. custom JsonConverter)
                 hostValues.pitchDistortionIntensity = Instance.values.pitchDistortionIntensity;
+                hostValues.enemyPitchDistortionIntensity = Instance.values.enemyPitchDistortionIntensity;
 
                 PlayerCosmetics.RegularizeAllCosmeticsWhenLoading();
 
