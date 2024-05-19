@@ -2,6 +2,9 @@
 **Tweaks**
 - Additional option *[Enemies]EnemyPitchDistortionIntensity* to change voice pitch of enemies, relative to their scale and the local player scale
 
+**Fixes**
+- Fixed turrets being unable to see shrunken players
+
 ### 1.0.2 ###
 **Fixes**
 - Fixed glassification not working

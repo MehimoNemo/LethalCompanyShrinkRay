@@ -186,6 +186,21 @@ namespace LittleCompany.patches
             Plugin.Log(enemies != null ? enemies.Join(null, "\n") : "Not in a round.");
         }
 
+        public static void SpawnTurretInFrontOfPlayer(PlayerControllerB targetPlayer)
+        {
+            foreach (var obj in RoundManager.Instance.currentLevel.spawnableMapObjects)
+            {
+                if (obj.prefabToSpawn.GetComponentInChildren<Turret>() == null) continue;
+
+                var position = targetPlayer.transform.position + targetPlayer.transform.forward * 3f;
+                var turret = Object.Instantiate(obj.prefabToSpawn, position, Quaternion.identity, RoundManager.Instance.mapPropsContainer.transform);
+                turret.transform.position = position;
+                turret.transform.forward = new Vector3(1, 0, 0);
+                turret.GetComponent<NetworkObject>().Spawn(true);
+                return;
+            }
+        }
+
         public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, Enemy? enemy = null)
         {
             var enemyName = enemy.HasValue ? EnemyNameOf(enemy.Value) : "";
