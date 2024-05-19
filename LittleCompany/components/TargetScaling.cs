@@ -229,6 +229,9 @@ namespace LittleCompany.components
                 Plugin.Log("Reached end of scaling");
                 GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
                 PlayerInfo.RebuildRig(target);
+
+                if(PlayerInfo.IsCurrentPlayer(target))
+                    AudioPatches.UpdateEnemyPitches();
             }
         }
 
@@ -422,5 +425,10 @@ namespace LittleCompany.components
 
     internal class EnemyScaling : TargetScaling<EnemyAI>
     {
+        public override void ScaleTo(float scale, PlayerControllerB scaledBy)
+        {
+            base.ScaleTo(scale, scaledBy);
+            AudioPatches.AdjustPitchIntensityOf(target);
+        }
     }
 }

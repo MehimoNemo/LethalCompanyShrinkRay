@@ -1,4 +1,5 @@
 ﻿using LittleCompany.components;
+using LittleCompany.patches;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -94,6 +95,7 @@ namespace LittleCompany.helper
                 gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
                 var enemyAI = gameObject.GetComponent<EnemyAI>();
                 RoundManager.Instance.SpawnedEnemies.Add(enemyAI);
+                AudioPatches.AdjustPitchIntensityOf(enemyAI);
                 return enemyAI;
             }
             return null;

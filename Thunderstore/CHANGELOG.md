@@ -1,3 +1,7 @@
+### 1.0.3 ###
+**Tweaks**
+- Additional option *[Enemies]EnemyPitchDistortionIntensity* to change voice pitch of enemies, relative to their scale and the local player scale
+
 ### 1.0.2 ###
 **Fixes**
 - Fixed glassification not working

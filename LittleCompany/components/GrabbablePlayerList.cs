@@ -173,27 +173,6 @@ namespace LittleCompany.components
             if(TryFindGrabbableObjectForPlayer(__instance.playerClientId, out GrabbablePlayerObject gpo)) // Used to disable trigger when climbing ladders
                 gpo.UpdateInteractTrigger();
         }
-                
-
-        [HarmonyPatch(typeof(StartOfRound), "UpdatePlayerVoiceEffects")]
-        [HarmonyPriority(Priority.HigherThanNormal)]
-        [HarmonyBefore(["MoreCompany"])]
-        [HarmonyPostfix]
-        public static void SetPlayerVoiceFilters()
-        {
-            if (SoundManager.Instance == null) return;
-
-            foreach (var pcb in PlayerInfo.AllPlayers)
-            {
-                float playerScale = PlayerInfo.SizeOf(pcb);
-                float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
-
-                float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
-
-                SoundManager.Instance.playerVoicePitchTargets[pcb.playerClientId] = modifiedPitch;
-                SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)pcb.playerClientId);
-            }
-        }
 
         [HarmonyPatch(typeof(RoundManager), "GenerateNewLevelClientRpc")]
         [HarmonyPostfix]
