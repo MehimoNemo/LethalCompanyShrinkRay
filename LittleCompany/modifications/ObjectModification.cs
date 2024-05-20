@@ -101,9 +101,9 @@ namespace LittleCompany.modifications
                         Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
-                            if (nextShrunkenSize < DeathShrinkMargin)
+                            if (Mathf.Approximately(nextShrunkenSize, 0f))
                             {
-                                // Poof Target to death because they are too small to exist
+                                // Poof Target to death because they are at size 0
                                 if (Effects.TryCreateDeathPoofAt(out GameObject deathPoof, targetObject.transform.position) && targetObject.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
                                     audioSource.PlayOneShot(deathPoofSFX);
 

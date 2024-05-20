@@ -1,3 +1,7 @@
+### 1.0.5 ###
+**Tweaks**
+- Items below a size of 0.2 can now exist. Only items with a size of 0 will disappear
+
 ### 1.0.4 ###
 **Tweaks**
 - Additional option *[Enemies]EnemyPitchDistortionIntensity* to change voice pitch of enemies, relative to their scale and the local player scale
