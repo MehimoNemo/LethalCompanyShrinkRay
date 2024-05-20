@@ -4,6 +4,7 @@
 
 **Fixes**
 - Fixed turrets being unable to see shrunken players
+- Fixed some items (like extension ladder) causing log errors when shrunken to zero
 
 ### 1.0.2 ###
 **Fixes**
