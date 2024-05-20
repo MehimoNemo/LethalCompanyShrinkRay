@@ -1,7 +1,8 @@
-### 1.0.3 ###
+### 1.0.4 ###
 **Tweaks**
 - Additional option *[Enemies]EnemyPitchDistortionIntensity* to change voice pitch of enemies, relative to their scale and the local player scale
 
+## 1.0.3 ###
 **Fixes**
 - Fixed turrets being unable to see shrunken players
 - Fixed some items (like extension ladder) causing log errors when shrunken to zero
