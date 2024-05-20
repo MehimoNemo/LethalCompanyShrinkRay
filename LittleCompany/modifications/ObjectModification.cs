@@ -108,6 +108,8 @@ namespace LittleCompany.modifications
                                     audioSource.PlayOneShot(deathPoofSFX);
 
                                 targetObject.DestroyObjectInHand(targetObject.playerHeldBy);
+                                if (PlayerInfo.IsHost)
+                                    targetObject.NetworkObject.Despawn();
                             }
 
                             if (onComplete != null)
