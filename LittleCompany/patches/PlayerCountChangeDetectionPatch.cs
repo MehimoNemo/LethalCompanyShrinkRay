@@ -2,8 +2,7 @@
 using HarmonyLib;
 using LittleCompany.components;
 using LittleCompany.helper;
-using UnityEngine;
-using LittleCompany.modifications;
+using Unity.Netcode;
 
 namespace LittleCompany.patches
 {
@@ -13,7 +12,7 @@ namespace LittleCompany.patches
         // After a client joins
         [HarmonyPatch(typeof(StartOfRound), "OnPlayerConnectedClientRpc")]
         [HarmonyPrefix]
-        public static void OnPlayerConnectedClientRpc(ulong assignedPlayerObjectId)
+        public static void OnPlayerConnectedClientRpc(ulong clientId, ulong assignedPlayerObjectId)
         {
             var player = StartOfRound.Instance.allPlayerScripts[assignedPlayerObjectId];
             if(player == null)
@@ -22,25 +21,38 @@ namespace LittleCompany.patches
                 return;
             }
 
+            if (clientId == NetworkManager.Singleton.LocalClientId)
+            {
+                Plugin.Log("We joined.");
+                return; // CurrentPlayer
+            }
+
             Plugin.Log(player.name + " joined.");
+
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(player);
             GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(player);
         }
 
 
-        // After client joined
+        // Host opened lobby
         [HarmonyPatch(typeof(PlayerControllerB), "ConnectClientToPlayerObject")]
         [HarmonyPostfix]
         public static void ConnectClientToPlayerObject()
         {
-            if (!GameNetworkManagerPatch.IsGameInitialized)
+            if (!PlayerInfo.IsHost)
                 return;
 
+            GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
+        }
+        
+        // After our config is synced
+        public static void ConfigSyncedOnConnect()
+        {
             // cigarette
             Plugin.Log("\n a,  8a\r\n `8, `8)                            ,adPPRg,\r\n  8)  ]8                        ,ad888888888b\r\n ,8' ,8'                    ,gPPR888888888888\r\n,8' ,8'                 ,ad8\"\"   `Y888888888P\r\n8)  8)              ,ad8\"\"        (8888888\"\"\r\n8,  8,          ,ad8\"\"            d888\"\"\r\n`8, `8,     ,ad8\"\"            ,ad8\"\"\r\n `8, `\" ,ad8\"\"            ,ad8\"\"\r\n    ,gPPR8b           ,ad8\"\"\r\n   dP:::::Yb      ,ad8\"\"\r\n   8):::::(8  ,ad8\"\"\r\n   Yb:;;;:d888\"\"  Yummy\r\n    \"8ggg8P\"      Nummy");
-            Plugin.Log("We joined a lobby.");
-            //AddPlayerScalingToEveryScaledPlayer();
+
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
+            GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(PlayerInfo.CurrentPlayer);
         }
 
         // When players get revived

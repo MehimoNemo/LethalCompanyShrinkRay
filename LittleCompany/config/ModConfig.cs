@@ -9,6 +9,7 @@ using LittleCompany.helper;
 using LittleCompany.components;
 using LittleCompany.compatibility;
 using UnityEngine;
+using LittleCompany.patches;
 
 namespace LittleCompany.Config
 {
@@ -224,6 +225,8 @@ namespace LittleCompany.Config
 
                 Instance.values = hostValues;
                 Instance.FixWrongEntries();
+
+                PlayerCountChangeDetection.ConfigSyncedOnConnect();
             }
             #endregion
         }
