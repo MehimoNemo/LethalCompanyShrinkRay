@@ -13,6 +13,7 @@ using LittleCompany.patches.EnemyBehaviours;
 using static LittleCompany.helper.Moons;
 using static LittleCompany.helper.LayerMasks;
 using LittleCompany.dependency;
+using LittleCompany.coroutines;
 
 namespace LittleCompany.components
 {
@@ -50,8 +51,6 @@ namespace LittleCompany.components
         private int frameCounter = 1;
         public bool IsCurrentPlayer { get; set; }
         public NetworkVariable<bool> IsOnSellCounter = new NetworkVariable<bool>(false);
-
-        private bool IsGoombaCoroutineRunning = false;
 
         private EnemyAI enemyHeldBy = null;
         public HoarderBugAI lastHoarderBugGrabbedBy = null;
@@ -299,6 +298,8 @@ namespace LittleCompany.components
             ResetControlTips();
 
             UpdateInteractTrigger();
+
+            StartCoroutine(GrabCooldownCoroutine());
         }
 
         public override void GrabItemFromEnemy(EnemyAI enemyAI)
@@ -352,6 +353,8 @@ namespace LittleCompany.components
 
             if (IsCurrentPlayer)
                 PlayerInfo.EnableCameraVisor();
+
+            StartCoroutine(GrabCooldownCoroutine());
         }
 
         public override void EquipItem()
@@ -452,6 +455,18 @@ namespace LittleCompany.components
                     playerHeldBy.DiscardHeldObject(); // Can lead to problems
             }
             catch { };
+        }
+
+        public IEnumerator GrabCooldownCoroutine()
+        {
+            var previouslyGrabbable = grabbable;
+            var previouslyGrabbableToEnemies = grabbableToEnemies;
+
+            grabbable = false;
+            grabbableToEnemies = false;
+            yield return new WaitForSeconds(0.5f);
+            grabbable = previouslyGrabbable;
+            grabbableToEnemies = previouslyGrabbableToEnemies;
         }
 
         public void UpdateScanNodeVisibility()
@@ -573,17 +588,14 @@ namespace LittleCompany.components
         private PlayerControllerB GetPlayerAbove()
         {
             // Cast a ray upwards to check for the player above
-            if (Physics.Raycast(grabbedPlayer.gameplayCamera.transform.position, grabbedPlayer.gameObject.transform.up, out RaycastHit hit, 0.5f, ToInt([Mask.Player]), QueryTriggerInteraction.Ignore))
-                return hit.collider.gameObject.GetComponent<PlayerControllerB>();
+            if (Physics.Raycast(grabbedPlayer.gameplayCamera.transform.position, Vector3.up, out RaycastHit hit, 1f, ToInt([Mask.Player]), QueryTriggerInteraction.Ignore))
+                return hit.collider.GetComponentInParent<PlayerControllerB>();
 
             return null;
         }
 
         private void CheckForGoomba()
         {
-            if (IsGoombaCoroutineRunning)
-                return; // Already running
-
             if (!ModConfig.Instance.values.jumpOnShrunkenPlayers)
                 return;
 
@@ -593,14 +605,15 @@ namespace LittleCompany.components
                 return;
             }
 
+            if (GoombaStomp.IsGettingGoombad(PlayerInfo.CurrentPlayer))
+                return; // Already running
+
             var playerAbove = GetPlayerAbove();
             if (playerAbove == null)
                 return;
 
             if (PlayerInfo.SizeOf(PlayerInfo.CurrentPlayer) >= PlayerInfo.SizeOf(playerAbove))
                 return; // 2 Weak 2 Goomba c:
-
-            IsGoombaCoroutineRunning = true;
 
             OnGoombaServerRpc(PlayerInfo.CurrentPlayer.playerClientId);
         }
@@ -741,23 +754,24 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         public void OnGoombaServerRpc(ulong playerID)
         {
-            if (IsGoombaCoroutineRunning) return;
+            var targetPlayer = PlayerInfo.ControllerFromID(playerID);
+            if (targetPlayer != null && GoombaStomp.IsGettingGoombad(targetPlayer)) return;
+
             OnGoombaClientRpc(playerID);
         }
 
         [ClientRpc]
         public void OnGoombaClientRpc(ulong playerID)
         {
-            var currentPlayer = PlayerInfo.CurrentPlayer;
-            if(currentPlayer.playerClientId == playerID)
+            var targetPlayer = PlayerInfo.ControllerFromID(playerID);
+            if (targetPlayer == null)
+                return;
+
+            if(targetPlayer == PlayerInfo.CurrentPlayer)
                 Plugin.Log("WE GETTING GOOMBAD");
             else
                 Plugin.Log("A goomba on player " + playerID);
-            coroutines.GoombaStomp.StartRoutine(PlayerInfo.ControllerFromID(playerID).gameObject, () =>
-            {
-                if (playerID == currentPlayer.playerClientId)
-                    IsGoombaCoroutineRunning = false;
-            });
+            GoombaStomp.GoombaPlayer(targetPlayer);
         }
 
         [ServerRpc(RequireOwnership = false)]

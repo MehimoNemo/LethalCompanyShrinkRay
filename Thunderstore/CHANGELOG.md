@@ -1,6 +1,16 @@
+### 1.0.6 ###
+**Fixes**
+- Fixed DefaultPlayerSize not being synced in time between host and client
+
 ### 1.0.5 ###
 **Tweaks**
 - Items below a size of 0.2 can now exist. Only items with a size of 0 will disappear
+
+**Fixes**
+- Attempt to fix OverflowException when sending config options from host to clients
+- Fixed goomba animation stacking when hit multiple times by a shovel
+- Fixed goomba animation starting at full size, regardless of player size
+- Added cooldown for grabbing the same player again, to counter a bug where re-grabbing a player too fast is rarely causing a bugged interact state
 
 ### 1.0.4 ###
 **Tweaks**

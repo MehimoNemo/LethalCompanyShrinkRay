@@ -13,7 +13,6 @@ namespace LittleCompany.helper
     internal class PlayerInfo
     {
         public static readonly float VanillaPlayerSize = 1f;
-        public static float DefaultPlayerSize => ModConfig.Instance.values.defaultPlayerSize;
         public static void Cleanup()
         {
             _cameraVisor = null;
@@ -96,7 +95,7 @@ namespace LittleCompany.helper
 
         public static bool IsDefaultVanillaSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), VanillaPlayerSize);
 
-        public static bool IsDefaultSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), DefaultPlayerSize);
+        public static bool IsDefaultSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), ModConfig.Instance.values.defaultPlayerSize);
 
         public static bool IsEnlarged(PlayerControllerB player) => LargerThan(player, VanillaPlayerSize);
 

@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
 using LittleCompany.Config;
+using LittleCompany.coroutines;
 using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
@@ -74,6 +75,7 @@ namespace LittleCompany.modifications
                     break;
 
                 case ModificationType.Shrinking:
+                    if (GoombaStomp.IsGettingGoombad(targetPlayer)) return false;
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
                     var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
@@ -83,6 +85,7 @@ namespace LittleCompany.modifications
                     break;
 
                 case ModificationType.Enlarging:
+                    if (GoombaStomp.IsGettingGoombad(targetPlayer)) return false;
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
                     var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
@@ -114,6 +117,8 @@ namespace LittleCompany.modifications
             {
                 case ModificationType.Normalizing:
                     {
+                        GoombaStomp.StopGoombaOn(targetPlayer);
+
                         Plugin.Log("Normalizing player [" + targetPlayer.playerClientId + "]");
                         ScalingOf(targetPlayer).ScaleTo(ModConfig.Instance.values.defaultPlayerSize, playerModifiedBy);
 

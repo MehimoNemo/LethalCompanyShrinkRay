@@ -9,6 +9,7 @@ using LittleCompany.helper;
 using LittleCompany.components;
 using LittleCompany.compatibility;
 using UnityEngine;
+using LittleCompany.patches;
 
 namespace LittleCompany.Config
 {
@@ -207,7 +208,7 @@ namespace LittleCompany.Config
                 int writeSize = FastBufferWriter.GetWriteSize(json);
                 using FastBufferWriter writer = new FastBufferWriter(writeSize, Allocator.Temp);
                 writer.WriteValueSafe(json);
-                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RECEIVE_MESSAGE, clientId, writer, NetworkDelivery.ReliableSequenced);
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RECEIVE_MESSAGE, clientId, writer, NetworkDelivery.ReliableFragmentedSequenced);
             }
 
             public static void HostConfigReceived(ulong clientId, FastBufferReader reader)
@@ -224,6 +225,8 @@ namespace LittleCompany.Config
 
                 Instance.values = hostValues;
                 Instance.FixWrongEntries();
+
+                PlayerCountChangeDetection.ConfigSyncedOnConnect();
             }
             #endregion
         }
