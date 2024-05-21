@@ -2,6 +2,11 @@
 **Tweaks**
 - Items below a size of 0.2 can now exist. Only items with a size of 0 will disappear
 
+**Fixes**
+- Attempt to fix OverflowException when sending config options from host to clients
+- Fixed goomba animation stacking when hit multiple times by a shovel
+- Fixed goomba animation starting at full size, regardless of player size
+
 ### 1.0.4 ###
 **Tweaks**
 - Additional option *[Enemies]EnemyPitchDistortionIntensity* to change voice pitch of enemies, relative to their scale and the local player scale
