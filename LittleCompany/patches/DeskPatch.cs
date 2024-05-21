@@ -24,7 +24,7 @@ namespace LittleCompany.patches
                 return;
             }
 
-            if(!Config.ModConfig.Instance.values.sellablePlayers)
+            if(!Plugin.Config.SELLABLE_PLAYERS)
             {
                 Plugin.Log("Nuh uh honey bear! We are not selling this fella!!! (Player " + placedPlayer.grabbedPlayerID.Value + ")", Plugin.LogType.Warning);
                 return;

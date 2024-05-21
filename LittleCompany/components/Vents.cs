@@ -59,7 +59,7 @@ namespace LittleCompany.components
             if (sussification) // Already sussified
                 return;
 
-            if (!ModConfig.Instance.values.canUseVents)
+            if (!Plugin.Config.CAN_USE_VENTS)
             {
                 Plugin.Log("Sussification of vents disabled.");
                 return;

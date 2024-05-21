@@ -20,12 +20,12 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(EnemyAI targetEnemy)
         {
-            return Mathf.Max(Rounded(ScalingOf(targetEnemy).RelativeScale - ModConfig.Instance.values.enemySizeChangeStep), 0f);
+            return Mathf.Max(Rounded(ScalingOf(targetEnemy).RelativeScale - Plugin.Config.ENEMY_SIZE_STEP_CHANGE), 0f);
         }
 
         public static float NextIncreasedSizeOf(EnemyAI targetEnemy)
         {
-            return Rounded(ScalingOf(targetEnemy).RelativeScale + ModConfig.Instance.values.enemySizeChangeStep);
+            return Rounded(ScalingOf(targetEnemy).RelativeScale + Plugin.Config.ENEMY_SIZE_STEP_CHANGE);
         }
 
         public static bool CanApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy)

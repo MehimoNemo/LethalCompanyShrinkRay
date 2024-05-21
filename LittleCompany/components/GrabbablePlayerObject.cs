@@ -204,7 +204,7 @@ namespace LittleCompany.components
                         HoarderBugAIPatch.HoarderBugEscapeRoutineForGrabbablePlayer(this);
                 }
 
-                if (playerHeldBy != null && ModConfig.Instance.values.CanEscapeGrab && Keyboard.current.spaceKey.wasPressedThisFrame)
+                if (playerHeldBy != null && Plugin.Config.CAN_ESCAPE_GRAB && Keyboard.current.spaceKey.wasPressedThisFrame)
                     DemandDropFromPlayerServerRpc(playerHeldBy.playerClientId, grabbedPlayer.playerClientId);
             }
             else if(playerHeldBy != null && playerHeldBy.isPlayerDead && playerHeldBy.playerClientId == PlayerInfo.CurrentPlayerID)
@@ -226,7 +226,7 @@ namespace LittleCompany.components
             {
                 var direction = playerHeldBy.gameplayCamera.transform.forward;
 
-                if (ModConfig.Instance.values.throwablePlayers)
+                if (Plugin.Config.THROWABLE_PLAYERS)
                 {
                     var sizeDifference = Mathf.Abs(PlayerInfo.SizeOf(playerHeldBy) - PlayerInfo.SizeOf(grabbedPlayer));
                     var force = Mathf.Max(sizeDifference * 15f, 10f);
@@ -420,7 +420,7 @@ namespace LittleCompany.components
             CalculateScrapValue();
 
             itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight;
-            grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) * ModConfig.Instance.values.weightMultiplier;
+            grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) * Plugin.Config.WEIGHT_MULTIPLIER;
             previousCarryWeight = grabbedPlayer.carryWeight;
             Plugin.Log("gpo weight: " + itemProperties.weight);
 
@@ -441,7 +441,7 @@ namespace LittleCompany.components
             {
                 SetIsGrabbableToEnemies(false);
 
-                grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) / ModConfig.Instance.values.weightMultiplier;
+                grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) / Plugin.Config.WEIGHT_MULTIPLIER;
                 previousCarryWeight = grabbedPlayer.carryWeight;
 
                 if (audioSource != null && audioSource.isPlaying)
@@ -554,7 +554,7 @@ namespace LittleCompany.components
 
         public void WeightChangedBy(float diff)
         {
-            var modifiedValue = diff * (ModConfig.Instance.values.weightMultiplier - 1f);
+            var modifiedValue = diff * (Plugin.Config.WEIGHT_MULTIPLIER - 1f);
 
             itemProperties.weight += diff;
 
@@ -581,7 +581,7 @@ namespace LittleCompany.components
 
             Plugin.Log("GrabbablePlayer - Allow enemy grab: " + isGrabbable);
 
-            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.NoGrab)
+            if (Plugin.Config.HOARDING_BUG_BEHAVIOUR != ModConfig.HoardingBugBehaviour.NoGrab)
                 HoarderBugAI.RefreshGrabbableObjectsInMapList();
         }
 
@@ -596,7 +596,7 @@ namespace LittleCompany.components
 
         private void CheckForGoomba()
         {
-            if (!ModConfig.Instance.values.jumpOnShrunkenPlayers)
+            if (!Plugin.Config.JUMP_ON_SHRUNKEN_PLAYERS)
                 return;
 
             if (isHeld)
@@ -648,7 +648,7 @@ namespace LittleCompany.components
                     holdingItem: true,
                     itemProperties);
             }
-            else if(IsCurrentPlayer && ModConfig.Instance.values.CanEscapeGrab)
+            else if(IsCurrentPlayer && Plugin.Config.CAN_ESCAPE_GRAB)
             {
                 var grabbedPlayerItem = GrabbedPlayerCurrentItem();
                 if (grabbedPlayerItem != null) // only case that's not working so far!

@@ -19,7 +19,7 @@ namespace LittleCompany.patches.EnemyBehaviours
 
             if(pcb.playerClientId != PlayerInfo.CurrentPlayerID) return;
 
-            switch (ModConfig.Instance.values.thumperBehaviour)
+            switch (Plugin.Config.THUMPER_BEHAVIOUR.Value)
             {
                 case ModConfig.ThumperBehaviour.OneShot:
                     pcb.KillPlayer(bodyVelocity: Vector3.zero, spawnBody: false, CauseOfDeath.Mauling);

@@ -41,7 +41,7 @@ namespace LittleCompany.patches
             // Single-time changes
             if(wasModifiedLastFrame)
             {
-                ___jumpForce = DefaultJumpForce * ModConfig.Instance.values.jumpHeightMultiplier;
+                ___jumpForce = DefaultJumpForce * Plugin.Config.JUMP_HEIGHT_MULTIPLIER;
                 modifiedSprintMultiplier = ___sprintMultiplier;
                 wasModifiedLastFrame = false;
             }
@@ -58,7 +58,7 @@ namespace LittleCompany.patches
                 // Base values taken from PlayerControllerB.Update()
                 var delta = Time.deltaTime;
                 var baseModificationSpeed = __instance.isSprinting ? delta : (delta * 10f);
-                var baseSpeed = (__instance.isSprinting ? 2.25f : 1f) * ModConfig.Instance.values.movementSpeedMultiplier;
+                var baseSpeed = (__instance.isSprinting ? 2.25f : 1f) * Plugin.Config.MOVEMENT_SPEED_MULTIPLIER;
                 modifiedSprintMultiplier = Mathf.Lerp(modifiedSprintMultiplier, baseSpeed, baseModificationSpeed);
                 ___sprintMultiplier = modifiedSprintMultiplier;
             }

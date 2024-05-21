@@ -24,12 +24,12 @@ namespace LittleCompany.modifications
 
         public static float NextShrunkenSizeOf(GrabbableObject targetObject)
         {
-            return Mathf.Max(Rounded(ScalingOf(targetObject).DesiredScale - ModConfig.Instance.values.itemSizeChangeStep), 0f);
+            return Mathf.Max(Rounded(ScalingOf(targetObject).DesiredScale - Plugin.Config.ITEM_SIZE_STEP_CHANGE), 0f);
         }
 
         public static float NextIncreasedSizeOf(GrabbableObject targetObject)
         {
-            return Rounded(ScalingOf(targetObject).DesiredScale + ModConfig.Instance.values.itemSizeChangeStep);
+            return Rounded(ScalingOf(targetObject).DesiredScale + Plugin.Config.ITEM_SIZE_STEP_CHANGE);
         }
 
         public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy)

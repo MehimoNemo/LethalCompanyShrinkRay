@@ -25,7 +25,7 @@ namespace LittleCompany.patches
         public static void AdjustPitchIntensityOf(PlayerControllerB player)
         {
             float playerScale = PlayerInfo.SizeOf(player);
-            float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
+            float intensity = Plugin.Config.PITCH_DISTORTION_INTENSITY.Value;
 
             float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
 
@@ -58,7 +58,7 @@ namespace LittleCompany.patches
             if (PlayerInfo.CurrentPlayer == null || enemyAI == null || enemyAI.creatureVoice == null) return;
 
             var sizeDifference = PlayerInfo.CurrentPlayerScale - EnemyInfo.SizeOf(enemyAI);
-            var pitchIntensity = ModConfig.Instance.values.enemyPitchDistortionIntensity;
+            var pitchIntensity = Plugin.Config.ENEMY_PITCH_DISTORTION_INTENSITY.Value;
             var pitch = Mathf.Clamp(1f + (sizeDifference * pitchIntensity), 0.5f, 1.5f);
 
             enemyAI.creatureVoice.pitch = pitch;

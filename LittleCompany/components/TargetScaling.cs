@@ -321,7 +321,7 @@ namespace LittleCompany.components
 
         private void UpdatePropertiesBasedOnScale()
         {
-            if (ModConfig.Instance.values.itemScalingVisualOnly)
+            if (Plugin.Config.ITEM_SCALING_VISUAL_ONLY)
                 return;
 
             // Item properties

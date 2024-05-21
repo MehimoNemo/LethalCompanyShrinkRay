@@ -68,7 +68,7 @@ namespace LittleCompany.components
 
             networkPrefab = assetItem.spawnPrefab;
             ScrapManagementFacade.FixMixerGroups(networkPrefab);
-            assetItem.creditsWorth = ModConfig.Instance.values.shrinkRayCost;
+            assetItem.creditsWorth = Plugin.Config.SHRINK_RAY_COST;
             assetItem.weight = 1.05f;
             assetItem.canBeGrabbedBeforeGameStart = true;
             networkPrefab.transform.localScale = new Vector3(1f, 1f, 1f);
@@ -267,9 +267,9 @@ namespace LittleCompany.components
                 return;
             }
 
-            if(!LaserEnabled || ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.Off) return;
+            if(!LaserEnabled || Plugin.Config.SHRINK_TAY_TARGET_HIGHLIGHTING == ModConfig.ShrinkRayTargetHighlighting.Off) return;
 
-            if(currentMode.Value != Mode.Loading && ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.OnLoading) return;
+            if(currentMode.Value != Mode.Loading && Plugin.Config.SHRINK_TAY_TARGET_HIGHLIGHTING == ModConfig.ShrinkRayTargetHighlighting.OnLoading) return;
 
             if(currentMode.Value == Mode.Loading && targetObject != null)
             {
@@ -317,9 +317,9 @@ namespace LittleCompany.components
             get
             {
                 var layerMasks = new List<Mask>() { Mask.Player };
-                if (ModConfig.Instance.values.itemSizeChangeStep > Mathf.Epsilon)
+                if (Plugin.Config.ITEM_SIZE_STEP_CHANGE > Mathf.Epsilon)
                     layerMasks.Add(Mask.Props);
-                if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
+                if (Plugin.Config.ENEMY_SIZE_STEP_CHANGE > Mathf.Epsilon)
                     layerMasks.Add(Mask.Enemies);
                 return ToInt(layerMasks.ToArray());
             }

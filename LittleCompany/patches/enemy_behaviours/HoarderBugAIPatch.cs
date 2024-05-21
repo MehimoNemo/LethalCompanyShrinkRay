@@ -18,7 +18,7 @@ namespace LittleCompany.patches.EnemyBehaviours
         [HarmonyPostfix]
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, EnemyAI __instance)
         {
-            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab || !(__instance is HoarderBugAI))
+            if (Plugin.Config.HOARDING_BUG_BEHAVIOUR == ModConfig.HoardingBugBehaviour.NoGrab || !(__instance is HoarderBugAI))
                 return __result;
 
             if (IsDieing(__instance)) // about to die.. don't see players as threat
@@ -34,7 +34,7 @@ namespace LittleCompany.patches.EnemyBehaviours
         [HarmonyPostfix]
         public static void RefreshGrabbableObjectsInMapList()
         {
-            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.NoGrab)
+            if (Plugin.Config.HOARDING_BUG_BEHAVIOUR != ModConfig.HoardingBugBehaviour.NoGrab)
             {
                 HoarderBugAI.grabbableObjectsInMap.RemoveAll(go => go.TryGetComponent(out GrabbablePlayerObject gpo) && (gpo.InLastHoardingBugNestRange.Value || !gpo.grabbableToEnemies)); // remove still grabbed ones
                 return;
@@ -47,7 +47,7 @@ namespace LittleCompany.patches.EnemyBehaviours
         [HarmonyPostfix]
         public static void DetectNoise(HoarderBugAI __instance, ref float ___timeSinceLookingTowardsNoise)
         {
-            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.Addicted || !PlayerInfo.IsCurrentPlayerShrunk) return; // Not targetable
+            if (Plugin.Config.HOARDING_BUG_BEHAVIOUR != ModConfig.HoardingBugBehaviour.Addicted || !PlayerInfo.IsCurrentPlayerShrunk) return; // Not targetable
 
             if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
                 return; // Chill, you already got one..
@@ -117,7 +117,7 @@ namespace LittleCompany.patches.EnemyBehaviours
 
         public static void HoardingBugTargetUs(HoarderBugAI hoarderBug, GrabbablePlayerObject gpo)
         {
-            if (gpo.playerHeldBy != null && ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.Addicted)
+            if (gpo.playerHeldBy != null && Plugin.Config.HOARDING_BUG_BEHAVIOUR == ModConfig.HoardingBugBehaviour.Addicted)
             {
                 Plugin.Log("Oh you better drop that beautiful player, my friend!");
                 hoarderBug.targetItem = gpo;
@@ -173,7 +173,7 @@ namespace LittleCompany.patches.EnemyBehaviours
                 if (distanceToNest < (maxAllowedNestDistance + 5f))
                 {
                     Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " moved too far away from hoarder bug nest.");
-                    if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.Addicted)
+                    if (Plugin.Config.HOARDING_BUG_BEHAVIOUR == ModConfig.HoardingBugBehaviour.Addicted)
                     {
                         Plugin.Log(" Bug tries to get them back!");
                         HoardingBugTargetUs(gpo.lastHoarderBugGrabbedBy, gpo);

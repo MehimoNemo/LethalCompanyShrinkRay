@@ -2,7 +2,6 @@
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
-using BepInEx.Configuration;
 using LittleCompany.patches;
 using LittleCompany.patches.EnemyBehaviours;
 using LittleCompany.Config;
@@ -20,6 +19,7 @@ namespace LittleCompany
     [BepInDependency(LethalEmotesApiCompatibility.LethalEmotesApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ScrapManagementFacade.LethalLevelLoaderReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ScrapManagementFacade.LethalLibReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(CSync.Plugin.GUID)]
     public class Plugin : BaseUnityPlugin
     {
         #region Properties
@@ -27,7 +27,7 @@ namespace LittleCompany
         private static Plugin Instance;
         private static ManualLogSource mls;
 
-        public static ConfigFile BepInExConfig() { return Instance.Config; }
+        public static new ModConfig Config { get; private set; }
         #endregion
 
         private void Awake()
@@ -37,7 +37,7 @@ namespace LittleCompany
                 Instance = this;
 
             mls = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
-            ModConfig.Instance.Setup();
+            Config = new(base.Config);
 
             NetcodePatching();
             ApplyHarmonyPatches();
@@ -53,7 +53,6 @@ namespace LittleCompany
             // patches
             harmony.PatchAll(typeof(GameNetworkManagerPatch));
             harmony.PatchAll(typeof(PlayerMultiplierPatch));
-            harmony.PatchAll(typeof(ModConfig.SyncHandshake));
             harmony.PatchAll(typeof(ThumperAIPatch));
             harmony.PatchAll(typeof(HoarderBugAIPatch));
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
@@ -126,7 +125,7 @@ namespace LittleCompany
         internal static void Log(string message, LogType type = LogType.Debug)
         {
 #if !DEBUG
-            if (type == LogType.Debug && !ModConfig.DebugLog)
+            if (type == LogType.Debug && !Config.DEBUG_LOG.Value)
                 return;
 #endif
 

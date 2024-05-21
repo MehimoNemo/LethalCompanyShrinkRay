@@ -221,7 +221,7 @@ namespace LittleCompany.components
         [HarmonyPostfix]
         private static void SetHoverTipAndCurrentInteractTriggerPatch(ref InteractTrigger ___hoveringOverTrigger) // Disable storage closet for shrunken players
         {
-            if (___hoveringOverTrigger == null || !ModConfig.Instance.values.cantOpenStorageCloset) return;
+            if (___hoveringOverTrigger == null || !Plugin.Config.CANT_OPEN_STORAGE_CLOSET) return;
 
             var parentCube = ___hoveringOverTrigger.transform;
             if (parentCube == null) return;

@@ -30,7 +30,7 @@ namespace LittleCompany.modifications
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - ModConfig.Instance.values.playerSizeChangeStep), 0f);
+            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - Plugin.Config.PLAYER_SIZE_STEP_CHANGE), 0f);
             if ((nextShrunkenSize + (ModConfig.SmallestSizeChange / 2)) <= DeathShrinkMargin)
                 return 0f;
             else
@@ -41,7 +41,7 @@ namespace LittleCompany.modifications
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
             Plugin.Log("NextEnlargedSizeOf -> " + playerSize);
-            return Mathf.Min(Rounded(playerSize + ModConfig.Instance.values.playerSizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
+            return Mathf.Min(Rounded(playerSize + Plugin.Config.PLAYER_SIZE_STEP_CHANGE), Plugin.Config.MAXIMUM_PLAYER_SIZE);
         }
 
         public static void TransitionedToShrunk(PlayerControllerB targetPlayer)
@@ -79,7 +79,7 @@ namespace LittleCompany.modifications
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
                     var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
-                    if ((!ModConfig.Instance.values.deathShrinking || !targetPlayer.AllowPlayerDeath()) && Mathf.Approximately(nextShrunkenSize, 0f) )
+                    if ((!Plugin.Config.DEATH_SHRINKING || !targetPlayer.AllowPlayerDeath()) && Mathf.Approximately(nextShrunkenSize, 0f) )
                         return false;
 
                     break;
@@ -89,7 +89,7 @@ namespace LittleCompany.modifications
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
                     var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
-                    if (Mathf.Approximately(nextIncreasedSize, ModConfig.Instance.values.maximumPlayerSize))
+                    if (Mathf.Approximately(nextIncreasedSize, Plugin.Config.MAXIMUM_PLAYER_SIZE))
                         return false;
                     break;
 
@@ -120,7 +120,7 @@ namespace LittleCompany.modifications
                         GoombaStomp.StopGoombaOn(targetPlayer);
 
                         Plugin.Log("Normalizing player [" + targetPlayer.playerClientId + "]");
-                        ScalingOf(targetPlayer).ScaleTo(ModConfig.Instance.values.defaultPlayerSize, playerModifiedBy);
+                        ScalingOf(targetPlayer).ScaleTo(Plugin.Config.DEFAULT_PLAYER_SIZE, playerModifiedBy);
 
                         if (onComplete != null)
                             onComplete();

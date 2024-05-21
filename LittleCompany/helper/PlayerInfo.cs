@@ -95,7 +95,7 @@ namespace LittleCompany.helper
 
         public static bool IsDefaultVanillaSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), VanillaPlayerSize);
 
-        public static bool IsDefaultSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), ModConfig.Instance.values.defaultPlayerSize);
+        public static bool IsDefaultSize(PlayerControllerB player) => Mathf.Approximately(SizeOf(player), Plugin.Config.DEFAULT_PLAYER_SIZE);
 
         public static bool IsEnlarged(PlayerControllerB player) => LargerThan(player, VanillaPlayerSize);
 
