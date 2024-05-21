@@ -207,7 +207,7 @@ namespace LittleCompany.Config
                 int writeSize = FastBufferWriter.GetWriteSize(json);
                 using FastBufferWriter writer = new FastBufferWriter(writeSize, Allocator.Temp);
                 writer.WriteValueSafe(json);
-                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RECEIVE_MESSAGE, clientId, writer, NetworkDelivery.ReliableSequenced);
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RECEIVE_MESSAGE, clientId, writer, NetworkDelivery.ReliableFragmentedSequenced);
             }
 
             public static void HostConfigReceived(ulong clientId, FastBufferReader reader)
