@@ -6,6 +6,7 @@
 - Attempt to fix OverflowException when sending config options from host to clients
 - Fixed goomba animation stacking when hit multiple times by a shovel
 - Fixed goomba animation starting at full size, regardless of player size
+- Added cooldown for grabbing the same player again, to counter a bug where re-grabbing a player too fast is rarely causing a bugged interact state
 
 ### 1.0.4 ###
 **Tweaks**

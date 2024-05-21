@@ -298,6 +298,8 @@ namespace LittleCompany.components
             ResetControlTips();
 
             UpdateInteractTrigger();
+
+            StartCoroutine(GrabCooldownCoroutine());
         }
 
         public override void GrabItemFromEnemy(EnemyAI enemyAI)
@@ -351,6 +353,8 @@ namespace LittleCompany.components
 
             if (IsCurrentPlayer)
                 PlayerInfo.EnableCameraVisor();
+
+            StartCoroutine(GrabCooldownCoroutine());
         }
 
         public override void EquipItem()
@@ -451,6 +455,18 @@ namespace LittleCompany.components
                     playerHeldBy.DiscardHeldObject(); // Can lead to problems
             }
             catch { };
+        }
+
+        public IEnumerator GrabCooldownCoroutine()
+        {
+            var previouslyGrabbable = grabbable;
+            var previouslyGrabbableToEnemies = grabbableToEnemies;
+
+            grabbable = false;
+            grabbableToEnemies = false;
+            yield return new WaitForSeconds(0.5f);
+            grabbable = previouslyGrabbable;
+            grabbableToEnemies = previouslyGrabbableToEnemies;
         }
 
         public void UpdateScanNodeVisibility()
