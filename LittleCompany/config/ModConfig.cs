@@ -3,6 +3,8 @@ using UnityEngine;
 using CSync.Lib;
 using System.Runtime.Serialization;
 using CSync.Util;
+using LittleCompany.patches;
+using System.Collections;
 
 namespace LittleCompany.Config
 {
@@ -94,7 +96,7 @@ namespace LittleCompany.Config
         {
             ConfigManager.Register(this);
 
-            SyncReceived += OnReceive;
+            SyncComplete += OnSyncComplete;
 
             SHRINK_RAY_COST                = cfg.BindSyncedEntry("General", "ShrinkRayCost",               1000,                              new ConfigDescription("Store cost of the shrink ray"));
             DEATH_SHRINKING                = cfg.BindSyncedEntry("General", "DeathShrinking",              false,                             new ConfigDescription("If true, a player can be shrunk below 0.2f, resulting in an instant death."));
@@ -133,12 +135,25 @@ namespace LittleCompany.Config
             FixWrongEntries();
         }
 
-        void OnReceive()
+        void OnSyncComplete(bool success)
         {
-            Plugin.Log("Received host config.");
-            FixWrongEntries();
+            if(success)
+            {
+                Plugin.Log("Synced config with host.");
+                FixWrongEntries();
+            }
+            else
+                Plugin.Log("Unable to sync config with host. This can cause desyncs during gameplay!", Plugin.LogType.Error);
 
-			PlayerCountChangeDetection.ConfigSyncedOnConnect();
+            Plugin.Log("DefaultPlayerSize: " + Plugin.Config.DEFAULT_PLAYER_SIZE.Value);
+
+            GameNetworkManager.Instance.StartCoroutine(WaitAndFireOnConnect());
+        }
+
+        public IEnumerator WaitAndFireOnConnect()
+        {
+            yield return new WaitForSeconds(0.3f);
+            PlayerCountChangeDetection.ConfigSyncedOnConnect();
         }
 
         public void FixWrongEntries()
