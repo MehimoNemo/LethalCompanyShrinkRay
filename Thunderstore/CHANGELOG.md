@@ -1,3 +1,7 @@
+### 1.0.6 ###
+**Fixes**
+- Fixed DefaultPlayerSize not being synced in time between host and client
+
 ### 1.0.5 ###
 **Tweaks**
 - Items below a size of 0.2 can now exist. Only items with a size of 0 will disappear
