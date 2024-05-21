@@ -3,6 +3,7 @@ using HarmonyLib;
 using LittleCompany.components;
 using LittleCompany.helper;
 using Unity.Netcode;
+using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.patches
 {
@@ -53,6 +54,12 @@ namespace LittleCompany.patches
 
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
             GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(PlayerInfo.CurrentPlayer);
+
+            foreach(var player in PlayerInfo.AllPlayers)
+            {
+                if(!PlayerInfo.IsDefaultVanillaSize(player))
+                    PlayerInfo.RebuildRig(player);
+            }
         }
 
         // When players get revived
