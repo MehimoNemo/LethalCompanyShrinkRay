@@ -17,8 +17,8 @@ namespace LittleCompany.patches
 
         public static void Modify()
         {
-            modified = true;
-            wasModifiedLastFrame = true;
+            modified = ModConfig.Instance.values.movementSpeedMultiplier != 1f;
+            wasModifiedLastFrame = ModConfig.Instance.values.jumpHeightMultiplier != 1f;
         }
 
         public static void Reset()
@@ -52,7 +52,7 @@ namespace LittleCompany.patches
                 wasResetLastFrame = false;
             }
 
-            // Continuos changes
+            // Continuous changes
             if (modified)
             {
                 // Base values taken from PlayerControllerB.Update()
