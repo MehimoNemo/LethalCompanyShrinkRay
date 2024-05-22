@@ -20,6 +20,8 @@ namespace LittleCompany
     [BepInDependency(LethalEmotesApiCompatibility.LethalEmotesApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ScrapManagementFacade.LethalLevelLoaderReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ScrapManagementFacade.LethalLibReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(LethalVRMCompatibilityComponent.LethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(LethalVRMCompatibilityComponent.BetterLethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         #region Properties
@@ -88,6 +90,11 @@ namespace LittleCompany
             {
                 Log("enabling ModelReplacementApiCompatibility");
                 harmony.PatchAll(typeof(ModelReplacementApiCompatibilityPatch));
+            }
+            if (LethalVRMCompatibilityComponent.compatEnabled)
+            {
+                Log("enabling LethalVRMCompatibility");
+                harmony.PatchAll(typeof(LethalVRMCompatibilityPatch));
             }
 
 #if DEBUG
