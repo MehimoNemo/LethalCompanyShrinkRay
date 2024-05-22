@@ -1,45 +1,50 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.helper;
+using System.Collections.Generic;
 using UnityEngine;
-using static LittleCompany.helper.LayerMasks;
 
 namespace LittleCompany.patches
 {
     internal class TurretPatch
     {
-        [HarmonyPatch(typeof(Turret), "CheckForPlayersInLineOfSight")]
+        static List<ulong> FixedTurretNetworkIDs = new List<ulong>();
+
+        [HarmonyPatch(typeof(Turret), "Start")]
         [HarmonyPostfix]
-        public static PlayerControllerB CheckForPlayersInLineOfSight(PlayerControllerB __result, Turret __instance, float radius = 2f, bool angleRangeCheck = false)
+        public static void Start(Turret __instance)
         {
-            if (__result != null) return __result;
+            if (FixedTurretNetworkIDs.Contains(__instance.NetworkObjectId)) return;
 
-            var forward = Quaternion.Euler(0f, (0f - __instance.rotationRange) / radius, 0f) * __instance.aimPoint.forward;
+            __instance.centerPoint.position += Vector3.down * 1.5f;
+            FixedTurretNetworkIDs.Add(__instance.NetworkObjectId);
+        }
 
-            var loweredPosition = __instance.centerPoint.position + Vector3.down * 1.5f;
-            float num = __instance.rotationRange / radius * 2f;
+        [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
+        [HarmonyPrefix()]
+        public static void ShipHasLeftPrefix()
+        {
+            FixedTurretNetworkIDs.Clear();
+        }
 
-            for (int i = 0; i <= 6; i++)
-            {
-                var lineObject = new GameObject("Line");
-                /*var line = lineObject.AddComponent<LineRenderer>();
-                line.startWidth = 0.1f;
-                line.endWidth = 0.1f;
-                line.positionCount = 2;
-                line.material = Materials.BurntMaterial;
-                line.SetPosition(0, loweredPosition);
-                line.SetPosition(1, loweredPosition + forward * 30f);*/
+        [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Disconnect")]
+        public static void Disconnect()
+        {
+            FixedTurretNetworkIDs.Clear();
+        }
 
-                if (Physics.Raycast(new Ray(loweredPosition, forward), out RaycastHit hit, 30f, ToInt([Mask.Player]), QueryTriggerInteraction.Ignore))
-                {
-                    if (hit.transform.TryGetComponent(out PlayerControllerB player))
-                        return player;
-                }
+        [HarmonyPatch(typeof(Turret), "TurnTowardsTargetIfHasLOS")]
+        [HarmonyPostfix()]
+        public static void TurnTowardsTargetIfHasLOS(Turret __instance, bool ___hasLineOfSight)
+        {
+            if (!___hasLineOfSight || PlayerInfo.IsDefaultVanillaSize(__instance.targetPlayerWithRotation)) return;
 
-                forward = Quaternion.Euler(0f, num / 6f, 0f) * forward;
-            }
+            var heightDiff = PlayerInfo.SizeOf(__instance.targetPlayerWithRotation) - PlayerInfo.VanillaPlayerSize;
+            if (heightDiff > 0f)
+                heightDiff *= -1f;
 
-            return null;
+            __instance.tempTransform.position += Vector3.up * heightDiff;
+            __instance.turnTowardsObjectCompass.LookAt(__instance.tempTransform);
         }
     }
 }

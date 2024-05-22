@@ -61,6 +61,13 @@ namespace LittleCompany.patches
             var pitchIntensity = ModConfig.Instance.values.enemyPitchDistortionIntensity;
             var pitch = Mathf.Clamp(1f + (sizeDifference * pitchIntensity), 0.5f, 1.5f);
 
+            foreach (var audioSource in enemyAI.GetComponents<AudioSource>())
+                audioSource.pitch = pitch;
+
+            foreach (var audioSource in enemyAI.GetComponentsInChildren<AudioSource>())
+                audioSource.pitch = pitch;
+
+            enemyAI.creatureSFX.pitch = pitch;
             enemyAI.creatureVoice.pitch = pitch;
         }
     }

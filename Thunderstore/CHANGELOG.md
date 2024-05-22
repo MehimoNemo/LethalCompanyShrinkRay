@@ -1,3 +1,11 @@
+### 1.0.7 ###
+**Tweaks**
+- EnemyPitchDistortionIntensity now affects audioSources other than creatureVoice
+
+**Fixes**
+- Fixed turrets being able to shoot through walls
+- Fixed turrets shooting too high for scaled players
+
 ### 1.0.6 ###
 **Fixes**
 - Fixed DefaultPlayerSize not being synced in time between host and client
