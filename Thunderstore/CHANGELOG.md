@@ -1,6 +1,14 @@
+### 1.0.8 ###
+**Fixes**
+- Fixed error log messages for enemies with creatureVoice but no creatureSFX audio
+
 ### 1.0.7 ###
+**What's new**
+- [LethalVRM](https://thunderstore.io/c/lethal-company/p/Ooseykins/LethalVRM/) compatibility
+
 **Tweaks**
 - EnemyPitchDistortionIntensity now affects audioSources other than creatureVoice
+- Putting speed/jump multiplier at 1 won't modify the original values (for mod compatibility purposes)
 
 **Fixes**
 - Fixed turrets being able to shoot through walls

@@ -55,7 +55,7 @@ namespace LittleCompany.patches
 
         public static void AdjustPitchIntensityOf(EnemyAI enemyAI)
         {
-            if (PlayerInfo.CurrentPlayer == null || enemyAI == null || enemyAI.creatureVoice == null) return;
+            if (PlayerInfo.CurrentPlayer == null || enemyAI == null) return;
 
             var sizeDifference = PlayerInfo.CurrentPlayerScale - EnemyInfo.SizeOf(enemyAI);
             var pitchIntensity = ModConfig.Instance.values.enemyPitchDistortionIntensity;
@@ -67,8 +67,8 @@ namespace LittleCompany.patches
             foreach (var audioSource in enemyAI.GetComponentsInChildren<AudioSource>())
                 audioSource.pitch = pitch;
 
-            enemyAI.creatureSFX.pitch = pitch;
-            enemyAI.creatureVoice.pitch = pitch;
+            if (enemyAI.creatureVoice != null) enemyAI.creatureVoice.pitch = pitch;
+            if (enemyAI.creatureSFX != null) enemyAI.creatureSFX.pitch = pitch;
         }
     }
 }
