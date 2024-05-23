@@ -83,7 +83,7 @@ namespace LittleCompany.helper
 
         public static ulong? CurrentPlayerID => CurrentPlayer?.playerClientId;
 
-        public static float SizeOf(PlayerControllerB player) => Modification.Rounded(player.transform.localScale.y);
+        public static float SizeOf(PlayerControllerB player) => player == null ? VanillaPlayerSize : Modification.Rounded(player.transform.localScale.y);
 
         public static float CurrentPlayerScale => SizeOf(CurrentPlayer);
 

@@ -1,3 +1,25 @@
+### 1.0.9 ###
+**Fixes**
+- Fixed: Putting speed/jump multiplier at 1 won't reset them back to original values (for mod compatibility purposes)
+
+### 1.0.8 ###
+**Fixes**
+- Fixed error log messages for enemies with creatureVoice but no creatureSFX audio
+- Fixed scaling of items not working if resized by another mod or before joining
+- DocileLocustBees (Harmless roaming ones) can be scaled now.. even though it still looks a bit weird
+
+### 1.0.7 ###
+**What's new**
+- [LethalVRM](https://thunderstore.io/c/lethal-company/p/Ooseykins/LethalVRM/) compatibility
+
+**Tweaks**
+- EnemyPitchDistortionIntensity now affects audioSources other than creatureVoice
+- Putting speed/jump multiplier at 1 won't modify the original values (for mod compatibility purposes)
+
+**Fixes**
+- Fixed turrets being able to shoot through walls
+- Fixed turrets shooting too high for scaled players
+
 ### 1.0.6 ###
 **Fixes**
 - Fixed DefaultPlayerSize not being synced in time between host and client

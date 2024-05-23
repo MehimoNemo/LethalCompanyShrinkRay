@@ -21,6 +21,8 @@ namespace LittleCompany.components
     internal class GrabbablePlayerObject : GrabbableObject
     {
         #region Properties
+        public static readonly string Name = "grabbablePlayerItem";
+
         internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "grabbable");
 
         public NetworkVariable<ulong> grabbedPlayerID = new NetworkVariable<ulong>(ulong.MaxValue);

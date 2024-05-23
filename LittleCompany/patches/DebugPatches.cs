@@ -11,8 +11,6 @@ using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
 using static LittleCompany.helper.EnemyInfo;
 using UnityEngine.SceneManagement;
-using static LittleCompany.components.GrabbablePlayerObject;
-using LittleCompany.events.enemy;
 
 namespace LittleCompany.patches
 {
@@ -71,7 +69,7 @@ namespace LittleCompany.patches
         {
             if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Jester);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.BeesHarmless);
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)
@@ -106,18 +104,12 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f8Key.wasPressedThisFrame)
             {
-                ReloadAllSounds();
+                SpawnItemInFront(ItemInfo.itemByName("LungApparatus").spawnPrefab);
             }
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)
             {
-                Item itemToSpawn = ItemInfo.SpawnableItems[itemIndex];
-                SpawnItemInFront(itemToSpawn.spawnPrefab);
-                itemIndex++;
-                if(itemIndex >= ItemInfo.SpawnableItems.Count)
-                {
-                    itemIndex = 0;
-                }
+                SpawnNextItemInFront();
             }
 
             else if (Keyboard.current.f10Key.wasPressedThisFrame)
@@ -178,6 +170,12 @@ namespace LittleCompany.patches
             Object.DontDestroyOnLoad(item);
             item.GetComponent<NetworkObject>()?.Spawn();
             item.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 1.5f;
+        }
+
+        public static void SpawnNextItemInFront()
+        {
+            SpawnItemInFront(ItemInfo.SpawnableItems[itemIndex++].spawnPrefab);
+            itemIndex %= ItemInfo.SpawnableItems.Count;
         }
 
         public static void LogCurrentLevelEnemyNames()

@@ -440,7 +440,7 @@ namespace LittleCompany.components
         
         private bool ShootRayOnClientAtTarget()
         {
-            switch ((Mask)targetObject.layer)
+            switch (TargetMask)
             {
                 case Mask.Player:
                     {
@@ -491,7 +491,7 @@ namespace LittleCompany.components
                         return false;
                     }
                 case Mask.Enemies:
-                    {
+                {
                         if (!targetObject.TryGetComponent(out EnemyAI enemyAI))
                             return false;
 
@@ -513,7 +513,31 @@ namespace LittleCompany.components
                         Plugin.Log("Ray has hit an unhandled object named \"" + targetObject.name + "\" [Layer " + targetObject.layer + "]");
                     return false;
             };
+        }
 
+        internal Mask TargetMask
+        {
+            get
+            {
+                if (targetObject == null) return Mask.Default;
+
+                var layerMask = (Mask)targetObject.layer;
+                if (layerMask != Mask.Default) return layerMask;
+
+                if (targetObject.TryGetComponent(out EnemyAI _))
+                    return Mask.Enemies;
+
+                if (targetObject.TryGetComponent(out GrabbableObject _))
+                    return targetObject.TryGetComponent(out GrabbablePlayerObject _) ? Mask.Player : Mask.Props;
+
+                if (targetObject.TryGetComponent(out Item _))
+                    return Mask.InteractableObject;
+
+                if (targetObject.TryGetComponent(out PlayerControllerB _))
+                    return Mask.Player;
+
+                return Mask.Default;
+            }
         }
 
         internal void ShootRayBeam()

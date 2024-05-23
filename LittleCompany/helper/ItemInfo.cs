@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Linq;
 using Unity.Netcode;
+using LittleCompany.components;
 
 namespace LittleCompany.helper
 {
@@ -84,7 +85,7 @@ namespace LittleCompany.helper
         // WalkieTalkie
         // ZapGun
         // CardboardBox
-        public static readonly List<Item> SpawnableItems = Resources.FindObjectsOfTypeAll<Item>().ToList();
+        public static readonly List<Item> SpawnableItems = Resources.FindObjectsOfTypeAll<Item>().Where(item => item.itemName != GrabbablePlayerObject.Name).ToList();
 
         public static GameObject visualCopyOf(Item item)
         {
@@ -103,6 +104,11 @@ namespace LittleCompany.helper
                 Object.DestroyImmediate(scanNode);
 
             return copy;
+        }
+
+        public static Item itemByName(string name)
+        {
+            return SpawnableItems.Find(x => x.name == name);
         }
     }
 }
