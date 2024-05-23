@@ -1,3 +1,7 @@
+### 1.0.9 ###
+**Fixes**
+- Fixed: Putting speed/jump multiplier at 1 won't reset them back to original values (for mod compatibility purposes)
+
 ### 1.0.8 ###
 **Fixes**
 - Fixed error log messages for enemies with creatureVoice but no creatureSFX audio
