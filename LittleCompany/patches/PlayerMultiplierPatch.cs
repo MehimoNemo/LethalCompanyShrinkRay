@@ -17,15 +17,15 @@ namespace LittleCompany.patches
 
         public static void Modify()
         {
-            modified = ModConfig.Instance.values.movementSpeedMultiplier != 1f;
-            wasModifiedLastFrame = ModConfig.Instance.values.jumpHeightMultiplier != 1f;
+            modified = !Mathf.Approximately(ModConfig.Instance.values.movementSpeedMultiplier, 1f);
+            wasModifiedLastFrame = !Mathf.Approximately(ModConfig.Instance.values.jumpHeightMultiplier, 1f);
         }
 
         public static void Reset()
         {
             Plugin.Log("Resetting player modifications");
             modified = false;
-            wasResetLastFrame = true;
+            wasResetLastFrame = !Mathf.Approximately(ModConfig.Instance.values.jumpHeightMultiplier, 1f);
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
