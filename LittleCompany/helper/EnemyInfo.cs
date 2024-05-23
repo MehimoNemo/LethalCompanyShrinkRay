@@ -117,7 +117,7 @@ namespace LittleCompany.helper
                 var scale = 1f;
                 foreach(var enemyScaling in UnityEngine.Object.FindObjectsOfType<EnemyScaling>())
                 {
-                    if(enemyScaling.target is HoarderBugAI)
+                    if(enemyScaling.Target is HoarderBugAI)
                         scale = Mathf.Max(scale, enemyScaling.RelativeScale);
                 }
                 return scale;

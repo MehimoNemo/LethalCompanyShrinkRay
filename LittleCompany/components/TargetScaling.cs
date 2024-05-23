@@ -7,9 +7,6 @@ using LittleCompany.helper;
 using LittleCompany.modifications;
 using LittleCompany.patches;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.Netcode;
-using UnityEngine.PlayerLoop;
 using LittleCompany.Config;
 
 namespace LittleCompany.components
@@ -19,14 +16,24 @@ namespace LittleCompany.components
     {
         #region Properties
         internal Vector3 OriginalOffset = Vector3.zero;
-        internal Vector3 OriginalScale = Vector3.one;
-
+        internal abstract Vector3 OriginalScale { get; }
         public float RelativeScale = 1f;
+
+        private T _target;
+        internal T Target
+        {
+            get
+            {
+                if(_target == null )
+                    _target = gameObject.GetComponent<T>();
+
+                return _target;
+            }
+        }
+
         internal HashSet<IScalingListener> scalingListeners;
 
         public bool GettingScaled { get; private set; } = false;
-
-        internal T target;
 
         public float ScalingProgress { get; private set; } = 0f; // progress from 0 to 1
 
@@ -46,9 +53,7 @@ namespace LittleCompany.components
                 return;
             }
 
-            target = gameObject.GetComponent<T>();
-
-            OriginalScale = gameObject.transform.localScale;
+            RelativeScale = 1f / OriginalScale.y * gameObject.transform.localScale.y;
 
             scalingListeners = [];
             DetectAndLoadCurrentListeningComponent();
@@ -189,20 +194,21 @@ namespace LittleCompany.components
         #region Methods
         internal Vector3 armOffset = Vector3.zero;
 
+		internal override Vector3 OriginalScale => Vector3.one;
+
         internal override void OnAwake()
         {
-            OriginalScale = Vector3.one;
-            RelativeScale = PlayerInfo.SizeOf(target);
+            RelativeScale = PlayerInfo.SizeOf(Target);
         }
 
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
-            if (target == null || target.transform == null)
+            if (Target == null || Target.transform == null)
                 return;
 
-            var wasShrunkenBefore = PlayerInfo.IsShrunk(target);
+            var wasShrunkenBefore = PlayerInfo.IsShrunk(Target);
             base.ScaleTo(scale, scaledBy);
-            if (PlayerInfo.IsCurrentPlayer(target))
+            if (PlayerInfo.IsCurrentPlayer(Target))
             {
                 // scale arms & visor
                 PlayerInfo.ScaleLocalPlayerBodyParts();
@@ -215,29 +221,29 @@ namespace LittleCompany.components
                 }
             }
 
-            var isShrunk = PlayerInfo.IsShrunk(target);
+            var isShrunk = PlayerInfo.IsShrunk(Target);
             if (wasShrunkenBefore != isShrunk)
             {
                 if (isShrunk)
-                    PlayerModification.TransitionedToShrunk(target);
+                    PlayerModification.TransitionedToShrunk(Target);
                 else
-                    PlayerModification.TransitionedFromShrunk(target);
+                    PlayerModification.TransitionedFromShrunk(Target);
             }
 
             if (!GettingScaled) // Execute at the very end
             {
                 Plugin.Log("Reached end of scaling");
-                GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(target);
-                PlayerInfo.RebuildRig(target);
+                GrabbablePlayerList.UpdateWhoIsGrabbableFromPerspectiveOf(Target);
+                PlayerInfo.RebuildRig(Target);
 
-                if(PlayerInfo.IsCurrentPlayer(target))
+                if(PlayerInfo.IsCurrentPlayer(Target))
                     AudioPatches.UpdateEnemyPitches();
             }
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
         {
-            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(target.playerClientId, out GrabbablePlayerObject gpo))
+            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(Target.playerClientId, out GrabbablePlayerObject gpo))
                 gpo.EnableInteractTrigger(false); // UpdateInteractTrigger happening in UpdateWhoIsGrabbableFromPerspectiveOf after scaling already
 
             base.ScaleOverTimeTo(scale, scaledBy, onComplete, duration, mode, startingFromScale);
@@ -257,16 +263,28 @@ namespace LittleCompany.components
 
         public int originalScrapValue = 0;
 
+        private Vector3? initialScale = null;
+        internal override Vector3 OriginalScale
+        {
+            get
+            {
+                if (initialScale == null)
+                    initialScale = Target.originalScale;
+
+                return initialScale.Value;
+            }
+        }
+
         internal override void OnAwake()
         {
             DesiredScale = RelativeScale;
-            originalItemProperties = target.itemProperties;
-            originalScrapValue = target.scrapValue;
+            originalItemProperties = Target.itemProperties;
+            originalScrapValue = Target.scrapValue;
 
             // Hologram
-            Plugin.Log("Instantiating hologram of " + target.name);
+            Plugin.Log("Instantiating hologram of " + Target.name);
             hologram = ItemInfo.visualCopyOf(originalItemProperties);
-            //hologram.transform.SetParent(target.transform, true);
+            //hologram.transform.SetParent(Target.transform, true);
 
             Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
 
@@ -275,10 +293,10 @@ namespace LittleCompany.components
 
         private void Update()
         {
-            if (hologram != null && target != null)
+            if (hologram != null && Target != null)
             {
-                hologram.transform.position = target.transform.position;
-                hologram.transform.rotation = target.transform.rotation;
+                hologram.transform.position = Target.transform.position;
+                hologram.transform.rotation = Target.transform.rotation;
             }
         }
 
@@ -315,6 +333,7 @@ namespace LittleCompany.components
             else
             {
                 base.ScaleTo(scale, scaledBy);
+                Target.originalScale = OriginalScale * scale;
                 UpdatePropertiesBasedOnScale();
             }
         }
@@ -340,16 +359,16 @@ namespace LittleCompany.components
             }
 
             // Weight
-            var lastWeight = target.itemProperties.weight;
-            target.itemProperties.weight = 1f + ((originalItemProperties.weight - 1f) * RelativeScale);
-            var diff = target.itemProperties.weight - lastWeight;
+            var lastWeight = Target.itemProperties.weight;
+            Target.itemProperties.weight = 1f + ((originalItemProperties.weight - 1f) * RelativeScale);
+            var diff = Target.itemProperties.weight - lastWeight;
 
-            if (target.playerHeldBy != null)
-                target.playerHeldBy.carryWeight += diff;
+            if (Target.playerHeldBy != null)
+                Target.playerHeldBy.carryWeight += diff;
 
             // Scrap value
             if(originalScrapValue > 0)
-                target.SetScrapValue((int)(originalScrapValue * Mathf.Max(1f + (RelativeScale - 1f) * 0.1f, 2f))); // Maximum twice the value at 10x size
+                Target.SetScrapValue((int)(originalScrapValue * Mathf.Max(1f + (RelativeScale - 1f) * 0.1f, 2f))); // Maximum twice the value at 10x size
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
@@ -359,7 +378,7 @@ namespace LittleCompany.components
 
         private IEnumerator HologramScaleCoroutine()
         {
-            Plugin.Log("Starting hologram scale routine for " + target.name);
+            Plugin.Log("Starting hologram scale routine for " + Target.name);
             hologram.SetActive(true);
 
             while(RelativeScale < DesiredScale)
@@ -369,7 +388,9 @@ namespace LittleCompany.components
 
                 RelativeScale += Time.deltaTime / (20 * RelativeScale);
 
-                gameObject.transform.localScale = OriginalScale * RelativeScale;
+                var newScale = OriginalScale * RelativeScale;
+                gameObject.transform.localScale = newScale;
+                Target.originalScale = newScale;
 
                 UpdatePropertiesBasedOnScale();
 
@@ -378,9 +399,7 @@ namespace LittleCompany.components
                 yield return null;
             }
 
-            Plugin.Log("Finished hologram scale routine for " + target.name);
-
-            target.originalScale = gameObject.transform.localScale;
+            Plugin.Log("Finished hologram scale routine for " + Target.name);
 
             hologram.SetActive(false);
 
@@ -391,24 +410,24 @@ namespace LittleCompany.components
 
         private void ResetItemProperties()
         {
-            if (target.itemProperties == originalItemProperties) return;
+            if (Target.itemProperties == originalItemProperties) return;
 
-            Destroy(target.itemProperties);
-            target.itemProperties = originalItemProperties;
+            Destroy(Target.itemProperties);
+            Target.itemProperties = originalItemProperties;
         }
 
         private void OverrideItemProperties()
         {
-            if (target.itemProperties == originalItemProperties)
+            if (Target.itemProperties == originalItemProperties)
             {
                 // itemProperties is not overriden, overrides it
-                target.itemProperties = Instantiate(originalItemProperties);
+                Target.itemProperties = Instantiate(originalItemProperties);
             }
         }
 
         private void RecalculateOffset(float scale)
         {
-            target.itemProperties.positionOffset = originalItemProperties.positionOffset * scale;
+            Target.itemProperties.positionOffset = originalItemProperties.positionOffset * scale;
         }
 
         public void ScaleTemporarlyTo(float scale)
@@ -418,17 +437,34 @@ namespace LittleCompany.components
 
         public override void Reset()
         {
-            gameObject.transform.localScale = target.originalScale;
+            gameObject.transform.localScale = Target.originalScale;
         }
 #endregion
     }
 
     internal class EnemyScaling : TargetScaling<EnemyAI>
     {
+        internal override Vector3 OriginalScale => Target.enemyType.enemyPrefab.transform.localScale;
+
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
+            HandleDifferentlyScaledEnemies(scale);
+
             base.ScaleTo(scale, scaledBy);
-            AudioPatches.AdjustPitchIntensityOf(target);
+
+            AudioPatches.AdjustPitchIntensityOf(Target);
+
+            // Exceptional enemies
+        }
+
+        private void HandleDifferentlyScaledEnemies(float scale)
+        {
+            if (Target is DocileLocustBeesAI)
+            {
+                var particles = Target.gameObject.transform.Find("BugSwarmParticle");
+                if (particles != null)
+                    particles.transform.localScale = OriginalScale * scale;
+            }
         }
     }
 }

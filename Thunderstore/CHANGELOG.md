@@ -1,6 +1,8 @@
 ### 1.0.8 ###
 **Fixes**
 - Fixed error log messages for enemies with creatureVoice but no creatureSFX audio
+- Fixed scaling of items not working if resized by another mod or before joining
+- DocileLocustBees (Harmless roaming ones) can be scaled now.. even though it still looks a bit weird
 
 ### 1.0.7 ###
 **What's new**

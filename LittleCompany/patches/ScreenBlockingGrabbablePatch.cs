@@ -11,6 +11,11 @@ namespace LittleCompany.patches
 {
     internal class ScreenBlockingGrabbablePatch
     {
+        #region Properties
+        private const float DurationOfGrabAnimationInSeconds = 0.3f;
+        #endregion
+
+        #region Patches
         [HarmonyPostfix, HarmonyPatch(typeof(GrabbableObject), "GrabItem")]
         public static void GrabItem(GrabbableObject __instance)
         {
@@ -20,23 +25,23 @@ namespace LittleCompany.patches
             __instance.StartCoroutine(CheckForGlassifyLater(__instance));
         }
 
-        private const float DurationOfGrabAnimationInSeconds = 0.3f;
-
-        public static IEnumerator CheckForGlassifyLater(GrabbableObject item)
-        {
-            yield return new WaitForSeconds(DurationOfGrabAnimationInSeconds);
-            CheckForGlassify(item);
-        }
-
         [HarmonyPrefix, HarmonyPatch(typeof(GrabbableObject), "DiscardItem")]
         public static void DiscardItem(GrabbableObject __instance)
         {
             if (!CanBlockOurScreen(__instance)) return;
 
-            OnItemNormalize(__instance);
+            UnGlassifyItem(__instance);
+        }
+        #endregion
+
+        #region Methods
+        private static IEnumerator CheckForGlassifyLater(GrabbableObject item)
+        {
+            yield return new WaitForSeconds(DurationOfGrabAnimationInSeconds);
+            CheckForGlassify(item);
         }
 
-        public static bool CanBlockOurScreen(GrabbableObject item)
+        private static bool CanBlockOurScreen(GrabbableObject item)
         {
             var currentPlayerID = PlayerInfo.CurrentPlayerID;
             if (currentPlayerID.HasValue && item.playerHeldBy != null && item.playerHeldBy.playerClientId != currentPlayerID)
@@ -65,7 +70,7 @@ namespace LittleCompany.patches
                 UnGlassifyItem(item);
         }
 
-        public static float CompareItemScaleToPlayerScale(GrabbableObject item, PlayerControllerB pcb)
+        private static float CompareItemScaleToPlayerScale(GrabbableObject item, PlayerControllerB pcb)
         {
             ItemScaling itemScaling = item.GetComponent<ItemScaling>();
             PlayerScaling playerScaling = pcb.GetComponent<PlayerScaling>();
@@ -116,27 +121,7 @@ namespace LittleCompany.patches
             return false;
         }
 
-        public static void OnItemNormalize(GrabbableObject item)
-        {
-            if (item == null) return;
-
-            if (item.gameObject.TryGetComponent(out ItemScaling scaling))
-                scaling.Reset();
-
-            UnGlassifyItem(item);
-        }
-
-        public static void TransformItemRelativeTo(GrabbableObject item, float scale, Vector3 additionalOffset = new Vector3())
-        {
-            if (item == null) return;
-
-            if (!item.gameObject.TryGetComponent(out ItemScaling scaling))
-                scaling = item.gameObject.AddComponent<ItemScaling>();
-
-            scaling.ScaleTemporarlyTo(scale);
-        }
-
-        public static void UnGlassifyItem(GrabbableObject item)
+        private static void UnGlassifyItem(GrabbableObject item)
         {
             if (item == null)
                 return;
@@ -145,12 +130,13 @@ namespace LittleCompany.patches
                 Object.Destroy(glassification);
         }
 
-        public static void GlassifyItem(GrabbableObject item)
+        private static void GlassifyItem(GrabbableObject item)
         {
             if (item == null) return;
 
             if (!item.gameObject.TryGetComponent<TargetGlassification>(out _))
                 item.gameObject.AddComponent<TargetGlassification>();
         }
+        #endregion
     }
 }
