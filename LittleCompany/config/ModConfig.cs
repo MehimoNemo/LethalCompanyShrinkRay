@@ -94,6 +94,10 @@ namespace LittleCompany.Config
 
             public int enlargePotionStorePrice { get; set; }
             public int enlargePotionScrapRarity { get; set; }
+
+            // Experimental
+
+            public bool useLethalLevelLoaderForItemRegistration { get; set; }
         }
 
         public ConfigValues values = new ConfigValues();
@@ -145,7 +149,9 @@ namespace LittleCompany.Config
             values.shrinkPotionScrapRarity       = Plugin.BepInExConfig().Bind("Potions", "ShrinkPotionScrapRarity", 10, new ConfigDescription("Sets the scrap rarity. 0 makes it unable to spawn inside.", new AcceptableValueRange<int>(0, 100))).Value;
             values.enlargePotionStorePrice       = Plugin.BepInExConfig().Bind("Potions", "EnlargePotionStorePrice", 50, new ConfigDescription("Sets the store price. 0 to removed potion from store.", new AcceptableValueRange<int>(0, 500))).Value;
             values.enlargePotionScrapRarity      = Plugin.BepInExConfig().Bind("Potions", "EnlargePotionScrapRarity", 5, new ConfigDescription("Sets the scrap rarity. 0 makes it unable to spawn inside.", new AcceptableValueRange<int>(0, 100))).Value;
-                                                 
+                                    
+            values.useLethalLevelLoaderForItemRegistration = Plugin.BepInExConfig().Bind("Experimental", "UseLethalLevelLoaderForItemRegistration", false, new ConfigDescription("Allow LittleCompany to use LethalLevelLoader for item registration instead of LethalLib.")).Value;
+
             DebugLog                             = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", false, "Additional logging to help identifying issues of this mod.").Value;
 
 #if DEBUG

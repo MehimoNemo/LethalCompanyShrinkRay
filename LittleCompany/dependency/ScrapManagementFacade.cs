@@ -1,5 +1,6 @@
 ﻿using LethalLevelLoader;
 using LethalLib.Modules;
+using LittleCompany.Config;
 using LittleCompany.helper;
 using System;
 using System.Runtime.CompilerServices;
@@ -20,7 +21,8 @@ namespace LittleCompany.dependency
             {
                 if (_ScrapManager == null)
                 {
-                    if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalLevelLoaderReferenceChain))
+                    if (ModConfig.Instance.values.useLethalLevelLoaderForItemRegistration
+                        && BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(LethalLevelLoaderReferenceChain))
                     {
                         Plugin.Log("Using LethalLevelLoader for scrap loading");
                         _ScrapManager = new LethalLevelLoaderScrapManagement();
