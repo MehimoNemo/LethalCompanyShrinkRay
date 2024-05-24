@@ -2,10 +2,9 @@
 **Tweaks**
 Reworked HoardingBug behaviour
 - being small isn't a greencard for not being targetable anymore (they followed you like pets, unable to get their desired item which a smaller player held)
-- colliding while being grabbable causes the bug to immediately grab you
+- hoarding bugs will grab players smaller than them on collision
 - enlarging a hoarding bug will make any smaller players immediately grabbable
 - they're not fully muted anymore.. yippie!
-- several smaller bugfixes leading to unwanted behaviour
 
 **Compatibility**
 - Added config option *[Experimental]UseLethalLevelLoaderForItemRegistration* as a way to disable usage of LethalLevelLoader, which caused bugs when loading items.
