@@ -79,6 +79,7 @@ namespace LittleCompany.components
         // TODO: Rework.. this has too many parameters..
         public virtual void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float ? duration = null, Mode? mode = null, float? startingFromScale = null)
         {
+            float previousScale = RelativeScale;
             GettingScaled = true;
             StartCoroutine(ScaleOverTimeToCoroutine(scale, scaledBy, duration.GetValueOrDefault(ShrinkRayFX.DefaultBeamDuration), mode.GetValueOrDefault(Mode.Wave), startingFromScale, () =>
             {
@@ -87,7 +88,7 @@ namespace LittleCompany.components
                 // Ensure final scale is set to the desired value
                 ScaleTo(scale, scaledBy);
 
-                CallListenersAtEndOfScaling();
+                CallListenersAtEndOfScaling(previousScale, scale, scaledBy);
 
                 if (onComplete != null)
                     onComplete();
@@ -179,11 +180,11 @@ namespace LittleCompany.components
             }
         }
 
-        public void CallListenersAtEndOfScaling()
+        public void CallListenersAtEndOfScaling(float from, float to, PlayerControllerB playerBy)
         {
             foreach (IScalingListener listener in scalingListeners)
             {
-                listener.AtEndOfScaling();
+                listener.AtEndOfScaling(from, to, playerBy);
             }
         }
         #endregion

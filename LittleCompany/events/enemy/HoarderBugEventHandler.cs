@@ -1,7 +1,10 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
+using LittleCompany.Config;
 using LittleCompany.helper;
 using LittleCompany.modifications;
+using LittleCompany.patches.EnemyBehaviours;
+using System.Collections;
 using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
 
@@ -62,6 +65,23 @@ namespace LittleCompany.events.enemy
 
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
             Plugin.Log("Hoarderbug shrunken to death");
+        }
+
+        public override void Scaled(float from, float to, PlayerControllerB playerShrunkenBy)
+        {
+            base.Scaled(from, to, playerShrunkenBy);
+
+            if ((to + (ModConfig.SmallestSizeChange / 2)) > PlayerInfo.LargestPlayerSize)
+            {
+                GrabbablePlayerList.UpdateGrabbablePlayerList();
+                StartCoroutine(UpdateHoarderBugGrabbablesLater());
+            }
+        }
+
+        private IEnumerator UpdateHoarderBugGrabbablesLater()
+        {
+            yield return new WaitForSeconds(0.5f);
+            HoarderBugAI.RefreshGrabbableObjectsInMapList();
         }
     }
 }

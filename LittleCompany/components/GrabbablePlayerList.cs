@@ -376,7 +376,12 @@ namespace LittleCompany.components
                 }
             }
 
-            if(PlayerInfo.IsHost)
+            UpdateGrabbablePlayerList();
+        }
+
+        public static void UpdateGrabbablePlayerList()
+        {
+            if (PlayerInfo.IsHost)
             {
                 var largestGrabberSize = Mathf.Max(PlayerInfo.LargestPlayerSize, EnemyInfo.LargestGrabbingEnemy);
                 foreach (var player in PlayerInfo.AlivePlayers)

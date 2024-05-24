@@ -18,14 +18,29 @@ namespace LittleCompany.patches.EnemyBehaviours
         [HarmonyPostfix]
         public static bool PlayerIsTargetable(bool __result, PlayerControllerB playerScript, EnemyAI __instance)
         {
-            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab || !(__instance is HoarderBugAI))
+            if(!__result || ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab)
+                return __result;
+
+            var hoarderBug = __instance as HoarderBugAI;
+            if (hoarderBug == null)
                 return __result;
 
             if (IsDieing(__instance)) // about to die.. don't see players as threat
                 return false;
 
-            if (PlayerInfo.SmallerThan(playerScript, EnemyInfo.SizeOf(__instance)))
-                return false;
+            if (hoarderBug.angryTimer > 0f)
+                return true;
+
+            if (hoarderBug.targetItem != null) // is the player holding the targetItem
+            {
+                foreach (var heldItem in playerScript.ItemSlots)
+                {
+                    if (heldItem == hoarderBug.targetItem)
+                        return true;
+                }
+            }
+
+            if (PlayerInfo.SmallerThan(playerScript, EnemyInfo.SizeOf(__instance))) return false;
 
             return __result;
         }
@@ -47,22 +62,23 @@ namespace LittleCompany.patches.EnemyBehaviours
         [HarmonyPostfix]
         public static void DetectNoise(HoarderBugAI __instance, ref float ___timeSinceLookingTowardsNoise)
         {
-            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.Addicted || !PlayerInfo.IsCurrentPlayerShrunk) return; // Not targetable
+            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab) return;
+
+            if (__instance.currentBehaviourStateIndex > 1) return;
 
             if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
                 return; // Chill, you already got one..
 
             if (__instance.targetItem != null)
             {
-                Plugin.Log("DetectNoise. Target item: " + __instance.targetItem.name + " with position: " + __instance.targetItem.transform.position);
                 if (__instance.targetItem is GrabbablePlayerObject)
                 {
                     ___timeSinceLookingTowardsNoise = 0f; // Set this to avoid switching to behaviour 1 (which is "return to nest")
-                    Plugin.Log("targetItem: player position -> " + (__instance.targetItem as GrabbablePlayerObject).grabbedPlayer.transform.position);
                     return; // Already targeting a player
                 }
             }
 
+            if (ModConfig.Instance.values.hoardingBugBehaviour != ModConfig.HoardingBugBehaviour.Addicted) return; // Not targetable
 
             var inLineOfSight = PlayerInfo.CurrentPlayer.HasLineOfSightToPosition(__instance.transform.position + Vector3.up * (PlayerInfo.CurrentPlayerScale - 1f + 0.75f)); // HoarderBugAI.Update() case 2
             if (!inLineOfSight) return;
@@ -70,18 +86,91 @@ namespace LittleCompany.patches.EnemyBehaviours
             if (PlayerInfo.CurrentPlayerID.HasValue && GrabbablePlayerList.TryFindGrabbableObjectForPlayer(PlayerInfo.CurrentPlayerID.Value, out GrabbablePlayerObject gpo))
             {
                 if (!IsGrabbablePlayerTargetable(gpo, __instance))
-                {
-                    Plugin.Log("Player " + gpo.grabbedPlayerID.Value + " not targetable.");
                     return;
-                }
 
-                Plugin.Log("Forget everything else.. we found a grabbable player! Let's goooo..!");
                 gpo.HoardingBugTargetUsServerRpc(__instance.NetworkObjectId);
-                ___timeSinceLookingTowardsNoise = 0f; // Set this to avoid switching to behaviour 1 (which is "return to nest")
+                ___timeSinceLookingTowardsNoise = 0f;
             }
         }
 
-        public static bool IsDieing(EnemyAI hoarderBug) => hoarderBug.GetComponent<DieingBugBehaviour> != null;
+        [HarmonyPatch(typeof(HoarderBugAI), "OnCollideWithPlayer")]
+        [HarmonyPostfix]
+        public static void OnCollideWithPlayer(HoarderBugAI __instance, Collider other, bool ___inChase, ref float ___timeSinceLookingTowardsNoise)
+        {
+            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab) return;
+
+            if (__instance.isEnemyDead || !__instance.ventAnimationFinished || __instance.stunNormalizedTimer >= 0f) return; // EnemyAI.MeetsStandardPlayerCollisionConditions
+
+            if (___inChase || __instance.currentBehaviourStateIndex > 1) return;
+
+            if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
+                return; // Already holding a player
+
+            if (!other.gameObject.TryGetComponent(out PlayerControllerB targetPlayer) || targetPlayer != PlayerInfo.CurrentPlayer) return;
+
+            if (GrabbablePlayerList.TryFindGrabbableObjectForPlayer(targetPlayer.playerClientId, out GrabbablePlayerObject gpo))
+            {
+                if (!IsGrabbablePlayerTargetable(gpo, __instance))
+                    return;
+
+                __instance.GrabItemServerRpc(gpo.NetworkObject);
+                ___timeSinceLookingTowardsNoise = 0f;
+            }
+        }
+
+        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
+        [HarmonyPrefix]
+        public static void SetGoTowardsTargetObjectPrefix(ref GameObject foundObject, HoarderBugAI __instance)
+        {
+            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab) return;
+
+            if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
+            {
+                foundObject = __instance.heldItem.itemGrabbableObject.gameObject;
+                __instance.SwitchToBehaviourState((int)BehaviourState.Nest);
+            }
+        }
+
+        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
+        [HarmonyPostfix]
+        public static void SetGoTowardsTargetObjectPostfix(GameObject foundObject, HoarderBugAI __instance)
+        {
+            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab) return;
+
+            if (!foundObject.TryGetComponent(out GrabbablePlayerObject gpo))
+                return;
+
+            if (!IsGrabbablePlayerTargetable(gpo, __instance))
+            {
+                __instance.SetDestinationToPosition(__instance.transform.position);
+                if (__instance.targetItem != null)
+                {
+                    __instance.targetItem = null;
+                    __instance.StartSearch(__instance.nestPosition, __instance.searchForItems);
+                }
+                return;
+            }
+        }
+
+        [HarmonyPatch(typeof(HoarderBugAI), "DoAIInterval")]
+        [HarmonyPostfix]
+        public static void DoAIInterval(HoarderBugAI __instance)
+        {
+            if (ModConfig.Instance.values.hoardingBugBehaviour == ModConfig.HoardingBugBehaviour.NoGrab) return;
+
+            if (__instance.targetItem == null || __instance.heldItem != null || __instance.currentBehaviourStateIndex > 1) return;
+
+            var gpo = __instance.targetItem as GrabbablePlayerObject;
+            if (gpo == null) return;
+
+            if (!IsGrabbablePlayerTargetable(gpo, __instance))
+            {
+                __instance.targetItem = null;
+                __instance.SwitchToBehaviourServerRpc(1);
+            }
+        }
+
+        public static bool IsDieing(EnemyAI hoarderBug) => hoarderBug.TryGetComponent(out DieingBugBehaviour _);
 
         public static bool IsGrabbablePlayerTargetable(GrabbablePlayerObject gpo, HoarderBugAI hoarderBug)
         {
@@ -188,44 +277,18 @@ namespace LittleCompany.patches.EnemyBehaviours
                 gpo.lastHoarderBugGrabbedBy.DropItemServerRpc(gpo.lastHoarderBugGrabbedBy.heldItem.itemGrabbableObject.NetworkObject, gpo.lastHoarderBugGrabbedBy.transform.position, false);
         }
 
-        [HarmonyPatch(typeof(HoarderBugAI), "SetGoTowardsTargetObject")]
-        [HarmonyPrefix]
-        public static void SetGoTowardsTargetObjectPrefix(ref GameObject foundObject, HoarderBugAI __instance)
-        {
-            if (__instance.heldItem != null && __instance.heldItem.itemGrabbableObject != null && __instance.heldItem.itemGrabbableObject as GrabbablePlayerObject != null)
-            {
-                Plugin.Log("Ayy?! Still holding a player, you forgot?! Nononono..");
-                foundObject = __instance.heldItem.itemGrabbableObject.gameObject; // Hopefully this won't break stuff..
-                __instance.SwitchToBehaviourState((int)BehaviourState.Nest);
-            }
+            
 
-            /*if (!foundObject.TryGetComponent(out GrabbablePlayerObject gpo))
-                return;
-
-            if (!IsGrabbablePlayerTargetable(gpo, __instance))
-            {
-                Plugin.Log("SetGoTowardsTargetObject: Player not targetable for hoarding bug");
-                return;
-            }*/
-        }
-
-        // ------------------ DEBUG FROM HERE ON ------------------
+    // ------------------ DEBUG FROM HERE ON ------------------
 #if DEBUG
-        // ChatCommands mod line -> /spawnenemy Hoarding bug a=1 p=@me
+    // ChatCommands mod line -> /spawnenemy Hoarding bug a=1 p=@me
 
-        private static Vector3 hoarderBugNestPosition;
+    private static Vector3 hoarderBugNestPosition;
         [HarmonyPatch(typeof(HoarderBugAI), "SyncNestPositionClientRpc")]
         [HarmonyPostfix]
         public static void SyncNestPositionClientRpc(Vector3 newNestPosition)
         {
             hoarderBugNestPosition = newNestPosition;
-        }
-
-        [HarmonyPatch(typeof(HoarderBugAI), "DoAIInterval")]
-        [HarmonyPostfix]
-        public static void DoAIInterval(HoarderBugAI __instance)
-        {
-            //Plugin.Log("behaviourState: " + __instance.currentBehaviourStateIndex + " | targetItem: " + __instance.targetItem);
         }
 
         public static void SetUsAsStolen()

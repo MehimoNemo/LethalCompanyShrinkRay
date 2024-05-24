@@ -96,18 +96,20 @@ namespace LittleCompany.events.enemy
 #endif
             }
 
-            public IEnumerator SpawnKillLater()
+#if DEBUG
+            private IEnumerator SpawnKillLater()
             {
                 yield return new WaitForSeconds(0.5f);
                 enemy.transform.localScale = Vector3.zero;
                 OnDeathShrinking(1f, PlayerInfo.ControllerFromID(0ul)); // SPAWNKILL !!
             }
+#endif
 
             public virtual void OnAwake() {
                 GetComponent<EnemyScaling>()?.AddListener(this);
             }
 
-            public void AfterEachScale(float from, float to, PlayerControllerB playerBy)
+            public void AtEndOfScaling(float from, float to, PlayerControllerB playerBy)
             {
                 if (Mathf.Approximately(from, to)) return;
                 Scaled(from, to, playerBy);
