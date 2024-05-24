@@ -1,3 +1,7 @@
+### 1.0.10 ###
+**Compatibility**
+- Added config option *[Experimental]UseLethalLevelLoaderForItemRegistration* as a way to disable usage of LethalLevelLoader, which caused bugs when loading items.
+
 ### 1.0.9 ###
 **Fixes**
 - Fixed: Putting speed/jump multiplier at 1 won't reset them back to original values (for mod compatibility purposes)
@@ -9,12 +13,12 @@
 - DocileLocustBees (Harmless roaming ones) can be scaled now.. even though it still looks a bit weird
 
 ### 1.0.7 ###
-**What's new**
-- [LethalVRM](https://thunderstore.io/c/lethal-company/p/Ooseykins/LethalVRM/) compatibility
+**Compatibility**
+- [LethalVRM](https://thunderstore.io/c/lethal-company/p/Ooseykins/LethalVRM/) support
+- Putting speed/jump multiplier at 1 won't modify the original values
 
 **Tweaks**
 - EnemyPitchDistortionIntensity now affects audioSources other than creatureVoice
-- Putting speed/jump multiplier at 1 won't modify the original values (for mod compatibility purposes)
 
 **Fixes**
 - Fixed turrets being able to shoot through walls
