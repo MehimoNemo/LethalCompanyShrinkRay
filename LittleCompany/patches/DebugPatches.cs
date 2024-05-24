@@ -69,7 +69,7 @@ namespace LittleCompany.patches
         {
             if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.BeesHarmless);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.HoarderBug);
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)

@@ -142,7 +142,6 @@ namespace LittleCompany.patches.EnemyBehaviours
 
             if (!IsGrabbablePlayerTargetable(gpo, __instance))
             {
-                __instance.SetDestinationToPosition(__instance.transform.position);
                 if (__instance.targetItem != null)
                 {
                     __instance.targetItem = null;
@@ -169,6 +168,20 @@ namespace LittleCompany.patches.EnemyBehaviours
                 __instance.SwitchToBehaviourServerRpc(1);
             }
         }
+
+        [HarmonyPatch(typeof(HoarderBugAI), "CheckLineOfSightForItem")]
+        [HarmonyPrefix]
+        public static void CheckLineOfSightForItem()
+        {
+            // TODO: find out why there's a null object in here
+            for(int i = HoarderBugAI.HoarderBugItems.Count - 1; i >= 0; i--)
+            {
+                var item = HoarderBugAI.HoarderBugItems[i];
+                if (item == null || item.itemGrabbableObject == null)
+                    HoarderBugAI.HoarderBugItems.RemoveAt(i);
+            }
+        }
+        
 
         public static bool IsDieing(EnemyAI hoarderBug) => hoarderBug.TryGetComponent(out DieingBugBehaviour _);
 
