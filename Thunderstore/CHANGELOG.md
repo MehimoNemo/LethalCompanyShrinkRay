@@ -1,3 +1,4 @@
+### 1.0.11 ###
 **Fixes**
 - Fixed giftbox presents causing errors and being invisible
 - Fixed error after dropped by a hoarding bug
