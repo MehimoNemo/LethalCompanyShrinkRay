@@ -318,6 +318,17 @@ namespace LittleCompany.components
         }
 
         #region Methods
+        public void ScaleToImmediate(float scale, PlayerControllerB scaledBy)
+        {
+            scale = Mathf.Max(scale, 0f);
+            playerLastScaledBy = scaledBy;
+            DesiredScale = RelativeScale = scale;
+
+            base.ScaleTo(scale, scaledBy);
+            Target.originalScale = OriginalScale * scale;
+            UpdatePropertiesBasedOnScale();
+        }
+
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             scale = Mathf.Max(scale, 0f);
@@ -387,8 +398,11 @@ namespace LittleCompany.components
                 //Plugin.Log("Going from scale " + RelativeScale + " to desired scale " + DesiredScale);
                 float previousScale = RelativeScale;
 
+#if DEBUG
+                RelativeScale += Time.deltaTime / 2;
+#else
                 RelativeScale += Time.deltaTime / (20 * RelativeScale);
-
+#endif
                 var newScale = OriginalScale * RelativeScale;
                 gameObject.transform.localScale = newScale;
                 Target.originalScale = newScale;

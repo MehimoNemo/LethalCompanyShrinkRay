@@ -1,3 +1,11 @@
+**Fixes**
+- Fixed giftbox presents causing errors and being invisible
+- Fixed error after dropped by a hoarding bug
+- Fixed error when dropping hoarding bugs target item right when it gets angry
+
+**Tweaks**
+- GiftBox presents will now have the same relative scale as the gift box itself
+
 ### 1.0.10 ###
 **Tweaks**
 Reworked HoardingBug behaviour

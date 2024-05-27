@@ -104,7 +104,7 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f8Key.wasPressedThisFrame)
             {
-                SpawnItemInFront(ItemInfo.itemByName("LungApparatus").spawnPrefab);
+                SpawnItemInFront(ItemInfo.itemByName("GiftBox").spawnPrefab);
             }
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)

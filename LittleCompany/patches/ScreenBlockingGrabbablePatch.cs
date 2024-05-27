@@ -121,7 +121,7 @@ namespace LittleCompany.patches
             return false;
         }
 
-        private static void UnGlassifyItem(GrabbableObject item)
+        public static void UnGlassifyItem(GrabbableObject item)
         {
             if (item == null)
                 return;

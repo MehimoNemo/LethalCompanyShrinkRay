@@ -118,6 +118,7 @@ namespace LittleCompany.components
         {
             foreach (KeyValuePair<MeshRenderer, Material[]> meshAndOriginalMaterial in meshesAndOriginalMaterials)
             {
+                if (meshAndOriginalMaterial.Key == null) continue;
                 meshAndOriginalMaterial.Key.materials = meshAndOriginalMaterial.Value;
             }
         }
