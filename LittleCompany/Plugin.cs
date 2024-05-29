@@ -22,6 +22,7 @@ namespace LittleCompany
     [BepInDependency(ScrapManagementFacade.LethalLibReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalVRMCompatibilityComponent.LethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalVRMCompatibilityComponent.BetterLethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(LCOfficeCompatibility.LCOfficeReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         #region Properties
@@ -96,6 +97,11 @@ namespace LittleCompany
             {
                 Log("enabling LethalVRMCompatibility");
                 harmony.PatchAll(typeof(LethalVRMCompatibilityPatch));
+            }
+            if (LCOfficeCompatibility.compatEnabled)
+            {
+                Log("enabling LCOfficeCompatibility");
+                harmony.PatchAll(typeof(LCOfficeCompatibility));
             }
 
 #if DEBUG
