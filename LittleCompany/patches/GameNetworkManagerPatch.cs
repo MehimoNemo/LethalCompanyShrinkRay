@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using LittleCompany.components;
 using LittleCompany.events.enemy;
+using LittleCompany.events.item;
 using LittleCompany.helper;
 
 namespace LittleCompany.patches
@@ -13,7 +14,9 @@ namespace LittleCompany.patches
         [HarmonyPriority(Priority.First)]
         public static void Init()
         {
-            EnemyEventManager.BindAllEnemyEvents();
+            EnemyEventManager.BindAllEventHandler();
+            ItemEventManager.BindAllEventHandler();
+
             AssetLoader.LoadAllAssets();
         }
 

@@ -303,7 +303,6 @@ namespace LittleCompany.components
 
         private void OnDestroy()
         {
-            Plugin.Log("TargetScaling.ondestroy");
             RemoveHologram();
         }
 
@@ -399,7 +398,7 @@ namespace LittleCompany.components
                 float previousScale = RelativeScale;
 
 #if DEBUG
-                RelativeScale += Time.deltaTime / 2;
+                RelativeScale += Time.deltaTime / 2.5f;
 #else
                 RelativeScale += Time.deltaTime / (20 * RelativeScale);
 #endif
@@ -468,11 +467,9 @@ namespace LittleCompany.components
             base.ScaleTo(scale, scaledBy);
 
             AudioPatches.AdjustPitchIntensityOf(Target);
-
-            // Exceptional enemies
         }
 
-        private void HandleDifferentlyScaledEnemies(float scale)
+        private void HandleDifferentlyScaledEnemies(float scale) // todo: move to their event handler
         {
             if (Target is DocileLocustBeesAI)
             {
