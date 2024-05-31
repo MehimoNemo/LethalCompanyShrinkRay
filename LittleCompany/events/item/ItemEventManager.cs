@@ -11,7 +11,8 @@ namespace LittleCompany.events.item
         public static readonly Dictionary<VanillaItem, Type> EventHandler = new Dictionary<VanillaItem, Type>
         {
             { VanillaItem.Custom,         typeof(CustomItemEventHandler) },
-            { VanillaItem.Pro_flashlight, typeof(FlashlightEventHandler) }
+            { VanillaItem.Pro_flashlight, typeof(FlashlightEventHandler) },
+            { VanillaItem.Flashlight,     typeof(FlashlightEventHandler) }
         };
 
         public static Type EventHandlerTypeByName(string name) => EventHandler.GetValueOrDefault(itemTypeByName(name), typeof(CustomItemEventHandler));
