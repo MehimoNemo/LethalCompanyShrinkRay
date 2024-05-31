@@ -23,6 +23,16 @@ namespace LittleCompany.events
 
         public abstract void OnAwake();
 
+        public void AfterEachScale(float from, float to, PlayerControllerB playerBy)
+        {
+            if (Mathf.Approximately(from, to)) return;
+            Scaling(from, to, playerBy);
+            if (from > to)
+                Shrinking(from <= 1f, playerBy);
+            else
+                Enlarging(from >= 1f, playerBy);
+        }
+
         public void AtEndOfScaling(float from, float to, PlayerControllerB playerBy)
         {
             if (Mathf.Approximately(from, to)) return;
@@ -86,8 +96,13 @@ namespace LittleCompany.events
         }
         #endregion
 
-        public virtual void Scaled(float from, float to, PlayerControllerB playerShrunkenBy) { }
+        // Realtime methods
+        public virtual void Scaling(float from, float to, PlayerControllerB playerShrunkenBy) { }
+        public virtual void Shrinking(bool wasAlreadyShrunken, PlayerControllerB playerShrunkenBy) { }
+        public virtual void Enlarging(bool wasAlreadyEnlarged, PlayerControllerB playerEnlargedBy) { }
 
+        // Single-Time methods
+        public virtual void Scaled(float from, float to, PlayerControllerB playerShrunkenBy) { }
         public virtual void Shrunken(bool wasAlreadyShrunken, PlayerControllerB playerShrunkenBy) { }
         public virtual void Enlarged(bool wasAlreadyEnlarged, PlayerControllerB playerEnlargedBy) { }
         public virtual void ScaledToNormalSize(bool wasShrunken, bool wasEnlarged, PlayerControllerB playerScaledBy) { }

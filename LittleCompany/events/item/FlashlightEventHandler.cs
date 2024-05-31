@@ -6,26 +6,21 @@ namespace LittleCompany.events.item
 {
     internal class FlashlightEventHandler : ItemEventHandler
     {
-        private static float flashlightBulbDefaultIntensity = 0f;
-        private static float flashlightBulbGlowDefaultIntensity = 0f;
-        private FlashlightItem flashlight;
+        float baseBatteryUsage = 0f;
 
         public override void OnAwake()
         {
             base.OnAwake();
-            flashlight = item as FlashlightItem;
         }
-        public override void Scaled(float from, float to, PlayerControllerB playerShrunkenBy)
+        public override void Scaling(float from, float to, PlayerControllerB playerShrunkenBy)
         {
             base.Scaled(from, to, playerShrunkenBy);
 
-            if (Mathf.Approximately(flashlightBulbDefaultIntensity, 0f))
-                flashlightBulbDefaultIntensity = flashlight.flashlightBulb.intensity;
-            flashlight.flashlightBulb.intensity = flashlightBulbDefaultIntensity * to;
+            if (Mathf.Approximately(baseBatteryUsage, 0f))
+                baseBatteryUsage = item.itemProperties.batteryUsage;
 
-            if (Mathf.Approximately(flashlightBulbGlowDefaultIntensity, 0f))
-                flashlightBulbGlowDefaultIntensity = flashlight.flashlightBulbGlow.intensity;
-            flashlight.flashlightBulbGlow.intensity = flashlightBulbGlowDefaultIntensity * to;
+            var batteryUsageMultiplier = 1f + Mathf.Max((to - 1f) * 5, -0.9f);
+            item.itemProperties.batteryUsage = baseBatteryUsage * batteryUsageMultiplier;
         }
     }
 }
