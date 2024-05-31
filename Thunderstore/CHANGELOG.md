@@ -1,3 +1,10 @@
+### 1.0.12 ###
+**Compatibility**
+- LC_Office item-scaling compatibility
+
+**Tweaks**
+- Flashlight intensity & battery usage are now in relation to the item size
+
 ### 1.0.11 ###
 **Fixes**
 - Fixed giftbox presents causing errors and being invisible
