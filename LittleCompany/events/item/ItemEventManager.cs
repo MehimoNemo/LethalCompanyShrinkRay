@@ -12,7 +12,9 @@ namespace LittleCompany.events.item
         {
             { VanillaItem.Custom,         typeof(CustomItemEventHandler) },
             { VanillaItem.Pro_flashlight, typeof(FlashlightEventHandler) },
-            { VanillaItem.Flashlight,     typeof(FlashlightEventHandler) }
+            { VanillaItem.Flashlight,     typeof(FlashlightEventHandler) },
+            { VanillaItem.Gift,           typeof(GiftBoxEventHandler)    },
+            { VanillaItem.Shovel,         typeof(ShovelEventHandler)     }
         };
 
         public static Type EventHandlerTypeByName(string name) => EventHandler.GetValueOrDefault(itemTypeByName(name), typeof(CustomItemEventHandler));

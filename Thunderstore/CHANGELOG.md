@@ -1,3 +1,12 @@
+### 1.0.13 ###
+**Fixes**
+- Fixed item scaling effects affecting any item of the same type during the first milliseconds of scaling an item
+
+**Tweaks**
+- Enlarged flashlights now cover a larger radius
+- Reworked battery cost calculation for scaled flashlights
+- Hits from enlarged shovels now take significantly more damage
+
 ### 1.0.12 ###
 **Compatibility**
 - LC_Office item-scaling compatibility

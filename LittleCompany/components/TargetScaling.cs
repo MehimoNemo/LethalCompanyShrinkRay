@@ -280,6 +280,7 @@ namespace LittleCompany.components
         {
             DesiredScale = RelativeScale;
             originalItemProperties = Target.itemProperties;
+            OverrideItemProperties();
             originalScrapValue = Target.scrapValue;
 
             // Hologram
@@ -304,6 +305,7 @@ namespace LittleCompany.components
         private void OnDestroy()
         {
             RemoveHologram();
+            ResetItemProperties();
         }
 
         public void RemoveHologram()
@@ -355,19 +357,27 @@ namespace LittleCompany.components
                 return;
 
             // Item properties
-            if (originalItemProperties != null)
+            if (!Mathf.Approximately(Modification.Rounded(RelativeScale), 1f))
+                RecalculateOffset(RelativeScale);
+
+            // Hands
+            /*float holderRequired = (originalItemProperties.twoHanded ? 1f : 0f) + RelativeScale;
+            Target.itemProperties.twoHanded = holderRequired >= 2f;*/
+
+            // Handanimation
+            /*bool usingTwoHandAnimation = originalItemProperties.twoHandedAnimation && RelativeScale > 0.5f;
+            if (usingTwoHandAnimation != Target.itemProperties.twoHandedAnimation && Target.playerHeldBy != null)
             {
-                if (Modification.Rounded(RelativeScale) == 1)
-                {
-                    // If normalized, reset to original item properties
-                    ResetItemProperties();
-                }
-                else
-                {
-                    OverrideItemProperties();
-                    RecalculateOffset(RelativeScale);
-                }
+                Target.playerHeldBy.playerBodyAnimator.ResetTrigger("SwitchHoldAnimationTwoHanded");
+                Target.playerHeldBy.playerBodyAnimator.ResetTrigger("SwitchHoldAnimation");
+
+                Target.playerHeldBy.playerBodyAnimator.SetTrigger("SwitchHoldAnimation");
+
+                if(usingTwoHandAnimation)
+                    Target.playerHeldBy.playerBodyAnimator.SetTrigger("SwitchHoldAnimationTwoHanded");
             }
+
+            Target.itemProperties.twoHandedAnimation = usingTwoHandAnimation;*/
 
             // Weight
             var lastWeight = Target.itemProperties.weight;
