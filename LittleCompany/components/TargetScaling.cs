@@ -286,11 +286,14 @@ namespace LittleCompany.components
             // Hologram
             Plugin.Log("Instantiating hologram of " + Target.name);
             hologram = ItemInfo.visualCopyOf(originalItemProperties);
-            //hologram.transform.SetParent(Target.transform, true);
+            if (hologram != null)
+            {
+                //hologram.transform.SetParent(Target.transform, true);
 
-            Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
+                Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
 
-            hologram.SetActive(false);
+                hologram.SetActive(false);
+            }
         }
 
         private void Update()
@@ -336,9 +339,10 @@ namespace LittleCompany.components
             playerLastScaledBy = scaledBy;
 
             DesiredScale = scale;
-            hologram.transform.localScale = OriginalScale * DesiredScale;
+            if (hologram != null)
+                hologram.transform.localScale = OriginalScale * DesiredScale;
 
-            if (DesiredScale > RelativeScale)
+            if (hologram != null && DesiredScale > RelativeScale)
             {
                 if (hologramCoroutine == null)
                     hologramCoroutine = StartCoroutine(HologramScaleCoroutine());

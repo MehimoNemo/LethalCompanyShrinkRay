@@ -97,6 +97,7 @@ namespace LittleCompany.components
             shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
             shrinkRay.itemProperties.minValue = 0;
             shrinkRay.itemProperties.maxValue = 0;
+            shrinkRay.itemProperties.holdButtonUse = false;
             shrinkRay.grabbable = true;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
@@ -122,6 +123,15 @@ namespace LittleCompany.components
                 audioSource = gameObject.AddComponent<AudioSource>();
             }
 
+            var raysPerCharge = ModConfig.Instance.values.shrinkRayShotsPerCharge;
+            if (raysPerCharge > 0)
+            {
+                itemProperties.requiresBattery = true;
+                itemProperties.batteryUsage = ModConfig.Instance.values.shrinkRayShotsPerCharge * ShrinkRayFX.DefaultBeamDuration;
+            }
+            else
+                itemProperties.requiresBattery = false;
+
             DisableLaserForHolder();
         }
 
@@ -142,7 +152,7 @@ namespace LittleCompany.components
             if (LaserEnabled)
                 UpdateLaser();
 
-            if (!isHeld || playerHeldBy != PlayerInfo.CurrentPlayer || isPocketed || currentMode.Value != Mode.Default)
+            if (!isHeld || playerHeldBy != PlayerInfo.CurrentPlayer || isPocketed || currentMode.Value != Mode.Default || !UseItemBatteries(itemProperties.holdButtonUse))
                 return;
 
             if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
@@ -220,9 +230,11 @@ namespace LittleCompany.components
                     StartCoroutine(LoadRay());
                     break;
                 case Mode.Shooting:
+                    isBeingUsed = true;
                     ShootRayBeam();
                     break;
                 case Mode.Unloading:
+                    isBeingUsed = false;
                     StartCoroutine(UnloadRay());
                     break;
                 case Mode.Missing:

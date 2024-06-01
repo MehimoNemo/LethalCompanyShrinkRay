@@ -106,6 +106,8 @@ namespace LittleCompany.helper
 
         public static GameObject visualCopyOf(Item item)
         {
+            if(item == null || item.spawnPrefab == null) return null;
+
             var copy = UnityEngine.Object.Instantiate(item.spawnPrefab);
 
             if (copy.TryGetComponent(out NetworkObject networkObject))

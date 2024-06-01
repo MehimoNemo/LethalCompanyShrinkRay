@@ -1,3 +1,12 @@
+### 1.0.14 ###
+**Tweaks**
+- The ShrinkRay now requires battery to run
+  - Configurable through *[General]ShrinkRayShotsPerCharge* in the config.
+  - Setting this option to 0 will disable the battery usage.
+
+**Fixes**
+- Fixed a bug when scaling objects without a spawnPrefab
+
 ### 1.0.13 ###
 **Fixes**
 - Fixed item scaling effects affecting any item of the same type during the first milliseconds of scaling an item
