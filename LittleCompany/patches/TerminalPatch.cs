@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
 using LittleCompany.helper;
 using System.Collections;
 using UnityEngine;

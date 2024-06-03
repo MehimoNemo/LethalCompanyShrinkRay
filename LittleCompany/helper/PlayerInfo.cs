@@ -194,7 +194,5 @@ namespace LittleCompany.helper
                 audioReverbPresets.audioPresets[audioPresetIndex].ChangeAudioReverbForPlayer(targetPlayer);
             }
         }
-
-        public static bool IsUsingTerminal(PlayerControllerB player) => player != null && TerminalUsers.userlist.Contains(player.playerClientId);
     }
 }
