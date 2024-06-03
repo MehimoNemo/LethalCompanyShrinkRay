@@ -280,16 +280,20 @@ namespace LittleCompany.components
         {
             DesiredScale = RelativeScale;
             originalItemProperties = Target.itemProperties;
+            OverrideItemProperties();
             originalScrapValue = Target.scrapValue;
 
             // Hologram
             Plugin.Log("Instantiating hologram of " + Target.name);
             hologram = ItemInfo.visualCopyOf(originalItemProperties);
-            //hologram.transform.SetParent(Target.transform, true);
+            if (hologram != null)
+            {
+                //hologram.transform.SetParent(Target.transform, true);
 
-            Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
+                Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
 
-            hologram.SetActive(false);
+                hologram.SetActive(false);
+            }
         }
 
         private void Update()
@@ -303,8 +307,8 @@ namespace LittleCompany.components
 
         private void OnDestroy()
         {
-            Plugin.Log("TargetScaling.ondestroy");
             RemoveHologram();
+            ResetItemProperties();
         }
 
         public void RemoveHologram()
@@ -335,9 +339,10 @@ namespace LittleCompany.components
             playerLastScaledBy = scaledBy;
 
             DesiredScale = scale;
-            hologram.transform.localScale = OriginalScale * DesiredScale;
+            if (hologram != null)
+                hologram.transform.localScale = OriginalScale * DesiredScale;
 
-            if (DesiredScale > RelativeScale)
+            if (hologram != null && DesiredScale > RelativeScale)
             {
                 if (hologramCoroutine == null)
                     hologramCoroutine = StartCoroutine(HologramScaleCoroutine());
@@ -356,19 +361,27 @@ namespace LittleCompany.components
                 return;
 
             // Item properties
-            if (originalItemProperties != null)
+            if (!Mathf.Approximately(Modification.Rounded(RelativeScale), 1f))
+                RecalculateOffset(RelativeScale);
+
+            // Hands
+            /*float holderRequired = (originalItemProperties.twoHanded ? 1f : 0f) + RelativeScale;
+            Target.itemProperties.twoHanded = holderRequired >= 2f;*/
+
+            // Handanimation
+            /*bool usingTwoHandAnimation = originalItemProperties.twoHandedAnimation && RelativeScale > 0.5f;
+            if (usingTwoHandAnimation != Target.itemProperties.twoHandedAnimation && Target.playerHeldBy != null)
             {
-                if (Modification.Rounded(RelativeScale) == 1)
-                {
-                    // If normalized, reset to original item properties
-                    ResetItemProperties();
-                }
-                else
-                {
-                    OverrideItemProperties();
-                    RecalculateOffset(RelativeScale);
-                }
+                Target.playerHeldBy.playerBodyAnimator.ResetTrigger("SwitchHoldAnimationTwoHanded");
+                Target.playerHeldBy.playerBodyAnimator.ResetTrigger("SwitchHoldAnimation");
+
+                Target.playerHeldBy.playerBodyAnimator.SetTrigger("SwitchHoldAnimation");
+
+                if(usingTwoHandAnimation)
+                    Target.playerHeldBy.playerBodyAnimator.SetTrigger("SwitchHoldAnimationTwoHanded");
             }
+
+            Target.itemProperties.twoHandedAnimation = usingTwoHandAnimation;*/
 
             // Weight
             var lastWeight = Target.itemProperties.weight;
@@ -399,7 +412,7 @@ namespace LittleCompany.components
                 float previousScale = RelativeScale;
 
 #if DEBUG
-                RelativeScale += Time.deltaTime / 2;
+                RelativeScale += Time.deltaTime / 2.5f;
 #else
                 RelativeScale += Time.deltaTime / (20 * RelativeScale);
 #endif
@@ -468,11 +481,9 @@ namespace LittleCompany.components
             base.ScaleTo(scale, scaledBy);
 
             AudioPatches.AdjustPitchIntensityOf(Target);
-
-            // Exceptional enemies
         }
 
-        private void HandleDifferentlyScaledEnemies(float scale)
+        private void HandleDifferentlyScaledEnemies(float scale) // todo: move to their event handler
         {
             if (Target is DocileLocustBeesAI)
             {

@@ -12,6 +12,7 @@ using LittleCompany.compatibility;
 using LittleCompany.events.enemy;
 using LittleCompany.helper;
 using LittleCompany.dependency;
+using LittleCompany.events.item;
 
 namespace LittleCompany
 {
@@ -68,19 +69,24 @@ namespace LittleCompany
             harmony.PatchAll(typeof(QuicksandPatch));
             harmony.PatchAll(typeof(TurretPatch));
             harmony.PatchAll(typeof(AudioPatches));
-            harmony.PatchAll(typeof(GiftBoxItemPatch));
 
             // components
             harmony.PatchAll(typeof(Vents));
+            harmony.PatchAll(typeof(ShrinkRay));
             harmony.PatchAll(typeof(GrabbablePlayerList));
 
             // helper
             harmony.PatchAll(typeof(Effects));
 
-            // events
+            // events - enemy
             harmony.PatchAll(typeof(BrackenEventHandler));
             harmony.PatchAll(typeof(RobotEventHandler));
             harmony.PatchAll(typeof(ThumperEventHandler));
+
+            // events - item
+            harmony.PatchAll(typeof(FlashlightEventHandler));
+            harmony.PatchAll(typeof(GiftBoxEventHandler));
+            harmony.PatchAll(typeof(ShovelEventHandler));
 
             // Compatibility
             if (LethalEmotesApiCompatibility.compatEnabled)

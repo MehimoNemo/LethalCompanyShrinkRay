@@ -1,21 +1,22 @@
 ﻿using HarmonyLib;
-using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.modifications;
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using static LittleCompany.events.item.ItemEventManager;
 
-namespace LittleCompany.patches
+namespace LittleCompany.events.item
 {
     [HarmonyPatch]
-    internal class GiftBoxItemPatch
+    internal class GiftBoxEventHandler : ItemEventHandler
     {
+        #region Patches
         [HarmonyPrefix, HarmonyPatch(typeof(GiftBoxItem), "OpenGiftBoxClientRpc")]
-        public static void OpenGiftBoxClientRpc(GiftBoxItem __instance, NetworkObjectReference netObjectRef, int presentValue, Vector3 startFallingPos)
+        public static void OpenGiftBox(GiftBoxItem __instance, NetworkObjectReference netObjectRef, int presentValue, Vector3 startFallingPos)
         {
             if (__instance.TryGetComponent(out TargetHighlighting highlighting))
-                Object.DestroyImmediate(highlighting);
+                DestroyImmediate(highlighting);
 
             var giftBoxScaling = ObjectModification.ScalingOf(__instance);
             giftBoxScaling.RemoveHologram();
@@ -41,8 +42,9 @@ namespace LittleCompany.patches
             }
             yield return new WaitForEndOfFrame();
 
-            if(netObject.TryGetComponent(out GrabbableObject item))
+            if (netObject.TryGetComponent(out GrabbableObject item))
                 ObjectModification.ScalingOf(item).ScaleToImmediate(scale, null);
         }
+        #endregion
     }
 }

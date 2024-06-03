@@ -1,3 +1,29 @@
+### 1.0.14 ###
+**Tweaks**
+- The ShrinkRay now requires battery to run
+  - Configurable through *[General]ShrinkRayShotsPerCharge* in the config.
+  - Setting this option to 0 will disable the battery usage.
+- Added *[General]ShrinkRayNoRecharge*. If set, the ShrinkRay will overheat when the battery is used up and can't be recharged.
+
+**Fixes**
+- Fixed a bug when scaling objects without a spawnPrefab
+
+### 1.0.13 ###
+**Fixes**
+- Fixed item scaling effects affecting any item of the same type during the first milliseconds of scaling an item
+
+**Tweaks**
+- Enlarged flashlights now cover a larger radius
+- Reworked battery cost calculation for scaled flashlights
+- Hits from enlarged shovels now take significantly more damage
+
+### 1.0.12 ###
+**Compatibility**
+- LC_Office item-scaling compatibility
+
+**Tweaks**
+- Flashlight intensity & battery usage are now in relation to the item size
+
 ### 1.0.11 ###
 **Fixes**
 - Fixed giftbox presents causing errors and being invisible

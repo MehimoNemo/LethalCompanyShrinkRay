@@ -201,22 +201,6 @@ namespace LittleCompany.components
                 (__instance as GrabbablePlayerObject).UpdateScanNodeVisibility();
         }
 
-        [HarmonyPatch(typeof(Shovel), "HitShovel")]
-        [HarmonyPostfix]
-        public static void HitShovel(bool cancel, RaycastHit[] ___objectsHitByShovel, Shovel __instance)
-        {
-            if (cancel) return;
-
-            foreach(var obj in ___objectsHitByShovel)
-            {
-                if(obj.transform != null && obj.transform.TryGetComponent(out GrabbablePlayerObject gpo))
-                {
-                    if (__instance.playerHeldBy == null || __instance.playerHeldBy.playerClientId != gpo.grabbedPlayerID.Value)
-                        gpo.OnGoombaServerRpc(gpo.grabbedPlayerID.Value);
-                }
-            }
-        }
-
         [HarmonyPatch(typeof(PlayerControllerB), "SetHoverTipAndCurrentInteractTrigger")]
         [HarmonyPostfix]
         private static void SetHoverTipAndCurrentInteractTriggerPatch(ref InteractTrigger ___hoveringOverTrigger) // Disable storage closet for shrunken players

@@ -12,6 +12,7 @@ using LittleCompany.modifications;
 using static LittleCompany.helper.LayerMasks;
 using static LittleCompany.modifications.Modification;
 using LittleCompany.dependency;
+using HarmonyLib;
 
 namespace LittleCompany.components
 {
@@ -19,6 +20,9 @@ namespace LittleCompany.components
     public class ShrinkRay : GrabbableObject
     {
         #region Properties
+        internal static readonly string OverheatedHeaderText = "Overheated ShrinkRay";
+        internal static readonly string OverheatedSubText = "Became unusable and can't be recharged.";
+
         internal static string BaseAssetPath = Path.Combine(AssetLoader.BaseAssetPath, "Shrink");
 
         private const float beamSearchDistance = 10f;
@@ -41,6 +45,8 @@ namespace LittleCompany.components
 
         internal GameObject targetObject = null;
         internal List<Material> targetMaterials = new List<Material>();
+
+        internal bool EmptyBattery => itemProperties.requiresBattery && (insertedBattery.empty || insertedBattery.charge < (ShrinkRayFX.DefaultBeamDuration / 2f ));
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
@@ -97,6 +103,7 @@ namespace LittleCompany.components
             shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
             shrinkRay.itemProperties.minValue = 0;
             shrinkRay.itemProperties.maxValue = 0;
+            shrinkRay.itemProperties.holdButtonUse = false;
             shrinkRay.grabbable = true;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
@@ -112,6 +119,7 @@ namespace LittleCompany.components
         {
             base.Start();
 
+            //insertedBattery = new Battery(isEmpty: false, 1f);
             LaserLight = transform.Find("LaserLight")?.GetComponent<Light>();
             LaserDot = transform.Find("LaserDot")?.GetComponent<Light>();
             LaserLine = transform.Find("LaserLine")?.GetComponent<LineRenderer>();
@@ -122,14 +130,24 @@ namespace LittleCompany.components
                 audioSource = gameObject.AddComponent<AudioSource>();
             }
 
-            DisableLaserForHolder();
+            var raysPerCharge = ModConfig.Instance.values.shrinkRayShotsPerCharge;
+            if (raysPerCharge > 0)
+            {
+                itemProperties.requiresBattery = true;
+                itemProperties.batteryUsage = raysPerCharge * ShrinkRayFX.DefaultBeamDuration;
+                if (EmptyBattery)
+                    StartCoroutine(Overheat());
+            }
+            else
+                itemProperties.requiresBattery = false;
+
+            EnableLaserForHolder();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
         {
-            if (currentMode.Value != Mode.Default) return;
+            if (currentMode.Value != Mode.Default || EmptyBattery) return;
 
-            Plugin.Log("Triggering " + name);
             base.ItemActivate(used, buttonDown);
             SwitchModificationTypeServerRpc((int)ModificationType.Shrinking);
             SwitchModeServerRpc((int)Mode.Loading);
@@ -142,7 +160,7 @@ namespace LittleCompany.components
             if (LaserEnabled)
                 UpdateLaser();
 
-            if (!isHeld || playerHeldBy != PlayerInfo.CurrentPlayer || isPocketed || currentMode.Value != Mode.Default)
+            if (!isHeld || playerHeldBy != PlayerInfo.CurrentPlayer || isPocketed || currentMode.Value != Mode.Default || !UseItemBatteries(itemProperties.holdButtonUse))
                 return;
 
             if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
@@ -205,6 +223,8 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModeServerRpc(int newMode)
         {
+            SyncBatteryServerRpc((int)insertedBattery.charge);
+
             currentMode.Value = (Mode)newMode;
 
             SwitchModeClientRpc(newMode);
@@ -220,9 +240,11 @@ namespace LittleCompany.components
                     StartCoroutine(LoadRay());
                     break;
                 case Mode.Shooting:
+                    isBeingUsed = true;
                     ShootRayBeam();
                     break;
                 case Mode.Unloading:
+                    isBeingUsed = false;
                     StartCoroutine(UnloadRay());
                     break;
                 case Mode.Missing:
@@ -249,13 +271,15 @@ namespace LittleCompany.components
 
         internal void EnableLaserForHolder(bool enable = true)
         {
-            if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null)
+            if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null || EmptyBattery)
                 enable = false;
 
             LaserEnabled = enable;
             if (LaserLine != null) LaserLine.enabled = enable;
             if (LaserLight != null) LaserLight.enabled = enable;
             if (LaserDot != null) LaserDot.enabled = enable;
+            if (!enable)
+                ChangeTarget(null);
         }
         internal void DisableLaserForHolder() => EnableLaserForHolder(false);
 
@@ -398,6 +422,10 @@ namespace LittleCompany.components
         private IEnumerator UnloadRay(bool hasHitTarget = true)
         {
             Plugin.Log("UnloadRay");
+
+            if(hasHitTarget)
+                CheckForOverheat();
+
             if (unloadSFX != null && audioSource != null)
             {
                 audioSource.Stop();
@@ -555,6 +583,34 @@ namespace LittleCompany.components
                 SwitchModeClientRpc((int)Mode.Unloading);
             });
         }
+
+        internal void CheckForOverheat()
+        {
+            if (!EmptyBattery) return;
+
+            StartCoroutine(Overheat());
+            Landmine.SpawnExplosion(transform.position, true, 0, 0.25f, 5);
+        }
+
+        internal IEnumerator Overheat()
+        {
+            var burning = Effects.BurningEffect;
+            var relativeScale = ObjectModification.ScalingOf(this).RelativeScale;
+            burning.transform.localScale = Vector3.one * 0.2f * relativeScale;
+            burning.transform.position = transform.position;
+            burning.transform.SetParent(transform, true);
+            burning.transform.localPosition = new Vector3(0f, 0.2f, 0.3f);
+
+            yield return new WaitForSeconds(1f);
+
+            Materials.ReplaceAllMaterialsWith(gameObject, (mat) => Materials.BurntMaterial); // todo: change materials slowly over time if possible
+            var scanNode = GetComponentInChildren<ScanNodeProperties>();
+            if (scanNode != null)
+            {
+                scanNode.headerText = OverheatedHeaderText;
+                scanNode.subText = OverheatedSubText;
+            }
+        }
         #endregion
 
         #region PlayerTargeting
@@ -659,6 +715,20 @@ namespace LittleCompany.components
 
             if (IsOwner)
                 SwitchModeServerRpc((int)Mode.Shooting);
+        }
+        #endregion
+
+        #region Patches
+        [HarmonyPatch(typeof(ItemCharger), "Update")]
+        [HarmonyPostfix]
+        public static void ItemChargerUpdate(ItemCharger __instance)
+        {
+            if (!__instance.triggerScript.interactable || GameNetworkManager.Instance.localPlayerController == null || GameNetworkManager.Instance.localPlayerController.currentlyHeldObjectServer == null) return;
+
+            var shrinkRay = GameNetworkManager.Instance.localPlayerController.currentlyHeldObjectServer as ShrinkRay;
+            if(shrinkRay == null) return;
+
+            __instance.triggerScript.interactable = !ModConfig.Instance.values.shrinkRayNoRecharge;
         }
         #endregion
     }

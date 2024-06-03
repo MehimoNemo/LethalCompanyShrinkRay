@@ -46,18 +46,18 @@ Send us a message on discord
 + abovefire
 
 or leave a message in the following discord server:
-[LittleCompany Discord](https://discord.gg/63KdxhQ2Dn)
-[Unofficial Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1169792572382773318/1190100786357743646)
-[Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1168655651455639582/1206337352608256010)
++ [LittleCompany Discord](https://discord.gg/63KdxhQ2Dn)
++ [Unofficial Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1169792572382773318/1190100786357743646)
++ [Modding Discord](https://discord.gg/nYcQFEpXfU) \| [LittleCompany-Thread](https://discord.com/channels/1168655651455639582/1206337352608256010)
 
 ## Credits
-- Created by [Nemo](https://github.com/MehimoNemo) and [Niro](https://github.com/NiroDev)
-- Development help in terms of compatibility and stability by [AboveFire](https://github.com/AboveFire)
-- The ShrinkRay model created by [@peppermint_2859](https://twitter.com/ItsJOEYthe)
-- Intensive testing and feedback through github by [CoolLKKPS](https://github.com/CoolLKKPS)
-- The SrhinkRay beam made by [Sakiskid](https://github.com/Sakiskid)
-- [MissScarlett](https://github.com/QueenScarlett23) for contributing to the mod.
-- Ellethwen on discord for the potion & player item icons!
-- Spinmaster on discord for creating all the sounds this mod includes!
-- Everyone who helped with testing: [StrawberriStorm](https://twitter.com/strawberristorm) | [Tcorn](https://twitter.com/TcorntheLazy) | [Sirdog](https://youtu.be/6ItPIiegBms?si=zH-Cf467VIOtVTMt) | [IceSigil](https://twitter.com/IceSigil) | [NimNom](https://www.twitch.tv/nimnom)
++ Created by [Nemo](https://github.com/MehimoNemo) and [Niro](https://github.com/NiroDev)
++ Development help in terms of compatibility and stability by [AboveFire](https://github.com/AboveFire)
++ The ShrinkRay model created by [@peppermint_2859](https://twitter.com/ItsJOEYthe)
++ Intensive testing and feedback through github by [CoolLKKPS](https://github.com/CoolLKKPS)
++ The SrhinkRay beam made by [Sakiskid](https://github.com/Sakiskid)
++ [MissScarlett](https://github.com/QueenScarlett23) for contributing to the mod.
++ Ellethwen on discord for the potion & player item icons!
++ Spinmaster on discord for creating all the sounds this mod includes!
++ Everyone who helped with testing: [StrawberriStorm](https://twitter.com/strawberristorm) | [Tcorn](https://twitter.com/TcorntheLazy) | [Sirdog](https://youtu.be/6ItPIiegBms?si=zH-Cf467VIOtVTMt) | [IceSigil](https://twitter.com/IceSigil) | [NimNom](https://www.twitch.tv/nimnom)
 

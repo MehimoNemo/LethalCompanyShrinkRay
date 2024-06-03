@@ -7,6 +7,7 @@ using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using static LittleCompany.patches.TerminalPatch;
 
 namespace LittleCompany.helper
 {

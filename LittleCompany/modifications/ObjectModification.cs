@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
 using LittleCompany.Config;
+using LittleCompany.events.item;
 using LittleCompany.helper;
 using System;
 using System.Collections.Generic;
@@ -97,20 +98,16 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Shrinking:
                     {
+                        var previousSize = ScalingOf(targetObject).RelativeScale;
                         var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
                         Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
+                        if (Mathf.Approximately(nextShrunkenSize, 0f))
+                            ItemEventManager.EventHandlerOf(targetObject).AboutToDeathShrink(previousSize, playerModifiedBy);
+
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
                             if (Mathf.Approximately(nextShrunkenSize, 0f))
-                            {
-                                // Poof Target to death because they are at size 0
-                                if (Effects.TryCreateDeathPoofAt(out GameObject deathPoof, targetObject.transform.position) && targetObject.gameObject.TryGetComponent(out AudioSource audioSource) && audioSource != null)
-                                    audioSource.PlayOneShot(deathPoofSFX);
-
-                                targetObject.DestroyObjectInHand(targetObject.playerHeldBy);
-                                if (PlayerInfo.IsHost)
-                                    targetObject.NetworkObject.Despawn();
-                            }
+                                ItemEventManager.EventHandlerOf(targetObject).OnDeathShrinking(previousSize, playerModifiedBy);
 
                             if (onComplete != null)
                                 onComplete();

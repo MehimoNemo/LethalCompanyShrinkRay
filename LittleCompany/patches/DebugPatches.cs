@@ -69,7 +69,7 @@ namespace LittleCompany.patches
         {
             if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.HoarderBug);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Thumper);
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)
@@ -104,7 +104,7 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f8Key.wasPressedThisFrame)
             {
-                SpawnItemInFront(ItemInfo.itemByName("GiftBox").spawnPrefab);
+                SpawnItemInFront(ItemInfo.itemByName("Shovel").spawnPrefab);
             }
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)
@@ -170,6 +170,12 @@ namespace LittleCompany.patches
             Object.DontDestroyOnLoad(item);
             item.GetComponent<NetworkObject>()?.Spawn();
             item.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 1.5f;
+            if (item.TryGetComponent(out GrabbableObject grabbableObject))
+            {
+                grabbableObject.itemProperties.canBeGrabbedBeforeGameStart = true;
+                if (grabbableObject.itemProperties.requiresBattery)
+                    grabbableObject.insertedBattery = new Battery(isEmpty: false, 1f);
+            }
         }
 
         public static void SpawnNextItemInFront()
