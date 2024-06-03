@@ -64,7 +64,7 @@ namespace LittleCompany.modifications
 
         public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy)
         {
-            if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder || targetPlayer.inTerminalMenu)
+            if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder)
                 return false;
 
             switch (type)
@@ -112,6 +112,9 @@ namespace LittleCompany.modifications
             if (targetPlayer == null) return;
 
             bool targetingUs = PlayerInfo.IsCurrentPlayer(targetPlayer);
+
+            if (targetingUs && targetPlayer.inTerminalMenu)
+                UnityEngine.Object.FindObjectOfType<Terminal>()?.QuitTerminal();
 
             switch (type)
             {
