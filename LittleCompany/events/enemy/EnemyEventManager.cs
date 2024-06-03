@@ -5,6 +5,7 @@ using UnityEngine;
 using LittleCompany.helper;
 using LittleCompany.components;
 using static LittleCompany.helper.EnemyInfo;
+using LittleCompany.events.item;
 
 namespace LittleCompany.events.enemy
 {
@@ -44,6 +45,7 @@ namespace LittleCompany.events.enemy
         public static void BindAllEventHandler()
         {
             int handlersAdded = 0;
+            int customHandlersAdded = 0;
             foreach (var enemyType in EnemyTypes)
             {
                 if (enemyType.enemyPrefab == null)
@@ -60,12 +62,20 @@ namespace LittleCompany.events.enemy
                         handlersAdded++;
 #if DEBUG
                     if (eventHandler != null)
-                        Plugin.Log("Added event handler \"" + eventHandlerType.Name + "\" for enemy \"" + enemyType.enemyName + "\"");
+                    {
+                        if (eventHandlerType == typeof(CustomEnemyEventHandler))
+                            customHandlersAdded++;
+                        else
+                            Plugin.Log("Added event handler \"" + eventHandlerType.Name + "\" for enemy \"" + enemyType.enemyName + "\"");
+                    }
                     else
                         Plugin.Log("No enemy handler found for enemy \"" + enemyType.enemyName + "\"");
 #endif
                 }
             }
+
+            if (customHandlersAdded > 0)
+                Plugin.Log("Added custom event handler for " + customHandlersAdded + " enemies");
 
             Plugin.Log("BindAllEnemyEvents -> Added handler for " + handlersAdded + "/" + EnemyTypes.Count + " enemies.");
         }

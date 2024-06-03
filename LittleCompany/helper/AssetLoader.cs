@@ -66,7 +66,7 @@ namespace LittleCompany.helper
 
                 AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
                 yield return new WaitUntil(() => clip.loadState == AudioDataLoadState.Loaded);
-                Plugin.Log("Loaded audio \"" + filename);
+                //Plugin.Log("Loaded audio \"" + filename);
                 onComplete(clip);
             }
         }
@@ -74,8 +74,8 @@ namespace LittleCompany.helper
         public static void LoadAllAssets()
         {
 #if DEBUG
-            foreach (var assetName in littleCompanyAsset?.GetAllAssetNames())
-                Plugin.Log("Found asset: " + assetName);
+            //foreach (var assetName in littleCompanyAsset?.GetAllAssetNames())
+            //    Plugin.Log("Found asset: " + assetName);
 #endif
 
             GrabbablePlayerObject.LoadAsset();

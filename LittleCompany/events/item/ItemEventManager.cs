@@ -33,6 +33,7 @@ namespace LittleCompany.events.item
         public static void BindAllEventHandler()
         {
             int handlersAdded = 0;
+            int customHandlersAdded = 0;
             foreach (var item in SpawnableItems)
             {
                 if (item.spawnPrefab == null)
@@ -46,12 +47,20 @@ namespace LittleCompany.events.item
                 if (eventHandler != null)
                     handlersAdded++;
 #if DEBUG
-                    if (eventHandler != null)
-                        Plugin.Log("Added event handler \"" + eventHandlerType.Name + "\" for item \"" + item.itemName + "\"");
+                if (eventHandler != null)
+                {
+                    if (eventHandlerType == typeof(CustomItemEventHandler))
+                        customHandlersAdded++;
                     else
-                        Plugin.Log("No enemy handler found for item \"" + item.itemName + "\"");
+                        Plugin.Log("Added event handler \"" + eventHandlerType.Name + "\" for item \"" + item.itemName + "\"");
+                }
+                else
+                    Plugin.Log("No enemy handler found for item \"" + item.itemName + "\"");
 #endif
             }
+
+            if (customHandlersAdded > 0)
+                Plugin.Log("Added custom event handler for " + customHandlersAdded + " items");
 
             Plugin.Log("BindAllItemEvents -> Added handler for " + handlersAdded + "/" + SpawnableItems.Count + " items.");
         }

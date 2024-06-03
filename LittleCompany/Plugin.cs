@@ -72,6 +72,7 @@ namespace LittleCompany
 
             // components
             harmony.PatchAll(typeof(Vents));
+            harmony.PatchAll(typeof(ShrinkRay));
             harmony.PatchAll(typeof(GrabbablePlayerList));
 
             // helper

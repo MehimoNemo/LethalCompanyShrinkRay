@@ -46,6 +46,11 @@ namespace LittleCompany.dependency
             return ScrapManager.CloneNetworkPrefab(prefabToClone, newName);
         }
 
+        public static GameObject CreateNetworkPrefab(string newName = null)
+        {
+            return ScrapManager.CreateNetworkPrefab( newName);
+        }
+
         public static void FixMixerGroups(GameObject prefab)
         {
             ScrapManager.FixMixerGroups(prefab);
@@ -74,6 +79,7 @@ namespace LittleCompany.dependency
 
         internal interface IScrapManagement
         {
+            public GameObject CreateNetworkPrefab(string newName = null);
             public GameObject CloneNetworkPrefab(GameObject prefabToClone, string newName = null);
 
             public void FixMixerGroups(GameObject prefab);
@@ -87,6 +93,11 @@ namespace LittleCompany.dependency
             public GameObject CloneNetworkPrefab(GameObject prefabToClone, string newName = null)
             {
                 return LethalLib.Modules.NetworkPrefabs.CloneNetworkPrefab(prefabToClone, newName);
+            }
+
+            public GameObject CreateNetworkPrefab(string newName = null)
+            {
+                return LethalLib.Modules.NetworkPrefabs.CreateNetworkPrefab(newName);
             }
 
             [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
@@ -134,6 +145,11 @@ namespace LittleCompany.dependency
             public GameObject CloneNetworkPrefab(GameObject prefabToClone, string newName = null)
             {
                 return CloneNetworkPrefabImpl(prefabToClone, newName);
+            }
+
+            public GameObject CreateNetworkPrefab(string newName = null)
+            {
+                return LethalLevelLoader.PrefabHelper.CreateNetworkPrefab(newName);
             }
 
             public void FixMixerGroups(GameObject prefab)

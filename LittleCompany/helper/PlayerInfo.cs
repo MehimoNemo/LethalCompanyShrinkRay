@@ -7,6 +7,7 @@ using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using static LittleCompany.patches.TerminalPatch;
 
 namespace LittleCompany.helper
 {
@@ -193,5 +194,7 @@ namespace LittleCompany.helper
                 audioReverbPresets.audioPresets[audioPresetIndex].ChangeAudioReverbForPlayer(targetPlayer);
             }
         }
+
+        public static bool IsUsingTerminal(PlayerControllerB player) => player != null && TerminalUsers.userlist.Contains(player.playerClientId);
     }
 }

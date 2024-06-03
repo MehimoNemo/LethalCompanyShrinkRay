@@ -6,7 +6,6 @@ using Unity.Collections;
 using Unity.Netcode;
 using GameNetcodeStuff;
 using LittleCompany.helper;
-using LittleCompany.components;
 using LittleCompany.compatibility;
 using UnityEngine;
 using LittleCompany.patches;
@@ -48,6 +47,8 @@ namespace LittleCompany.Config
             public int shrinkRayCost { get; set; }
 
             public int shrinkRayShotsPerCharge { get; set; }
+
+            public bool shrinkRayNoRecharge { get; set; }
 
             public float movementSpeedMultiplier { get; set; }
 
@@ -122,6 +123,7 @@ namespace LittleCompany.Config
         {
             values.shrinkRayCost                 = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 1000, "Store cost of the shrink ray").Value;
             values.shrinkRayShotsPerCharge       = Plugin.BepInExConfig().Bind("General", "ShrinkRayShotsPerCharge", 7, "Amount of shots per charge for the shrink ray. Set to 0 for unlimited").Value;
+            values.shrinkRayNoRecharge           = Plugin.BepInExConfig().Bind("General", "ShrinkRayNoRecharge", false, "If true, the shrink ray can't be recharged.").Value;
             values.deathShrinking                = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
             values.shrinkRayTargetHighlighting   = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnHit, "Defines, when a target gets highlighted. Set to OnLoading if you encounter performance issues.").Value;
                                                  
