@@ -121,11 +121,11 @@ namespace LittleCompany.Config
         #region Methods
         public void Setup()
         {
-            values.shrinkRayCost                 = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 1000, "Store cost of the shrink ray").Value;
+            values.shrinkRayCost                 = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 1000, "Store cost of the shrink ray.").Value;
             values.shrinkRayShotsPerCharge       = Plugin.BepInExConfig().Bind("General", "ShrinkRayShotsPerCharge", 7, "Amount of shots per charge for the shrink ray. Set to 0 for unlimited.").Value;
             values.shrinkRayNoRecharge           = Plugin.BepInExConfig().Bind("General", "ShrinkRayNoRecharge", false, "If true, the shrink ray can't be recharged and will overheat once battery is at zero.").Value;
-            values.deathShrinking                = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
             values.shrinkRayTargetHighlighting   = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnHit, "Defines, when a target gets highlighted. Set to OnLoading if you encounter performance issues.").Value;
+            values.deathShrinking                = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
                                                  
             values.defaultPlayerSize             = Plugin.BepInExConfig().Bind("Sizing", "DefaultPlayerSize", 1f, new ConfigDescription("The default player size when joining a lobby or reviving.", new AcceptableValueRange<float>(0.2f, 1.7f))).Value;
             values.maximumPlayerSize             = Plugin.BepInExConfig().Bind("Sizing", "MaximumPlayerSize", 1.7f, "Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)").Value;
@@ -139,12 +139,12 @@ namespace LittleCompany.Config
             values.weightMultiplier              = Plugin.BepInExConfig().Bind("Shrunken", "WeightMultiplier", 1.5f, new ConfigDescription("Weight multiplier on held items for shrunken players, ranging from 0.5 (lighter) to 2 (heavier).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
             values.canUseVents                   = Plugin.BepInExConfig().Bind("Shrunken", "CanUseVents", true, "If true, shrunken players can move between vents.").Value;
             values.pitchDistortionIntensity      = Plugin.BepInExConfig().Bind("Shrunken", "PitchDistortionIntensity", 0.3f, new ConfigDescription("Intensity of the pitch distortion for players with a different size than the local player, from 0 (unchanged) to 0.5 (strong).", new AcceptableValueRange<float>(0f, 0.5f))).Value;
-            values.CanEscapeGrab                 = Plugin.BepInExConfig().Bind("Shrunken", "CanEscapeGrab", true, "If true, a player who got grabbed can escape by jumping").Value;
+            values.CanEscapeGrab                 = Plugin.BepInExConfig().Bind("Shrunken", "CanEscapeGrab", true, "If true, a player who got grabbed can escape by jumping.").Value;
             values.cantOpenStorageCloset         = Plugin.BepInExConfig().Bind("Shrunken", "CantOpenStorageCloset", false, "If true, a shrunken player can't open or close the storage closet anymore.").Value;
                                                  
             values.jumpOnShrunkenPlayers         = Plugin.BepInExConfig().Bind("Interactions", "JumpOnShrunkenPlayers", true, "If true, normal-sized players can harm shrunken players by jumping on them.").Value;
             values.throwablePlayers              = Plugin.BepInExConfig().Bind("Interactions", "ThrowablePlayers", true, "If true, shrunken players can be thrown by normal sized players.").Value;
-            values.sellablePlayers               = Plugin.BepInExConfig().Bind("Interactions", "SellablePlayers", true, "If true, shrunken players can be sold to the company").Value;
+            values.sellablePlayers               = Plugin.BepInExConfig().Bind("Interactions", "SellablePlayers", true, "If true, shrunken players can be sold to the company.").Value;
 
             values.enemyPitchDistortionIntensity = Plugin.BepInExConfig().Bind("Enemies", "EnemyPitchDistortionIntensity", 0.2f, new ConfigDescription("Intensity of the pitch distortion for enemies with a different size than the local player, from 0 (unchanged) to 0.5 (strong).", new AcceptableValueRange<float>(0f, 0.5f))).Value;
             values.hoardingBugBehaviour          = Plugin.BepInExConfig().Bind("Enemies", "HoarderBugBehaviour", HoardingBugBehaviour.Default, "Defines if hoarding bugs should be able to grab you and how likely that is.").Value;
