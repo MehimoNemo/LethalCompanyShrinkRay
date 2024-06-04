@@ -87,6 +87,7 @@ namespace LittleCompany
             harmony.PatchAll(typeof(FlashlightEventHandler));
             harmony.PatchAll(typeof(GiftBoxEventHandler));
             harmony.PatchAll(typeof(ShovelEventHandler));
+            harmony.PatchAll(typeof(KeyEventHandler));
 
             // Compatibility
             if (LethalEmotesApiCompatibility.compatEnabled)

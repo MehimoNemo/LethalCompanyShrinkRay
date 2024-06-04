@@ -50,6 +50,7 @@ namespace LittleCompany.components
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
+        internal NetworkVariable<bool> isOverheated = new NetworkVariable<bool>();
         internal enum Mode
         {
             Default,
@@ -135,7 +136,7 @@ namespace LittleCompany.components
             {
                 itemProperties.requiresBattery = true;
                 itemProperties.batteryUsage = raysPerCharge * ShrinkRayFX.DefaultBeamDuration;
-                if (EmptyBattery)
+                if (isOverheated.Value)
                     StartCoroutine(Overheat());
             }
             else
@@ -144,9 +145,17 @@ namespace LittleCompany.components
             EnableLaserForHolder();
         }
 
+        public override void ChargeBatteries()
+        {
+            base.ChargeBatteries();
+            Plugin.Log("Charging ShrinkRay");
+            insertedBattery.charge = itemProperties.batteryUsage;
+            EnableLaserForHolder();
+        }
+
         public override void ItemActivate(bool used, bool buttonDown = true)
         {
-            if (currentMode.Value != Mode.Default || EmptyBattery) return;
+            if (currentMode.Value != Mode.Default || EmptyBattery || isOverheated.Value) return;
 
             base.ItemActivate(used, buttonDown);
             SwitchModificationTypeServerRpc((int)ModificationType.Shrinking);
@@ -160,7 +169,7 @@ namespace LittleCompany.components
             if (LaserEnabled)
                 UpdateLaser();
 
-            if (!isHeld || playerHeldBy != PlayerInfo.CurrentPlayer || isPocketed || currentMode.Value != Mode.Default || !UseItemBatteries(itemProperties.holdButtonUse))
+            if (!isHeld || playerHeldBy != PlayerInfo.CurrentPlayer || isPocketed || currentMode.Value != Mode.Default || EmptyBattery || isOverheated.Value)
                 return;
 
             if (Mouse.current.middleButton.wasPressedThisFrame) // todo: make middle mouse button scroll through modificationTypes later on, with visible: Mouse.current.scroll.ReadValue().y
@@ -271,7 +280,7 @@ namespace LittleCompany.components
 
         internal void EnableLaserForHolder(bool enable = true)
         {
-            if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null || EmptyBattery)
+            if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null || EmptyBattery || isOverheated.Value)
                 enable = false;
 
             LaserEnabled = enable;
@@ -586,7 +595,7 @@ namespace LittleCompany.components
 
         internal void CheckForOverheat()
         {
-            if (!EmptyBattery) return;
+            if (isOverheated.Value || !EmptyBattery) return;
 
             StartCoroutine(Overheat());
             Landmine.SpawnExplosion(transform.position, true, 0, 0.25f, 5);
@@ -610,6 +619,9 @@ namespace LittleCompany.components
                 scanNode.headerText = OverheatedHeaderText;
                 scanNode.subText = OverheatedSubText;
             }
+
+            if (PlayerInfo.IsHost)
+                isOverheated.Value = true;
         }
         #endregion
 
