@@ -15,7 +15,9 @@ namespace LittleCompany.events.item
             { VanillaItem.Flashlight,     typeof(FlashlightEventHandler) },
             { VanillaItem.Gift,           typeof(GiftBoxEventHandler)    },
             { VanillaItem.Shovel,         typeof(ShovelEventHandler)     },
-            { VanillaItem.Key,            typeof(KeyEventHandler)        }
+            { VanillaItem.Key,            typeof(KeyEventHandler)        },
+            { VanillaItem.Clown_horn,     typeof(HornEventHandler)       },
+            { VanillaItem.Airhorn,        typeof(HornEventHandler)       }
         };
 
         public static Type EventHandlerTypeByName(string name) => EventHandler.GetValueOrDefault(itemTypeByName(name), typeof(CustomItemEventHandler));

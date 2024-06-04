@@ -104,7 +104,8 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f8Key.wasPressedThisFrame)
             {
-                SpawnItemInFront(ItemInfo.itemByName("Shovel").spawnPrefab);
+                //SpawnItemInFront(ItemInfo.itemByName("Clown_horn").spawnPrefab);
+                SpawnItemInFront(ItemInfo.itemByName("Airhorn").spawnPrefab);
             }
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)
@@ -114,7 +115,12 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f10Key.wasPressedThisFrame)
             {
-                TeleportIntoShip();
+                foreach(var door in Resources.FindObjectsOfTypeAll<DoorLock>())
+                {
+                    if (door != null && door.isLocked)
+                        PlayerInfo.CurrentPlayer.TeleportPlayer(door.lockPickerPosition.position);
+                }
+                //TeleportIntoShip();
             }
 
             else if (Keyboard.current.f11Key.wasPressedThisFrame)
@@ -152,6 +158,13 @@ namespace LittleCompany.patches
             return cube;
         }
 
+        public static void SpawnItemInFront(Item item)
+        {
+            if (item == null) return;
+
+            SpawnItemInFront(item.spawnPrefab);
+        }
+
         public static void SpawnItemInFront(GameObject networkPrefab)
         {
             if (!PlayerInfo.IsHost)
@@ -173,8 +186,8 @@ namespace LittleCompany.patches
             if (item.TryGetComponent(out GrabbableObject grabbableObject))
             {
                 grabbableObject.itemProperties.canBeGrabbedBeforeGameStart = true;
-                if (grabbableObject.itemProperties.requiresBattery)
-                    grabbableObject.insertedBattery = new Battery(isEmpty: false, 1f);
+                /*if (grabbableObject.itemProperties.requiresBattery)
+                    grabbableObject.insertedBattery = new Battery(isEmpty: false, 1f); */
             }
         }
 
