@@ -46,7 +46,10 @@ namespace LittleCompany.components
         internal GameObject targetObject = null;
         internal List<Material> targetMaterials = new List<Material>();
 
-        internal bool EmptyBattery => itemProperties.requiresBattery && (insertedBattery.empty || insertedBattery.charge < (ShrinkRayFX.DefaultBeamDuration / 2f ));
+        internal GameObject burningEffect = null;
+        internal bool IsBurning => burningEffect != null;
+
+        internal bool EmptyBattery => itemProperties.requiresBattery && (insertedBattery.empty || insertedBattery.charge < ( 1f / ModConfig.Instance.values.shrinkRayShotsPerCharge / 2f)); // 1f for charge is full
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
@@ -109,6 +112,16 @@ namespace LittleCompany.components
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
 
+            var raysPerCharge = ModConfig.Instance.values.shrinkRayShotsPerCharge;
+            if (raysPerCharge > 0)
+            {
+                shrinkRay.itemProperties.requiresBattery = true;
+                shrinkRay.itemProperties.batteryUsage = raysPerCharge * ShrinkRayFX.DefaultBeamDuration;
+                shrinkRay.insertedBattery = new Battery(false, 1f);
+            }
+            else
+                shrinkRay.itemProperties.requiresBattery = false;
+
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
             ScrapManagementFacade.RegisterItem(shrinkRay.itemProperties, false, true, -1, shrinkRay.name + "\nA fun, lightweight toy that the Company repurposed to help employees squeeze through tight spots. Despite it's childish appearance, it really works!");
@@ -131,26 +144,13 @@ namespace LittleCompany.components
                 audioSource = gameObject.AddComponent<AudioSource>();
             }
 
-            var raysPerCharge = ModConfig.Instance.values.shrinkRayShotsPerCharge;
-            if (raysPerCharge > 0)
+            if (isOverheated.Value)
             {
-                itemProperties.requiresBattery = true;
-                itemProperties.batteryUsage = raysPerCharge * ShrinkRayFX.DefaultBeamDuration;
-                if (isOverheated.Value)
-                    StartCoroutine(Overheat());
+                AddBurningEffect();
+                Overheat();
             }
             else
-                itemProperties.requiresBattery = false;
-
-            EnableLaserForHolder();
-        }
-
-        public override void ChargeBatteries()
-        {
-            base.ChargeBatteries();
-            Plugin.Log("Charging ShrinkRay");
-            insertedBattery.charge = itemProperties.batteryUsage;
-            EnableLaserForHolder();
+                EnableLaserForHolder();
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -232,11 +232,18 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModeServerRpc(int newMode)
         {
-            SyncBatteryServerRpc((int)insertedBattery.charge);
+            Plugin.Log("Battery charge: " + insertedBattery.charge);
+            SyncBatteryServerRpc((int)(insertedBattery.charge * 100f));
 
             currentMode.Value = (Mode)newMode;
 
             SwitchModeClientRpc(newMode);
+        }
+
+        public override void ChargeBatteries()
+        {
+            base.ChargeBatteries();
+            EnableLaserForHolder();
         }
 
         [ClientRpc]
@@ -283,6 +290,7 @@ namespace LittleCompany.components
             if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null || EmptyBattery || isOverheated.Value)
                 enable = false;
 
+            Plugin.Log("EnableLaserForHolder");
             LaserEnabled = enable;
             if (LaserLine != null) LaserLine.enabled = enable;
             if (LaserLight != null) LaserLight.enabled = enable;
@@ -432,8 +440,18 @@ namespace LittleCompany.components
         {
             Plugin.Log("UnloadRay");
 
-            if(hasHitTarget)
-                CheckForOverheat();
+            if (IsBurning)
+            {
+                if (hasHitTarget)
+                {
+                    Landmine.SpawnExplosion(transform.position, true, 0.25f, 1f, 20);
+                    Overheat();
+                    if (playerHeldBy != null && playerHeldBy == PlayerInfo.CurrentPlayer)
+                        playerHeldBy.DiscardHeldObject();
+                }
+                else
+                    DestroyImmediate(burningEffect); // Ray beam failed, remove burning effect
+            }
 
             if (unloadSFX != null && audioSource != null)
             {
@@ -586,33 +604,44 @@ namespace LittleCompany.components
                 return;
             }
 
+            if (ModConfig.Instance.values.shrinkRayNoRecharge)
+            {
+                var singleShot = 1f / ModConfig.Instance.values.shrinkRayShotsPerCharge;
+                if (insertedBattery.charge < (singleShot * 1.5f))
+                    AddBurningEffect();
+            }
+
             shrinkRayFX.RenderRayBeam(playerHeldBy.gameplayCamera.transform, targetObject.transform, currentModificationType.Value, audioSource, () =>
             {
-                Plugin.Log("Ray beam, has finished.");
+                // Complete
+                Plugin.Log("Ray beam has finished.");
                 SwitchModeClientRpc((int)Mode.Unloading);
+            }, () =>
+            {
+                // Failure
+                Plugin.Log("Ray beam failed.");
+                SwitchModeClientRpc((int)Mode.Missing);
             });
         }
 
-        internal void CheckForOverheat()
+        internal void AddBurningEffect()
         {
-            if (isOverheated.Value || !EmptyBattery) return;
+            if (IsBurning) return;
 
-            StartCoroutine(Overheat());
-            Landmine.SpawnExplosion(transform.position, true, 0, 0.25f, 5);
+            burningEffect = Effects.BurningEffect;
+            var relativeScale = ObjectModification.ScalingOf(this).RelativeScale;
+            burningEffect.transform.localScale = Vector3.one * 0.2f * relativeScale;
+            burningEffect.transform.position = transform.position;
+            burningEffect.transform.SetParent(transform, true);
+            burningEffect.transform.localPosition = new Vector3(0f, 0.2f, 0.3f);
         }
 
-        internal IEnumerator Overheat()
+        internal void Overheat()
         {
-            var burning = Effects.BurningEffect;
-            var relativeScale = ObjectModification.ScalingOf(this).RelativeScale;
-            burning.transform.localScale = Vector3.one * 0.2f * relativeScale;
-            burning.transform.position = transform.position;
-            burning.transform.SetParent(transform, true);
-            burning.transform.localPosition = new Vector3(0f, 0.2f, 0.3f);
+            // Materials
+            Materials.ReplaceAllMaterialsWith(gameObject, (mat) => Materials.BurntMaterial);
 
-            yield return new WaitForSeconds(1f);
-
-            Materials.ReplaceAllMaterialsWith(gameObject, (mat) => Materials.BurntMaterial); // todo: change materials slowly over time if possible
+            // Scan node
             var scanNode = GetComponentInChildren<ScanNodeProperties>();
             if (scanNode != null)
             {
@@ -630,13 +659,13 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         public void OnPlayerModificationServerRpc(ulong targetPlayerID, ulong playerHeldByID)
         {
-            Plugin.Log("OnPlayerModification");
             OnPlayerModificationClientRpc(targetPlayerID, playerHeldByID);
         }
 
         [ClientRpc]
         public void OnPlayerModificationClientRpc(ulong targetPlayerID, ulong playerHeldByID)
         {
+            Plugin.Log("OnPlayerModificationClientRpc");
             playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
 
             var targetPlayer = PlayerInfo.ControllerFromID(targetPlayerID);
@@ -669,13 +698,13 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         public void OnObjectModificationServerRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
         {
-            Plugin.Log("OnObjectModification");
             OnObjectModificationClientRpc(targetObjectNetworkID, playerHeldByID);
         }
 
         [ClientRpc]
         public void OnObjectModificationClientRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
         {
+            Plugin.Log("OnObjectModificationClientRpc");
             playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
 
             if (!TryGetObjectByNetworkID(targetObjectNetworkID, out targetObject))
@@ -702,13 +731,13 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         public void OnEnemyModificationServerRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
         {
-            Plugin.Log("OnEnemyModification");
             OnEnemyModificationClientRpc(targetEnemyNetworkID, playerHeldByID);
         }
 
         [ClientRpc]
         public void OnEnemyModificationClientRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
         {
+            Plugin.Log("OnEnemyModificationClientRpc");
             playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
 
             if (!TryGetObjectByNetworkID(targetEnemyNetworkID, out targetObject))
@@ -740,7 +769,7 @@ namespace LittleCompany.components
             var shrinkRay = GameNetworkManager.Instance.localPlayerController.currentlyHeldObjectServer as ShrinkRay;
             if(shrinkRay == null) return;
 
-            __instance.triggerScript.interactable = !ModConfig.Instance.values.shrinkRayNoRecharge;
+            __instance.triggerScript.interactable = !shrinkRay.isOverheated.Value;
         }
         #endregion
     }

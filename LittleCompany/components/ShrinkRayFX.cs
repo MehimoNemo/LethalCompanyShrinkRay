@@ -145,7 +145,7 @@ namespace LittleCompany.components
             Destroy(beam);
         }
 
-        public GameObject RenderRayBeam(Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null)
+        public GameObject RenderRayBeam(Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null, Action onFailure = null)
         {
             var beam = Instantiate(fxPrefab);
             //DontDestroyOnLoad(fx);
@@ -156,13 +156,15 @@ namespace LittleCompany.components
             return beam;
         }
 
-        private IEnumerator RenderRayBeamCoroutine(GameObject beam, Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null)
+        private IEnumerator RenderRayBeamCoroutine(GameObject beam, Transform holderCamera, Transform target, ModificationType? type = null, AudioSource shrinkRayAudio = null, Action onComplete = null, Action onFailure = null)
         {
             visualEffect = beam.GetComponentInChildren<VisualEffect>();
             if (!visualEffect)
             {
                 Plugin.Log("Shrink Ray VFX Null Error: Couldn't get VisualEffect component", Plugin.LogType.Error);
                 RemoveBeam(beam);
+                if (onFailure != null)
+                    onFailure();
                 yield break;
             }
 
