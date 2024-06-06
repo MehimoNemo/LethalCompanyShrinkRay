@@ -4,6 +4,7 @@ using System.Linq;
 using Unity.Netcode;
 using LittleCompany.components;
 using System;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace LittleCompany.helper
 {
@@ -104,7 +105,7 @@ namespace LittleCompany.helper
             return SpawnableItems.Find(x => x.name == name);
         }
 
-        public static GameObject visualCopyOf(Item item)
+        public static GameObject visualCopyOf(Item item) // todo: optimize / find better way
         {
             if(item == null || item.spawnPrefab == null) return null;
 
@@ -117,7 +118,19 @@ namespace LittleCompany.helper
             if (copy.TryGetComponent(out Collider collider))
                 UnityEngine.Object.DestroyImmediate(collider);
 
-            if(!copy.TryGetComponent(out ScanNodeProperties scanNode))
+            var lineRenderer = copy.GetComponentsInChildren<LineRenderer>();
+            foreach(var line in lineRenderer)
+                UnityEngine.Object.DestroyImmediate(line);
+
+            var lightScripts = copy.GetComponentsInChildren<HDAdditionalLightData>();
+            foreach(var lightScript in lightScripts)
+                UnityEngine.Object.DestroyImmediate(lightScript);
+
+            var lights = copy.GetComponentsInChildren<Light>();
+            foreach(var light in lights)
+                UnityEngine.Object.DestroyImmediate(light);
+
+            if (!copy.TryGetComponent(out ScanNodeProperties scanNode))
                 scanNode = copy.GetComponentInChildren<ScanNodeProperties>();
             if(scanNode != null)
                 UnityEngine.Object.DestroyImmediate(scanNode);

@@ -107,7 +107,6 @@ namespace LittleCompany.components
             shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
             shrinkRay.itemProperties.minValue = 0;
             shrinkRay.itemProperties.maxValue = 0;
-            shrinkRay.itemProperties.holdButtonUse = false;
             shrinkRay.grabbable = true;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
@@ -181,14 +180,13 @@ namespace LittleCompany.components
 
         public override void EquipItem()
         {
-            if (IsOwner)
-            {
-                EnableLaserForHolder();
-                if(grabSFX != null && audioSource != null)
+            Plugin.Log("ShrinkRay.EquipItem");
+            if (IsOwner && grabSFX != null && audioSource != null)
                     audioSource.PlayOneShot(grabSFX);
-            }
 
             base.EquipItem();
+
+            EnableLaserForHolder();
         }
 
         public override void PocketItem()
@@ -214,9 +212,16 @@ namespace LittleCompany.components
 
         public override void GrabItem()
         {
-            Plugin.Log("IsOwner of ShrinkRay: " + IsOwner);
+            Plugin.Log("ShrinkRay.GrabItem. Is Owner: " + IsOwner);
             EnableLaserForHolder();
             base.GrabItem();
+        }
+
+        public override void ChargeBatteries()
+        {
+            base.ChargeBatteries();
+            Plugin.Log("ChargeBatteries");
+            EnableLaserForHolder();
         }
         #endregion
 
@@ -224,7 +229,6 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModificationTypeServerRpc(int newType)
         {
-            Plugin.Log(currentModificationType.Value.ToString());
             Plugin.Log("ShrinkRay modificationType switched to " + (ModificationType)newType);
             currentModificationType.Value = (ModificationType)newType;
         }
@@ -238,12 +242,6 @@ namespace LittleCompany.components
             currentMode.Value = (Mode)newMode;
 
             SwitchModeClientRpc(newMode);
-        }
-
-        public override void ChargeBatteries()
-        {
-            base.ChargeBatteries();
-            EnableLaserForHolder();
         }
 
         [ClientRpc]
@@ -285,16 +283,20 @@ namespace LittleCompany.components
             return gameObject != null;
         }
 
+        internal bool HasLaserComponents() => LaserLine != null && LaserDot != null && LaserLight != null;
+        internal bool CanEnableLaser() => IsOwner && playerHeldBy == PlayerInfo.CurrentPlayer && !EmptyBattery && !isOverheated.Value && !isPocketed;
+
         internal void EnableLaserForHolder(bool enable = true)
         {
-            if (!IsOwner || LaserLine == null || LaserDot == null || LaserLight == null || playerHeldBy == null || EmptyBattery || isOverheated.Value)
+            if (!HasLaserComponents()) return;
+
+            if (!CanEnableLaser())
                 enable = false;
 
-            Plugin.Log("EnableLaserForHolder");
             LaserEnabled = enable;
-            if (LaserLine != null) LaserLine.enabled = enable;
-            if (LaserLight != null) LaserLight.enabled = enable;
-            if (LaserDot != null) LaserDot.enabled = enable;
+            LaserLine.enabled = enable;
+            LaserLight.enabled = enable;
+            LaserDot.enabled = enable;
             if (!enable)
                 ChangeTarget(null);
         }
