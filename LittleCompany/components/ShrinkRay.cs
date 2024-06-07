@@ -298,7 +298,7 @@ namespace LittleCompany.components
             LaserLine.enabled = enable;
             LaserLight.enabled = enable;
             LaserDot.enabled = enable;
-            if (!enable)
+            if (!enable && currentMode.Value == Mode.Default)
                 ChangeTarget(null);
         }
         internal void DisableLaserForHolder() => EnableLaserForHolder(false);
