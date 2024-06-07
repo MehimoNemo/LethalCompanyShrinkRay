@@ -690,7 +690,7 @@ namespace LittleCompany.components
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
             Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
-            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, () =>
+            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, 1f, () =>
             {
                 Plugin.Log("Finished player modification with type: " + currentModificationType.Value.ToString());
             });

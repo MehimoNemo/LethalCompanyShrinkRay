@@ -318,7 +318,7 @@ namespace LittleCompany.patches
                 return;
 
             Executing = true;
-            PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, type, PlayerInfo.CurrentPlayer, () => Executing = false);
+            PlayerModification.ApplyModificationTo(PlayerInfo.CurrentPlayer, type, PlayerInfo.CurrentPlayer, 1f, () => Executing = false);
         }
         #endregion
 #endif

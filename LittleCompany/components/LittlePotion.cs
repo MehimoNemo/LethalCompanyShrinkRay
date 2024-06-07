@@ -288,14 +288,15 @@ namespace LittleCompany.components
             if (Consuming || playerHeldBy == null)
                 yield break;
 
-            if (Consumed.Value || playerHeldBy.isClimbingLadder || !PlayerModification.CanApplyModificationTo(playerHeldBy, modificationType, playerHeldBy))
+            var scalingMultiplier = ObjectModification.ScalingOf(this).RelativeScale;
+            if (Consumed.Value || playerHeldBy.isClimbingLadder || !PlayerModification.CanApplyModificationTo(playerHeldBy, modificationType, playerHeldBy, scalingMultiplier))
             {
                 if (IsOwner && noConsumeSFX != null && audioSource != null)
                     audioSource.PlayOneShot(noConsumeSFX);
                 yield break;
             }
 
-            PlayerModification.ApplyModificationTo(playerHeldBy, modificationType, playerHeldBy);
+            PlayerModification.ApplyModificationTo(playerHeldBy, modificationType, playerHeldBy, scalingMultiplier);
 
             Consuming = true;
             isBeingUsed = true;

@@ -7,6 +7,7 @@
 - Scaling keys will make them useless.. just don't.
 - Adjusted pitch for scaled Airhorn & ClownHorn
 - Removed *[General]ShrinkRayTargetHighlighting*, as OnHit didn't have a noticable performance impact
+- Player-scaling from consuming potions now depends on the potion size. Larger potions have a larger impact.
 
 **Fixes**
 - Fixed a bug when scaling objects without a spawnPrefab

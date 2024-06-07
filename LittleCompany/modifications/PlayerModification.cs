@@ -27,21 +27,21 @@ namespace LittleCompany.modifications
             return scaling.GettingScaled;
         }
 
-        public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer)
+        public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer, float multiplier = 1f)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - ModConfig.Instance.values.playerSizeChangeStep), 0f);
+            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), 0f);
             if ((nextShrunkenSize + (ModConfig.SmallestSizeChange / 2)) <= DeathShrinkMargin)
                 return 0f;
             else
                 return nextShrunkenSize;
         }
 
-        public static float NextEnlargedSizeOf(PlayerControllerB targetPlayer)
+        public static float NextEnlargedSizeOf(PlayerControllerB targetPlayer, float multiplier = 1f)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
             Plugin.Log("NextEnlargedSizeOf -> " + playerSize);
-            return Mathf.Min(Rounded(playerSize + ModConfig.Instance.values.playerSizeChangeStep), ModConfig.Instance.values.maximumPlayerSize);
+            return Mathf.Min(Rounded(playerSize + (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), ModConfig.Instance.values.maximumPlayerSize);
         }
 
         public static void TransitionedToShrunk(PlayerControllerB targetPlayer)
@@ -62,7 +62,7 @@ namespace LittleCompany.modifications
             }
         }
 
-        public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy)
+        public static bool CanApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f)
         {
             if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder)
                 return false;
@@ -78,7 +78,7 @@ namespace LittleCompany.modifications
                     if (GoombaStomp.IsGettingGoombad(targetPlayer)) return false;
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
-                    var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
+                    var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer, multiplier);
                     if ((!ModConfig.Instance.values.deathShrinking || !targetPlayer.AllowPlayerDeath()) && Mathf.Approximately(nextShrunkenSize, 0f) )
                         return false;
 
@@ -88,7 +88,7 @@ namespace LittleCompany.modifications
                     if (GoombaStomp.IsGettingGoombad(targetPlayer)) return false;
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
-                    var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
+                    var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer, multiplier);
                     if (Mathf.Approximately(nextIncreasedSize, ModConfig.Instance.values.maximumPlayerSize))
                         return false;
                     break;
@@ -107,7 +107,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
+        public static void ApplyModificationTo(PlayerControllerB targetPlayer, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f, Action onComplete = null)
         {
             if (targetPlayer == null) return;
 
@@ -132,7 +132,7 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Shrinking:
                     {
-                        var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer);
+                        var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer, multiplier);
                         Plugin.Log("Shrinking player [" + targetPlayer.playerClientId + "] to size: " + nextShrunkenSize);
                         ScalingOf(targetPlayer).ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
@@ -155,7 +155,7 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Enlarging:
                     {
-                        var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer);
+                        var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer, multiplier);
                         Plugin.Log("Enlarging player [" + targetPlayer.playerClientId + "] to size: " + nextIncreasedSize);
 
                         ScalingOf(targetPlayer).ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
