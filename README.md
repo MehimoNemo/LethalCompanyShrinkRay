@@ -10,8 +10,7 @@ A wiki containing the list of features this mod adds can be found in our [github
 | ------------ | --------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------- | ------- |
 | General      | ShrinkRayCost                           | Store cost of the shrink ray                                                               | any number                             | 1000    |
 |              | ShrinkRayShotsPerCharge                 | Amount of shots per charge for the shrink ray. Set to 0 for unlimited.                     | Any number                             | 7       |
-|              | ShrinkRayNoRecharge                     | If true, the shrink ray can't be recharged and will overheat once battery is at zero.      | true / false                           | false    |
-|              | ShrinkRayTargetHighlighting             | Defines, when a target gets highlighted. Set to OnLoading on performance issues.           | Off, OnHit, OnLoading                  | OnHit   |
+|              | ShrinkRayNoRecharge                     | If true, the shrink ray can't be recharged and will overheat once battery is at zero.      | true / false                           | false   |
 |              | DeathShrinking                          | If true, a player can be shrunk below 0.2, resulting in an instant death.                  | true / false                           | false   |
 | Sizing       | DefaultPlayerSize                       | The default player size when joining a lobby or reviving.                                  | 0.2 - 1.7                              | 1       |
 |              | MaximumPlayerSize                       | Defines, how tall a player can become (1.7 is the maximum for the ship inside and doors!)  | Max(1, DefaultPlayerSize) - any number | 1.7     |

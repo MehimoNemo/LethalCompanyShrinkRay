@@ -32,13 +32,6 @@ namespace LittleCompany.Config
             Addicted
         }
 
-        public enum ShrinkRayTargetHighlighting
-        {
-            Off,
-            OnHit,
-            OnLoading
-        }
-
         public struct ConfigValues
         {
             // Mark client-sided options with [JsonIgnore] to ignore them when requesting host config
@@ -85,8 +78,6 @@ namespace LittleCompany.Config
 
             public bool cantOpenStorageCloset { get; set; }
 
-            public ShrinkRayTargetHighlighting shrinkRayTargetHighlighting { get; set; }
-
             public ThumperBehaviour thumperBehaviour { get; set; }
 
             public HoardingBugBehaviour hoardingBugBehaviour { get; set; }
@@ -124,7 +115,6 @@ namespace LittleCompany.Config
             values.shrinkRayCost                 = Plugin.BepInExConfig().Bind("General", "ShrinkRayCost", 1000, "Store cost of the shrink ray.").Value;
             values.shrinkRayShotsPerCharge       = Plugin.BepInExConfig().Bind("General", "ShrinkRayShotsPerCharge", 7, "Amount of shots per charge for the shrink ray. Set to 0 for unlimited.").Value;
             values.shrinkRayNoRecharge           = Plugin.BepInExConfig().Bind("General", "ShrinkRayNoRecharge", false, "If true, the shrink ray can't be recharged and will overheat once battery is at zero.").Value;
-            values.shrinkRayTargetHighlighting   = Plugin.BepInExConfig().Bind("General", "ShrinkRayTargetHighlighting", ShrinkRayTargetHighlighting.OnHit, "Defines, when a target gets highlighted. Set to OnLoading if you encounter performance issues.").Value;
             values.deathShrinking                = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
                                                  
             values.defaultPlayerSize             = Plugin.BepInExConfig().Bind("Sizing", "DefaultPlayerSize", 1f, new ConfigDescription("The default player size when joining a lobby or reviving.", new AcceptableValueRange<float>(0.2f, 1.7f))).Value;

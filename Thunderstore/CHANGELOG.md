@@ -6,6 +6,7 @@
 - Added *[General]ShrinkRayNoRecharge*. If set, the ShrinkRay will overheat when the battery is used up and can't be recharged.
 - Scaling keys will make them useless.. just don't.
 - Adjusted pitch for scaled Airhorn & ClownHorn
+- Removed *[General]ShrinkRayTargetHighlighting*, as OnHit didn't have a noticable performance impact
 
 **Fixes**
 - Fixed a bug when scaling objects without a spawnPrefab

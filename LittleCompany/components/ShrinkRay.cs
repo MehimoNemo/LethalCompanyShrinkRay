@@ -49,7 +49,9 @@ namespace LittleCompany.components
         internal GameObject burningEffect = null;
         internal bool IsBurning => burningEffect != null;
 
-        internal bool EmptyBattery => itemProperties.requiresBattery && (insertedBattery.empty || insertedBattery.charge < ( 1f / ModConfig.Instance.values.shrinkRayShotsPerCharge / 2f)); // 1f for charge is full
+        internal int ShotsLeft => Mathf.RoundToInt(ModConfig.Instance.values.shrinkRayShotsPerCharge * insertedBattery.charge);
+
+        internal bool EmptyBattery => itemProperties.requiresBattery && (insertedBattery.empty || ShotsLeft == 0);
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
@@ -236,8 +238,7 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModeServerRpc(int newMode)
         {
-            Plugin.Log("Battery charge: " + insertedBattery.charge);
-            SyncBatteryServerRpc((int)(insertedBattery.charge * 100f));
+            SyncBatteryServerRpc((int)(100f / ModConfig.Instance.values.shrinkRayShotsPerCharge * ShotsLeft));
 
             currentMode.Value = (Mode)newMode;
 
@@ -304,17 +305,15 @@ namespace LittleCompany.components
 
         internal void UpdateLaser()
         {
-            if(LaserEnabled && isPocketed) // Fallback -> todo: find main reason why laser is still active sometimes when pocketed
+            if(!LaserEnabled) return;
+
+            if (isPocketed) // Fallback -> todo: find main reason why laser is still active sometimes when pocketed
             {
                 DisableLaserForHolder();
                 return;
             }
 
-            if(!LaserEnabled || ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.Off) return;
-
-            if(currentMode.Value != Mode.Loading && ModConfig.Instance.values.shrinkRayTargetHighlighting == ModConfig.ShrinkRayTargetHighlighting.OnLoading) return;
-
-            if(currentMode.Value == Mode.Loading && targetObject != null)
+            if (currentMode.Value == Mode.Loading && targetObject != null)
             {
                 var distance = Vector3.Distance(transform.position, targetObject.transform.position);
                 if(distance < beamSearchDistance)
@@ -446,6 +445,7 @@ namespace LittleCompany.components
             {
                 if (hasHitTarget)
                 {
+                    Plugin.Log("ShrinkRay went BOOM ._.'");
                     Landmine.SpawnExplosion(transform.position, true, 0.25f, 1f, 20);
                     Overheat();
                     if (playerHeldBy != null && playerHeldBy == PlayerInfo.CurrentPlayer)
@@ -599,9 +599,14 @@ namespace LittleCompany.components
 
         internal void ShootRayBeam()
         {
-            if (!transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) || shrinkRayFX == null || playerHeldBy == null)
+            if (playerHeldBy == null || targetObject == null || !transform.TryGetComponent(out ShrinkRayFX shrinkRayFX) || shrinkRayFX == null)
             {
-                Plugin.Log("Unable to shoot ray beam.", Plugin.LogType.Error);
+                string reason;
+                if (playerHeldBy == null) reason = "Not held by a player.";
+                else if (targetObject == null) reason = "No target found.";
+                else reason = "Unable to create ray beam visuals.";
+
+                Plugin.Log("Unable to shoot ray beam. Reason: " + reason, Plugin.LogType.Error);
                 SwitchModeClientRpc((int)Mode.Unloading);
                 return;
             }
