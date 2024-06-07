@@ -285,7 +285,8 @@ namespace LittleCompany.components
         }
 
         internal bool HasLaserComponents() => LaserLine != null && LaserDot != null && LaserLight != null;
-        internal bool CanEnableLaser() => IsOwner && playerHeldBy == PlayerInfo.CurrentPlayer && !EmptyBattery && !isOverheated.Value && !isPocketed;
+        internal bool IsHolder => IsOwner && playerHeldBy == PlayerInfo.CurrentPlayer;
+        internal bool CanEnableLaser() => IsHolder && !EmptyBattery && !isOverheated.Value && !isPocketed;
 
         internal void EnableLaserForHolder(bool enable = true)
         {
@@ -298,7 +299,7 @@ namespace LittleCompany.components
             LaserLine.enabled = enable;
             LaserLight.enabled = enable;
             LaserDot.enabled = enable;
-            if (!enable && currentMode.Value == Mode.Default)
+            if (!enable && IsHolder && currentMode.Value == Mode.Default)
                 ChangeTarget(null);
         }
         internal void DisableLaserForHolder() => EnableLaserForHolder(false);
