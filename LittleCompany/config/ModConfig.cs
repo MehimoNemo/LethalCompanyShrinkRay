@@ -43,6 +43,8 @@ namespace LittleCompany.Config
 
             public bool shrinkRayNoRecharge { get; set; }
 
+            public bool logicalMultiplier { get; set; }
+
             public float movementSpeedMultiplier { get; set; }
 
             public float jumpHeightMultiplier { get; set; }
@@ -116,6 +118,7 @@ namespace LittleCompany.Config
             values.shrinkRayShotsPerCharge       = Plugin.BepInExConfig().Bind("General", "ShrinkRayShotsPerCharge", 7, "Amount of shots per charge for the shrink ray. Set to 0 for unlimited.").Value;
             values.shrinkRayNoRecharge           = Plugin.BepInExConfig().Bind("General", "ShrinkRayNoRecharge", false, "If true, the shrink ray can't be recharged and will overheat once battery is at zero.").Value;
             values.deathShrinking                = Plugin.BepInExConfig().Bind("General", "DeathShrinking", false, "If true, a player can be shrunk below 0.2f, resulting in an instant death.").Value;
+            values.logicalMultiplier             = Plugin.BepInExConfig().Bind("General", "LogicalMultiplier", true, new ConfigDescription("If true, jump height & speed multiplier will be set according to what would be logical for the given player size. This overrides MovementSpeedMultiplier and JumpHeightMultiplier.")).Value;
                                                  
             values.defaultPlayerSize             = Plugin.BepInExConfig().Bind("Sizing", "DefaultPlayerSize", 1f, new ConfigDescription("The default player size when joining a lobby or reviving.", new AcceptableValueRange<float>(0.2f, 1.7f))).Value;
             values.maximumPlayerSize             = Plugin.BepInExConfig().Bind("Sizing", "MaximumPlayerSize", 1.7f, "Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)").Value;
@@ -123,7 +126,7 @@ namespace LittleCompany.Config
             values.itemSizeChangeStep            = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.5f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.itemScalingVisualOnly         = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingVisualOnly", false, "If true, scaling items has no special effects.").Value;
             values.enemySizeChangeStep           = Plugin.BepInExConfig().Bind("Sizing", "EnemySizeChangeStep", 0.5f, new ConfigDescription("Defines how much an enemy shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
-                                                 
+            
             values.movementSpeedMultiplier       = Plugin.BepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.3f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (very slow) to 1.5 (very fast).", new AcceptableValueRange<float>(0.5f, 1.5f))).Value;
             values.jumpHeightMultiplier          = Plugin.BepInExConfig().Bind("Shrunken", "JumpHeightMultiplier", 1.3f, new ConfigDescription("Jump-height multiplier for shrunken players, ranging from 0.5 (very low) to 2 (very high).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
             values.weightMultiplier              = Plugin.BepInExConfig().Bind("Shrunken", "WeightMultiplier", 1.5f, new ConfigDescription("Weight multiplier on held items for shrunken players, ranging from 0.5 (lighter) to 2 (heavier).", new AcceptableValueRange<float>(0.5f, 2f))).Value;

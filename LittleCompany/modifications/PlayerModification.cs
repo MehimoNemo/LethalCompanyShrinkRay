@@ -6,6 +6,8 @@ using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
 using UnityEngine;
+using static LittleCompany.components.GrabbablePlayerObject;
+using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.modifications
 {
@@ -48,7 +50,8 @@ namespace LittleCompany.modifications
         {
             if (PlayerInfo.IsCurrentPlayer(targetPlayer))
             {
-                PlayerMultiplierPatch.Modify();
+                if(!ModConfig.Instance.values.logicalMultiplier)
+                    PlayerMultiplierPatch.Modify();
                 Vents.EnableVents();
             }
         }
@@ -57,7 +60,8 @@ namespace LittleCompany.modifications
         {
             if (PlayerInfo.IsCurrentPlayer(targetPlayer))
             {
-                PlayerMultiplierPatch.Reset();
+                if (!ModConfig.Instance.values.logicalMultiplier)
+                    PlayerMultiplierPatch.Reset();
                 Vents.DisableVents();
             }
         }

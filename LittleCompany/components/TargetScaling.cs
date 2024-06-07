@@ -208,7 +208,9 @@ namespace LittleCompany.components
                 return;
 
             var wasShrunkenBefore = PlayerInfo.IsShrunk(Target);
+
             base.ScaleTo(scale, scaledBy);
+
             if (PlayerInfo.IsCurrentPlayer(Target))
             {
                 // scale arms & visor
@@ -219,6 +221,14 @@ namespace LittleCompany.components
                 {
                     if (!GettingScaled) // Only check at the very end
                         ScreenBlockingGrabbablePatch.CheckForGlassify(heldItem);
+                }
+
+                if (ModConfig.Instance.values.logicalMultiplier)
+                {
+                    if (PlayerInfo.IsDefaultSize(Target))
+                        PlayerMultiplierPatch.Reset();
+                    else
+                        PlayerMultiplierPatch.Modify();
                 }
             }
 

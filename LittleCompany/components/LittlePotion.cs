@@ -8,7 +8,6 @@ using UnityEngine;
 using static LittleCompany.modifications.Modification;
 using LittleCompany.modifications;
 using LittleCompany.dependency;
-using LethalLib.Modules;
 
 namespace LittleCompany.components
 {

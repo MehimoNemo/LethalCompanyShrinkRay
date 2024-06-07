@@ -1,13 +1,18 @@
 ### 1.1.0 ###
+**What's new**
+- Added [General]LogicalMultiplier
+  - Sets the jump height & movement speed to logical values.
+  - If set, JumpHeightMultiplier & SpeedMultiplier will be overwritten.
+
 **Tweaks**
 - The ShrinkRay now requires battery to run
   - Configurable through *[General]ShrinkRayShotsPerCharge* in the config.
   - Setting this option to 0 will disable the battery usage.
-- Added *[General]ShrinkRayNoRecharge*. If set, the ShrinkRay will overheat when the battery is used up and can't be recharged.
+  - Added *[General]ShrinkRayNoRecharge*. If set, the ShrinkRay will overheat when the battery is used up and can't be recharged.
 - Scaling keys will make them useless.. just don't.
 - Adjusted pitch for scaled Airhorn & ClownHorn
 - Removed *[General]ShrinkRayTargetHighlighting*, as OnHit didn't have a noticable performance impact
-- Player-scaling from consuming potions now depends on the potion size. Larger potions have a larger impact.
+- Player-scaling from consuming potions now depends on the potion size (simple multiplication of potion size with *PlayerSizeChangeStep*)
 
 **Fixes**
 - Fixed a bug when scaling objects without a spawnPrefab
