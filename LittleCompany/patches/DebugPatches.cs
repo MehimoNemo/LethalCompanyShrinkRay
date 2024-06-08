@@ -43,6 +43,15 @@ namespace LittleCompany.patches
                 sceneName = "MainMenu";
         }
 
+        /*[HarmonyPatch(typeof(StartOfRound), "LoadShipGrabbableItems")]
+        [HarmonyPrefix]
+        public static void LoadShipGrabbableItems()
+        {
+            int[] array = ES3.Load<int[]>("shipGrabbableItemIDs", GameNetworkManager.Instance.currentSaveFileName);
+            foreach (var item in array)
+                Plugin.Log("item saved with id: " + item);
+        }*/
+
         private static bool Executing = false;
 
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]

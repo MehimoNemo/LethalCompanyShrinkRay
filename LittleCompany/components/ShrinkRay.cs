@@ -109,6 +109,7 @@ namespace LittleCompany.components
             shrinkRay.itemProperties.toolTips = ["Shrink: LMB", "Enlarge: MMB"];
             shrinkRay.itemProperties.minValue = 0;
             shrinkRay.itemProperties.maxValue = 0;
+            shrinkRay.itemProperties.saveItemVariable = true;
             shrinkRay.grabbable = true;
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
@@ -152,6 +153,25 @@ namespace LittleCompany.components
             }
             else
                 EnableLaserForHolder();
+        }
+
+        public override int GetItemDataToSave()
+        {
+            base.GetItemDataToSave();
+            return isOverheated.Value ? 1 : 0;
+        }
+
+        public override void LoadItemSaveData(int saveData)
+        {
+            base.LoadItemSaveData(saveData);
+            if(saveData > 0)
+            {
+                AddBurningEffect();
+                Overheat();
+
+                if (PlayerInfo.IsHost)
+                    isOverheated.Value = true;
+            }
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -284,15 +304,15 @@ namespace LittleCompany.components
             return gameObject != null;
         }
 
-        internal bool HasLaserComponents() => LaserLine != null && LaserDot != null && LaserLight != null;
+        internal bool HasLaserComponents => LaserLine != null && LaserDot != null && LaserLight != null;
         internal bool IsHolder => IsOwner && playerHeldBy == PlayerInfo.CurrentPlayer;
-        internal bool CanEnableLaser() => IsHolder && !EmptyBattery && !isOverheated.Value && !isPocketed;
+        internal bool CanEnableLaser => IsHolder && !EmptyBattery && !isOverheated.Value && !isPocketed;
 
         internal void EnableLaserForHolder(bool enable = true)
         {
-            if (!HasLaserComponents()) return;
+            if (!HasLaserComponents) return;
 
-            if (!CanEnableLaser())
+            if (!CanEnableLaser)
                 enable = false;
 
             LaserEnabled = enable;
@@ -308,7 +328,7 @@ namespace LittleCompany.components
         {
             if(!LaserEnabled) return;
 
-            if (isPocketed) // Fallback -> todo: find main reason why laser is still active sometimes when pocketed
+            if (isPocketed || playerHeldBy != PlayerInfo.CurrentPlayer) // Fallback -> todo: find main reason why laser is still active sometimes
             {
                 DisableLaserForHolder();
                 return;

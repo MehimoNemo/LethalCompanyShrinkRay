@@ -17,6 +17,8 @@
 **Fixes**
 - Fixed a bug when scaling objects without a spawnPrefab
 - Fixed size desync for players who are getting scaled while using the terminal. They will now automatically quit the terminal when scaled.
+- Fixed scaled items disappearing when reloading a savefile
+- Fixed Potions being consumable again after reloading a savefile
 
 ### 1.0.13 ###
 **Fixes**

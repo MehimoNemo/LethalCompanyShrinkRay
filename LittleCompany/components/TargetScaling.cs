@@ -446,7 +446,7 @@ namespace LittleCompany.components
             yield return null;
         }
 
-        private void ResetItemProperties()
+        internal void ResetItemProperties()
         {
             if (Target.itemProperties == originalItemProperties) return;
 

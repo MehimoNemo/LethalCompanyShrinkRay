@@ -183,6 +183,8 @@ namespace LittleCompany.components
             itemProperties.syncUseFunction = true;
             itemProperties.syncGrabFunction = false;
             itemProperties.syncDiscardFunction = false;
+
+            itemProperties.saveItemVariable = true;
         }
         #endregion
 
@@ -220,6 +222,24 @@ namespace LittleCompany.components
 
             if (Consumed.Value)
                 SetConsumed();
+        }
+
+        public override int GetItemDataToSave()
+        {
+            base.GetItemDataToSave();
+            return Consumed.Value ? 1 : 0;
+        }
+
+        public override void LoadItemSaveData(int saveData)
+        {
+            base.LoadItemSaveData(saveData);
+            if (saveData > 0)
+            {
+                SetConsumed();
+
+                if (PlayerInfo.IsHost)
+                    Consumed.Value = true;
+            }
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true)
@@ -353,6 +373,10 @@ namespace LittleCompany.components
             if (Cap != null)
                 Destroy(Cap);
             SetLiquidLevel(0f);
+
+            var lightSource = GetComponentInChildren<Light>();
+            if(lightSource != null )
+                lightSource.enabled = false;
 
             itemProperties.toolTips = [];
 
