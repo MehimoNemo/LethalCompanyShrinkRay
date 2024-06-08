@@ -164,7 +164,7 @@ namespace LittleCompany.components
         public override void LoadItemSaveData(int saveData)
         {
             base.LoadItemSaveData(saveData);
-            if(saveData > 0)
+            if(saveData > 0 && ModConfig.Instance.values.shrinkRayNoRecharge)
             {
                 AddBurningEffect();
                 Overheat();
