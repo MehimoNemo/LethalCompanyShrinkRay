@@ -1,6 +1,6 @@
 ### 1.1.0 ###
 **What's new**
-- Added [General]LogicalMultiplier
+- Added *[General]LogicalMultiplier*
   - Sets the jump height & movement speed to logical values.
   - If set, JumpHeightMultiplier & SpeedMultiplier will be overwritten.
 
