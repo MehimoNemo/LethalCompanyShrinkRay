@@ -52,6 +52,8 @@ namespace LittleCompany.components
         internal int ShotsLeft => Mathf.RoundToInt(ModConfig.Instance.values.shrinkRayShotsPerCharge * insertedBattery.charge);
 
         internal bool EmptyBattery => itemProperties.requiresBattery && (insertedBattery.empty || ShotsLeft == 0);
+        internal static bool RequiresBattery => ModConfig.Instance.values.shrinkRayShotsPerCharge > 0;
+        internal int initialBattery = 100;
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
@@ -114,11 +116,10 @@ namespace LittleCompany.components
             shrinkRay.grabbableToEnemies = true;
             shrinkRay.fallTime = 0f;
 
-            var raysPerCharge = ModConfig.Instance.values.shrinkRayShotsPerCharge;
-            if (raysPerCharge > 0)
+            if (RequiresBattery)
             {
                 shrinkRay.itemProperties.requiresBattery = true;
-                shrinkRay.itemProperties.batteryUsage = raysPerCharge * ShrinkRayFX.DefaultBeamDuration;
+                shrinkRay.itemProperties.batteryUsage = ModConfig.Instance.values.shrinkRayShotsPerCharge * ShrinkRayFX.DefaultBeamDuration;
                 shrinkRay.insertedBattery = new Battery(false, 1f);
             }
             else
@@ -133,6 +134,7 @@ namespace LittleCompany.components
         #region Base Methods
         public override void Start()
         {
+            Plugin.Log("ShrinkRay.Start");
             base.Start();
 
             //insertedBattery = new Battery(isEmpty: false, 1f);
@@ -146,6 +148,9 @@ namespace LittleCompany.components
                 audioSource = gameObject.AddComponent<AudioSource>();
             }
 
+            if (itemProperties.requiresBattery && PlayerInfo.IsHost)
+                SyncBatteryServerRpc(initialBattery);
+
             if (isOverheated.Value)
             {
                 AddBurningEffect();
@@ -158,18 +163,17 @@ namespace LittleCompany.components
         public override int GetItemDataToSave()
         {
             base.GetItemDataToSave();
-            return isOverheated.Value ? 1 : 0;
+            return RequiresBattery ? (int)(insertedBattery.charge * 100) : 100;
         }
 
         public override void LoadItemSaveData(int saveData)
         {
+            Plugin.Log("ShrinkRay.LoadItemSaveData: " + saveData);
             base.LoadItemSaveData(saveData);
-            if(saveData > 0 && ModConfig.Instance.values.shrinkRayNoRecharge)
+            if(RequiresBattery)
             {
-                AddBurningEffect();
-                Overheat();
-
-                if (PlayerInfo.IsHost)
+                initialBattery = saveData;
+                if (PlayerInfo.IsHost && ModConfig.Instance.values.shrinkRayNoRecharge && saveData < (100 / ModConfig.Instance.values.shrinkRayShotsPerCharge))
                     isOverheated.Value = true;
             }
         }
