@@ -134,7 +134,6 @@ namespace LittleCompany.components
         #region Base Methods
         public override void Start()
         {
-            Plugin.Log("ShrinkRay.Start");
             base.Start();
 
             //insertedBattery = new Battery(isEmpty: false, 1f);
@@ -163,17 +162,16 @@ namespace LittleCompany.components
         public override int GetItemDataToSave()
         {
             base.GetItemDataToSave();
-            return RequiresBattery ? (int)(insertedBattery.charge * 100) : 100;
+            return RequiresBattery ? ShotsLeft : -1;
         }
 
         public override void LoadItemSaveData(int saveData)
         {
-            Plugin.Log("ShrinkRay.LoadItemSaveData: " + saveData);
             base.LoadItemSaveData(saveData);
-            if(RequiresBattery)
+            if(RequiresBattery && saveData != -1) // -1 = previously no battery required. initialBattery default of 100 counts
             {
-                initialBattery = saveData;
-                if (PlayerInfo.IsHost && ModConfig.Instance.values.shrinkRayNoRecharge && saveData < (100 / ModConfig.Instance.values.shrinkRayShotsPerCharge))
+                initialBattery = (int)Mathf.Min(100f / ModConfig.Instance.values.shrinkRayShotsPerCharge * saveData, 100f);
+                if (PlayerInfo.IsHost && ModConfig.Instance.values.shrinkRayNoRecharge && saveData == 0)
                     isOverheated.Value = true;
             }
         }
