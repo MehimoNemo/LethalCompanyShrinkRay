@@ -7,6 +7,7 @@
 **Tweaks**
 - The ShrinkRay now requires battery to run
   - Configurable through *[General]ShrinkRayShotsPerCharge* in the config.
+  - "Shots left" are saved through rounds
   - Setting this option to 0 will disable the battery usage.
   - Added *[General]ShrinkRayNoRecharge*. If set, the ShrinkRay will overheat when the battery is used up and can't be recharged.
 - Scaling keys will make them useless.. just don't.
