@@ -1,3 +1,6 @@
+**Fixes**
+- Laser pointer is no longer affected by FLashlight scaling changes. Will receive its own changes later on
+
 ### 1.1.1 ###
 **Fixes**
 - If ShrinkRayShotsPerCharge are set to 0, the ShrinkRay can no longer overheat
@@ -101,7 +104,7 @@ Reworked HoardingBug behaviour
 **Tweaks**
 - Additional option *[Enemies]EnemyPitchDistortionIntensity* to change voice pitch of enemies, relative to their scale and the local player scale
 
-## 1.0.3 ###
+### 1.0.3 ###
 **Fixes**
 - Fixed turrets being unable to see shrunken players
 - Fixed some items (like extension ladder) causing log errors when shrunken to zero
@@ -224,7 +227,7 @@ Reworked HoardingBug behaviour
 ### 0.4.1 ###
 - using main folder as fallback if there is no audio / icons folder (e.g. when downloaded via thunderstore)
 
-### 0.4.0 [Singleplayer & Sounds update] ###
+## 0.4.0 [Singleplayer & Sounds update] ##
 **What's new**
 - Added two potions: Light & Heavy
   - Buyable in store including terminal notes & available as rare scrap in the dungeons!
@@ -257,7 +260,7 @@ Reworked HoardingBug behaviour
 ### 0.3.1 ###
 - fixed players being unable to grab anything when holding a player who died or became ungrabbable in the meantime
 
-### 0.3.0 [Yippie] ###
+## 0.3.0 [Yippie] ##
 **What's new?**
 - Shrunken players are now grabbable by Hoarding Bugs! There are 3 modes available:
   - **Default:** Hoarding bugs grab you occasionally, like any other item.
@@ -275,7 +278,7 @@ Reworked HoardingBug behaviour
 - Added new ThumperBehaviour: Bumper -> With their immense power, thumpers are unable to grab shrunken players. Instead they will send them flying on contact!
 - Fixed bug where ThumperBehaviour.OneShot was throwing errors in multiplayer
 
-### 0.2.0 [Stability update] ###
+## 0.2.0 [Stability update] ##
 - Major GrabbablePlayerList overhaul (simplified & removed RPC calls as they weren't needed)
 - DeskPatch (Playerselling) overhaul (simplified & bugfixing)
 - Fixed infinite shrink/enlarge bug at end of round if player died from shrinking or was sold
