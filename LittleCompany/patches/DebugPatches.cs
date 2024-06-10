@@ -113,8 +113,7 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f8Key.wasPressedThisFrame)
             {
-                //SpawnItemInFront(ItemInfo.itemByName("Clown_horn").spawnPrefab);
-                SpawnItemInFront(ItemInfo.itemByName("Airhorn").spawnPrefab);
+                SpawnItemInFront(ItemInfo.itemByType(ItemInfo.VanillaItem.Laser_pointer));
             }
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)

@@ -8,6 +8,7 @@ using LittleCompany.modifications;
 
 namespace LittleCompany.events
 {
+    [DisallowMultipleComponent]
     public abstract class EventHandlerBase : NetworkBehaviour, IScalingListener
     {
         public abstract void DestroyObject();

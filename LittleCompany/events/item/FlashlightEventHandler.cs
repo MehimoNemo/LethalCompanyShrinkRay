@@ -43,10 +43,22 @@ namespace LittleCompany.events.item
             if (!defaultFlashlightInnerSpotAngles.ContainsKey(__instance.NetworkObjectId))
                 defaultFlashlightInnerSpotAngles.Add(__instance.NetworkObjectId, __instance.flashlightBulb.innerSpotAngle);
 
-            var intensityMultiplier = 1f + Mathf.Max((scaling.RelativeScale - 1f) / 2, -0.9f);
-            __instance.flashlightBulb.intensity = ___initialIntensity * intensityMultiplier;
-            __instance.flashlightBulb.spotAngle = Mathf.Max(defaultFlashlightSpotAngles[__instance.NetworkObjectId] * intensityMultiplier, 75f);
-            __instance.flashlightBulb.innerSpotAngle = Mathf.Max(defaultFlashlightInnerSpotAngles[__instance.NetworkObjectId] * intensityMultiplier, 75f);
+            switch (__instance.flashlightTypeID)
+            {
+                case 0: // Pro-flashlight
+                case 1: // Flashlight
+                {
+                    var intensityMultiplier = 1f + Mathf.Max((scaling.RelativeScale - 1f) / 2, -0.9f);
+                    __instance.flashlightBulb.intensity = ___initialIntensity * intensityMultiplier;
+                    __instance.flashlightBulb.spotAngle = Mathf.Max(defaultFlashlightSpotAngles[__instance.NetworkObjectId] * intensityMultiplier, 5f);
+                    __instance.flashlightBulb.innerSpotAngle = Mathf.Max(defaultFlashlightInnerSpotAngles[__instance.NetworkObjectId] * intensityMultiplier, 2f);
+                    break;
+                }
+                case 2: // Laserpointer
+                    // WIP
+                    break;
+            }
+
         }
     }
 }

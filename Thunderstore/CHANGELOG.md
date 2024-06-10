@@ -1,4 +1,8 @@
-### 1.1.0 ###
+### 1.1.1 ###
+**Fixes**
+- If ShrinkRayShotsPerCharge are set to 0, the ShrinkRay can no longer overheat
+
+## 1.1.0 ##
 **What's new**
 - Added *[General]LogicalMultiplier*
   - Sets the jump height & movement speed to logical values.

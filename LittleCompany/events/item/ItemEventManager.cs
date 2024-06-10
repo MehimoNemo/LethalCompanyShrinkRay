@@ -13,6 +13,7 @@ namespace LittleCompany.events.item
             { VanillaItem.Custom,         typeof(CustomItemEventHandler) },
             { VanillaItem.Pro_flashlight, typeof(FlashlightEventHandler) },
             { VanillaItem.Flashlight,     typeof(FlashlightEventHandler) },
+            //{ VanillaItem.Laser_pointer,  typeof(FlashlightEventHandler) }, // WIP
             { VanillaItem.Gift,           typeof(GiftBoxEventHandler)    },
             { VanillaItem.Shovel,         typeof(ShovelEventHandler)     },
             { VanillaItem.Key,            typeof(KeyEventHandler)        },

@@ -634,7 +634,7 @@ namespace LittleCompany.components
                 return;
             }
 
-            if (ModConfig.Instance.values.shrinkRayNoRecharge)
+            if (ModConfig.Instance.values.shrinkRayNoRecharge && RequiresBattery)
             {
                 var singleShot = 1f / ModConfig.Instance.values.shrinkRayShotsPerCharge;
                 if (insertedBattery.charge < (singleShot * 1.5f))

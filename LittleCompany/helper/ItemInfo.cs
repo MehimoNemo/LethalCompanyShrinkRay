@@ -100,10 +100,8 @@ namespace LittleCompany.helper
         }
 
         public static readonly List<Item> SpawnableItems = Resources.FindObjectsOfTypeAll<Item>().Where(item => item.itemName != GrabbablePlayerObject.Name).ToList();
-        public static Item itemByName(string name)
-        {
-            return SpawnableItems.Find(x => x.name == name);
-        }
+        public static Item itemByName(string name) => SpawnableItems.Find(x => x.itemName == name || x.itemName.Replace("-", "_") == name || x.itemName.Replace(" ", "_") == name);
+        public static Item itemByType(VanillaItem type) => itemByName(type.ToString());
 
         public static GameObject visualCopyOf(Item item) // todo: optimize / find better way
         {
