@@ -105,7 +105,7 @@ namespace LittleCompany.compatibility
             AdjustToSize(to);
         }
 
-        public void AtEndOfScaling()
+        public void AtEndOfScaling(float from, float to, PlayerControllerB playerB)
         {
             ReloadCurrentReplacementModel();
         }
