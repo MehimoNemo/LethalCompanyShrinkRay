@@ -10,16 +10,18 @@ namespace LittleCompany.events.item
     {
         public static readonly Dictionary<VanillaItem, Type> EventHandler = new Dictionary<VanillaItem, Type>
         {
-            { VanillaItem.Custom,         typeof(CustomItemEventHandler) },
-            { VanillaItem.Pro_flashlight, typeof(FlashlightEventHandler) },
-            { VanillaItem.Flashlight,     typeof(FlashlightEventHandler) },
+            { VanillaItem.Custom,         typeof(CustomItemEventHandler)  },
+            { VanillaItem.Pro_flashlight, typeof(FlashlightEventHandler)  },
+            { VanillaItem.Flashlight,     typeof(FlashlightEventHandler)  },
             //{ VanillaItem.Laser_pointer,  typeof(FlashlightEventHandler) }, // WIP
-            { VanillaItem.Gift,           typeof(GiftBoxEventHandler)    },
-            { VanillaItem.Shovel,         typeof(ShovelEventHandler)     },
-            { VanillaItem.Key,            typeof(KeyEventHandler)        },
-            { VanillaItem.Clown_horn,     typeof(HornEventHandler)       },
-            { VanillaItem.Airhorn,        typeof(HornEventHandler)       },
-            { VanillaItem.Spray_paint,    typeof(SprayPaintEventHandler) }
+            { VanillaItem.Gift,           typeof(GiftBoxEventHandler)     },
+            { VanillaItem.Shovel,         typeof(ShovelEventHandler)      },
+            { VanillaItem.Key,            typeof(KeyEventHandler)         },
+            { VanillaItem.Clown_horn,     typeof(HornEventHandler)        },
+            { VanillaItem.Airhorn,        typeof(HornEventHandler)        },
+            { VanillaItem.Spray_paint,    typeof(SprayPaintEventHandler)  },
+            { VanillaItem.Shotgun,        typeof(ShotgunEventHandler)     },
+            { VanillaItem.Ammo,           typeof(ShotgunAmmoEventHandler) }
         };
 
         public static Type EventHandlerTypeByName(string name) => EventHandler.GetValueOrDefault(itemTypeByName(name), typeof(CustomItemEventHandler));

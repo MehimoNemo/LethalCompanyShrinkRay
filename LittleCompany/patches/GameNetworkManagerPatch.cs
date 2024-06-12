@@ -3,6 +3,10 @@ using LittleCompany.components;
 using LittleCompany.events.enemy;
 using LittleCompany.events.item;
 using LittleCompany.helper;
+using LittleCompany.modifications;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace LittleCompany.patches
@@ -34,18 +38,6 @@ namespace LittleCompany.patches
             GrabbablePlayerList.ResetAnyPlayerModificationsFor(PlayerInfo.CurrentPlayer);
             GrabbablePlayerList.ClearGrabbablePlayerObjects();
             PlayerInfo.Cleanup();
-        }
-
-        [HarmonyPatch(typeof(GameNetworkManager), "SaveItemsInShip")]
-        [HarmonyPrefix]
-        public static void SaveItemsInShip()
-        {
-            GrabbableObject[] array = Object.FindObjectsByType<GrabbableObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            foreach (var item in array)
-            {
-                if (item.TryGetComponent(out ItemScaling scaling))
-                    scaling.ResetItemProperties();
-            }
         }
     }
 }

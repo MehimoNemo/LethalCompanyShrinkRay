@@ -1,20 +1,21 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.helper;
+using UnityEngine;
 using static LittleCompany.events.enemy.EnemyEventManager;
 
 namespace LittleCompany.events.enemy
 {
     internal class BeesEventHandler : EnemyEventHandler
     {
-        public override void OnDeathShrinking(float previousSize, PlayerControllerB playerShrunkenBy)
+        public override void OnAwake()
         {
-            Plugin.Log("Bees shrunken to death");
+            base.OnAwake();
 
-            Effects.LightningStrikeAtPosition(enemy.transform.position);
-
-            // var bees = (enemy as RedLocustBees);
-            base.OnDeathShrinking(previousSize, playerShrunkenBy);
+            foreach (var particles in enemy.GetComponentsInChildren<ParticleSystem>())
+            {
+                var main = particles.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            }
         }
-
     }
 }

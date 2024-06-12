@@ -13,20 +13,21 @@ namespace LittleCompany.events.enemy
     {
         internal static readonly Dictionary<Enemy, Type> EventHandler = new Dictionary<Enemy, Type>
         {
-            { Enemy.Custom,     typeof(CustomEnemyEventHandler) },
-            { Enemy.Centipede,  typeof(CentipedeEventHandler)   },
-            { Enemy.Spider,     typeof(SpiderEventHandler)      },
-            { Enemy.HoarderBug, typeof(HoarderBugEventHandler)  },
-            { Enemy.Bracken,    typeof(BrackenEventHandler)     },
-            { Enemy.Slime,      typeof(SlimeEventHandler)       },
-            { Enemy.Bees,       typeof(BeesEventHandler)        },
-            { Enemy.Coilhead,   typeof(CoilheadEventHandler)    },
-            { Enemy.BaboonHawk, typeof(BaboonHawkEventHandler)  },
-            { Enemy.Butler,     typeof(ButlerEventHandler)      },
-            { Enemy.ButlerBees, typeof(ButlerBeesEventHandler)  },
-            { Enemy.Thumper,    typeof(ThumperEventHandler)     },
-            { Enemy.Robot,      typeof(RobotEventHandler)       },
-            { Enemy.Worm,       typeof(WormEventHandler)        }
+            { Enemy.Custom,       typeof(CustomEnemyEventHandler) },
+            { Enemy.Centipede,    typeof(CentipedeEventHandler)   },
+            { Enemy.Spider,       typeof(SpiderEventHandler)      },
+            { Enemy.HoarderBug,   typeof(HoarderBugEventHandler)  },
+            { Enemy.Bracken,      typeof(BrackenEventHandler)     },
+            { Enemy.Slime,        typeof(SlimeEventHandler)       },
+            { Enemy.Bees,         typeof(HarmfulBeesEventHandler) },
+            { Enemy.BeesHarmless, typeof(BeesEventHandler)        },
+            { Enemy.Coilhead,     typeof(CoilheadEventHandler)    },
+            { Enemy.BaboonHawk,   typeof(BaboonHawkEventHandler)  },
+            { Enemy.Butler,       typeof(ButlerEventHandler)      },
+            { Enemy.ButlerBees,   typeof(ButlerBeesEventHandler)  },
+            { Enemy.Thumper,      typeof(ThumperEventHandler)     },
+            { Enemy.Robot,        typeof(RobotEventHandler)       },
+            { Enemy.Worm,         typeof(WormEventHandler)        }
         };
 
         public static Type EventHandlerTypeByName(string enemyName) => EventHandler.GetValueOrDefault(EnemyByName(enemyName), typeof(CustomEnemyEventHandler));
