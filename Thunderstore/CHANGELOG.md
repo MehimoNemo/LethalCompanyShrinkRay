@@ -1,3 +1,6 @@
+**Compatibility**
+- Increased ModelReplacementAPI compatibility (e.g. LethalCreatures)
+
 **Tweaks**
 - Spray paint size is now relative to the can size
 
