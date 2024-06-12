@@ -1,5 +1,7 @@
+### 1.1.2 ###
 **Compatibility**
 - Increased ModelReplacementAPI compatibility (e.g. LethalCreatures)
+- MoreCompany compatibility regarding audio changes (pitch modulation)
 
 **Tweaks**
 - Spray paint size is now relative to the can size
