@@ -1,6 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using LethalEmotesAPI.Core;
+using LittleCompany.compatibility;
 using LittleCompany.Config;
 using LittleCompany.helper;
 using System.Linq;
@@ -12,7 +12,6 @@ namespace LittleCompany.patches
     internal class AudioPatches
     {
         [HarmonyPatch(typeof(StartOfRound), "UpdatePlayerVoiceEffects")]
-        [HarmonyAfter(["MoreCompany"])]
         [HarmonyPostfix]
         public static void SetPlayerVoiceFilters()
         {
@@ -26,11 +25,13 @@ namespace LittleCompany.patches
         {
             float playerScale = PlayerInfo.SizeOf(player);
             float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
-
-            float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
-
-            SoundManager.Instance.playerVoicePitchTargets[player.playerClientId] = modifiedPitch;
-            SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)player.playerClientId);
+            if(intensity != 0)
+            {
+                float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
+                SoundManager.Instance.playerVoicePitchTargets[player.playerClientId] = modifiedPitch;
+                SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)player.playerClientId);
+                MoreCompanyAudioCompatibilityPatch.CompatUpdatePitchInAudioMixers(player.playerClientId, modifiedPitch);
+            }
         }
 
         [HarmonyPatch(typeof(RoundManager), "SpawnEnemyGameObject")]
