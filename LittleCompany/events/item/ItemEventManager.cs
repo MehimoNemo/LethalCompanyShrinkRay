@@ -18,7 +18,8 @@ namespace LittleCompany.events.item
             { VanillaItem.Shovel,         typeof(ShovelEventHandler)     },
             { VanillaItem.Key,            typeof(KeyEventHandler)        },
             { VanillaItem.Clown_horn,     typeof(HornEventHandler)       },
-            { VanillaItem.Airhorn,        typeof(HornEventHandler)       }
+            { VanillaItem.Airhorn,        typeof(HornEventHandler)       },
+            { VanillaItem.Spray_paint,    typeof(SprayPaintEventHandler) }
         };
 
         public static Type EventHandlerTypeByName(string name) => EventHandler.GetValueOrDefault(itemTypeByName(name), typeof(CustomItemEventHandler));
