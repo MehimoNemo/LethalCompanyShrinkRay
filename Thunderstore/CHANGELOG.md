@@ -3,6 +3,8 @@
 
 **Tweaks**
 - Spray paint size is now relative to the can size
+- Shotgun can only be reloaded with equally scaled ammo
+- Shotgun damage relative to scale
 
 **Fixes**
 - Laser pointer is no longer affected by FLashlight scaling changes. Will receive its own changes later on
