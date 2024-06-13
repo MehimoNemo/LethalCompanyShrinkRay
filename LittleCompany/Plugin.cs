@@ -69,6 +69,7 @@ namespace LittleCompany
             harmony.PatchAll(typeof(QuicksandPatch));
             harmony.PatchAll(typeof(TurretPatch));
             harmony.PatchAll(typeof(AudioPatches));
+            harmony.PatchAll(typeof(ItemSavingPatch));
 
             // components
             harmony.PatchAll(typeof(Vents));
