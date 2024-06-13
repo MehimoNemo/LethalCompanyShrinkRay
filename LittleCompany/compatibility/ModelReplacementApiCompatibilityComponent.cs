@@ -1,10 +1,9 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
 using LittleCompany.helper;
-using System.Collections.Generic;
-using System.Linq;
+using ModelReplacement;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace LittleCompany.compatibility
 {
@@ -34,7 +33,7 @@ namespace LittleCompany.compatibility
         public void Awake()
         {
             player = GetComponent<PlayerControllerB>();
-            ReloadCurrentReplacementModel();
+            AttachAndRescaleReplacementModel();
             GetComponent<PlayerScaling>()?.AddListener(this);
         }
 
@@ -43,18 +42,19 @@ namespace LittleCompany.compatibility
             GetComponent<PlayerScaling>()?.RemoveListener(this);
         }
 
-        public void ReloadCurrentReplacementModel()
+        public void AttachAndRescaleReplacementModel()
         {
             GameObject foundModel = FindCurrentReplacementModel();
             if (foundModel != null)
             {
-                if (replacementModel == null || foundModel.name != replacementModel.name)
+                if (replacementModel == null || foundModel.GetInstanceID() != replacementModel.GetInstanceID())
                 {
                     Plugin.Log("Replace original scale");
                     replacementModelOriginalScale = foundModel.transform.localScale;
                 }
                 replacementModel = foundModel;
-                Plugin.Log("Replacement: " + replacementModel.name);
+                Plugin.Log("Replacement: " + replacementModel.name + " : " + replacementModel.GetInstanceID());
+                Plugin.Log("Size: " + PlayerInfo.SizeOf(player));
                 AdjustToSize(PlayerInfo.SizeOf(player));
             }
             else
@@ -62,6 +62,18 @@ namespace LittleCompany.compatibility
                 Plugin.Log("Replacement null");
                 replacementModel = null;
             }
+        }
+        
+        public void ReloadNextFrame()
+        {
+            StartCoroutine(NextFrameCall());
+        }
+
+        IEnumerator NextFrameCall()
+        {
+            //returning 0 will make it wait 1 frame
+            yield return 0;
+            AttachAndRescaleReplacementModel();
         }
 
         public void AdjustToSize(float size)
@@ -74,30 +86,7 @@ namespace LittleCompany.compatibility
 
         private GameObject FindCurrentReplacementModel()
         {
-            string matchName = "(Clone)(" + player.playerUsername + ")";
-            HashSet<GameObject> found = new HashSet<GameObject>();
-            foreach (GameObject g in SceneManager.GetActiveScene().GetRootGameObjects())
-            {
-                if (g.name.EndsWith(matchName))
-                {
-                    found.Add(g);
-                }
-            }
-            // If there's only one then the model didn't change
-            if(found.Count == 1)
-            {
-                return found.First();
-            }
-            // If there's multiple then we need to return the new model (the old one will get destroyed at the end of the frame)
-            foreach (GameObject g in found)
-            {
-               if(g.name != replacementModel.name)
-               {
-                    return g;
-               }
-            }
-            // No models
-            return null;
+            return player.GetComponent<BodyReplacementBase>()?.replacementModel;
         }
 
         public void AfterEachScale(float from, float to, PlayerControllerB playerBy)
@@ -107,7 +96,7 @@ namespace LittleCompany.compatibility
 
         public void AtEndOfScaling(float from, float to, PlayerControllerB playerB)
         {
-            ReloadCurrentReplacementModel();
+            AttachAndRescaleReplacementModel();
         }
     }
 }

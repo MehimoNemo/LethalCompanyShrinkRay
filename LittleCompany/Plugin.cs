@@ -25,6 +25,7 @@ namespace LittleCompany
     [BepInDependency(LethalVRMCompatibilityComponent.LethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalVRMCompatibilityComponent.BetterLethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LCOfficeCompatibility.LCOfficeReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(ModelReplacementApiCompatibilityComponent.ModelReplacementApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         #region Properties

@@ -1,32 +1,20 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.patches;
-using System.Collections.Generic;
+using ModelReplacement;
+using System.Runtime.CompilerServices;
 namespace LittleCompany.compatibility
 {
     [HarmonyPatch]
     internal class ModelReplacementApiCompatibilityPatch
     {
-        public static Dictionary<ulong, int> PlayerToSuit = new Dictionary<ulong, int>();
-
-        [HarmonyPatch(typeof(PlayerControllerB), "LateUpdate")]
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        [HarmonyPatch(typeof(BodyReplacementBase), "Awake")]
         [HarmonyPostfix]
-        [HarmonyPriority(Priority.Last)]
-        public static void DetectSuitChange_LateUpdate_Postfix(PlayerControllerB __instance)
+        public static void BodyReplacementBase_Postfix(BodyReplacementBase __instance)
         {
-            
-            if (PlayerChangedSuit(__instance))
-            {
-                Plugin.Log("DetectSuitChange");
-                // Update the suit in the map
-                PlayerToSuit[__instance.playerClientId] = __instance.currentSuitID;
-                __instance.GetComponent<ModelReplacementApiCompatibilityComponent>()?.ReloadCurrentReplacementModel();
-            }
-        }
-
-        public static bool PlayerChangedSuit(PlayerControllerB pcb)
-        {
-            return PlayerToSuit.GetValueOrDefault(pcb.playerClientId, -1) != pcb.currentSuitID;
+            Plugin.Log("BodyReplacementBase_Postfix");
+            __instance.gameObject.GetComponent<ModelReplacementApiCompatibilityComponent>().ReloadNextFrame();
         }
 
         // We joined
@@ -36,7 +24,7 @@ namespace LittleCompany.compatibility
         {
             if (!GameNetworkManagerPatch.IsGameInitialized)
                 return;
-
+            Plugin.Log("We Joined");
             foreach (var player in StartOfRound.Instance.allPlayerScripts)
             {
                 player.gameObject.AddComponent<ModelReplacementApiCompatibilityComponent>();
