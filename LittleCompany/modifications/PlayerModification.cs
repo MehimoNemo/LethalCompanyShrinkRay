@@ -44,13 +44,12 @@ namespace LittleCompany.modifications
         public static float NextEnlargedSizeOf(PlayerControllerB targetPlayer, float multiplier = 1f)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            Plugin.Log("NextEnlargedSizeOf -> " + playerSize);
-            var nextEnlargeSize = Mathf.Min(Rounded(playerSize + (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), ModConfig.Instance.values.maximumPlayerSize);
+            var nextEnlargedSize = Mathf.Min(Rounded(playerSize + (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), ModConfig.Instance.values.maximumPlayerSize);
 
-            if (ModConfig.Instance.values.playerSizeStopAtDefault && !PlayerInfo.IsDefaultSize(targetPlayer) && playerSize < DefaultPlayerSize && nextEnlargeSize > DefaultPlayerSize)
+            if (ModConfig.Instance.values.playerSizeStopAtDefault && !PlayerInfo.IsDefaultSize(targetPlayer) && playerSize < DefaultPlayerSize && nextEnlargedSize > DefaultPlayerSize)
                 return DefaultPlayerSize;
             else
-                return nextEnlargeSize;
+                return nextEnlargedSize;
         }
 
         public static void TransitionedToShrunk(PlayerControllerB targetPlayer)
@@ -78,6 +77,8 @@ namespace LittleCompany.modifications
             if (targetPlayer == null || targetPlayer.isPlayerDead || targetPlayer.isClimbingLadder)
                 return false;
 
+            var playerSize = PlayerInfo.SizeOf(targetPlayer);
+
             switch (type)
             {
                 case ModificationType.Normalizing:
@@ -90,7 +91,9 @@ namespace LittleCompany.modifications
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
                     var nextShrunkenSize = NextShrunkenSizeOf(targetPlayer, multiplier);
-                    if ((!ModConfig.Instance.values.deathShrinking || !targetPlayer.AllowPlayerDeath()) && Mathf.Approximately(nextShrunkenSize, 0f) )
+                    if (Mathf.Approximately(playerSize, nextShrunkenSize)) return false; // No change
+
+                    if (Mathf.Approximately(nextShrunkenSize, 0f) && (!ModConfig.Instance.values.deathShrinking || !targetPlayer.AllowPlayerDeath()) )
                         return false;
 
                     break;
@@ -100,8 +103,7 @@ namespace LittleCompany.modifications
                     if (ScalingOf(targetPlayer).GettingScaled) return false;
 
                     var nextIncreasedSize = NextEnlargedSizeOf(targetPlayer, multiplier);
-                    if (Mathf.Approximately(nextIncreasedSize, ModConfig.Instance.values.maximumPlayerSize))
-                        return false;
+                    if (Mathf.Approximately(playerSize, nextIncreasedSize)) return false; // No change
                     break;
 
                 default:

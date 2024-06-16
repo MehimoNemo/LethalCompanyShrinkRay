@@ -187,6 +187,8 @@ namespace LittleCompany.components
 
         public override void Update()
         {
+            if (StartOfRound.Instance == null) return;
+			
             base.Update();
 
             if (LaserEnabled)
