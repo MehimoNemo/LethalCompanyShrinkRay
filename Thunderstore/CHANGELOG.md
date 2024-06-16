@@ -1,9 +1,8 @@
-### 1.1.2 ###
 **What's new**
 - Added *[Sizing]PlayerSizeStopAtDefault*, which scales to PlayerDefaultSize, if a scaling step would go over it
+
 **Compatibility**
 - Increased ModelReplacementAPI compatibility (e.g. LethalCreatures)
-- MoreCompany compatibility regarding audio changes (pitch modulation)
 
 **Tweaks**
 - Spray paint size is now relative to the can size
@@ -11,6 +10,7 @@
 - Shotgun damage relative to scale
 
 **Fixes**
+- Fixed item scales not being saved through rounds
 - Laser pointer is no longer affected by FLashlight scaling changes. Will receive its own changes later on
 - Fixed exception being thrown when scaling items without an item event handler
 
