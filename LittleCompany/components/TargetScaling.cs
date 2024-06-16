@@ -416,6 +416,7 @@ namespace LittleCompany.components
             Plugin.Log("Starting hologram scale routine for " + Target.name);
             hologram.SetActive(true);
 
+            var isPocketed = false;
             while(RelativeScale < DesiredScale)
             {
                 //Plugin.Log("Going from scale " + RelativeScale + " to desired scale " + DesiredScale);
@@ -433,6 +434,12 @@ namespace LittleCompany.components
                 UpdatePropertiesBasedOnScale();
 
                 CallListenersAfterEachScale(previousScale, RelativeScale, playerLastScaledBy);
+
+                if(isPocketed != Target.isPocketed)
+                {
+                    isPocketed = Target.isPocketed;
+                    hologram.SetActive(!isPocketed);
+                }
 
                 yield return null;
             }

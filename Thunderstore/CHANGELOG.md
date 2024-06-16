@@ -11,6 +11,7 @@
 - Players can now scale to the MaximumPlayerSize, even if they would usually scale to a higher value
 
 **Fixes**
+- Hide hologram while item is pocketed
 - Fixed item scales not being saved through rounds
 - Laser pointer is no longer affected by FLashlight scaling changes. Will receive its own changes later on
 - Fixed exception being thrown when scaling items without an item event handler
