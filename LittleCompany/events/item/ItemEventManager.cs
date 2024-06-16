@@ -26,6 +26,12 @@ namespace LittleCompany.events.item
 
         public static Type EventHandlerTypeByName(string name) => EventHandler.GetValueOrDefault(itemTypeByName(name), typeof(CustomItemEventHandler));
 
+        public static bool TryGetEventHandlerOf(GrabbableObject item, out ItemEventHandler handler)
+        {
+            handler = EventHandlerOf(item);
+            return handler != null;
+        }
+
         public static ItemEventHandler EventHandlerOf(GrabbableObject item)
         {
             var eventHandlerType = EventHandlerTypeByName(item.itemProperties.itemName);

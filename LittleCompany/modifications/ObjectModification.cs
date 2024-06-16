@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using static LittleCompany.components.TargetScaling<GrabbableObject>;
+using static LittleCompany.events.item.ItemEventManager;
 
 namespace LittleCompany.modifications
 {
@@ -101,13 +102,13 @@ namespace LittleCompany.modifications
                         var previousSize = ScalingOf(targetObject).RelativeScale;
                         var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
                         Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
-                        if (Mathf.Approximately(nextShrunkenSize, 0f))
-                            ItemEventManager.EventHandlerOf(targetObject).AboutToDeathShrink(previousSize, playerModifiedBy);
+                        if (Mathf.Approximately(nextShrunkenSize, 0f) && TryGetEventHandlerOf(targetObject, out ItemEventHandler handler))
+                            handler.AboutToDeathShrink(previousSize, playerModifiedBy);
 
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
-                            if (Mathf.Approximately(nextShrunkenSize, 0f))
-                                ItemEventManager.EventHandlerOf(targetObject).OnDeathShrinking(previousSize, playerModifiedBy);
+                            if (Mathf.Approximately(nextShrunkenSize, 0f) && TryGetEventHandlerOf(targetObject, out ItemEventHandler handler))
+                                handler.OnDeathShrinking(previousSize, playerModifiedBy);
 
                             if (onComplete != null)
                                 onComplete();

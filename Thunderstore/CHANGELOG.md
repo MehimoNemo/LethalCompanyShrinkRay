@@ -1,3 +1,6 @@
+**What's new**
+- Added *[Sizing]PlayerSizeStopAtDefault*, which scales to PlayerDefaultSize, if a scaling step would go over it
+
 **Compatibility**
 - Increased ModelReplacementAPI compatibility (e.g. LethalCreatures)
 
@@ -8,6 +11,7 @@
 
 **Fixes**
 - Laser pointer is no longer affected by FLashlight scaling changes. Will receive its own changes later on
+- Fixed exception being thrown when scaling items without an item event handler
 
 ### 1.1.1 ###
 **Fixes**

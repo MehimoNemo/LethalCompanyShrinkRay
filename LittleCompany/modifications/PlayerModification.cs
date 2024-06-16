@@ -6,13 +6,13 @@ using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
 using UnityEngine;
-using static LittleCompany.components.GrabbablePlayerObject;
-using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.modifications
 {
     public class PlayerModification : Modification
     {
+        public static float DefaultPlayerSize => ModConfig.Instance.values.defaultPlayerSize;
+
         #region Methods
         internal static PlayerScaling ScalingOf(PlayerControllerB target)
         {
@@ -35,6 +35,8 @@ namespace LittleCompany.modifications
             var nextShrunkenSize = Mathf.Max(Rounded(playerSize - (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), 0f);
             if ((nextShrunkenSize + (ModConfig.SmallestSizeChange / 2)) <= DeathShrinkMargin)
                 return 0f;
+            else if (ModConfig.Instance.values.playerSizeStopAtDefault && !PlayerInfo.IsDefaultSize(targetPlayer) && playerSize > DefaultPlayerSize && nextShrunkenSize < DefaultPlayerSize)
+                return DefaultPlayerSize;
             else
                 return nextShrunkenSize;
         }
@@ -43,7 +45,12 @@ namespace LittleCompany.modifications
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
             Plugin.Log("NextEnlargedSizeOf -> " + playerSize);
-            return Mathf.Min(Rounded(playerSize + (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), ModConfig.Instance.values.maximumPlayerSize);
+            var nextEnlargeSize = Mathf.Min(Rounded(playerSize + (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), ModConfig.Instance.values.maximumPlayerSize);
+
+            if (ModConfig.Instance.values.playerSizeStopAtDefault && !PlayerInfo.IsDefaultSize(targetPlayer) && playerSize < DefaultPlayerSize && nextEnlargeSize > DefaultPlayerSize)
+                return DefaultPlayerSize;
+            else
+                return nextEnlargeSize;
         }
 
         public static void TransitionedToShrunk(PlayerControllerB targetPlayer)
