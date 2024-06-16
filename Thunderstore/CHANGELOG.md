@@ -1,8 +1,9 @@
+### 1.1.2 ###
 **What's new**
 - Added *[Sizing]PlayerSizeStopAtDefault*, which scales to PlayerDefaultSize, if a scaling step would go over it
-
 **Compatibility**
 - Increased ModelReplacementAPI compatibility (e.g. LethalCreatures)
+- MoreCompany compatibility regarding audio changes (pitch modulation)
 
 **Tweaks**
 - Spray paint size is now relative to the can size

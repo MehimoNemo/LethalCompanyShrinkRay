@@ -13,17 +13,19 @@ using LittleCompany.events.enemy;
 using LittleCompany.helper;
 using LittleCompany.dependency;
 using LittleCompany.events.item;
+using UnityEngine.Audio;
 
 namespace LittleCompany
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-    [BepInDependency("me.swipez.melonloader.morecompany", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(MoreCompanyAudioCompatibilityPatch.MoreCompanyReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalEmotesApiCompatibility.LethalEmotesApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ScrapManagementFacade.LethalLevelLoaderReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ScrapManagementFacade.LethalLibReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalVRMCompatibilityComponent.LethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalVRMCompatibilityComponent.BetterLethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LCOfficeCompatibility.LCOfficeReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(ModelReplacementApiCompatibilityComponent.ModelReplacementApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         #region Properties
@@ -112,6 +114,11 @@ namespace LittleCompany
             {
                 Log("enabling LCOfficeCompatibility");
                 harmony.PatchAll(typeof(LCOfficeCompatibility));
+            }
+            if (MoreCompanyAudioCompatibilityPatch.compatEnabled) {
+                Log("enabling MoreCompanyAudioCompatibility");
+                harmony.Unpatch(typeof(AudioMixer).GetMethod("SetFloat"), HarmonyPatchType.Prefix, MoreCompanyAudioCompatibilityPatch.MoreCompanyReferenceChain);
+                harmony.PatchAll(typeof(MoreCompanyAudioCompatibilityPatch));
             }
 
 #if DEBUG
