@@ -8,6 +8,7 @@
 - Spray paint size is now relative to the can size
 - Shotgun can only be reloaded with equally scaled ammo
 - Shotgun damage relative to scale
+- Players can now scale to the MaximumPlayerSize, even if they would usually scale to a higher value
 
 **Fixes**
 - Fixed item scales not being saved through rounds
