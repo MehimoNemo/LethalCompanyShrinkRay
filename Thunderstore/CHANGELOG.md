@@ -10,6 +10,7 @@
 - Shotgun damage relative to scale
 - Players can now scale to the MaximumPlayerSize, even if they would usually scale to a higher value
 - Fixed inventory bug when holding an item that gets shrunken to size 0 and disappears
+- Fixed ShrinkRay target circle staying upon death
 
 **Fixes**
 - Hide hologram while item is pocketed
