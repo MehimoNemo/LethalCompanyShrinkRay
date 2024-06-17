@@ -9,6 +9,7 @@
 - Shotgun can only be reloaded with equally scaled ammo
 - Shotgun damage relative to scale
 - Players can now scale to the MaximumPlayerSize, even if they would usually scale to a higher value
+- Fixed inventory bug when holding an item that gets shrunken to size 0 and disappears
 
 **Fixes**
 - Hide hologram while item is pocketed

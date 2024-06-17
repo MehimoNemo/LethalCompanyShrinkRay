@@ -17,12 +17,17 @@ namespace LittleCompany.patches
 
         [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
         [HarmonyPriority(Priority.First)]
-        public static void Init()
+        public static void InitFirst()
+        {
+            AssetLoader.LoadAllAssets();
+        }
+
+        [HarmonyPrefix, HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        [HarmonyPriority(Priority.Last)]
+        public static void InitLast()
         {
             EnemyEventManager.BindAllEventHandler();
             ItemEventManager.BindAllEventHandler();
-
-            AssetLoader.LoadAllAssets();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]

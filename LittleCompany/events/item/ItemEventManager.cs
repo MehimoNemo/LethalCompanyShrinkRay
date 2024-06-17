@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using LittleCompany.components;
 using static LittleCompany.helper.ItemInfo;
+using LittleCompany.helper;
 
 namespace LittleCompany.events.item
 {
@@ -35,11 +36,11 @@ namespace LittleCompany.events.item
         public static ItemEventHandler EventHandlerOf(GrabbableObject item)
         {
             var eventHandlerType = EventHandlerTypeByName(item.itemProperties.itemName);
-            Plugin.Log("Found eventHandler with name " + eventHandlerType.ToString() + " for enemy name " + item.itemProperties.itemName);
+            Plugin.Log("Found eventHandler with name " + eventHandlerType.ToString() + " for item name " + item.itemProperties.itemName);
             if (item.TryGetComponent(eventHandlerType, out Component eventHandler))
                 return eventHandler as ItemEventHandler;
 
-            Plugin.Log("Enemy had no event handler!", Plugin.LogType.Error);
+            Plugin.Log("Item had no event handler!", Plugin.LogType.Error);
             return null;
         }
 
@@ -90,7 +91,21 @@ namespace LittleCompany.events.item
 
             public override void DestroyObject()
             {
+                if (item.playerHeldBy == PlayerInfo.CurrentPlayer)
+                {
+                    for (int i = 0; i < item.playerHeldBy.ItemSlots.Length; i++)
+                    {
+                        if (item.playerHeldBy.ItemSlots[i] == item)
+                        {
+                            HUDManager.Instance.itemSlotIcons[i].enabled = false;
+                            break;
+                        }
+                    }
+                }
+
                 item.DestroyObjectInHand(item.playerHeldBy);
+                item.playerHeldBy = null;
+                item.heldByPlayerOnServer = false;
             }
 
             public override void DespawnObject()
