@@ -17,18 +17,13 @@ namespace LittleCompany.modifications
                 scaling = target.gameObject.AddComponent<EnemyScaling>();
             return scaling;
         }
+        public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(ModConfig.Instance.values.enemySizeChangeStep * multiplier, ModConfig.SmallestSizeChange);
 
-        public static float NextShrunkenSizeOf(EnemyAI targetEnemy)
-        {
-            return Mathf.Max(Rounded(ScalingOf(targetEnemy).RelativeScale - ModConfig.Instance.values.enemySizeChangeStep), 0f);
-        }
+        public static float NextShrunkenSizeOf(EnemyAI targetEnemy, float multiplier = 1f) => Mathf.Max(Rounded(ScalingOf(targetEnemy).RelativeScale - SizeChangeStep(multiplier)), 0f);
 
-        public static float NextIncreasedSizeOf(EnemyAI targetEnemy)
-        {
-            return Rounded(ScalingOf(targetEnemy).RelativeScale + ModConfig.Instance.values.enemySizeChangeStep);
-        }
+        public static float NextIncreasedSizeOf(EnemyAI targetEnemy, float multiplier = 1f) => Rounded(ScalingOf(targetEnemy).RelativeScale + SizeChangeStep(multiplier));
 
-        public static bool CanApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy)
+        public static bool CanApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f)
         {
             if (targetEnemy == null)
                 return false;
@@ -40,14 +35,14 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Shrinking:
-                    var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy);
+                    var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy, multiplier);
                     Plugin.Log("CanApplyModificationTo -> " + nextShrunkenSize + " / " + scaling.RelativeScale);
                     if (nextShrunkenSize == scaling.RelativeScale)
                         return false;
                     break;
 
                 case ModificationType.Enlarging:
-                    var nextIncreasedSize = NextIncreasedSizeOf(targetEnemy);
+                    var nextIncreasedSize = NextIncreasedSizeOf(targetEnemy, multiplier);
                     if (nextIncreasedSize == scaling.RelativeScale)
                         return false;
                     break;
@@ -59,7 +54,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
+        public static void ApplyModificationTo(EnemyAI targetEnemy, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f, Action onComplete = null)
         {
             if (targetEnemy?.gameObject == null) return;
 
@@ -71,7 +66,7 @@ namespace LittleCompany.modifications
                 case ModificationType.Shrinking:
                     {
                         var previousScale = ScalingOf(targetEnemy).RelativeScale;
-                        var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy);
+                        var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy, multiplier);
                         Plugin.Log("Shrinking enemy [" + targetEnemy.name + "] to size: " + nextShrunkenSize);
                         if (nextShrunkenSize < DeathShrinkMargin)
                             EnemyEventManager.EventHandlerOf(targetEnemy)?.AboutToDeathShrink(previousScale, playerModifiedBy);
@@ -93,7 +88,7 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Enlarging:
                     {
-                        var nextIncreasedSize = NextIncreasedSizeOf(targetEnemy);
+                        var nextIncreasedSize = NextIncreasedSizeOf(targetEnemy, multiplier);
                         Plugin.Log("Enlarging enemy [" + targetEnemy.name + "] to size: " + nextIncreasedSize);
                         scaling.ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {

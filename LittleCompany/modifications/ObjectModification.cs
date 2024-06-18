@@ -24,17 +24,13 @@ namespace LittleCompany.modifications
             return scaling;
         }
 
-        public static float NextShrunkenSizeOf(GrabbableObject targetObject)
-        {
-            return Mathf.Max(Rounded(ScalingOf(targetObject).DesiredScale - ModConfig.Instance.values.itemSizeChangeStep), 0f);
-        }
+        public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(ModConfig.Instance.values.itemSizeChangeStep * multiplier, ModConfig.SmallestSizeChange);
 
-        public static float NextIncreasedSizeOf(GrabbableObject targetObject)
-        {
-            return Rounded(ScalingOf(targetObject).DesiredScale + ModConfig.Instance.values.itemSizeChangeStep);
-        }
+        public static float NextShrunkenSizeOf(GrabbableObject targetObject, float multiplier = 1f) => Mathf.Max(Rounded(ScalingOf(targetObject).DesiredScale - SizeChangeStep(multiplier)), 0f);
 
-        public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy)
+        public static float NextIncreasedSizeOf(GrabbableObject targetObject, float multiplier = 1f) => Rounded(ScalingOf(targetObject).DesiredScale + SizeChangeStep(multiplier));
+
+        public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f)
         {
             if (targetObject == null)
                 return false;
@@ -51,7 +47,7 @@ namespace LittleCompany.modifications
                     break;
 
                 case ModificationType.Shrinking:
-                    var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
+                    var nextShrunkenSize = NextShrunkenSizeOf(targetObject, multiplier);
                     if (nextShrunkenSize == scaling.DesiredScale)
                         return false;
 
@@ -61,7 +57,7 @@ namespace LittleCompany.modifications
                     break;
 
                 case ModificationType.Enlarging:
-                    var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
+                    var nextIncreasedSize = NextIncreasedSizeOf(targetObject, multiplier);
                     if (nextIncreasedSize == scaling.DesiredScale)
                         return false;
 
@@ -76,7 +72,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, Action onComplete = null)
+        public static void ApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f, Action onComplete = null)
         {
             if (targetObject?.gameObject == null) return;
 
@@ -100,7 +96,7 @@ namespace LittleCompany.modifications
                 case ModificationType.Shrinking:
                     {
                         var previousSize = ScalingOf(targetObject).RelativeScale;
-                        var nextShrunkenSize = NextShrunkenSizeOf(targetObject);
+                        var nextShrunkenSize = NextShrunkenSizeOf(targetObject, multiplier);
                         Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
                         if (Mathf.Approximately(nextShrunkenSize, 0f) && TryGetEventHandlerOf(targetObject, out ItemEventHandler handler))
                             handler.AboutToDeathShrink(previousSize, playerModifiedBy);
@@ -119,7 +115,7 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Enlarging:
                     {
-                        var nextIncreasedSize = NextIncreasedSizeOf(targetObject);
+                        var nextIncreasedSize = NextIncreasedSizeOf(targetObject, multiplier);
                         Plugin.Log("Enlarging object [" + targetObject.name + "] to size: " + nextIncreasedSize);
                         scaling.ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {

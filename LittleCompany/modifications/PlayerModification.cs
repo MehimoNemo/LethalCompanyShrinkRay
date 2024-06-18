@@ -29,10 +29,12 @@ namespace LittleCompany.modifications
             return scaling.GettingScaled;
         }
 
+        public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(ModConfig.Instance.values.playerSizeChangeStep * multiplier, ModConfig.SmallestSizeChange);
+
         public static float NextShrunkenSizeOf(PlayerControllerB targetPlayer, float multiplier = 1f)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), 0f);
+            var nextShrunkenSize = Mathf.Max(Rounded(playerSize - SizeChangeStep(multiplier)), 0f);
             if ((nextShrunkenSize + (ModConfig.SmallestSizeChange / 2)) <= DeathShrinkMargin)
                 return 0f;
             else if (ModConfig.Instance.values.playerSizeStopAtDefault && !PlayerInfo.IsDefaultSize(targetPlayer) && playerSize > DefaultPlayerSize && nextShrunkenSize < DefaultPlayerSize)
@@ -44,7 +46,7 @@ namespace LittleCompany.modifications
         public static float NextEnlargedSizeOf(PlayerControllerB targetPlayer, float multiplier = 1f)
         {
             var playerSize = PlayerInfo.SizeOf(targetPlayer);
-            var nextEnlargedSize = Mathf.Min(Rounded(playerSize + (ModConfig.Instance.values.playerSizeChangeStep * multiplier)), ModConfig.Instance.values.maximumPlayerSize);
+            var nextEnlargedSize = Mathf.Min(Rounded(playerSize + SizeChangeStep(multiplier)), ModConfig.Instance.values.maximumPlayerSize);
 
             if (ModConfig.Instance.values.playerSizeStopAtDefault && !PlayerInfo.IsDefaultSize(targetPlayer) && playerSize < DefaultPlayerSize && nextEnlargedSize > DefaultPlayerSize)
                 return DefaultPlayerSize;

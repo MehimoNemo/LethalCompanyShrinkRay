@@ -522,6 +522,7 @@ namespace LittleCompany.components
         
         private bool ShootRayOnClientAtTarget()
         {
+            var scalingMultiplier = ObjectModification.ScalingOf(this).RelativeScale;
             switch (TargetMask)
             {
                 case Mask.Player:
@@ -531,7 +532,7 @@ namespace LittleCompany.components
 
                         if(IsOwner)
                             Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy))
+                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, scalingMultiplier))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -552,7 +553,7 @@ namespace LittleCompany.components
                         if (IsOwner)
                             Plugin.Log("Ray has hit an ITEM -> " + item.name);
 
-                        if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value, playerHeldBy))
+                        if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value, playerHeldBy, scalingMultiplier))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -580,7 +581,7 @@ namespace LittleCompany.components
                         if (IsOwner)
                             Plugin.Log("Ray has hit an ENEMY -> " + enemyAI.enemyType.name);
 
-                        if(!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value, playerHeldBy))
+                        if(!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value, playerHeldBy, scalingMultiplier))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -715,7 +716,7 @@ namespace LittleCompany.components
             var targetingUs = targetPlayer.playerClientId == PlayerInfo.CurrentPlayerID;
 
             Plugin.Log("Ray has hit " + (targetingUs ? "us" : "Player (" + targetPlayer.playerClientId + ")") + "!");
-            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, 1f, () =>
+            PlayerModification.ApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
             {
                 Plugin.Log("Finished player modification with type: " + currentModificationType.Value.ToString());
             });
@@ -748,7 +749,7 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, playerHeldBy, () =>
+            ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
             {
                 Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
             });
@@ -781,7 +782,7 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            EnemyModification.ApplyModificationTo(targetObject.GetComponentInParent<EnemyAI>(), currentModificationType.Value, playerHeldBy, () =>
+            EnemyModification.ApplyModificationTo(targetObject.GetComponentInParent<EnemyAI>(), currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale,() =>
             {
                 Plugin.Log("Finished enemy modification with type: " + currentModificationType.Value.ToString());
             });

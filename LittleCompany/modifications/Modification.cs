@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using Unity.Netcode;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace LittleCompany.modifications
 {
@@ -19,15 +17,5 @@ namespace LittleCompany.modifications
         #endregion
 
         public static float Rounded(float unroundedValue) => Mathf.Round(unroundedValue * 100f) / 100f; // round to 2 digits
-
-        /*#region Methods
-        public static float NextShrunkenSizeOf(GameObject target) { throw new NotImplementedException(); }
-
-        public static float NextIncreasedSizeOf(GameObject target) { throw new NotImplementedException(); }
-
-        public static bool CanApplyModificationTo(GameObject target, ModificationType type) { throw new NotImplementedException(); }
-
-        public static void ApplyModificationTo(GameObject target, ModificationType type, Action onComplete = null) { throw new NotImplementedException(); }
-        #endregion*/
     }
 }
