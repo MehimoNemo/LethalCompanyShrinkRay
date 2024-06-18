@@ -1,4 +1,8 @@
-### 1.2.0 ###
+### 1.2.1 ###
+**Fixes**
+- Fixed pitch warnings
+
+## 1.2.0 ##
 **What's new**
 - Added *[Sizing]PlayerSizeStopAtDefault*, which scales to PlayerDefaultSize, if a scaling step would go over it
 

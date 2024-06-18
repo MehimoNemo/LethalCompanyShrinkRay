@@ -292,18 +292,19 @@ namespace LittleCompany.components
             originalItemProperties = Target.itemProperties;
             OverrideItemProperties();
             originalScrapValue = Target.scrapValue;
+        }
 
-            // Hologram
-            Plugin.Log("Instantiating hologram of " + Target.name);
+        internal bool TryCreateHologram()
+        {
             hologram = ItemInfo.visualCopyOf(originalItemProperties);
-            if (hologram != null)
-            {
-                //hologram.transform.SetParent(Target.transform, true);
+            if (hologram == null) return false;
 
-                Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
+            //hologram.transform.position = Target.transform.position;
+            //hologram.transform.SetParent(Target.transform, true);
+            Materials.ReplaceAllMaterialsWith(hologram, (Material _) => Materials.Wireframe);
+            hologram.SetActive(false);
 
-                hologram.SetActive(false);
-            }
+            return true;
         }
 
         private void Update()
@@ -352,7 +353,7 @@ namespace LittleCompany.components
             if (hologram != null)
                 hologram.transform.localScale = OriginalScale * DesiredScale;
 
-            if (hologram != null && DesiredScale > RelativeScale)
+            if (DesiredScale > RelativeScale)
             {
                 if (hologramCoroutine == null)
                     hologramCoroutine = StartCoroutine(HologramScaleCoroutine());
@@ -414,6 +415,8 @@ namespace LittleCompany.components
         private IEnumerator HologramScaleCoroutine()
         {
             Plugin.Log("Starting hologram scale routine for " + Target.name);
+            if (hologram == null && !TryCreateHologram()) yield break;
+
             hologram.SetActive(true);
 
             var isPocketed = false;

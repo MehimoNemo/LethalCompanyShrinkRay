@@ -26,7 +26,7 @@ namespace LittleCompany.compatibility
             }
         }
 
-        static List<AudioMixerGroup> listOfVoicePlayer;
+        static Dictionary<ulong, List<AudioMixerGroup>> listOfVoicePlayer;
 
         //We joined a lobby
         [HarmonyPatch(typeof(PlayerControllerB), "ConnectClientToPlayerObject")]
@@ -38,21 +38,25 @@ namespace LittleCompany.compatibility
             {
                 if (a.name.Contains("VoicePlayer"))
                 {
-                    listOfVoicePlayer.Add(a);
+                    var playerIDText = a.name.Replace("VoicePlayer", "");
+                    var playerID = ulong.Parse(playerIDText.Length > 0 ? playerIDText : "0");
+                    if(listOfVoicePlayer.ContainsKey(playerID))
+                        listOfVoicePlayer[playerID].Add(a);
+                    else
+                        listOfVoicePlayer.Add(playerID, [a]);
                 }
             }
         }
 
         public static void CompatUpdatePitchInAudioMixers(ulong playerClientId, float pitch)
         {
-            if (compatEnabled)
+            if (compatEnabled && listOfVoicePlayer.ContainsKey(playerClientId))
             {
-                foreach (AudioMixerGroup voicePlayer in listOfVoicePlayer)
+                var voicePlayer = listOfVoicePlayer[playerClientId];
+                for (int i = voicePlayer.Count - 1; i >= 0; i--)
                 {
-                    if (voicePlayer != null && voicePlayer.name == "VoicePlayer" + playerClientId)
-                    {
-                        voicePlayer.audioMixer.SetFloat("pitch", pitch);
-                    }
+                    if (voicePlayer[i]?.audioMixer == null || !voicePlayer[i].audioMixer.SetFloat("pitch", pitch))
+                        voicePlayer.RemoveAt(i);
                 }
             }
         }

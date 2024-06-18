@@ -27,7 +27,6 @@ namespace LittleCompany.events.item
 
             var batteryUsageMultiplier = 1f + Mathf.Max((1f - to) / 5, -0.9f);
             item.itemProperties.batteryUsage = baseBatteryUsage * batteryUsageMultiplier;
-            Plugin.Log("Multiplier: " +  batteryUsageMultiplier);
         }
 
         [HarmonyPatch(typeof(FlashlightItem), "Update")]

@@ -25,7 +25,7 @@ namespace LittleCompany.patches
         {
             float playerScale = PlayerInfo.SizeOf(player);
             float intensity = (float)ModConfig.Instance.values.pitchDistortionIntensity;
-            if(intensity != 0)
+            if(intensity != 0 && player.isPlayerControlled)
             {
                 float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
                 SoundManager.Instance.playerVoicePitchTargets[player.playerClientId] = modifiedPitch;
