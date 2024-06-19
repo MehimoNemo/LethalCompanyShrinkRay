@@ -366,6 +366,7 @@ namespace LittleCompany.components
                 }
 
                 if (targetObject == null || targetObject != hit.collider.gameObject)
+                    Plugin.Log(hit.collider.gameObject.name);
                     ChangeTarget(hit.collider.gameObject);
             }
             else
@@ -383,11 +384,15 @@ namespace LittleCompany.components
         {
             get
             {
-                var layerMasks = new List<Mask>() { Mask.Player/*, Mask.PlaceableShipObjects, Mask.InteractableObject, Mask.DecalStickableSurface*/ };
+                var layerMasks = new List<Mask>() { Mask.Player };
                 if (ModConfig.Instance.values.itemSizeChangeStep > Mathf.Epsilon)
                     layerMasks.Add(Mask.Props);
                 if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
                     layerMasks.Add(Mask.Enemies);
+#if DEBUG
+                if (true)
+                    layerMasks.Add(Mask.PlaceableShipObjects);
+#endif
                 return ToInt(layerMasks.ToArray());
             }
         }
@@ -826,7 +831,7 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            ShipObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<PlaceableShipObject>(), currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
+            ShipObjectModification.ApplyModificationTo(targetObject.GetComponentInChildren<PlaceableShipObject>(), currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
             {
                 Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
             });

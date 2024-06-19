@@ -521,7 +521,17 @@ namespace LittleCompany.components
         internal override void OnAwake()
         {
             base.OnAwake();
-            _originalScale = Target.transform.localScale;
+            _originalScale = Target.parentObject.transform.localScale;
+            Plugin.Log("_originalScale: " + _originalScale);
+        }
+
+        public override void ScaleTo(float scale, PlayerControllerB scaledBy)
+        {
+            base.ScaleTo(scale, scaledBy);
+            Plugin.Log("_originalScale: " + _originalScale);
+            Plugin.Log("scale: " + scale);
+            Target.parentObject.transform.localScale = _originalScale * scale;
+            Plugin.Log("Scaling ship item: " + Target.parentObject.transform.localScale);
         }
     }
 }
