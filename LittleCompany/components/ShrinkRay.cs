@@ -13,6 +13,7 @@ using static LittleCompany.helper.LayerMasks;
 using static LittleCompany.modifications.Modification;
 using LittleCompany.dependency;
 using HarmonyLib;
+using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.components
 {
@@ -415,12 +416,14 @@ namespace LittleCompany.components
             else
                 Plugin.Log("Lost track of target.");
 #endif
+            Plugin.Log("Target: " + targetObject?.name);
             if (targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
                 Destroy(circle);
 
             targetObject = identifiedTarget; // Change target object
 
-            if(targetObject != null)
+            Plugin.Log("Target new: " + targetObject?.name);
+            if (targetObject != null)
                 targetObject.AddComponent<TargetCircle>();
         }
 
@@ -457,7 +460,7 @@ namespace LittleCompany.components
                 case Mask.PlaceableShipObjects:
                     var placeableShipObject = target.GetComponentInParent<PlaceableShipObject>();
                     if (placeableShipObject != null)
-                        return placeableShipObject.gameObject;
+                        return placeableShipObject.parentObject.gameObject;
                     break;
             }
             return null;
@@ -519,13 +522,7 @@ namespace LittleCompany.components
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRayOnClient()
         {
-            NetworkObject networkObject = null;
-            if (TargetMask == Mask.PlaceableShipObjects && targetObject.TryGetComponent( out PlaceableShipObject placeableShipObject) && placeableShipObject.parentObject != null)
-                networkObject = placeableShipObject.parentObject.NetworkObject;
-            else if(targetObject != null)
-                networkObject = targetObject.GetComponent<NetworkObject>();
-
-            if (playerHeldBy == null || networkObject == null || playerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || targetObject.GetComponent<NetworkObject>() == null || playerHeldBy.isClimbingLadder)
             {
                 Plugin.Log("ShootRayOnClient: Missing");
                 SwitchModeServerRpc((int)Mode.Missing);
@@ -609,14 +606,10 @@ namespace LittleCompany.components
                         return true;
                     }
 
-                case Mask.PlaceableShipObjects:
-                case Mask.InteractableObject:
-                case Mask.DecalStickableSurface:
+                default:
+                    var shipObject = targetObject.GetComponentInChildren<PlaceableShipObject>();
+                    if (shipObject != null)
                     {
-                        var shipObject = targetObject.GetComponentInParent<PlaceableShipObject>();
-                        if(shipObject == null)
-                            return false;
-
                         if (IsOwner)
                             Plugin.Log("Ray has hit a ship object -> " + shipObject.name);
 
@@ -627,17 +620,17 @@ namespace LittleCompany.components
                             return false;
                         }
 
-                        if(shipObject.parentObject == null)
+                        if (!targetObject.TryGetComponent(out NetworkObject networkObject))
                         {
                             if (IsOwner)
                                 Plugin.Log("But it has no network object.");
                             return false;
                         }
 
-                        OnShipObjectModificationServerRpc(shipObject.parentObject.NetworkObjectId, playerHeldBy.playerClientId);
+                        OnShipObjectModificationServerRpc(networkObject.NetworkObjectId, playerHeldBy.playerClientId);
                         return true;
                     }
-                default:
+
                     if (IsOwner)
                         Plugin.Log("Ray has hit an unhandled object named \"" + targetObject.name + "\" [Layer " + targetObject.layer + "]");
                     return false;
@@ -665,7 +658,7 @@ namespace LittleCompany.components
                 if (targetObject.TryGetComponent(out PlayerControllerB _))
                     return Mask.Player;
 
-                if (targetObject.TryGetComponent(out PlaceableShipObject _))
+                if (targetObject.GetComponentInChildren<PlaceableShipObject>() != null)
                     return Mask.PlaceableShipObjects;
 
                 return Mask.Default;
