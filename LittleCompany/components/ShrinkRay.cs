@@ -454,7 +454,7 @@ namespace LittleCompany.components
                         return targetEnemy.gameObject;
                     break;
 
-                case Mask.PlaceableShipObjects: case Mask.InteractableObject: case Mask.DecalStickableSurface:
+                case Mask.PlaceableShipObjects:
                     var placeableShipObject = target.GetComponentInParent<PlaceableShipObject>();
                     if (placeableShipObject != null)
                         return placeableShipObject.gameObject;

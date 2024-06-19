@@ -37,6 +37,8 @@ namespace LittleCompany.components
 
         public float ScalingProgress { get; private set; } = 0f; // progress from 0 to 1
 
+        public virtual Transform TransformToScale => gameObject.transform;
+
         public enum Mode
         {
             Wave = 0,
@@ -53,7 +55,7 @@ namespace LittleCompany.components
                 return;
             }
 
-            RelativeScale = 1f / OriginalScale.y * gameObject.transform.localScale.y;
+            RelativeScale = 1f / OriginalScale.y * TransformToScale.localScale.y;
 
             scalingListeners = [];
             DetectAndLoadCurrentListeningComponent();
@@ -71,7 +73,7 @@ namespace LittleCompany.components
             scale = Mathf.Max(scale, 0f);
 
             float previousScale = RelativeScale;
-            gameObject.transform.localScale = OriginalScale * scale;
+            TransformToScale.localScale = OriginalScale * scale;
             RelativeScale = scale;
             CallListenersAfterEachScale(previousScale, scale, scaledBy);
         }
@@ -146,11 +148,11 @@ namespace LittleCompany.components
             return OriginalScale * percentage;
         }
 
-        public bool Unchanged => OriginalScale == gameObject.transform.localScale;
+        public bool Unchanged => OriginalScale == TransformToScale.localScale;
 
         public virtual void Reset()
         {
-            gameObject.transform.localScale = OriginalScale;
+            TransformToScale.localScale = OriginalScale;
             RelativeScale = 1f;
         }
 
@@ -431,7 +433,7 @@ namespace LittleCompany.components
                 RelativeScale += Time.deltaTime / (20 * RelativeScale);
 #endif
                 var newScale = OriginalScale * RelativeScale;
-                gameObject.transform.localScale = newScale;
+                TransformToScale.localScale = newScale;
                 Target.originalScale = newScale;
 
                 UpdatePropertiesBasedOnScale();
@@ -480,12 +482,12 @@ namespace LittleCompany.components
 
         public void ScaleTemporarlyTo(float scale)
         {
-            gameObject.transform.localScale = OriginalScale * scale;
+            TransformToScale.localScale = OriginalScale * scale;
         }
 
         public override void Reset()
         {
-            gameObject.transform.localScale = Target.originalScale;
+            TransformToScale.localScale = Target.originalScale;
         }
 #endregion
     }
@@ -515,23 +517,35 @@ namespace LittleCompany.components
     }
     internal class ShipObjectScaling : TargetScaling<PlaceableShipObject>
     {
-        private Vector3 _originalScale = Vector3.one;
-        internal override Vector3 OriginalScale => _originalScale;
+        public override Transform TransformToScale => Target.parentObject.transform;
+
+        private Vector3? _originalScale = null;
+        internal override Vector3 OriginalScale
+        {
+            get
+            {
+                if(_originalScale == null)
+                    _originalScale = TransformToScale.localScale;
+
+                return _originalScale.Value;
+            }
+        }
 
         internal override void OnAwake()
         {
             base.OnAwake();
-            _originalScale = Target.parentObject.transform.localScale;
             Plugin.Log("_originalScale: " + _originalScale);
         }
 
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
+            if (Target.parentObject != null)
+            {
+                var diff = scale - RelativeScale;
+                Target.parentObject.positionOffset += Vector3.up * diff;
+            }
+
             base.ScaleTo(scale, scaledBy);
-            Plugin.Log("_originalScale: " + _originalScale);
-            Plugin.Log("scale: " + scale);
-            Target.parentObject.transform.localScale = _originalScale * scale;
-            Plugin.Log("Scaling ship item: " + Target.parentObject.transform.localScale);
         }
     }
 }
