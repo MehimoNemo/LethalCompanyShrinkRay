@@ -533,12 +533,6 @@ namespace LittleCompany.components
             }
         }
 
-        internal override void OnAwake()
-        {
-            base.OnAwake();
-            Plugin.Log("_originalScale: " + _originalScale);
-        }
-
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             if (Target.parentObject != null && !AutoPositioningShipObjects.Contains((VanillaShipObject)Target.unlockableID))

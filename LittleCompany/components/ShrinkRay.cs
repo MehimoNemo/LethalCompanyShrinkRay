@@ -367,7 +367,6 @@ namespace LittleCompany.components
                 }
 
                 if (targetObject == null || targetObject != hit.collider.gameObject)
-                    Plugin.Log(hit.collider.gameObject.name);
                     ChangeTarget(hit.collider.gameObject);
             }
             else
@@ -416,13 +415,11 @@ namespace LittleCompany.components
             else
                 Plugin.Log("Lost track of target.");
 #endif
-            Plugin.Log("Target: " + targetObject?.name);
             if (targetObject != null && targetObject.TryGetComponent(out TargetCircle circle))
                 Destroy(circle);
 
             targetObject = identifiedTarget; // Change target object
 
-            Plugin.Log("Target new: " + targetObject?.name);
             if (targetObject != null)
                 targetObject.AddComponent<TargetCircle>();
         }
