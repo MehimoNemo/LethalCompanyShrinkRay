@@ -518,7 +518,7 @@ namespace LittleCompany.components
     }
     internal class ShipObjectScaling : TargetScaling<PlaceableShipObject>
     {
-        public static List<VanillaShipObject> AutoPositioningShipObjects = [VanillaShipObject.StorageCloset];
+        public static List<VanillaShipObject> AutoPositioningShipObjects = [VanillaShipObject.StorageCloset, VanillaShipObject.LightSwitchContainer];
         public override Transform TransformToScale => Target.parentObject.transform;
 
         private Vector3? _originalScale = null;
