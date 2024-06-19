@@ -1,8 +1,11 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.components;
+using LittleCompany.coroutines;
 using LittleCompany.helper;
+using LittleCompany.modifications;
 using UnityEngine;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Rendering.HighDefinition;
 using static LittleCompany.events.item.ItemEventManager;
 
@@ -33,6 +36,7 @@ namespace LittleCompany.events.item
         }
 
         #region Patches
+        // Damage
         [HarmonyPatch(typeof(EnemyAI), "HitEnemyOnLocalClient")]
         [HarmonyPrefix]
         public static void HitEnemy(ref int force, PlayerControllerB playerWhoHit)
@@ -40,14 +44,26 @@ namespace LittleCompany.events.item
             if (playerWhoHit?.currentlyHeldObjectServer is ShotgunItem && playerWhoHit.currentlyHeldObjectServer.TryGetComponent(out ItemScaling scaling))
                 force = (int)(force * scaling.RelativeScale);
         }
-
         [HarmonyPatch(typeof(PlayerControllerB), "DamagePlayerFromOtherClientServerRpc")]
         [HarmonyPrefix]
         public static void HitPlayer(ref int damageAmount, int playerWhoHit)
         {
             var player = PlayerInfo.ControllerFromID((ulong)playerWhoHit);
             if (player?.currentlyHeldObjectServer is ShotgunItem && player.currentlyHeldObjectServer.TryGetComponent(out ItemScaling scaling))
-                    damageAmount = (int)(damageAmount * scaling.RelativeScale);
+                damageAmount = (int)(damageAmount * scaling.RelativeScale);
+        }
+
+        // Recoil
+        [HarmonyPatch(typeof(ShotgunItem), "ShootGun")]
+        [HarmonyPostfix]
+        public static void ShootGun(ShotgunItem __instance, Vector3 shotgunPosition, Vector3 shotgunForward)
+        {
+            if (__instance.playerHeldBy == null || __instance.playerHeldBy != PlayerInfo.CurrentPlayer) return;
+
+            var scalingDiff = ObjectModification.ScalingOf(__instance).RelativeScale - PlayerInfo.SizeOf(__instance.playerHeldBy);
+            if (scalingDiff <= 0f) return; // Smaller or equally sized relative to the gun
+
+            PlayerThrowAnimation.StartRoutine(__instance.playerHeldBy, shotgunForward * -1f, scalingDiff * 10f);
         }
         #endregion
     }

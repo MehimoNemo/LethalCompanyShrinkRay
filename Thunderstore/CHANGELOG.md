@@ -1,3 +1,7 @@
+### 1.2.2 ###
+**Tweaks**
+- Larger shotguns now have a recoil (relative to player size)
+
 ### 1.2.1 ###
 **Fixes**
 - Fixed pitch warnings
