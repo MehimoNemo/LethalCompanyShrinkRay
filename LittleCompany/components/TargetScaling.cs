@@ -513,4 +513,15 @@ namespace LittleCompany.components
             }
         }
     }
+    internal class ShipObjectScaling : TargetScaling<PlaceableShipObject>
+    {
+        private Vector3 _originalScale = Vector3.one;
+        internal override Vector3 OriginalScale => _originalScale;
+
+        internal override void OnAwake()
+        {
+            base.OnAwake();
+            _originalScale = Target.transform.localScale;
+        }
+    }
 }

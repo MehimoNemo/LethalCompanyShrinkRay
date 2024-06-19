@@ -383,7 +383,7 @@ namespace LittleCompany.components
         {
             get
             {
-                var layerMasks = new List<Mask>() { Mask.Player };
+                var layerMasks = new List<Mask>() { Mask.Player/*, Mask.PlaceableShipObjects, Mask.InteractableObject, Mask.DecalStickableSurface*/ };
                 if (ModConfig.Instance.values.itemSizeChangeStep > Mathf.Epsilon)
                     layerMasks.Add(Mask.Props);
                 if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
@@ -392,8 +392,16 @@ namespace LittleCompany.components
             }
         }
 
+
+        //private string oldTargetObject = ""; // DEBUG
         public void ChangeTarget(GameObject newTarget)
         {
+            /*if (newTarget != null && newTarget.name != oldTargetObject)
+            {
+                oldTargetObject = newTarget.name;
+                Plugin.Log("New target: " + newTarget.name + " [layer " + newTarget.layer + "]");
+            }*/
+
             var identifiedTarget = IdentifyTarget(newTarget);
             if (identifiedTarget == targetObject) return;
 #if DEBUG
@@ -417,15 +425,15 @@ namespace LittleCompany.components
 
             //Plugin.Log("Target to identify: " + target.name + " [layer " + target.layer + "]");
 
-            switch((Mask)target.layer)
+            switch ((Mask)target.layer)
             {
-                case Mask.Player: /*case Mask.DecalStickableSurface:*/
+                case Mask.Player:
                     var targetPlayer = target.GetComponentInParent<PlayerControllerB>();
                     if (targetPlayer != null && targetPlayer.playerClientId != PlayerInfo.CurrentPlayerID && !PlayerModification.IsGettingScaled(targetPlayer))
                         return targetPlayer.gameObject;
                     break;
 
-                case Mask.Props: case Mask.InteractableObject:
+                case Mask.Props:
                     var targetPlayerObject = target.GetComponentInParent<GrabbablePlayerObject>();
                     if (targetPlayerObject != null)
                         return targetPlayerObject.grabbedPlayer.gameObject;
@@ -439,6 +447,12 @@ namespace LittleCompany.components
                     var targetEnemy = target.GetComponentInParent<EnemyAI>();
                     if (targetEnemy != null)
                         return targetEnemy.gameObject;
+                    break;
+
+                case Mask.PlaceableShipObjects: case Mask.InteractableObject: case Mask.DecalStickableSurface:
+                    var placeableShipObject = target.GetComponentInParent<PlaceableShipObject>();
+                    if (placeableShipObject != null)
+                        return placeableShipObject.gameObject;
                     break;
             }
             return null;
@@ -500,7 +514,13 @@ namespace LittleCompany.components
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRayOnClient()
         {
-            if (playerHeldBy == null || targetObject?.GetComponent<NetworkObject>() == null || playerHeldBy.isClimbingLadder)
+            NetworkObject networkObject = null;
+            if (TargetMask == Mask.PlaceableShipObjects && targetObject.TryGetComponent( out PlaceableShipObject placeableShipObject) && placeableShipObject.parentObject != null)
+                networkObject = placeableShipObject.parentObject.NetworkObject;
+            else if(targetObject != null)
+                networkObject = targetObject.GetComponent<NetworkObject>();
+
+            if (playerHeldBy == null || networkObject == null || playerHeldBy.isClimbingLadder)
             {
                 Plugin.Log("ShootRayOnClient: Missing");
                 SwitchModeServerRpc((int)Mode.Missing);
@@ -530,9 +550,9 @@ namespace LittleCompany.components
                         if (!targetObject.TryGetComponent(out PlayerControllerB targetPlayer))
                             return false;
 
-                        if(IsOwner)
-                            Plugin.Log("Ray has hit a PLAYER -> " + targetPlayer.name);
-                        if(targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, scalingMultiplier))
+                        if (IsOwner)
+                            Plugin.Log("Ray has hit a player -> " + targetPlayer.name);
+                        if (targetPlayer.playerClientId == playerHeldBy.playerClientId || !PlayerModification.CanApplyModificationTo(targetPlayer, currentModificationType.Value, playerHeldBy, scalingMultiplier))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -542,16 +562,17 @@ namespace LittleCompany.components
                         OnPlayerModificationServerRpc(targetPlayer.playerClientId, playerHeldBy.playerClientId);
                         return true;
                     }
+
                 case Mask.Props:
                     {
                         if (!targetObject.TryGetComponent(out GrabbableObject item))
                             return false;
 
-                        if(item is GrabbablePlayerObject)
+                        if (item is GrabbablePlayerObject)
                             return false;
 
                         if (IsOwner)
-                            Plugin.Log("Ray has hit an ITEM -> " + item.name);
+                            Plugin.Log("Ray has hit an item -> " + item.name);
 
                         if (!ObjectModification.CanApplyModificationTo(item, currentModificationType.Value, playerHeldBy, scalingMultiplier))
                         {
@@ -563,25 +584,16 @@ namespace LittleCompany.components
                         OnObjectModificationServerRpc(item.NetworkObjectId, playerHeldBy.playerClientId);
                         return true;
                     }
-                case Mask.InteractableObject:
-                    {
-                        if (!targetObject.TryGetComponent(out Item item))
-                            return false;
 
-                        if (IsOwner)
-                            Plugin.Log("Ray has hit an INTERACTABLE OBJECT -> " + item.name);
-                        //Plugin.Log("WIP");
-                        return false;
-                    }
                 case Mask.Enemies:
-                {
+                    {
                         if (!targetObject.TryGetComponent(out EnemyAI enemyAI))
                             return false;
 
                         if (IsOwner)
-                            Plugin.Log("Ray has hit an ENEMY -> " + enemyAI.enemyType.name);
+                            Plugin.Log("Ray has hit an enemy -> " + enemyAI.enemyType.name);
 
-                        if(!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value, playerHeldBy, scalingMultiplier))
+                        if (!EnemyModification.CanApplyModificationTo(enemyAI, currentModificationType.Value, playerHeldBy, scalingMultiplier))
                         {
                             if (IsOwner)
                                 Plugin.Log("... but would do nothing.");
@@ -589,6 +601,35 @@ namespace LittleCompany.components
                         }
 
                         OnEnemyModificationServerRpc(enemyAI.NetworkObjectId, playerHeldBy.playerClientId);
+                        return true;
+                    }
+
+                case Mask.PlaceableShipObjects:
+                case Mask.InteractableObject:
+                case Mask.DecalStickableSurface:
+                    {
+                        var shipObject = targetObject.GetComponentInParent<PlaceableShipObject>();
+                        if(shipObject == null)
+                            return false;
+
+                        if (IsOwner)
+                            Plugin.Log("Ray has hit a ship object -> " + shipObject.name);
+
+                        if (!ShipObjectModification.CanApplyModificationTo(shipObject, currentModificationType.Value, playerHeldBy, scalingMultiplier))
+                        {
+                            if (IsOwner)
+                                Plugin.Log("... but would do nothing.");
+                            return false;
+                        }
+
+                        if(shipObject.parentObject == null)
+                        {
+                            if (IsOwner)
+                                Plugin.Log("But it has no network object.");
+                            return false;
+                        }
+
+                        OnShipObjectModificationServerRpc(shipObject.parentObject.NetworkObjectId, playerHeldBy.playerClientId);
                         return true;
                     }
                 default:
@@ -618,6 +659,9 @@ namespace LittleCompany.components
 
                 if (targetObject.TryGetComponent(out PlayerControllerB _))
                     return Mask.Player;
+
+                if (targetObject.TryGetComponent(out PlaceableShipObject _))
+                    return Mask.PlaceableShipObjects;
 
                 return Mask.Default;
             }
@@ -750,6 +794,39 @@ namespace LittleCompany.components
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
             ObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<GrabbableObject>(), currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
+            {
+                Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
+            });
+
+            if (IsOwner)
+                SwitchModeServerRpc((int)Mode.Shooting);
+        }
+        #endregion
+
+        #region ShipObjectTargeting
+        // ------ Ray hitting Object ------
+        [ServerRpc(RequireOwnership = false)]
+        public void OnShipObjectModificationServerRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
+        {
+            OnShipObjectModificationClientRpc(targetObjectNetworkID, playerHeldByID);
+        }
+
+        [ClientRpc]
+        public void OnShipObjectModificationClientRpc(ulong targetObjectNetworkID, ulong playerHeldByID)
+        {
+            Plugin.Log("OnShipObjectModificationClientRpc");
+            playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
+
+            if (!TryGetObjectByNetworkID(targetObjectNetworkID, out targetObject))
+            {
+                Plugin.Log("OnShipObjectModification: Object not found", Plugin.LogType.Error);
+                if (IsOwner)
+                    SwitchModeServerRpc((int)Mode.Missing);
+                return;
+            }
+
+            Plugin.Log("Ray has hit " + targetObject.name + "!");
+            ShipObjectModification.ApplyModificationTo(targetObject.GetComponentInParent<PlaceableShipObject>(), currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
             {
                 Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
             });

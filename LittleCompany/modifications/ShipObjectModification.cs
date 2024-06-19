@@ -5,30 +5,27 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-using static LittleCompany.components.TargetScaling<GrabbableObject>;
-using static LittleCompany.events.item.ItemEventManager;
+using static LittleCompany.components.TargetScaling<PlaceableShipObject>;
 
 namespace LittleCompany.modifications
 {
-    public class ObjectModification : Modification
+    public class ShipObjectModification : Modification
     {
-        public static List<string> UnscalableObjects = ["RagdollGrabbableObject"];
-
         #region Methods
-        internal static ItemScaling ScalingOf(GrabbableObject target)
+        internal static ShipObjectScaling ScalingOf(PlaceableShipObject target)
         {
-            if (!target.TryGetComponent(out ItemScaling scaling))
-                scaling = target.gameObject.AddComponent<ItemScaling>();
+            if (!target.TryGetComponent(out ShipObjectScaling scaling))
+                scaling = target.gameObject.AddComponent<ShipObjectScaling>();
             return scaling;
         }
 
         public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(ModConfig.Instance.values.itemSizeChangeStep * multiplier, ModConfig.SmallestSizeChange);
 
-        public static float NextShrunkenSizeOf(GrabbableObject targetObject, float multiplier = 1f) => Mathf.Max(Rounded(ScalingOf(targetObject).DesiredScale - SizeChangeStep(multiplier)), 0f);
+        public static float NextShrunkenSizeOf(PlaceableShipObject targetObject, float multiplier = 1f) => Mathf.Max(Rounded(ScalingOf(targetObject).RelativeScale - SizeChangeStep(multiplier)), 0f);
 
-        public static float NextIncreasedSizeOf(GrabbableObject targetObject, float multiplier = 1f) => Rounded(ScalingOf(targetObject).DesiredScale + SizeChangeStep(multiplier));
+        public static float NextIncreasedSizeOf(PlaceableShipObject targetObject, float multiplier = 1f) => Rounded(ScalingOf(targetObject).RelativeScale + SizeChangeStep(multiplier));
 
-        public static bool CanApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f)
+        public static bool CanApplyModificationTo(PlaceableShipObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f)
         {
             if (targetObject == null)
                 return false;
@@ -40,27 +37,22 @@ namespace LittleCompany.modifications
             switch (type)
             {
                 case ModificationType.Normalizing:
-                    if (scaling.DesiredScale == 1f)
+                    if (scaling.RelativeScale == 1f)
                         return false;
                     break;
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject, multiplier);
-                    if (nextShrunkenSize == scaling.DesiredScale)
-                        return false;
-
-                    if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
+                    if (nextShrunkenSize == scaling.RelativeScale)
                         return false;
 
                     break;
 
                 case ModificationType.Enlarging:
                     var nextIncreasedSize = NextIncreasedSizeOf(targetObject, multiplier);
-                    if (nextIncreasedSize == scaling.DesiredScale)
+                    if (nextIncreasedSize == scaling.RelativeScale)
                         return false;
 
-                    if (UnscalableObjects.Contains(targetObject.itemProperties.itemName))
-                        return false;
                     break;
 
                 default:
@@ -70,7 +62,7 @@ namespace LittleCompany.modifications
             return true;
         }
 
-        public static void ApplyModificationTo(GrabbableObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f, Action onComplete = null)
+        public static void ApplyModificationTo(PlaceableShipObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f, Action onComplete = null)
         {
             if (targetObject?.gameObject == null) return;
 
@@ -82,7 +74,7 @@ namespace LittleCompany.modifications
                 case ModificationType.Normalizing:
                     {
                         var normalizedSize = 1f;
-                        Plugin.Log("Normalizing object [" + targetObject.name + "]");
+                        Plugin.Log("Normalizing ship object [" + targetObject.name + "]");
                         scaling.ScaleOverTimeTo(normalizedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
@@ -95,15 +87,10 @@ namespace LittleCompany.modifications
                     {
                         var previousSize = ScalingOf(targetObject).RelativeScale;
                         var nextShrunkenSize = NextShrunkenSizeOf(targetObject, multiplier);
-                        Plugin.Log("Shrinking object [" + targetObject.name + "] to size: " + nextShrunkenSize);
-                        if (Mathf.Approximately(nextShrunkenSize, 0f) && TryGetEventHandlerOf(targetObject, out ItemEventHandler handler))
-                            handler.AboutToDeathShrink(previousSize, playerModifiedBy);
+                        Plugin.Log("Shrinking ship object [" + targetObject.name + "] to size: " + nextShrunkenSize);
 
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
-                            if (Mathf.Approximately(nextShrunkenSize, 0f) && TryGetEventHandlerOf(targetObject, out ItemEventHandler handler))
-                                handler.OnDeathShrinking(previousSize, playerModifiedBy);
-
                             if (onComplete != null)
                                 onComplete();
                         }, default, Mode.Linear);
@@ -114,7 +101,7 @@ namespace LittleCompany.modifications
                 case ModificationType.Enlarging:
                     {
                         var nextIncreasedSize = NextIncreasedSizeOf(targetObject, multiplier);
-                        Plugin.Log("Enlarging object [" + targetObject.name + "] to size: " + nextIncreasedSize);
+                        Plugin.Log("Enlarging ship object [" + targetObject.name + "] to size: " + nextIncreasedSize);
                         scaling.ScaleOverTimeTo(nextIncreasedSize, playerModifiedBy, () =>
                         {
                             if (onComplete != null)
