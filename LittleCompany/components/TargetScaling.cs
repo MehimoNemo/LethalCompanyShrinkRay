@@ -8,6 +8,7 @@ using LittleCompany.modifications;
 using LittleCompany.patches;
 using System.Collections.Generic;
 using LittleCompany.Config;
+using static LittleCompany.helper.ShipObjectInfo;
 
 namespace LittleCompany.components
 {
@@ -517,6 +518,7 @@ namespace LittleCompany.components
     }
     internal class ShipObjectScaling : TargetScaling<PlaceableShipObject>
     {
+        public static List<VanillaShipObject> AutoPositioningShipObjects = [VanillaShipObject.StorageCloset];
         public override Transform TransformToScale => Target.parentObject.transform;
 
         private Vector3? _originalScale = null;
@@ -539,7 +541,7 @@ namespace LittleCompany.components
 
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
-            if (Target.parentObject != null)
+            if (Target.parentObject != null && !AutoPositioningShipObjects.Contains((VanillaShipObject)Target.unlockableID))
             {
                 var diff = scale - RelativeScale;
                 Target.parentObject.positionOffset += Vector3.up * diff;
