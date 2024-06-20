@@ -521,6 +521,8 @@ namespace LittleCompany.components
         public static List<VanillaShipObject> AutoPositioningShipObjects = [VanillaShipObject.StorageCloset, VanillaShipObject.LightSwitchContainer];
         public override Transform TransformToScale => Target.parentObject.transform;
 
+        private float offsetPivotToBottom = 0f;
+
         private Vector3? _originalScale = null;
         internal override Vector3 OriginalScale
         {
@@ -533,12 +535,23 @@ namespace LittleCompany.components
             }
         }
 
+        internal override void OnAwake()
+        {
+            base.OnAwake();
+
+            if (Target.placeObjectCollider != null && Target.parentObject != null)
+            {
+                var bottomY = Target.placeObjectCollider.bounds.center.y - (Target.placeObjectCollider.bounds.size.y / 2);
+                offsetPivotToBottom = Target.parentObject.transform.position.y - bottomY;
+            }
+        }
+
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
-            if (Target.parentObject != null && !AutoPositioningShipObjects.Contains((VanillaShipObject)Target.unlockableID))
+            if (Target.parentObject != null)
             {
                 var diff = scale - RelativeScale;
-                Target.parentObject.positionOffset += Vector3.up * diff;
+                Target.parentObject.positionOffset += Vector3.up * offsetPivotToBottom * diff;
             }
 
             base.ScaleTo(scale, scaledBy);
