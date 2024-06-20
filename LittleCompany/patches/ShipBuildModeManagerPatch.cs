@@ -27,21 +27,27 @@ namespace LittleCompany.patches
             }
         }
 
-        /*[HarmonyPatch(typeof(ShipBuildModeManager), "ConfirmBuildMode_performed")]
+        [HarmonyPatch(typeof(ShipBuildModeManager), "EnterBuildMode")]
         [HarmonyPrefix]
-        public static void ConfirmBuildMode_performed_Prefix()
+        public static void EnterBuildMode_Prefix(InputAction.CallbackContext context, ShipBuildModeManager __instance)
         {
-            Plugin.Log("ConfirmBuildMode_performed");
-            if (!(ShipBuildModeManager.Instance.timeSincePlacingObject <= 1f) && ShipBuildModeManager.Instance.PlayerMeetsConditionsToBuild() && ShipBuildModeManager.Instance.InBuildMode)
+            if (!context.performed || GameNetworkManager.Instance == null || GameNetworkManager.Instance.localPlayerController == null || GameNetworkManager.Instance.localPlayerController.isTypingChat)
             {
-                if (!ShipBuildModeManager.Instance.CanConfirmPosition)
-                {
-                    return;
-                }
-                Plugin.Log("OFFSETTING");
-                ShipObjectScaling scaling = ShipObjectModification.ScalingOf(ShipBuildModeManager.Instance.placingObject);
-                ShipBuildModeManager.Instance.ghostObject.position -= Vector3.up * (scaling.offsetPivotToBottom * scaling.RelativeScale);
+                return;
             }
-        }*/
+            if (__instance.InBuildMode)
+            {
+                if (!(__instance.timeSincePlacingObject <= 1f) && __instance.PlayerMeetsConditionsToBuild())
+                {
+                    if (!__instance.CanConfirmPosition)
+                    {
+                        return;
+                    }
+                    ShipObjectScaling scaling = ShipObjectModification.ScalingOf(__instance.placingObject);
+                    __instance.ghostObject.position -= Vector3.up * (scaling.offsetPivotToBottom * scaling.RelativeScale);
+                }
+                return;
+            }
+        }
     }
 }
