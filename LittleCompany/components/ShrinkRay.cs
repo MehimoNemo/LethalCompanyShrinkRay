@@ -389,10 +389,8 @@ namespace LittleCompany.components
                     layerMasks.Add(Mask.Props);
                 if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
                     layerMasks.Add(Mask.Enemies);
-#if DEBUG
-                if (true)
+                if (ModConfig.Instance.values.shipObjectSizeChangeStep > Mathf.Epsilon)
                     layerMasks.Add(Mask.PlaceableShipObjects);
-#endif
                 return ToInt(layerMasks.ToArray());
             }
         }

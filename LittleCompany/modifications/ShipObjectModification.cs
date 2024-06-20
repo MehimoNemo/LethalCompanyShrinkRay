@@ -2,7 +2,6 @@
 using LittleCompany.components;
 using LittleCompany.Config;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 using static LittleCompany.components.TargetScaling<PlaceableShipObject>;
@@ -19,7 +18,7 @@ namespace LittleCompany.modifications
             return scaling;
         }
 
-        public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(ModConfig.Instance.values.itemSizeChangeStep * multiplier, ModConfig.SmallestSizeChange);
+        public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(ModConfig.Instance.values.shipObjectSizeChangeStep * multiplier, ModConfig.SmallestSizeChange);
 
         public static float NextShrunkenSizeOf(PlaceableShipObject targetObject, float multiplier = 1f) => Mathf.Max(Rounded(ScalingOf(targetObject).RelativeScale - SizeChangeStep(multiplier)), 0f);
 

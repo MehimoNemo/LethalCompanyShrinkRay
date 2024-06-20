@@ -72,6 +72,8 @@ namespace LittleCompany.Config
 
             public float itemSizeChangeStep { get; set; }
 
+            public float shipObjectSizeChangeStep { get; set; }
+
             public bool itemScalingVisualOnly { get; set; }
 
             public float enemySizeChangeStep { get; set; }
@@ -126,8 +128,9 @@ namespace LittleCompany.Config
             values.maximumPlayerSize             = Plugin.BepInExConfig().Bind("Sizing", "MaximumPlayerSize", 1.7f, "Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)").Value;
             values.playerSizeChangeStep          = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
             values.playerSizeStopAtDefault       = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeStopAtDefault", false, "If true, when scaling would go through the DefaultPlayerSize it will stop there instead.").Value;
-            values.itemSizeChangeStep            = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.5f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
+            values.itemSizeChangeStep            = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.4f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.itemScalingVisualOnly         = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingVisualOnly", false, "If true, scaling items has no special effects.").Value;
+            values.shipObjectSizeChangeStep      = Plugin.BepInExConfig().Bind("Sizing", "ShipObjectSizeChangeStep", 0.4f, new ConfigDescription("Defines how much a ship object shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.enemySizeChangeStep           = Plugin.BepInExConfig().Bind("Sizing", "EnemySizeChangeStep", 0.5f, new ConfigDescription("Defines how much an enemy shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             
             values.movementSpeedMultiplier       = Plugin.BepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.3f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (very slow) to 1.5 (very fast).", new AcceptableValueRange<float>(0.5f, 1.5f))).Value;
