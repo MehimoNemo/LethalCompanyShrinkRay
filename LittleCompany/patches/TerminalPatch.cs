@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.helper;
+using LittleCompany.modifications;
 using System.Collections;
 using UnityEngine;
 
@@ -14,18 +15,18 @@ namespace LittleCompany.patches
 
         [HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
         [HarmonyPrefix]
-        public static void BeginUsingTerminal()
+        public static void BeginUsingTerminal(Terminal __instance)
         {
             _realPlayerScale = PlayerInfo.CurrentPlayerScale;
-            _scalingCoroutine = GameNetworkManager.Instance.StartCoroutine(ScaleToTerminalSize());
+            _scalingCoroutine = GameNetworkManager.Instance.StartCoroutine(ScaleToTerminalSize(__instance));
         }
 
-        public static IEnumerator ScaleToTerminalSize()
+        public static IEnumerator ScaleToTerminalSize(Terminal terminal)
         {
             float time = 0f, duration = 0.5f;
             while (time < duration)
             {
-                var scale = Mathf.Lerp(_realPlayerScale, 1f, time / duration);
+                var scale = Mathf.Lerp(_realPlayerScale, ShipObjectModification.ScalingOf(terminal.placeableObject).RelativeScale, time / duration);
                 PlayerInfo.CurrentPlayer.transform.localScale = Vector3.one * scale;
 
                 time += Time.deltaTime;

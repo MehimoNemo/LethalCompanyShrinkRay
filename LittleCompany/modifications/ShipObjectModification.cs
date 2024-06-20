@@ -42,6 +42,10 @@ namespace LittleCompany.modifications
 
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject, multiplier);
+
+                    if (targetObject.parentObject.name == "Terminal" && nextShrunkenSize < 0.01f)
+                        return false;
+
                     if (nextShrunkenSize == scaling.RelativeScale)
                         return false;
 

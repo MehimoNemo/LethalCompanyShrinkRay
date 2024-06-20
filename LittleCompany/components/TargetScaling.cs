@@ -521,7 +521,7 @@ namespace LittleCompany.components
         public static List<VanillaShipObject> AutoPositioningShipObjects = [VanillaShipObject.StorageCloset, VanillaShipObject.LightSwitchContainer];
         public override Transform TransformToScale => Target.parentObject.transform;
 
-        private float offsetPivotToBottom = 0f;
+        public float offsetPivotToBottom = 0f;
 
         private Vector3? _originalScale = null;
         internal override Vector3 OriginalScale

@@ -819,8 +819,17 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            ShipObjectModification.ApplyModificationTo(targetObject.GetComponentInChildren<PlaceableShipObject>(), currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
+            PlaceableShipObject placeableShipObject = targetObject.GetComponentInChildren<PlaceableShipObject>();
+            ShipObjectModification.ApplyModificationTo(placeableShipObject, currentModificationType.Value, playerHeldBy, ObjectModification.ScalingOf(this).RelativeScale, () =>
             {
+                ShipObjectScaling scaling = ShipObjectModification.ScalingOf(placeableShipObject);
+                if (scaling.RelativeScale < 0.01f)
+                {
+                    PlayerControllerB player = GameNetworkManager.Instance.localPlayerController;
+                    scaling.ScaleTo(1, player);
+                    if(IsOwner)
+                        ShipBuildModeManager.Instance.StoreObjectServerRpc(placeableShipObject.parentObject.GetComponent<NetworkObject>(), (int)player.playerClientId);
+                }
                 Plugin.Log("Finished object modification with type: " + currentModificationType.Value.ToString());
             });
 
