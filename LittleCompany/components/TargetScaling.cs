@@ -518,8 +518,9 @@ namespace LittleCompany.components
     }
     internal class ShipObjectScaling : TargetScaling<PlaceableShipObject>
     {
-        public static List<VanillaShipObject> AutoPositioningShipObjects = [VanillaShipObject.StorageCloset, VanillaShipObject.LightSwitchContainer];
+        public readonly float CounterPlacementHeightLimit = 1.5f;
         public override Transform TransformToScale => Target.parentObject.transform;
+        private bool AllowPlacementOnCountersDefault = false;
 
         public float offsetPivotToBottom = 0f;
 
@@ -544,6 +545,9 @@ namespace LittleCompany.components
                 var bottomY = Target.placeObjectCollider.bounds.center.y - (Target.placeObjectCollider.bounds.size.y / 2);
                 offsetPivotToBottom = Target.parentObject.transform.position.y - bottomY;
             }
+
+            AllowPlacementOnCountersDefault = Target.AllowPlacementOnCounters;
+            Plugin.Log("Allowed by default: " + AllowPlacementOnCountersDefault);
         }
 
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
@@ -552,6 +556,15 @@ namespace LittleCompany.components
             {
                 var diff = scale - RelativeScale;
                 Target.parentObject.positionOffset += Vector3.up * offsetPivotToBottom * diff;
+            }
+
+            if(AllowPlacementOnCountersDefault) // allowed by default
+            {
+                Target.AllowPlacementOnCounters = RelativeScale <= 1f || Target.placeObjectCollider.bounds.size.y < CounterPlacementHeightLimit;
+            }
+            else // not allowed by default
+            {
+                Target.AllowPlacementOnCounters = !Target.AllowPlacementOnWalls && Target.placeObjectCollider.bounds.size.y < CounterPlacementHeightLimit;
             }
 
             base.ScaleTo(scale, scaledBy);

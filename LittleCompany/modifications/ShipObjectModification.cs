@@ -1,7 +1,9 @@
 ﻿using GameNetcodeStuff;
 using LittleCompany.components;
 using LittleCompany.Config;
+using LittleCompany.helper;
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
 using static LittleCompany.components.TargetScaling<PlaceableShipObject>;
@@ -43,7 +45,7 @@ namespace LittleCompany.modifications
                 case ModificationType.Shrinking:
                     var nextShrunkenSize = NextShrunkenSizeOf(targetObject, multiplier);
 
-                    if (targetObject.parentObject.name == "Terminal" && nextShrunkenSize < 0.01f)
+                    if (targetObject.parentObject.name == "Terminal" && nextShrunkenSize < ModConfig.SmallestSizeChange)
                         return false;
 
                     if (nextShrunkenSize == scaling.RelativeScale)
@@ -94,6 +96,26 @@ namespace LittleCompany.modifications
 
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
+                            if (Mathf.Approximately(nextShrunkenSize, 0f))
+                            {
+                                // Logic from ShipBuildModeManager.StoreObjectLocalClient
+                                if (!StartOfRound.Instance.unlockablesList.unlockables[targetObject.unlockableID].spawnPrefab)
+                                    targetObject.parentObject.disableObject = true;
+
+                                if (!PlayerInfo.IsHost)
+                                    StartOfRound.Instance.unlockablesList.unlockables[targetObject.unlockableID].inStorage = true;
+
+                                if (PlayerInfo.CurrentPlayer == playerModifiedBy)
+                                {
+                                    HUDManager.Instance.UIAudio.PlayOneShot(ShipBuildModeManager.Instance.storeItemSFX);
+                                    HUDManager.Instance.DisplayTip("Item stored!", "You can see stored items in the terminal by using command 'STORAGE'", isWarning: false, useSave: false, "LC_StorageTip");
+
+                                    ShipBuildModeManager.Instance.StoreObjectServerRpc(targetObject.parentObject.GetComponent<NetworkObject>(), (int)playerModifiedBy.playerClientId);
+                                }
+
+                                ScalingOf(targetObject).ScaleTo(1f, playerModifiedBy);
+                            }
+
                             if (onComplete != null)
                                 onComplete();
                         }, default, Mode.Linear);
