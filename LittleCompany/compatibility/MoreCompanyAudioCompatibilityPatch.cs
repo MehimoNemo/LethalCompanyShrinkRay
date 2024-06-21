@@ -26,14 +26,14 @@ namespace LittleCompany.compatibility
             }
         }
 
-        static Dictionary<ulong, List<AudioMixerGroup>> listOfVoicePlayer;
+        static Dictionary<ulong, List<AudioMixerGroup>> listOfVoicePlayer = new Dictionary<ulong, List<AudioMixerGroup>>();
 
         //We joined a lobby
         [HarmonyPatch(typeof(PlayerControllerB), "ConnectClientToPlayerObject")]
         [HarmonyPostfix]
         public static void ConnectClientToPlayerObject()
         {
-            listOfVoicePlayer = [];
+            listOfVoicePlayer.Clear();
             foreach (AudioMixerGroup a in Resources.FindObjectsOfTypeAll(typeof(AudioMixerGroup)).Cast<AudioMixerGroup>())
             {
                 if (a.name.Contains("VoicePlayer"))
