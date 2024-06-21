@@ -34,5 +34,16 @@ namespace LittleCompany.patches
                 __instance.ghostObject.position -= Vector3.up * (__instance.placingObject.yOffset - (__instance.placingObject.yOffset * scaling.RelativeScale));
             }
         }
+
+        [HarmonyPatch(typeof(ShipBuildModeManager), "PlayerMeetsConditionsToBuild")]
+        [HarmonyPostfix]
+        private static bool PlayerMeetsConditionsToBuild(bool __result)
+        {
+            if (!__result) return __result;
+
+            if (ShipBuildModeManager.Instance.placingObject != null && ShipObjectModification.ScalingOf(ShipBuildModeManager.Instance.placingObject).GettingScaled) return false;
+
+            return true;
+        }
     }
 }

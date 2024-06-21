@@ -15,6 +15,7 @@ namespace LittleCompany.modifications
         #region Methods
         internal static ShipObjectScaling ScalingOf(PlaceableShipObject target)
         {
+            if(target == null) return null;
             if (!target.TryGetComponent(out ShipObjectScaling scaling))
                 scaling = target.gameObject.AddComponent<ShipObjectScaling>();
             return scaling;
@@ -29,6 +30,9 @@ namespace LittleCompany.modifications
         public static bool CanApplyModificationTo(PlaceableShipObject targetObject, ModificationType type, PlayerControllerB playerModifiedBy, float multiplier = 1f)
         {
             if (targetObject == null)
+                return false;
+
+            if (ShipBuildModeManager.Instance.InBuildMode)
                 return false;
 
             var scaling = ScalingOf(targetObject);
