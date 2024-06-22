@@ -53,6 +53,8 @@ namespace LittleCompany.compatibility
             if (compatEnabled && listOfVoicePlayer.ContainsKey(playerClientId))
             {
                 var voicePlayer = listOfVoicePlayer[playerClientId];
+                if (voicePlayer == null) return;
+
                 for (int i = voicePlayer.Count - 1; i >= 0; i--)
                 {
                     if (voicePlayer[i]?.audioMixer == null || !voicePlayer[i].audioMixer.SetFloat("pitch", pitch))
