@@ -11,6 +11,7 @@ namespace LittleCompany.patches
     internal class TerminalPatch
     {
         private static float _realPlayerScale = 1f;
+        private static float _realTerminalScale = 1f;
         private static Coroutine _scalingCoroutine;
 
         [HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
@@ -18,16 +19,28 @@ namespace LittleCompany.patches
         public static void BeginUsingTerminal(Terminal __instance)
         {
             _realPlayerScale = PlayerInfo.CurrentPlayerScale;
-            _scalingCoroutine = GameNetworkManager.Instance.StartCoroutine(ScaleToTerminalSize(__instance));
+            _realTerminalScale = ShipObjectModification.ScalingOf(__instance.placeableObject).RelativeScale;
+            _scalingCoroutine = __instance.StartCoroutine(ScaleToTerminalSize(__instance));
         }
 
         public static IEnumerator ScaleToTerminalSize(Terminal terminal)
         {
+            var terminalScaling = ShipObjectModification.ScalingOf(terminal.placeableObject);
+            var playerScaling = PlayerModification.ScalingOf(PlayerInfo.CurrentPlayer);
+            if(terminalScaling == null || playerScaling == null)
+            {
+                Plugin.Log("Unable to adjust player size to terminal size.", Plugin.LogType.Error);
+                yield break;
+            }
+
             float time = 0f, duration = 0.5f;
             while (time < duration)
             {
-                var scale = Mathf.Lerp(_realPlayerScale, ShipObjectModification.ScalingOf(terminal.placeableObject).RelativeScale, time / duration);
-                PlayerInfo.CurrentPlayer.transform.localScale = Vector3.one * scale;
+                var playerScale = Mathf.Lerp(_realPlayerScale, 1f, time / duration);
+                playerScaling.TransformToScale.localScale = playerScaling.OriginalScale * playerScale;
+
+                var terminalScale = Mathf.Lerp(_realTerminalScale, 1f, time / duration);
+                terminalScaling.TransformToScale.localScale = terminalScaling.OriginalScale * terminalScale;
 
                 time += Time.deltaTime;
                 yield return null;
@@ -36,12 +49,22 @@ namespace LittleCompany.patches
 
         [HarmonyPatch(typeof(Terminal), "QuitTerminal")]
         [HarmonyPostfix]
-        public static void QuitTerminal(ref InteractTrigger ___terminalTrigger)
+        public static void QuitTerminal(Terminal __instance)
         {
             if (_scalingCoroutine != null)
-                GameNetworkManager.Instance.StopCoroutine(_scalingCoroutine);
+                __instance.StopCoroutine(_scalingCoroutine);
 
-            PlayerInfo.CurrentPlayer.transform.localScale = Vector3.one * _realPlayerScale;
+            var terminalScaling = ShipObjectModification.ScalingOf(__instance.placeableObject);
+            if (terminalScaling == null)
+                Plugin.Log("Unable to reset terminal size.", Plugin.LogType.Error);
+            else
+                terminalScaling.TransformToScale.localScale = terminalScaling.OriginalScale * _realTerminalScale;
+
+            var playerScaling = PlayerModification.ScalingOf(PlayerInfo.CurrentPlayer);
+            if (playerScaling == null)
+                Plugin.Log("Unable to reset player size after using terminal.", Plugin.LogType.Error);
+            else
+                playerScaling.TransformToScale.localScale = playerScaling.OriginalScale * _realPlayerScale;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace LittleCompany.modifications
             if (targetObject == null)
                 return false;
 
-            if (ShipBuildModeManager.Instance.InBuildMode)
+            if (ShipBuildModeManager.Instance.InBuildMode || targetObject.inUse)
                 return false;
 
             var scaling = ScalingOf(targetObject);
