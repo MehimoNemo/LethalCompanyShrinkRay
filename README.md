@@ -1,9 +1,11 @@
+[![Thunderstore Version](https://img.shields.io/thunderstore/v/Toybox/LittleCompany?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/necrowing/DramaMask/)
+[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/Toybox/LittleCompany?style=for-the-badge&color=yellow&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/Toybox/LittleCompany/)
+[![Discord invite](https://img.shields.io/discord/1192981794451107993?style=for-the-badge&logo=discord&logoColor=white&label=Discord&link=https%3A%2F%2Fdiscord.gg%2F63KdxhQ2Dn)](https://discord.gg/63KdxhQ2Dn)
+[![Wiki](https://img.shields.io/badge/Wiki-b?logo=github&style=for-the-badge&logoColor=white&label=GitHub&color=white&link=https%3A%2F%2Fgithub.com%2FMehimoNemo%2FLethalCompanyShrinkRay%2Fwiki)](https://github.com/MehimoNemo/LethalCompanyShrinkRay/wiki)
+
 # Honey, I shrunk the employees! #
 
 In this more than cosmetic Lethal Company mod, players can experience the game from a new perspective. The pros and cons of being small are many, and unique interactions are yet to be discovered...
-
-## Wiki ##
-A wiki containing the list of features this mod adds can be found in our [github repository](https://github.com/MehimoNemo/LethalCompanyShrinkRay/wiki)
 
 ## Configuration ##
 |  Group       |          Option                         |                           Description                                                        | Possible values                        | Default |
@@ -15,9 +17,9 @@ A wiki containing the list of features this mod adds can be found in our [github
 | Sizing       | DefaultPlayerSize                       | The default player size when joining a lobby or reviving.                                    | 0.2 - 1.7                              | 1       |
 |              | MaximumPlayerSize                       | Defines, how tall a player can become (1.7 is the maximum for the ship inside and doors!)    | Max(1, DefaultPlayerSize) - any number | 1.7     |
 |              | PlayerSizeChangeStep                    | Defines how much a player shrinks/enlarges.                                                  | 0.05 - 0.8                             | 0.4     |
-|              | ItemSizeChangeStep                      | Defines how much an item shrinks/enlarges. Set to 0 for disabling item scaling.              | 0 - 0.8                                | 0.5     |
+|              | ItemSizeChangeStep                      | Defines how much an item shrinks/enlarges. Set to 0 for disabling item scaling.              | 0 - 0.8                                | 0.4     |
 |              | ItemScalingVisualOnly                   | If true, scaling items has no special effects.                                               | true / false                           | false   |
-|              | ShipItemSizeChangeStep                  | Defines how much a ship object shrinks/enlarges. Set to 0 for disabling ship object scaling. | 0 - 0.8                                | 0.5     |
+|              | ShipItemSizeChangeStep                  | Defines how much a ship object shrinks/enlarges. Set to 0 for disabling ship object scaling. | 0 - 0.8                                | 0.2     |
 |              | EnemySizeChangeStep                     | Defines how much an enemy shrinks/enlarges. Set to 0 for disabling item scaling.             | 0 - 0.8                                | 0.5     |
 | Shrunken     | MovementSpeedMultiplier                 | Speed multiplier for shrunken players                                                        | 0.5 (slow) - 1.5 (fast)                | 1.3     |
 |              | JumpHeightMultiplier                    | Jump-height multiplier for shrunken players                                                  | 0.5 (lower) - 2 (higher)               | 1.3     |
@@ -44,6 +46,9 @@ A list of known bugs can be found on our Github repository in the [issues sectio
 
 ## Planned features ##
 A list of planned features can be found on our Github wiki in the [content ideas section](https://github.com/MehimoNemo/LethalCompanyShrinkRay/wiki/Content-ideas)
+
+## Related mods ##
+[RandomEnemiesSize](https://thunderstore.io/c/lethal-company/p/Wexop/RandomEnemiesSize/) - Set random spawn sizes for enemies and map hazards
 
 ## Got more ideas? ##
 Send us a message on discord
