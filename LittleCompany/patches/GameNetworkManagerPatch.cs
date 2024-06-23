@@ -4,6 +4,7 @@ using LittleCompany.events.enemy;
 using LittleCompany.events.item;
 using LittleCompany.helper;
 using LittleCompany.modifications;
+using LittleCompany.patches.enemy_behaviours;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,8 @@ namespace LittleCompany.patches
         {
             EnemyEventManager.BindAllEventHandler();
             ItemEventManager.BindAllEventHandler();
+
+            ForestGiantAIPatch.AddFleeState();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]

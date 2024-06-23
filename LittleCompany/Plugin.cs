@@ -14,6 +14,7 @@ using LittleCompany.helper;
 using LittleCompany.dependency;
 using LittleCompany.events.item;
 using UnityEngine.Audio;
+using LittleCompany.patches.enemy_behaviours;
 
 namespace LittleCompany
 {
@@ -57,22 +58,14 @@ namespace LittleCompany
             harmony.PatchAll(typeof(Plugin));
 
             // patches
-            harmony.PatchAll(typeof(GameNetworkManagerPatch));
-            harmony.PatchAll(typeof(PlayerMultiplierPatch));
             harmony.PatchAll(typeof(ModConfig.SyncHandshake));
-            harmony.PatchAll(typeof(ThumperAIPatch));
-            harmony.PatchAll(typeof(HoarderBugAIPatch));
+            harmony.PatchAll(typeof(GameNetworkManagerPatch));
             harmony.PatchAll(typeof(PlayerCountChangeDetection));
+            harmony.PatchAll(typeof(PlayerMultiplierPatch));
             harmony.PatchAll(typeof(DeskPatch));
-            harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
-            harmony.PatchAll(typeof(CentipedeAIPatch));
-            harmony.PatchAll(typeof(ModdedDungeonEntrancePatch));
-            harmony.PatchAll(typeof(TerminalPatch));
             harmony.PatchAll(typeof(QuicksandPatch));
             harmony.PatchAll(typeof(TurretPatch));
             harmony.PatchAll(typeof(AudioPatches));
-            harmony.PatchAll(typeof(ItemSavingPatch));
-            harmony.PatchAll(typeof(ShipBuildModeManagerPatch));
 
             // components
             harmony.PatchAll(typeof(Vents));
@@ -82,12 +75,22 @@ namespace LittleCompany
             // helper
             harmony.PatchAll(typeof(Effects));
 
-            // events - enemy
+            // enemy
+            harmony.PatchAll(typeof(ThumperAIPatch));
+            harmony.PatchAll(typeof(HoarderBugAIPatch));
+            harmony.PatchAll(typeof(CentipedeAIPatch));
+            harmony.PatchAll(typeof(ForestGiantAIPatch));
+
+            // enemy events
             harmony.PatchAll(typeof(BrackenEventHandler));
             harmony.PatchAll(typeof(RobotEventHandler));
             harmony.PatchAll(typeof(ThumperEventHandler));
 
-            // events - item
+            // items
+            harmony.PatchAll(typeof(ItemSavingPatch));
+            harmony.PatchAll(typeof(ScreenBlockingGrabbablePatch));
+
+            // item events
             harmony.PatchAll(typeof(FlashlightEventHandler));
             harmony.PatchAll(typeof(GiftBoxEventHandler));
             harmony.PatchAll(typeof(ShovelEventHandler));
@@ -95,7 +98,12 @@ namespace LittleCompany
             harmony.PatchAll(typeof(SprayPaintEventHandler));
             harmony.PatchAll(typeof(ShotgunEventHandler));
 
-            // Compatibility
+            // ship objects
+            harmony.PatchAll(typeof(ShipBuildModeManagerPatch));
+            harmony.PatchAll(typeof(TerminalPatch));
+
+            // compatibility
+            harmony.PatchAll(typeof(ModdedDungeonEntrancePatch));
             if (LethalEmotesApiCompatibility.compatEnabled)
             {
                 Log("enabling LethalEmotesApiCompatibility");

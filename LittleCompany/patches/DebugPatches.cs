@@ -78,7 +78,7 @@ namespace LittleCompany.patches
         {
             if (!ImperiumEnabled && Keyboard.current.f1Key.wasPressedThisFrame)
             {
-                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.Thumper);
+                SpawnEnemyInFrontOfPlayer(PlayerInfo.CurrentPlayer, Enemy.ForestGiant);
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f2Key.wasPressedThisFrame)
@@ -226,18 +226,16 @@ namespace LittleCompany.patches
             }
         }
 
-        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, Enemy? enemy = null)
+        public static void SpawnEnemyInFrontOfPlayer(PlayerControllerB targetPlayer, Enemy enemy)
         {
-            var enemyName = enemy.HasValue ? EnemyNameOf(enemy.Value) : "";
-            Plugin.Log("Enemy name: " + enemyName);
-            var enemyType = EnemyTypeByName(enemyName);
+            var enemyType = EnemyTypeByEnum(enemy);
             if (enemyType is null)
             {
                 Plugin.Log("No enemy found..");
                 return;
             }
 
-            var location = targetPlayer.transform.position + targetPlayer.transform.forward * 3;
+            var location = targetPlayer.transform.position + targetPlayer.transform.forward * 5f;
             SpawnEnemyAt(location, 0f, enemyType);
         }
 

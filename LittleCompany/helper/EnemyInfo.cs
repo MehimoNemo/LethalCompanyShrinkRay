@@ -75,6 +75,7 @@ namespace LittleCompany.helper
 
         public static string EnemyNameOf(Enemy enemy) => EnemyNameMap.FirstOrDefault((x) => x.Value == enemy).Key;
 
+        public static EnemyType EnemyTypeByEnum(Enemy enemy) => EnemyTypeByName(EnemyNameOf(enemy));
         public static EnemyType EnemyTypeByName(string enemyName = null)
         {
             if (enemyName == null) return null;
