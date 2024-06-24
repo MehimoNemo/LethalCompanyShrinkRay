@@ -51,13 +51,14 @@ namespace LittleCompany.components
 
         internal int ShotsLeft => Mathf.RoundToInt(ModConfig.Instance.values.shrinkRayShotsPerCharge * insertedBattery.charge);
 
-        internal bool EmptyBattery => itemProperties.requiresBattery && (insertedBattery.empty || ShotsLeft == 0);
+        internal bool EmptyBattery => RequiresBattery && (insertedBattery.empty || ShotsLeft == 0);
         internal static bool RequiresBattery => ModConfig.Instance.values.shrinkRayShotsPerCharge > 0;
         internal int initialBattery = 100;
 
         internal NetworkVariable<ModificationType> currentModificationType = new NetworkVariable<ModificationType>(ModificationType.Shrinking);
         internal NetworkVariable<Mode> currentMode = new NetworkVariable<Mode>(Mode.Default);
-        internal NetworkVariable<bool> isOverheated = new NetworkVariable<bool>();
+        internal NetworkVariable<bool> isOverheated = new NetworkVariable<bool>(false);
+        internal float timeSinceDefaultMode = 0f;
         internal enum Mode
         {
             Default,
@@ -190,6 +191,19 @@ namespace LittleCompany.components
             if (StartOfRound.Instance == null) return;
 			
             base.Update();
+
+            // Mode fallback
+            if (currentMode.Value != Mode.Default)
+            {
+                timeSinceDefaultMode += Time.deltaTime;
+
+                if (timeSinceDefaultMode > ShrinkRayFX.DefaultBeamDuration * 3)
+                {
+                    // Likely an error occured. Reset to default
+                    SwitchModeClientRpc((int)Mode.Default);
+                    timeSinceDefaultMode = 0f;
+                }
+            }
 
             if (LaserEnabled)
                 UpdateLaser();
