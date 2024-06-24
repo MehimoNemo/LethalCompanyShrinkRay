@@ -1,3 +1,7 @@
+### 1.3.1 ###
+**Fixes**
+- Attempt to fix ShrinkRay sometimes being unusable when reloading a savefile
+
 ## 1.3.0 ##
 **What's new**
 - Scaling ship items!
