@@ -193,15 +193,15 @@ namespace LittleCompany.components
             base.Update();
 
             // Mode fallback
-            if (currentMode.Value != Mode.Default)
+            if (PlayerInfo.IsHost && currentMode.Value != Mode.Default)
             {
                 timeSinceDefaultMode += Time.deltaTime;
 
                 if (timeSinceDefaultMode > ShrinkRayFX.DefaultBeamDuration * 3)
                 {
                     // Likely an error occured. Reset to default
-                    SwitchModeClientRpc((int)Mode.Default);
                     timeSinceDefaultMode = 0f;
+                    SwitchModeServerRpc((int)Mode.Default);
                 }
             }
 
@@ -276,7 +276,8 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         internal void SwitchModeServerRpc(int newMode)
         {
-            SyncBatteryServerRpc((int)(100f / ModConfig.Instance.values.shrinkRayShotsPerCharge * ShotsLeft));
+            if(RequiresBattery)
+                SyncBatteryServerRpc((int)(100f / ModConfig.Instance.values.shrinkRayShotsPerCharge * ShotsLeft));
 
             currentMode.Value = (Mode)newMode;
 
