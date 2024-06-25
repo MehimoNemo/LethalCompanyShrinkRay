@@ -1,3 +1,7 @@
+### 1.3.2 ###
+**Fixes**
+- Fallback for ShrinkRay being unusable after exception / error.
+
 ### 1.3.1 ###
 **Fixes**
 - Attempt to fix ShrinkRay sometimes being unusable when reloading a savefile

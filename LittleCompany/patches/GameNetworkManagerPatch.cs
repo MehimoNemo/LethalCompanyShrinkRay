@@ -29,8 +29,6 @@ namespace LittleCompany.patches
         {
             EnemyEventManager.BindAllEventHandler();
             ItemEventManager.BindAllEventHandler();
-
-            ForestGiantAIPatch.AddFleeState();
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
