@@ -6,6 +6,7 @@ using LittleCompany.modifications;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static LittleCompany.components.GrabbablePlayerObject;
 
 namespace LittleCompany.patches.enemy_behaviours
 {
@@ -14,7 +15,6 @@ namespace LittleCompany.patches.enemy_behaviours
     {
         internal static int fleeStateIndex = 0;
         internal static int fleeCoopStateIndex = 0;
-        internal static int fleeAttackStateIndex = 0;
 
         internal static Dictionary<ForestGiantAI, List<PlayerControllerB>> UntargetablePlayers = new Dictionary<ForestGiantAI, List<PlayerControllerB>>();
 
@@ -48,17 +48,51 @@ namespace LittleCompany.patches.enemy_behaviours
                 forestGiantAI.enemyBehaviourStates = new List<EnemyBehaviourState>(forestGiantAI.enemyBehaviourStates)
                 {
                     new EnemyBehaviourState() { name = "Flee" },
-                    new EnemyBehaviourState() { name = "FleeCoop" },
-                    new EnemyBehaviourState() { name = "FleeAttack" }
+                    new EnemyBehaviourState() { name = "FleeCoop" }
                 }.ToArray();
 
-                fleeStateIndex = forestGiantAI.enemyBehaviourStates.Length - 3;
-                fleeCoopStateIndex = forestGiantAI.enemyBehaviourStates.Length - 2;
-                fleeAttackStateIndex = forestGiantAI.enemyBehaviourStates.Length - 1;
+                fleeStateIndex = forestGiantAI.enemyBehaviourStates.Length - 2;
+                fleeCoopStateIndex = forestGiantAI.enemyBehaviourStates.Length - 1;
 
                 Plugin.Log("Added ForestGiant flee state behaviours.");
             }
         }
+
+        /*[HarmonyPatch(typeof(ForestGiantAI), "GiantSeePlayerEffect")]
+        [HarmonyPrefix] // Disable fear increase when giant would run away?
+        public static bool GiantSeePlayerEffect(ForestGiantAI __instance) => (EnemyModification.ScalingOf(__instance).RelativeScale - PlayerInfo.CurrentPlayerScale) < 0.5f;*/
+        
+
+        [HarmonyPatch(typeof(ForestGiantAI), "BeginChasingNewPlayerClientRpc")]
+        [HarmonyPrefix]
+        public static bool BeginChasingNewPlayerClientRpc(ForestGiantAI __instance, int playerId)
+        {
+            var targetPlayer = PlayerInfo.ControllerFromID((ulong)playerId);
+            if (targetPlayer == null) return true;
+
+            var sizeDiff = EnemyModification.ScalingOf(__instance).RelativeScale - PlayerInfo.SizeOf(targetPlayer);
+            if (sizeDiff >= 0.5f)
+            {
+                Plugin.Log("Starting flee mode!");
+                // Starting to flee
+                if (__instance.roamPlanet.inProgress)
+                    __instance.StopSearch(__instance.roamPlanet, clear: false);
+
+                if (__instance.searchForPlayers.inProgress)
+                    __instance.StopSearch(__instance.searchForPlayers);
+
+                __instance.targetPlayer = targetPlayer;
+                __instance.agent.speed = 8f;
+                __instance.reachForPlayerRig.weight = Mathf.Lerp(__instance.reachForPlayerRig.weight, 0f, Time.deltaTime * 15f); // Hands down
+
+                __instance.SwitchToBehaviourClientRpc(fleeStateIndex);
+                __instance.noticePlayerTimer = 1f;
+                return false;
+            }
+
+            return true;
+        }
+        
 
         [HarmonyPatch(typeof(ForestGiantAI), "Update")]
         [HarmonyPrefix]
@@ -67,25 +101,6 @@ namespace LittleCompany.patches.enemy_behaviours
             if (GameNetworkManager.Instance.localPlayerController == null || __instance.isEnemyDead)
                 return true;
 
-            if (__instance.targetPlayer != null && (__instance.currentBehaviourStateIndex < fleeStateIndex || __instance.currentBehaviourStateIndex > fleeAttackStateIndex))
-            {
-                var sizeDiff = EnemyModification.ScalingOf(__instance).RelativeScale - PlayerInfo.SizeOf(__instance.targetPlayer);
-                if (sizeDiff >= 0.5f)
-                {
-                    Plugin.Log("Starting flee mode!");
-                    // Starting to flee
-                    if (__instance.roamPlanet.inProgress)
-                        __instance.StopSearch(__instance.roamPlanet, clear: false);
-
-                    if (__instance.searchForPlayers.inProgress)
-                        __instance.StopSearch(__instance.searchForPlayers);
-
-                    __instance.agent.speed = 0f;
-                    __instance.SwitchToBehaviourState(fleeStateIndex);
-                    __instance.noticePlayerTimer = 1f;
-                }
-            }
-
             if (__instance.currentBehaviourStateIndex == fleeStateIndex)
                 return FleeBehaviour(__instance);
             else if (__instance.currentBehaviourStateIndex == fleeCoopStateIndex)
@@ -93,8 +108,6 @@ namespace LittleCompany.patches.enemy_behaviours
                 FleeCoopBehaviour(__instance);
                 return false;
             }
-            else if (__instance.currentBehaviourStateIndex == fleeAttackStateIndex)
-                return FleeAttackBehaviour(__instance);
 
             return true;
         }
@@ -102,8 +115,11 @@ namespace LittleCompany.patches.enemy_behaviours
         #region Flee
         private static bool FleeBehaviour(ForestGiantAI forestGiant)
         {
-            forestGiant.agent.speed = 8f;
-            forestGiant.reachForPlayerRig.weight = Mathf.Lerp(forestGiant.reachForPlayerRig.weight, 0f, Time.deltaTime * 15f); // Hands down
+            Plugin.Log("magnitude: " + forestGiant.agentLocalVelocity.sqrMagnitude);
+            if (forestGiant.agent.speed > 0f && forestGiant.agentLocalVelocity.sqrMagnitude < 0.5f) // Not moving or barely. Plain 0 is spawning speed
+                forestGiant.stopAndLookTimer += Time.deltaTime;
+            else
+                forestGiant.stopAndLookTimer = 0f;
 
             forestGiant.noticePlayerTimer++;
             forestGiant.noticePlayerTimer %= 200;
@@ -118,11 +134,14 @@ namespace LittleCompany.patches.enemy_behaviours
             }
 
             // Flee behaviour
-            var hasLOSToTarget = forestGiant.targetPlayer.HasLineOfSightToPosition(forestGiant.transform.position);
+            var hasLOSToTarget = forestGiant.CheckLineOfSightForPosition(forestGiant.targetPlayer.transform.position, 80f);
+            if (hasLOSToTarget)
+                forestGiant.timeSinceChangingTarget = 0f;
+
             var distanceFromTargetPlayer = Vector3.Distance(forestGiant.transform.position, forestGiant.targetPlayer.transform.position);
 
             PlayerControllerB closestSmallPlayer = FindNearestSmallerPlayerInLOSFor(forestGiant, out float distanceToNearestSmallPlayer);
-            if (closestSmallPlayer == null && distanceFromTargetPlayer > 30f)
+            if (closestSmallPlayer == null && distanceFromTargetPlayer > 50f || forestGiant.timeSinceChangingTarget > 3f) // over 50 away or not seen for 3s
             {
                 Plugin.Log("Lost all players in chase.");
 
@@ -134,43 +153,39 @@ namespace LittleCompany.patches.enemy_behaviours
 
             if (closestSmallPlayer != null && distanceToNearestSmallPlayer < distanceFromTargetPlayer)
             {
+                forestGiant.StartCoroutine(MakePlayerUntargetableFor(forestGiant, forestGiant.targetPlayer, 2f));
                 forestGiant.targetPlayer = closestSmallPlayer;
-                Plugin.Log("Moving away from seen player.");
+                Plugin.Log("Moving away from newly seen player.");
             }
 
-            Plugin.Log("Set fleeing point.");
-            Vector3 wayTowardsPlayer = forestGiant.transform.position - forestGiant.targetPlayer.transform.position;
-            var oppositeDirectionFromPlayer = forestGiant.transform.position + wayTowardsPlayer;
-            var navMeshPos = RoundManager.Instance.GetNavMeshPosition(oppositeDirectionFromPlayer);
-            var pos = RoundManager.Instance.GotNavMeshPositionResult ? navMeshPos : oppositeDirectionFromPlayer;
-            forestGiant.SetDestinationToPosition(pos);
-
-            if (Vector3.Distance(forestGiant.transform.position, pos) < 0.5f)
+            // Attack after getting stuck
+            if (forestGiant.stopAndLookTimer > 10f && hasLOSToTarget)
             {
-                // Not/barely moving
-                forestGiant.stopAndLookTimer += Time.deltaTime;
-                if (forestGiant.stopAndLookTimer > 2f && !forestGiant.lookingAtTarget)
-                {
-                    forestGiant.lookingAtTarget = true;
-                    forestGiant.lookTarget.position = pos;
-                    forestGiant.creatureVoice.PlayOneShot(forestGiant.giantCry);
-                }
-                if (forestGiant.stopAndLookTimer > 8f && hasLOSToTarget)
-                {
-                    // Already stuck for 3 seconds -> Attack
-                    forestGiant.SwitchToBehaviourState(fleeAttackStateIndex);
-                    GameNetworkManager.Instance.localPlayerController.JumpToFearLevel(0.7f);
-                }
-                forestGiant.lookTarget.position = forestGiant.targetPlayer.transform.position + Vector3.up;
+                Plugin.Log("Already stuck for 10 seconds -> Attack");
+                forestGiant.chasingPlayer = forestGiant.targetPlayer;
+                forestGiant.agent.speed = 8f;
+                forestGiant.SwitchToBehaviourState(1);
+                return false;
+            }
+
+            // Movement & Looking angle
+            if (forestGiant.stopAndLookTimer < 3f)
+            {
+                forestGiant.lookingAtTarget = false;
+
+                var targetPlayerVector = forestGiant.transform.position - forestGiant.targetPlayer.transform.position;
+                var oppositeDirectionFromPlayer = forestGiant.transform.position + targetPlayerVector;
+                forestGiant.SetDestinationToPosition(oppositeDirectionFromPlayer);
             }
             else
             {
-                forestGiant.stopAndLookTimer = 0f;
-                forestGiant.lookingAtTarget = false;
-                forestGiant.lookTarget.position = pos;
-            }
+                if (!forestGiant.lookingAtTarget)
+                    forestGiant.creatureVoice.PlayOneShot(forestGiant.giantCry);
+                forestGiant.lookingAtTarget = true;
 
-            forestGiant.LookAtTarget();
+                forestGiant.SetDestinationToPosition(forestGiant.transform.position);
+            }
+            forestGiant.lookTarget.position = forestGiant.destination;
 
             return true;
         }
@@ -248,11 +263,14 @@ namespace LittleCompany.patches.enemy_behaviours
             Plugin.Log("Found other giant while fleeing.");
             forestGiant.noticePlayerTimer = 0f;
 
+            forestGiant.agent.speed = 0f;
             forestGiant.lookTarget = otherGiant.transform;
             forestGiant.LookAtTarget();
             forestGiant.stopAndLookTimer = 0f;
             forestGiant.SwitchToBehaviourState(fleeCoopStateIndex);
 
+            otherGiant.targetPlayer = forestGiant.targetPlayer;
+            otherGiant.agent.speed = 0f;
             otherGiant.lookTarget = forestGiant.transform;
             otherGiant.LookAtTarget();
             otherGiant.stopAndLookTimer = 0f;
@@ -268,30 +286,14 @@ namespace LittleCompany.patches.enemy_behaviours
             if (forestGiant.stopAndLookTimer > Mathf.PI * 2f)
             {
                 Plugin.Log("Attack together with other giant!");
-                forestGiant.SwitchToBehaviourState(fleeAttackStateIndex);
+                //InitiateFleeAttack(forestGiant);
+                forestGiant.chasingPlayer = forestGiant.targetPlayer;
+                forestGiant.agent.speed = 8f;
+                forestGiant.SwitchToBehaviourState(1);
                 return;
             }
 
             forestGiant.reachForPlayerRig.weight = 0.9f * Mathf.Sin(forestGiant.stopAndLookTimer - Mathf.PI);
-        }
-        #endregion
-
-        #region Flee-Attack
-        private static bool FleeAttackBehaviour(ForestGiantAI forestGiant)
-        {
-            if(forestGiant.targetPlayer == null || forestGiant.targetPlayer.isPlayerDead || !forestGiant.targetPlayer.isPlayerControlled)
-            {
-                Plugin.Log("Lost player or they died!");
-                forestGiant.targetPlayer = null;
-                forestGiant.SwitchToBehaviourState(0);
-                return false;
-            }
-
-            forestGiant.agent.speed = 8f;
-            if(!forestGiant.inEatingPlayerAnimation)
-                forestGiant.movingTowardsTargetPlayer = true;
-
-            return true;
         }
         #endregion
     }

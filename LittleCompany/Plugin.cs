@@ -178,6 +178,6 @@ namespace LittleCompany
                 default: mls.LogMessage(message); break;
             }
         }
-#endregion
+        #endregion
     }
 }

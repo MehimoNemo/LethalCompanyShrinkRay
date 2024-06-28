@@ -531,7 +531,7 @@ namespace LittleCompany.components
         //do a cool raygun effect, ray gun sound, cast a ray, and shrink any players caught in the ray
         private void ShootRayOnClient()
         {
-            if (playerHeldBy == null || targetObject.GetComponent<NetworkObject>() == null || playerHeldBy.isClimbingLadder)
+            if (playerHeldBy == null || playerHeldBy.isClimbingLadder || targetObject?.GetComponent<NetworkObject>() == null)
             {
                 Plugin.Log("ShootRayOnClient: Missing");
                 SwitchModeServerRpc((int)Mode.Missing);
