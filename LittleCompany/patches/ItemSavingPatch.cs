@@ -79,7 +79,7 @@ namespace LittleCompany.patches
                 if(foundItem == null) continue;
 
                 Plugin.Log("Item " + foundItem.name + " scaled to " + itemScales[i]);
-                ObjectModification.ScalingOf(foundItem).ScaleToImmediate(itemScales[i], null);
+                ItemModification.ScalingOf(foundItem).ScaleToImmediate(itemScales[i], null);
 
                 items.Remove(foundItem); // Don't scale it another time
             }

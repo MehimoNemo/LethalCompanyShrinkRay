@@ -11,6 +11,8 @@ using LittleCompany.modifications;
 using static LittleCompany.modifications.Modification;
 using static LittleCompany.helper.EnemyInfo;
 using UnityEngine.SceneManagement;
+using System.Linq;
+using LethalLib.Modules;
 
 namespace LittleCompany.patches
 {
@@ -93,7 +95,14 @@ namespace LittleCompany.patches
 
             else if (!ImperiumEnabled && Keyboard.current.f4Key.wasPressedThisFrame)
             {
-                StartOfRound.Instance.ManuallyEjectPlayersServerRpc();
+                var enemyType = EnemyTypeByEnum(Enemy.ForestGiant);
+                if (enemyType != null)
+                {
+                    var location = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 60f;
+                    SpawnEnemyAt(location, 0f, enemyType);
+                }
+
+                //StartOfRound.Instance.ManuallyEjectPlayersServerRpc();
             }
 
             else if (!ImperiumEnabled && Keyboard.current.f5Key.wasPressedThisFrame)
@@ -118,7 +127,7 @@ namespace LittleCompany.patches
 
             else if (Keyboard.current.f9Key.wasPressedThisFrame)
             {
-                SpawnNextItemInFront();
+                SpawnVehicleInFront();
             }
 
             else if (Keyboard.current.f10Key.wasPressedThisFrame)
@@ -164,6 +173,24 @@ namespace LittleCompany.patches
             }
 
             return cube;
+        }
+
+        public static void SpawnVehicleInFront()
+        {
+            var terminal = Resources.FindObjectsOfTypeAll<Terminal>().First();
+            if (terminal != null && terminal.buyableVehicles.Length > 0 && terminal.buyableVehicles.First()?.vehiclePrefab != null)
+            {
+                var vehicle = Object.Instantiate(terminal.buyableVehicles.First().vehiclePrefab, RoundManager.Instance.VehiclesContainer);
+                vehicle.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 10f + Vector3.up * 5f;
+                vehicle.GetComponent<NetworkObject>()?.Spawn();
+
+                if (terminal.buyableVehicles.First().secondaryPrefab != null)
+                {
+                    var vehicleSec = Object.Instantiate(terminal.buyableVehicles.First().secondaryPrefab, RoundManager.Instance.VehiclesContainer);
+                    vehicleSec.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 10f + Vector3.up * 5f;
+                    vehicleSec.GetComponent<NetworkObject>()?.Spawn();
+                }
+            }
         }
 
         public static void SpawnItemInFront(Item item)

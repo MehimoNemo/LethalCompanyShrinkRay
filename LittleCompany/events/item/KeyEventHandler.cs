@@ -35,7 +35,7 @@ namespace LittleCompany.events.item
             var heldItem = PlayerInfo.CurrentPlayer.currentlyHeldObjectServer;
             if (heldItem == null || heldItem.itemProperties.itemId != 14) return;
 
-            if (ObjectModification.ScalingOf(heldItem).Unchanged) return;
+            if (ItemModification.ScalingOf(heldItem).Unchanged) return;
 
             doorTrigger.interactable = false;
             doorTrigger.hoverTip = SCALED_TIP;
@@ -46,7 +46,7 @@ namespace LittleCompany.events.item
         [HarmonyPrefix()]
         public static bool ItemActivate(KeyItem __instance)
         {
-            if (!ObjectModification.ScalingOf(__instance).Unchanged)
+            if (!ItemModification.ScalingOf(__instance).Unchanged)
                 return false; // Skip original method
 
             return true;

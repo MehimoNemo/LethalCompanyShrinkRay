@@ -38,7 +38,7 @@ namespace LittleCompany.events.enemy
 
             ScrapManagementFacade.RegisterItem(toyRobot.itemProperties);
 
-            ObjectModification.UnscalableObjects.Add(toyRobot.itemProperties.itemName);
+            ItemModification.UnscalableItems.Add(toyRobot.itemProperties.itemName);
         }
         #endregion
 

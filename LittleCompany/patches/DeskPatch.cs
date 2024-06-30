@@ -20,7 +20,7 @@ namespace LittleCompany.patches
             var placedPlayer = (placedItem as GrabbablePlayerObject);
             if (placedPlayer == null)
             {
-                ObjectModification.ScalingOf(placedItem).RemoveHologram();
+                ItemModification.ScalingOf(placedItem).RemoveHologram();
                 return;
             }
 

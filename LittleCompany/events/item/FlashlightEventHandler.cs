@@ -33,7 +33,7 @@ namespace LittleCompany.events.item
         [HarmonyPostfix()]
         public static void Update(FlashlightItem __instance, float ___initialIntensity)
         {
-            var scaling = ObjectModification.ScalingOf(__instance);
+            var scaling = ItemModification.ScalingOf(__instance);
             if (scaling.Unchanged) return;
 
             if (!defaultFlashlightSpotAngles.ContainsKey(__instance.NetworkObjectId))

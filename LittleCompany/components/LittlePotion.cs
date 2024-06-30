@@ -307,7 +307,7 @@ namespace LittleCompany.components
             if (Consuming || playerHeldBy == null)
                 yield break;
 
-            var scalingMultiplier = ObjectModification.ScalingOf(this).RelativeScale;
+            var scalingMultiplier = ItemModification.ScalingOf(this).RelativeScale;
             if (Consumed.Value || playerHeldBy.isClimbingLadder || !PlayerModification.CanApplyModificationTo(playerHeldBy, modificationType, playerHeldBy, scalingMultiplier))
             {
                 if (IsOwner && noConsumeSFX != null && audioSource != null)

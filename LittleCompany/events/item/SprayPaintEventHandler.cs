@@ -22,7 +22,7 @@ namespace LittleCompany.events.item
         {
             if (!__result) return false;
 
-            var scaling = ObjectModification.ScalingOf(__instance);
+            var scaling = ItemModification.ScalingOf(__instance);
             if (!scaling.Unchanged)
                 ___delayedSprayPaintDecal.size *= Mathf.Max(1f + (scaling.RelativeScale - 1f) * 0.5f, 0.1f);
 

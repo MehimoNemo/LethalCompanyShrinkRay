@@ -18,7 +18,7 @@ namespace LittleCompany.events.item
             if (__instance.TryGetComponent(out TargetHighlighting highlighting))
                 DestroyImmediate(highlighting);
 
-            var giftBoxScaling = ObjectModification.ScalingOf(__instance);
+            var giftBoxScaling = ItemModification.ScalingOf(__instance);
             giftBoxScaling.RemoveHologram();
 
             var giftBoxScale = giftBoxScaling.RelativeScale;
@@ -43,7 +43,7 @@ namespace LittleCompany.events.item
             yield return new WaitForEndOfFrame();
 
             if (netObject.TryGetComponent(out GrabbableObject item))
-                ObjectModification.ScalingOf(item).ScaleToImmediate(scale, null);
+                ItemModification.ScalingOf(item).ScaleToImmediate(scale, null);
         }
         #endregion
     }

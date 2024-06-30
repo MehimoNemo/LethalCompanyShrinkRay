@@ -60,7 +60,7 @@ namespace LittleCompany.events.item
         {
             if (__instance.playerHeldBy == null || __instance.playerHeldBy != PlayerInfo.CurrentPlayer) return;
 
-            var scalingDiff = ObjectModification.ScalingOf(__instance).RelativeScale - PlayerInfo.SizeOf(__instance.playerHeldBy);
+            var scalingDiff = ItemModification.ScalingOf(__instance).RelativeScale - PlayerInfo.SizeOf(__instance.playerHeldBy);
             if (scalingDiff <= 0f) return; // Smaller or equally sized relative to the gun
 
             PlayerThrowAnimation.StartRoutine(__instance.playerHeldBy, shotgunForward * -1f, scalingDiff * 10f);

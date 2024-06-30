@@ -39,7 +39,8 @@
             PlaceableShipObjects = 26,
             PlacementBlocker = 27,
             Railing = 28,
-            DecalStickableSurface = 29
+            DecalStickableSurface = 29,
+            CompanyCruiser = 30,
         }
 
         internal static int ToInt(Mask[] masks)

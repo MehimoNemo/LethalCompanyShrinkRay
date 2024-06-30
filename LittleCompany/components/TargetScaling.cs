@@ -9,6 +9,7 @@ using LittleCompany.patches;
 using System.Collections.Generic;
 using LittleCompany.Config;
 using static LittleCompany.helper.ShipObjectInfo;
+using Unity.Netcode;
 
 namespace LittleCompany.components
 {
@@ -17,7 +18,6 @@ namespace LittleCompany.components
     {
         #region Properties
         internal Vector3 OriginalOffset = Vector3.zero;
-        internal abstract Vector3 OriginalScale { get; }
         public float RelativeScale = 1f;
 
         private T _target;
@@ -31,6 +31,7 @@ namespace LittleCompany.components
                 return _target;
             }
         }
+        internal virtual Vector3 OriginalScale => Target.gameObject.transform.localScale;
 
         internal HashSet<IScalingListener> scalingListeners;
 
@@ -191,6 +192,11 @@ namespace LittleCompany.components
             }
         }
         #endregion
+    }
+
+    internal class VehicleScaling : TargetScaling<VehicleController>
+    {
+        internal override Vector3 OriginalScale => Vector3.one * 1.18f;
     }
 
     internal class PlayerScaling : TargetScaling<PlayerControllerB>
