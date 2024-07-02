@@ -285,26 +285,21 @@ namespace LittleCompany.patches
         {
             if (StartOfRound.Instance.inShipPhase) return;
 
-            Vector3 pos;
-            switch ((Moon)RoundManager.Instance.currentLevel.levelID)
-            {
-                case Moon.Experimentation:  pos = new Vector3(-111.04f, 2.97f, -17.62f);    break;
-                case Moon.Assurance:        pos = new Vector3(131.96f, 6.52f, 74.69f);      break;
-                case Moon.Vow:              pos = new Vector3(-29.41f, -1.15f, 148.34f);    break;
-                case Moon.March:            pos = new Vector3(-154.78f, -3.94f, 21.79f);    break;
-                case Moon.Rend:             pos = new Vector3(49.29f, -16.78f, -149.28f);   break;
-                case Moon.Dine:             pos = new Vector3(157.60f, -15.11f, -41.07f);   break;
-                case Moon.Offense:          pos = new Vector3(127.70f, 16.42f, -57.77f);    break;
-                case Moon.Titan:            pos = new Vector3(-33.79f, 47.75f, 7.48f);      break;
-                default: return;
-            }
+            var entrance = GameObject.Find("EntranceTeleportA")?.GetComponent<EntranceTeleport>();
+            if (entrance == null) return;
 
-            PlayerInfo.CurrentPlayer.TeleportPlayer(pos);
+            PlayerInfo.CurrentPlayer.TeleportPlayer(entrance.entrancePoint.position);
         }
 
         public static void TeleportInsideDungeon()
         {
             if (StartOfRound.Instance.inShipPhase) return;
+
+            var entrance = GameObject.Find("EntranceTeleportA")?.GetComponent<EntranceTeleport>();
+            if (entrance == null) return;
+
+            PlayerInfo.CurrentPlayer.TeleportPlayer(entrance.exitPoint.position);
+
 
             Vector3 pos;
             switch ((Moon)RoundManager.Instance.currentLevel.levelID)
