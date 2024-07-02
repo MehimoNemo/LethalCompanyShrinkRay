@@ -190,7 +190,20 @@ namespace LittleCompany.patches
                     vehicleSec.transform.position = PlayerInfo.CurrentPlayer.transform.position + PlayerInfo.CurrentPlayer.transform.forward * 10f + Vector3.up * 5f;
                     vehicleSec.GetComponent<NetworkObject>()?.Spawn();
                 }
+
+                if (vehicle.TryGetComponent(out VehicleController vehicleController))
+                {
+                    Plugin.Log("Disable vehicle controller");
+                    vehicleController.enabled = false;
+                    vehicleController.StartCoroutine(EnableVehicleControllerLater(vehicleController));
+                }
             }
+        }
+
+        private static IEnumerator EnableVehicleControllerLater(VehicleController vehicleController)
+        {
+            yield return new WaitForSeconds(1f);
+            vehicleController.enabled = true;
         }
 
         public static void SpawnItemInFront(Item item)

@@ -8,8 +8,6 @@ using LittleCompany.modifications;
 using LittleCompany.patches;
 using System.Collections.Generic;
 using LittleCompany.Config;
-using static LittleCompany.helper.ShipObjectInfo;
-using Unity.Netcode;
 
 namespace LittleCompany.components
 {
@@ -197,6 +195,22 @@ namespace LittleCompany.components
     internal class VehicleScaling : TargetScaling<VehicleController>
     {
         internal override Vector3 OriginalScale => Vector3.one * 1.18f;
+
+        public override void ScaleTo(float scale, PlayerControllerB scaledBy)
+        {
+            base.ScaleTo(scale, scaledBy);
+
+            /*Target.MatchWheelMeshToCollider(Target.leftWheelMesh, Target.BackRightWheel);
+            Target.MatchWheelMeshToCollider(Target.rightWheelMesh, Target.FrontRightWheel);
+            Target.MatchWheelMeshToCollider(Target.backLeftWheelMesh, Target.BackLeftWheel);
+            Target.MatchWheelMeshToCollider(Target.backRightWheelMesh, Target.BackRightWheel);*/
+        }
+        public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
+        {
+            Target.enabled = false;
+            base.ScaleOverTimeTo(scale, scaledBy, onComplete, duration, mode, startingFromScale);
+            Target.enabled = true;
+        }
     }
 
     internal class PlayerScaling : TargetScaling<PlayerControllerB>
