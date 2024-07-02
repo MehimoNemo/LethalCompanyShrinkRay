@@ -12,6 +12,7 @@ namespace LittleCompany.patches
     {
         private static float _realPlayerScale = 1f;
         private static float _realTerminalScale = 1f;
+        private static float _playerPositionYRelativeToTerminal = 0f;
         private static Coroutine _scalingCoroutine;
 
         [HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
@@ -21,6 +22,7 @@ namespace LittleCompany.patches
             _realPlayerScale = PlayerInfo.CurrentPlayerScale;
             _realTerminalScale = ShipObjectModification.ScalingOf(__instance.placeableObject).RelativeScale;
             _scalingCoroutine = __instance.StartCoroutine(ScaleToTerminalSize(__instance));
+            _playerPositionYRelativeToTerminal = PlayerInfo.CurrentPlayer.transform.position.y - __instance.transform.position.y;
         }
 
         public static IEnumerator ScaleToTerminalSize(Terminal terminal)
@@ -65,6 +67,9 @@ namespace LittleCompany.patches
                 Plugin.Log("Unable to reset player size after using terminal.", Plugin.LogType.Error);
             else
                 playerScaling.TransformToScale.localScale = playerScaling.OriginalScale * _realPlayerScale;
+
+            var playerPos = PlayerInfo.CurrentPlayer.transform.position;
+            PlayerInfo.CurrentPlayer.transform.position = new Vector3(playerPos.x, __instance.transform.position.y + _playerPositionYRelativeToTerminal, playerPos.z);
         }
     }
 }

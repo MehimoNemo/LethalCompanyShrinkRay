@@ -299,23 +299,6 @@ namespace LittleCompany.patches
             if (entrance == null) return;
 
             PlayerInfo.CurrentPlayer.TeleportPlayer(entrance.exitPoint.position);
-
-
-            Vector3 pos;
-            switch ((Moon)RoundManager.Instance.currentLevel.levelID)
-            {
-                case Moon.Experimentation:  pos = new Vector3(-14.50f, -219.56f, 65.91f);   break;
-                case Moon.Assurance:        pos = new Vector3(-5.09f, -219.56f, 65.94f);    break;
-                case Moon.Vow:              pos = new Vector3(-29.41f, -1.15f, 148.34f);    break;
-                case Moon.March:            pos = new Vector3(-6.03f, -219.56f, 65.92f);    break;
-                case Moon.Rend:             pos = new Vector3(-6.70f, -219.54f, 65.83f);    break;
-                case Moon.Dine:             pos = new Vector3(-7.22f, -219.56f, 65.90f);    break;
-                case Moon.Offense:          pos = new Vector3(-5.60f, -219.56f, 65.92f);    break;
-                case Moon.Titan:            pos = new Vector3(-7.22f, -219.56f, 65.90f);    break;
-                default: return;
-            }
-
-            PlayerInfo.CurrentPlayer.TeleportPlayer(pos);
         }
 
         public static void ReloadAllSounds()
