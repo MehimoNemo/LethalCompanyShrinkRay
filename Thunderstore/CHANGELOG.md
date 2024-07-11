@@ -1,3 +1,12 @@
+### 1.3.4 ###
+**Fixes**
+- Fixed a bug where throwing players that are in the Goomba animation (e.g. after shovel hit) leads to the player being stuck
+
+### 1.3.3 ###
+**Fixes**
+- Fixed clipping through ground after using scaled terminal
+- Fixed error message when shooting at landmines
+
 ### 1.3.2 ###
 **Fixes**
 - Fallback for ShrinkRay being unusable after exception / error.

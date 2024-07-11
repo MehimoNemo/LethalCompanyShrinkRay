@@ -90,6 +90,9 @@ namespace LittleCompany.coroutines
             float duration = 5f;
             float elapsedTime = 0f;
 
+            var previousStepOffset = targetPlayer.thisController.stepOffset;
+            targetPlayer.thisController.stepOffset = 0f;
+
             while (elapsedTime < duration)
             {
                 float scaleValue = scaleCurve.Evaluate(elapsedTime / duration);
@@ -100,6 +103,8 @@ namespace LittleCompany.coroutines
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
+
+            targetPlayer.thisController.stepOffset = previousStepOffset;
 
             onComplete();
         }
