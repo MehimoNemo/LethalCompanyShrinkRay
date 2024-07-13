@@ -5,6 +5,7 @@ using LittleCompany.coroutines;
 using LittleCompany.helper;
 using LittleCompany.patches;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace LittleCompany.modifications
@@ -129,7 +130,16 @@ namespace LittleCompany.modifications
             bool targetingUs = PlayerInfo.IsCurrentPlayer(targetPlayer);
 
             if (targetingUs && targetPlayer.inTerminalMenu)
-                UnityEngine.Object.FindObjectOfType<Terminal>()?.QuitTerminal();
+            {
+                try
+                {
+                    UnityEngine.Object.FindObjectsOfType<Terminal>().Where((t) => t != null).FirstOrDefault()?.QuitTerminal();
+                }
+                catch(Exception e)
+                {
+                    Plugin.Log("Unable to quit terminal: " + e.Message, Plugin.LogType.Error);
+                }
+            }
 
             switch (type)
             {

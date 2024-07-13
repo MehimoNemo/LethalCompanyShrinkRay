@@ -1,3 +1,7 @@
+**Fixes**
+- Fixed exception when spawning BurningRobotToy
+- Fixed exception when scaling player that uses the terminal
+
 ### 1.3.5 ###
 **Fixes**
 - Fixed typo causing previously implemented config option to not always be counted correctly
