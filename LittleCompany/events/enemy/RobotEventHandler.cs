@@ -53,9 +53,8 @@ namespace LittleCompany.events.enemy
         {
             Plugin.Log("Robot shrunken to death");
 
-            var explosionPrefab = (enemy as RadMechAI).explosionPrefab;
             base.OnDeathShrinking(previousSize, playerShrunkenBy);
-            Landmine.SpawnExplosion(transform.position, true, default, default, default, default, explosionPrefab);
+            Landmine.SpawnExplosion(transform.position, true);
 
             if (PlayerInfo.IsHost && BurningRobotToyPrefab != null)
             {
