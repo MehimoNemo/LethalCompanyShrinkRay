@@ -1,3 +1,7 @@
+### 1.3.5 ###
+**Fixes**
+- Fixed typo causing previously implemented config option to not always be counted correctly
+
 ### 1.3.4 ###
 **New**
 - Added *[Enemies]deathShrinkEventChance* config option to define to how likely it is for an enemy to cause an event when shrunken to death

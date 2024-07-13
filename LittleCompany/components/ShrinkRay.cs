@@ -913,7 +913,7 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         public void OnEnemyModificationServerRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
         {
-            bool callDeathShrinkEvent = Random.Range(0, 100) > ModConfig.Instance.values.deathShrinkEventChance;
+            bool callDeathShrinkEvent = Random.Range(0, 100) < ModConfig.Instance.values.deathShrinkEventChance;
             OnEnemyModificationClientRpc(targetEnemyNetworkID, playerHeldByID, callDeathShrinkEvent);
         }
 
