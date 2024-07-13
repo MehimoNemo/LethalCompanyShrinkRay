@@ -402,7 +402,7 @@ namespace LittleCompany.components
                 if (ModConfig.Instance.values.itemSizeChangeStep > Mathf.Epsilon)
                 {
                     layerMasks.Add(Mask.Props);
-                    layerMasks.Add(Mask.CompanyCruiser);
+                    //layerMasks.Add(Mask.CompanyCruiser);
                 }
                 if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
                     layerMasks.Add(Mask.Enemies);
@@ -913,11 +913,12 @@ namespace LittleCompany.components
         [ServerRpc(RequireOwnership = false)]
         public void OnEnemyModificationServerRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
         {
-            OnEnemyModificationClientRpc(targetEnemyNetworkID, playerHeldByID);
+            bool callDeathShrinkEvent = Random.Range(0, 100) > ModConfig.Instance.values.deathShrinkEventChance;
+            OnEnemyModificationClientRpc(targetEnemyNetworkID, playerHeldByID, callDeathShrinkEvent);
         }
 
         [ClientRpc]
-        public void OnEnemyModificationClientRpc(ulong targetEnemyNetworkID, ulong playerHeldByID)
+        public void OnEnemyModificationClientRpc(ulong targetEnemyNetworkID, ulong playerHeldByID, bool callDeathShrinkEvent)
         {
             Plugin.Log("OnEnemyModificationClientRpc");
             playerHeldBy = PlayerInfo.ControllerFromID(playerHeldByID);
@@ -931,6 +932,7 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
+            EnemyModification.callDeathShrinkEvent = callDeathShrinkEvent;
             EnemyModification.ApplyModificationTo(targetObject.GetComponentInParent<EnemyAI>(), currentModificationType.Value, playerHeldBy, ItemModification.ScalingOf(this).RelativeScale,() =>
             {
                 Plugin.Log("Finished enemy modification with type: " + currentModificationType.Value.ToString());

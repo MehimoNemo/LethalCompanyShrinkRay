@@ -10,6 +10,7 @@ namespace LittleCompany.modifications
 {
     public class EnemyModification : Modification
     {
+        public static bool callDeathShrinkEvent = true;
         #region Methods
         internal static EnemyScaling ScalingOf(EnemyAI target)
         {
@@ -68,12 +69,12 @@ namespace LittleCompany.modifications
                         var previousScale = ScalingOf(targetEnemy).RelativeScale;
                         var nextShrunkenSize = NextShrunkenSizeOf(targetEnemy, multiplier);
                         Plugin.Log("Shrinking enemy [" + targetEnemy.name + "] to size: " + nextShrunkenSize);
-                        if (nextShrunkenSize < DeathShrinkMargin)
+                        if (nextShrunkenSize < DeathShrinkMargin && callDeathShrinkEvent)
                             EnemyEventManager.EventHandlerOf(targetEnemy)?.AboutToDeathShrink(previousScale, playerModifiedBy);
 
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
-                            if (nextShrunkenSize < DeathShrinkMargin)
+                            if (nextShrunkenSize < DeathShrinkMargin && callDeathShrinkEvent)
                             {
                                 Plugin.Log("Death Shrinking: " + nextShrunkenSize + " : " + DeathShrinkMargin);
                                 EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking(previousScale, playerModifiedBy);

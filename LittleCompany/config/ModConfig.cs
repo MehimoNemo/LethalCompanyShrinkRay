@@ -84,6 +84,8 @@ namespace LittleCompany.Config
 
             public bool cantOpenStorageCloset { get; set; }
 
+            public int deathShrinkEventChance { get; set; }
+
             public ThumperBehaviour thumperBehaviour { get; set; }
 
             public HoardingBugBehaviour hoardingBugBehaviour { get; set; }
@@ -146,6 +148,7 @@ namespace LittleCompany.Config
             values.sellablePlayers               = Plugin.BepInExConfig().Bind("Interactions", "SellablePlayers", true, "If true, shrunken players can be sold to the company.").Value;
 
             values.enemyPitchDistortionIntensity = Plugin.BepInExConfig().Bind("Enemies", "EnemyPitchDistortionIntensity", 0.2f, new ConfigDescription("Intensity of the pitch distortion for enemies with a different size than the local player, from 0 (unchanged) to 0.5 (strong).", new AcceptableValueRange<float>(0f, 0.5f))).Value;
+            values.deathShrinkEventChance        = Plugin.BepInExConfig().Bind("Enemies", "DeathShrinkEventChance", 100, new ConfigDescription("Chance for an event when shrinking an enemy to death.", new AcceptableValueRange<int>(0, 100))).Value;
             values.hoardingBugBehaviour          = Plugin.BepInExConfig().Bind("Enemies", "HoarderBugBehaviour", HoardingBugBehaviour.Default, "Defines if hoarding bugs should be able to grab you and how likely that is.").Value;
             values.thumperBehaviour              = Plugin.BepInExConfig().Bind("Enemies", "ThumperBehaviour", ThumperBehaviour.Bumper, "Defines the way Thumpers react on shrunken players.").Value;
                                                  

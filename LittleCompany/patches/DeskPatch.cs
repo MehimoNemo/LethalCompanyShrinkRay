@@ -35,7 +35,7 @@ namespace LittleCompany.patches
 
         [HarmonyPatch(typeof(DepositItemsDesk), "SellAndDisplayItemProfits")]
         [HarmonyPrefix()]
-        public static void SellStuffPrefix(DepositItemsDesk __instance, ref int profit)
+        public static void SellStuffPrefix(DepositItemsDesk __instance)
         {
             var placedObjects = __instance.deskObjectsContainer.GetComponentsInChildren<GrabbableObject>();
             foreach(var obj in placedObjects )

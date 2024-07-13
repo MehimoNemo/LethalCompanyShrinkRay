@@ -32,7 +32,8 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | ThrowablePlayers                        | If true, shrunken players can be thrown by their holder.                                     | true / false                           | true    |
 |              | SellablePlayers                         | If true, shrunken players can be sold to the company.                                        | true / false                           | true    |
 | Enemies      | EnemyPitchDistortionIntensity \*        | Intensity of the pitch distortion for enemies with a different size than the local player.   | 0 (unchanged) - 0.5 (strong pitch)     | 0.2     |
-|              | HoarderBugBehaviour                     | Defines if hoarding bugs should be able to grab you and how likely that is                   | Default, NoGrab, Addicted              | Default |
+|              | HoarderBugBehaviour                     | Defines if hoarding bugs should be able to grab you and how likely that is.                  | Default, NoGrab, Addicted              | Default |
+|              | DeathShrinkEventChance                  | Chance for an event when shrinking an enemy to death.                                        | 0 - 100                                | 100     |
 |              | ThumperBehaviour                        | Defines the way Thumpers react on shrunken players.	                                        | Default, One-Shot, Bumper              | Bumper  |
 | Potions      | ShrinkPotionShopPrice                   | Sets the store price. 0 to removed potion from store.	                                    | 0 - 500                                | 30      |
 |              | ShrinkPotionScrapRarity                 | Sets the scrap rarity. 0 makes it unable to spawn inside.	                                | 0 - 100                                | 10      |

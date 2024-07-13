@@ -422,7 +422,7 @@ namespace LittleCompany.components
             CalculateScrapValue();
 
             itemProperties.weight = grabbedPlayer.carryWeight + BaseWeight;
-            grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) * ModConfig.Instance.values.weightMultiplier;
+            grabbedPlayer.carryWeight = Mathf.Clamp(1f + (grabbedPlayer.carryWeight - 1f) * ModConfig.Instance.values.weightMultiplier, 1f, 10f);
             previousCarryWeight = grabbedPlayer.carryWeight;
             Plugin.Log("gpo weight: " + itemProperties.weight);
 
@@ -443,7 +443,7 @@ namespace LittleCompany.components
             {
                 SetIsGrabbableToEnemies(false);
 
-                grabbedPlayer.carryWeight = 1f + (grabbedPlayer.carryWeight - 1f) / ModConfig.Instance.values.weightMultiplier;
+                grabbedPlayer.carryWeight = Mathf.Clamp(1f + (grabbedPlayer.carryWeight - 1f) / ModConfig.Instance.values.weightMultiplier, 1f, 10f);
                 previousCarryWeight = grabbedPlayer.carryWeight;
 
                 if (audioSource != null && audioSource.isPlaying)

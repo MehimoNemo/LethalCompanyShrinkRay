@@ -1,6 +1,10 @@
 ### 1.3.4 ###
+**New**
+- Added *[Enemies]deathShrinkEventChance* config option to define to how likely it is for an enemy to cause an event when shrunken to death
+
 **Fixes**
 - Fixed a bug where throwing players that are in the Goomba animation (e.g. after shovel hit) leads to the player being stuck
+- Weight now can't go below 0. This doesn't fix the -2b lb bug, but limits its effects on the gameplay
 
 ### 1.3.3 ###
 **Fixes**
