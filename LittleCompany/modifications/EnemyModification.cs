@@ -74,10 +74,17 @@ namespace LittleCompany.modifications
 
                         scaling.ScaleOverTimeTo(nextShrunkenSize, playerModifiedBy, () =>
                         {
-                            if (nextShrunkenSize < DeathShrinkMargin && callDeathShrinkEvent)
+                            if (nextShrunkenSize < DeathShrinkMargin)
                             {
                                 Plugin.Log("Death Shrinking: " + nextShrunkenSize + " : " + DeathShrinkMargin);
-                                EnemyEventManager.EventHandlerOf(targetEnemy)?.OnDeathShrinking(previousScale, playerModifiedBy);
+                                var enemyEventHandler = EnemyEventManager.EventHandlerOf(targetEnemy);
+                                if(enemyEventHandler != null)
+                                {
+                                    if (callDeathShrinkEvent)
+                                        enemyEventHandler.OnDeathShrinking(previousScale, playerModifiedBy);
+                                    else
+                                        enemyEventHandler.DespawnEnemy();
+                                }
                             }
 
                             if (onComplete != null)

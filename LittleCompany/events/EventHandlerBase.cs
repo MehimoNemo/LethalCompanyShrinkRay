@@ -62,6 +62,16 @@ namespace LittleCompany.events
             Plugin.Log(name + " shrunken to death");
         }
 
+        public void DespawnEnemy() => StartCoroutine(DespawnEnemyCoroutine());
+        private IEnumerator DespawnEnemyCoroutine()
+        {
+            DestroyObject();
+
+            yield return new WaitForSeconds(0.5f);
+            if (PlayerInfo.IsHost)
+                DespawnObject();
+        }
+
         #region DeathShrinkSync
         // Has to be done to prevent the enemy from despawning before any client got the OnDeathShrinking event
         private int DeathShrinkSyncedPlayers = 1; // host always got it
@@ -83,11 +93,7 @@ namespace LittleCompany.events
 
             DeathShrinkSyncedPlayers = 1;
 
-            DestroyObject();
-
-            yield return new WaitForSeconds(3f);
-            if (PlayerInfo.IsHost)
-                DespawnObject();
+            yield return DespawnEnemyCoroutine();
         }
 
         [ServerRpc(RequireOwnership = false)]

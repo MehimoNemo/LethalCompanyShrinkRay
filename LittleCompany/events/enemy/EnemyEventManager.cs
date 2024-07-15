@@ -5,7 +5,6 @@ using UnityEngine;
 using LittleCompany.helper;
 using LittleCompany.components;
 using static LittleCompany.helper.EnemyInfo;
-using LittleCompany.events.item;
 
 namespace LittleCompany.events.enemy
 {

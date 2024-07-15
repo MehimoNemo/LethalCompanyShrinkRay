@@ -1,6 +1,8 @@
+### 1.3.6 ###
 **Fixes**
 - Fixed exception when spawning BurningRobotToy
 - Fixed exception when scaling player that uses the terminal
+- Fixed enemy not despawning if death shrink event didn't occure
 
 ### 1.3.5 ###
 **Fixes**
