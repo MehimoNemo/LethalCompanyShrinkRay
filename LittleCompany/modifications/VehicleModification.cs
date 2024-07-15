@@ -18,7 +18,7 @@ namespace LittleCompany.modifications
             return scaling;
         }
 
-        public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(ModConfig.Instance.values.itemSizeChangeStep * multiplier, ModConfig.SmallestSizeChange);
+        public static float SizeChangeStep(float multiplier = 1f) => Mathf.Max(0.4f * multiplier, ModConfig.SmallestSizeChange);
 
         public static float NextShrunkenSizeOf(VehicleController targetObject, float multiplier = 1f) => Mathf.Max(Rounded(ScalingOf(targetObject).RelativeScale - SizeChangeStep(multiplier)), 0f);
 
