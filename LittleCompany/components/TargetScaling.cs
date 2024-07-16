@@ -199,20 +199,25 @@ namespace LittleCompany.components
 
         float OriginalFrontRightWheelRadius = 0f;
         float OriginalFrontRightWheelSprungMass = 0f;
+        float OriginalFrontRightWheelSuspensionDistance = 0f;
 
         float OriginalFrontLeftWheelRadius = 0f;
         float OriginalFrontLeftWheelSprungMass = 0f;
+        float OriginalFrontLeftWheelSuspensionDistance = 0f;
 
         float OriginalBackRightWheelRadius = 0f;
         float OriginalBackRightWheelSprungMass = 0f;
+        float OriginalBackRightWheelSuspensionDistance = 0f;
 
         float OriginalBackLeftWheelRadius = 0f;
         float OriginalBackLeftWheelSprungMass = 0f;
+        float OriginalBackLeftWheelSuspensionDistance = 0f;
 
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             base.ScaleTo(scale, scaledBy);
             UpdateWheelScaling(scale);
+            Target.mainRigidbody.ResetCenterOfMass();
             //MatchWheelMeshToColliders();
         }
 
@@ -220,36 +225,41 @@ namespace LittleCompany.components
         {
             Target.FrontRightWheel.radius = OriginalFrontRightWheelRadius * scale;
             Target.FrontRightWheel.sprungMass = OriginalFrontRightWheelSprungMass / scale;
+            Target.FrontRightWheel.suspensionDistance = OriginalFrontRightWheelSuspensionDistance * scale;
 
             Target.FrontLeftWheel.radius = OriginalFrontLeftWheelRadius * scale;
             Target.FrontLeftWheel.sprungMass = OriginalFrontLeftWheelSprungMass / scale;
+            Target.FrontLeftWheel.suspensionDistance = OriginalFrontLeftWheelSuspensionDistance * scale;
 
             Target.BackRightWheel.radius = OriginalBackRightWheelRadius * scale;
             Target.BackRightWheel.sprungMass = OriginalBackRightWheelSprungMass / scale;
+            Target.BackRightWheel.suspensionDistance = OriginalBackRightWheelSuspensionDistance * scale;
 
             Target.BackLeftWheel.radius = OriginalBackLeftWheelRadius * scale;
             Target.BackLeftWheel.sprungMass = OriginalBackLeftWheelSprungMass / scale;
+            Target.BackLeftWheel.suspensionDistance = OriginalBackLeftWheelSuspensionDistance * scale;
         }
 
 
         internal override void OnAwake()
         {
-            if (OrignalMass == 0f)
-            {
-                OrignalMass = Target.mainRigidbody.mass;
-            }
+            OrignalMass = Target.mainRigidbody.mass;
 
             OriginalFrontRightWheelRadius = Target.FrontRightWheel.radius;
             OriginalFrontRightWheelSprungMass = Target.FrontRightWheel.sprungMass;
+            OriginalFrontRightWheelSuspensionDistance = Target.FrontRightWheel.suspensionDistance;
 
             OriginalFrontLeftWheelRadius = Target.FrontLeftWheel.radius;
             OriginalFrontLeftWheelSprungMass = Target.FrontLeftWheel.sprungMass;
+            OriginalFrontLeftWheelSuspensionDistance = Target.FrontLeftWheel.suspensionDistance;
 
             OriginalBackRightWheelRadius = Target.BackRightWheel.radius;
             OriginalBackRightWheelSprungMass = Target.BackRightWheel.sprungMass;
+            OriginalBackRightWheelSuspensionDistance = Target.BackRightWheel.suspensionDistance;
 
             OriginalBackLeftWheelRadius = Target.BackLeftWheel.radius;
             OriginalBackLeftWheelSprungMass = Target.BackLeftWheel.sprungMass;
+            OriginalBackLeftWheelSuspensionDistance = Target.BackLeftWheel.suspensionDistance;
         }
 
         private void MatchWheelMeshToColliders()
