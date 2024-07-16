@@ -195,7 +195,7 @@ namespace LittleCompany.components
     internal class VehicleScaling : TargetScaling<VehicleController>
     {
         internal override Vector3 OriginalScale => Vector3.one * 1.18f;
-        float OrignalMass = 0f;
+        float OriginalMass = 0f;
 
         float OriginalFrontRightWheelRadius = 0f;
         float OriginalFrontRightWheelSprungMass = 0f;
@@ -217,6 +217,7 @@ namespace LittleCompany.components
         {
             base.ScaleTo(scale, scaledBy);
             UpdateWheelScaling(scale);
+            Target.mainRigidbody.mass = OriginalMass * Mathf.Clamp(scale, 0.5f, 1f);
             Target.mainRigidbody.ResetCenterOfMass();
             //MatchWheelMeshToColliders();
         }
@@ -243,7 +244,7 @@ namespace LittleCompany.components
 
         internal override void OnAwake()
         {
-            OrignalMass = Target.mainRigidbody.mass;
+            OriginalMass = Target.mainRigidbody.mass;
 
             OriginalFrontRightWheelRadius = Target.FrontRightWheel.radius;
             OriginalFrontRightWheelSprungMass = Target.FrontRightWheel.sprungMass;
