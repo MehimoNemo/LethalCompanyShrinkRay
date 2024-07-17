@@ -27,7 +27,7 @@ namespace LittleCompany.patches
             if(intensity != 0 && player.isPlayerControlled)
             {
                 float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
-                if(player.playerClientId < 4)
+                if(player.playerClientId < 4 || !MoreCompanyAudioCompatibilityPatch.compatEnabled)
                 {
                     SoundManager.Instance.playerVoicePitchTargets[player.playerClientId] = modifiedPitch;
                 }
