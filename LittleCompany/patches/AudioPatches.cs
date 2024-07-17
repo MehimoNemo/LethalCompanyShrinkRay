@@ -3,7 +3,6 @@ using HarmonyLib;
 using LittleCompany.compatibility;
 using LittleCompany.Config;
 using LittleCompany.helper;
-using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -28,7 +27,10 @@ namespace LittleCompany.patches
             if(intensity != 0 && player.isPlayerControlled)
             {
                 float modifiedPitch = (float)(-1f * intensity * (playerScale - PlayerInfo.CurrentPlayerScale) + 1f);
-                SoundManager.Instance.playerVoicePitchTargets[player.playerClientId] = modifiedPitch;
+                if(player.playerClientId < 4)
+                {
+                    SoundManager.Instance.playerVoicePitchTargets[player.playerClientId] = modifiedPitch;
+                }
                 SoundManager.Instance.SetPlayerPitch(modifiedPitch, (int)player.playerClientId);
                 MoreCompanyAudioCompatibilityPatch.CompatUpdatePitchInAudioMixers(player.playerClientId, modifiedPitch);
             }
