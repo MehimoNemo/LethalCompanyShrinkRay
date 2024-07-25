@@ -2,6 +2,7 @@
 using HarmonyLib;
 using LittleCompany.patches;
 using ModelReplacement;
+using ModelReplacement.Monobehaviors.Enemies;
 using System.Runtime.CompilerServices;
 namespace LittleCompany.compatibility
 {
@@ -43,6 +44,18 @@ namespace LittleCompany.compatibility
                 return;
             }
             player.gameObject.AddComponent<ModelReplacementApiCompatibilityComponent>();
+        }
+
+        [HarmonyPatch(typeof(MaskedReplacementBase), "SetReplacement")]
+        [HarmonyPostfix]
+        public static void SetReplacementPrefix(PlayerControllerB mimicking, MaskedReplacementBase __instance)
+        {
+            if (mimicking == null || __instance == null) return;
+            ModelReplacementApiCompatibilityComponent modelReplacement = mimicking.GetComponent<ModelReplacementApiCompatibilityComponent>();
+            if(modelReplacement != null)
+            {
+                __instance.replacementModel.transform.localScale = modelReplacement.replacementModelOriginalScale;
+            }
         }
     }
 }

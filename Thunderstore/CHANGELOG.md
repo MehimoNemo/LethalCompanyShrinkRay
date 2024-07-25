@@ -1,3 +1,9 @@
+### X.X.X ###
+**What's new**
+- Scaling the company cruiser is now possible!
+**Fixes**
+- Fixed models from ModelReplacementApi being off when appearing on masked enemies of Mirage mod if you're resized.
+
 ### 1.3.6 ###
 **Fixes**
 - Fixed exception when spawning BurningRobotToy

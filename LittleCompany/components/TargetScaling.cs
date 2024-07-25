@@ -219,7 +219,6 @@ namespace LittleCompany.components
             UpdateWheelScaling(scale);
             Target.mainRigidbody.mass = OriginalMass * Mathf.Clamp(scale, 0.5f, 1f);
             Target.mainRigidbody.ResetCenterOfMass();
-            //MatchWheelMeshToColliders();
         }
 
         private void UpdateWheelScaling(float scale)
@@ -263,19 +262,45 @@ namespace LittleCompany.components
             OriginalBackLeftWheelSuspensionDistance = Target.BackLeftWheel.suspensionDistance;
         }
 
-        private void MatchWheelMeshToColliders()
-        {
-            Target.MatchWheelMeshToCollider(Target.leftWheelMesh, Target.BackRightWheel);
-            Target.MatchWheelMeshToCollider(Target.rightWheelMesh, Target.FrontRightWheel);
-            Target.MatchWheelMeshToCollider(Target.backLeftWheelMesh, Target.BackLeftWheel);
-            Target.MatchWheelMeshToCollider(Target.backRightWheelMesh, Target.BackRightWheel);
-        }
-
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
         {
-            Target.enabled = false;
+            if(RelativeScale > scale)
+                PrepareForScaling();
             base.ScaleOverTimeTo(scale, scaledBy, onComplete, duration, mode, startingFromScale);
-            Target.enabled = true;
+        }
+
+        private static List<Collider> disabledColliders = new List<Collider>();
+
+        public void PrepareForScaling()
+        {
+            Target.mainRigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ;
+
+            foreach (Collider collider in Target.GetComponents<Collider>())
+            {
+                if (collider is not WheelCollider && collider.enabled)
+                {
+                    disabledColliders.Add(collider);
+                    collider.enabled = false;
+                }
+            }
+            foreach (Collider collider in Target.GetComponentsInChildren<Collider>())
+            {
+                if (collider is not WheelCollider && collider.enabled)
+                {
+                    disabledColliders.Add(collider);
+                    collider.enabled = false;
+                }
+            }
+        }
+
+        public void UnPrepareForScaling()
+        {
+            Target.mainRigidbody.constraints = 0;
+            foreach (Collider collider in disabledColliders)
+            {
+                collider.enabled = true;
+            }
+            disabledColliders.Clear();
         }
     }
 
@@ -339,6 +364,18 @@ namespace LittleCompany.components
                 if(PlayerInfo.IsCurrentPlayer(Target))
                     AudioPatches.UpdateEnemyPitches();
             }
+        }
+
+        public void NextFrameScale(float scale, PlayerControllerB player, int numberOfFrame)
+        {
+            StartCoroutine(NextFrameScaleCall(scale, player, numberOfFrame));
+        }
+
+        IEnumerator NextFrameScaleCall(float scale, PlayerControllerB player, int numberOfFrame)
+        {
+            //returning 0 will make it wait 1 frame
+            yield return numberOfFrame;
+            ScaleTo(scale, player);
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)

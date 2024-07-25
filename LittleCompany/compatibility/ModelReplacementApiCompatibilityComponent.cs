@@ -28,7 +28,7 @@ namespace LittleCompany.compatibility
 
         internal PlayerControllerB player;
         internal GameObject replacementModel;
-        internal Vector3 replacementModelOriginalScale;
+        public Vector3 replacementModelOriginalScale;
 
         public void Awake()
         {

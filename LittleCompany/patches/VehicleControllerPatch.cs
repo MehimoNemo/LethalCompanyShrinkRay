@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
+using LethalLib.Modules;
 using LittleCompany.components;
 using LittleCompany.helper;
 using LittleCompany.modifications;
@@ -9,32 +11,72 @@ namespace LittleCompany.patches
     internal class VehicleControllerPatch
     {
         private static float _realPlayerScale = 1f;
+        private static bool _isInVehicle = false;
 
         [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.SetPlayerInControlOfVehicleClientRpc))]
         [HarmonyPostfix]
         public static void SetPlayerInControlOfVehicleClientRpcPostfix(VehicleController __instance)
         {
-            if (__instance.currentDriver != PlayerInfo.CurrentPlayer) return;
+            SetScaleOnEnterVehicle(__instance.currentDriver, __instance);
+        }
 
-            var vehicleScale = VehicleModification.ScalingOf(__instance).RelativeScale;
-            var playerScaling = PlayerModification.ScalingOf(PlayerInfo.CurrentPlayer);
-            _realPlayerScale = PlayerInfo.CurrentPlayerScale;
-            playerScaling.TransformToScale.localScale = Vector3.one * vehicleScale;
+        [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.SetPassengerInCar))]
+        [HarmonyPostfix]
+        public static void SetPassengerInCarPostfix(PlayerControllerB player, VehicleController __instance)
+        {
+            SetScaleOnEnterVehicle(player, __instance);
         }
 
         [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.ExitDriverSideSeat))]
         [HarmonyPostfix]
         public static void ExitDriverSideSeatPostfix(VehicleController __instance)
         {
-            Plugin.Log("ExitDriverSideSeatPostfix");
-            if (!__instance.localPlayerInControl) return;
-            Plugin.Log("ExitDriverSideSeatPostfix2");
+            ResetScaleOnExitVehicle();
+        }
 
+        [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.SpringDriverSeatLocalClient))]
+        [HarmonyPostfix]
+        public static void SpringDriverSeatLocalClientPostfix(VehicleController __instance)
+        {
+            ResetScaleOnExitVehicle();
+        }
+
+        [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.ExitPassengerSideSeat))]
+        [HarmonyPostfix]
+        public static void ExitPassengerSideSeatPostfix(VehicleController __instance)
+        {
+            ResetScaleOnExitVehicle();
+        }
+
+        private static void SetScaleOnEnterVehicle(PlayerControllerB player, VehicleController vehicleController)
+        {
+            Plugin.Log("SetScaleOnEnterVehicle");
+            if (_isInVehicle || player != PlayerInfo.CurrentPlayer) return;
+            Plugin.Log("SetScaleOnEnterVehicle2");
+            var vehicleScale = VehicleModification.ScalingOf(vehicleController).RelativeScale;
             var playerScaling = PlayerModification.ScalingOf(PlayerInfo.CurrentPlayer);
+            _realPlayerScale = PlayerInfo.CurrentPlayerScale;
+            playerScaling.TransformToScale.localScale = Vector3.one * vehicleScale;
+            _isInVehicle = true;
+        }
+
+        private static void ResetScaleOnExitVehicle()
+        {
+            Plugin.Log("ResetScaleOnExitVehicle");
+            if (!_isInVehicle) return;
+            Plugin.Log("ResetScaleOnExitVehicle2");
+
+            PlayerControllerB player = PlayerInfo.CurrentPlayer;
+            var playerScaling = PlayerModification.ScalingOf(player);
             if (playerScaling == null)
                 Plugin.Log("Unable to reset player size after using vehicle.", Plugin.LogType.Error);
             else
-                playerScaling.TransformToScale.localScale = playerScaling.OriginalScale * _realPlayerScale;
+            {
+                //playerScaling.NextFrameScale(_realPlayerScale, player, 0);
+                //playerScaling.NextFrameScale(_realPlayerScale, player, 5);
+                playerScaling.ScaleOverTimeTo(_realPlayerScale, player);
+            }
+            _isInVehicle = false;
         }
 
         private static float GetMaximumCarStress(VehicleController vehicule)

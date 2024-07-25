@@ -13,6 +13,7 @@ using static LittleCompany.helper.LayerMasks;
 using static LittleCompany.modifications.Modification;
 using LittleCompany.dependency;
 using HarmonyLib;
+using static UnityEngine.GraphicsBuffer;
 
 namespace LittleCompany.components
 {
@@ -400,10 +401,9 @@ namespace LittleCompany.components
             {
                 var layerMasks = new List<Mask>() { Mask.Player };
                 if (ModConfig.Instance.values.itemSizeChangeStep > Mathf.Epsilon)
-                {
                     layerMasks.Add(Mask.Props);
-                    //layerMasks.Add(Mask.CompanyCruiser);
-                }
+                if (ModConfig.Instance.values.vehicleSizeChangeStep > Mathf.Epsilon)
+                    layerMasks.Add(Mask.CompanyCruiser);
                 if (ModConfig.Instance.values.enemySizeChangeStep > Mathf.Epsilon)
                     layerMasks.Add(Mask.Enemies);
                 if (ModConfig.Instance.values.shipObjectSizeChangeStep > Mathf.Epsilon)
@@ -864,8 +864,10 @@ namespace LittleCompany.components
             }
 
             Plugin.Log("Ray has hit " + targetObject.name + "!");
-            VehicleModification.ApplyModificationTo(targetObject.GetComponentInParent<VehicleController>(), currentModificationType.Value, playerHeldBy, ItemModification.ScalingOf(this).RelativeScale, () =>
+            VehicleController vehicleController = targetObject.GetComponentInParent<VehicleController>();
+            VehicleModification.ApplyModificationTo(vehicleController, currentModificationType.Value, playerHeldBy, ItemModification.ScalingOf(this).RelativeScale, () =>
             {
+                VehicleModification.ScalingOf(vehicleController)?.UnPrepareForScaling();
                 Plugin.Log("Finished vehicle modification with type: " + currentModificationType.Value.ToString());
             });
 
