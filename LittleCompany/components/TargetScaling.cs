@@ -525,6 +525,13 @@ namespace LittleCompany.components
             Target.itemProperties.weight = 1f + ((originalItemProperties.weight - 1f) * RelativeScale);
             var diff = Target.itemProperties.weight - lastWeight;
 
+            if (Target.itemProperties.weight < 0f)
+            {
+                Target.itemProperties.weight = 0;
+                diff = -lastWeight;
+            }
+                
+
             if (Target.playerHeldBy != null)
                 Target.playerHeldBy.carryWeight = Mathf.Clamp(Target.playerHeldBy.carryWeight + diff, 1f, 10f);
 
