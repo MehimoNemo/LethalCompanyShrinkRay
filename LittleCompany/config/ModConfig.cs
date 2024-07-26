@@ -72,6 +72,8 @@ namespace LittleCompany.Config
 
             public float itemSizeChangeStep { get; set; }
 
+            public float itemSizeChangeSpeed { get; set; }
+
             public float shipObjectSizeChangeStep { get; set; }
 
             public float vehicleSizeChangeStep { get; set; }
@@ -133,6 +135,7 @@ namespace LittleCompany.Config
             values.playerSizeChangeStep          = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
             values.playerSizeStopAtDefault       = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeStopAtDefault", false, "If true, when scaling would go through the DefaultPlayerSize it will stop there instead.").Value;
             values.itemSizeChangeStep            = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.4f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
+            values.itemSizeChangeSpeed           = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeSpeed", 1f, new ConfigDescription("Defines how fast an item shrinks/enlarges.", new AcceptableValueRange<float>(0.1f, 1000f))).Value;
             values.itemScalingVisualOnly         = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingVisualOnly", false, "If true, scaling items has no special effects.").Value;
             values.shipObjectSizeChangeStep      = Plugin.BepInExConfig().Bind("Sizing", "ShipObjectSizeChangeStep", 0.2f, new ConfigDescription("Defines how much a ship object shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.vehicleSizeChangeStep         = Plugin.BepInExConfig().Bind("Sizing", "VehicleSizeChangeStep", 0.2f, new ConfigDescription("Defines how much a vehicle shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;

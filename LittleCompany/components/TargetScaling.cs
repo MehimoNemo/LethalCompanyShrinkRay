@@ -552,9 +552,9 @@ namespace LittleCompany.components
                 float previousScale = RelativeScale;
 
 #if DEBUG
-                RelativeScale += Time.deltaTime / 2.5f;
+                RelativeScale += Time.deltaTime / 2.5f * ModConfig.Instance.values.itemSizeChangeSpeed;
 #else
-                RelativeScale += Time.deltaTime / (20 * RelativeScale);
+                RelativeScale += Time.deltaTime / (20 * RelativeScale * ModConfig.Instance.values.itemSizeChangeSpeed);
 #endif
                 var newScale = OriginalScale * RelativeScale;
                 TransformToScale.localScale = newScale;
