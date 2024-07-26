@@ -526,10 +526,10 @@ namespace LittleCompany.components
             var diff = Target.itemProperties.weight - lastWeight;
 
             if (Target.playerHeldBy != null)
-                Target.playerHeldBy.carryWeight += diff;
+                Target.playerHeldBy.carryWeight = Mathf.Clamp(Target.playerHeldBy.carryWeight + diff, 1f, 10f);
 
             // Scrap value
-            if(originalScrapValue > 0)
+            if (originalScrapValue > 0)
                 Target.SetScrapValue((int)(originalScrapValue * Mathf.Max(1f + (RelativeScale - 1f) * 0.1f, 2f))); // Maximum twice the value at 10x size
         }
 
