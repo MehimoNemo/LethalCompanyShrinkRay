@@ -1,8 +1,12 @@
 ### X.X.X ###
 **What's new**
 - Scaling the company cruiser is now possible!
+**Tweaks**
+- New config for adjusting the speed at which the items grow when shot with the shrink ray gun (ItemSizeChangeSpeed)
 **Fixes**
 - Fixed models from ModelReplacementApi being off when appearing on masked enemies of Mirage mod if you're resized.
+- Attempt fixing weird weight issues when resizing items
+- Fix error log for updating pitch of players in groups of more than 4 using MoreCompany
 
 ### 1.3.6 ###
 **Fixes**
