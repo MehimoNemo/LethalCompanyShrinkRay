@@ -1,4 +1,4 @@
-### X.X.X ###
+### 1.3.7 ###
 **What's new**
 - Scaling the company cruiser is now possible!
 **Tweaks**

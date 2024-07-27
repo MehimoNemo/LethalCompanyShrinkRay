@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.components;
+using LittleCompany.Config;
 using LittleCompany.helper;
 using LittleCompany.modifications;
 using System.Collections;
@@ -55,7 +56,7 @@ namespace LittleCompany.patches
 
         public static void CheckForGlassify(GrabbableObject item)
         {
-            if (item == null) return;
+            if (item == null || !ModConfig.Instance.values.itemGlassify) return;
             if (item.playerHeldBy == null) return;
 
             // If item relative scale is equal or smaller than the player scale then don't glassify

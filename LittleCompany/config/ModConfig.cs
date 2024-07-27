@@ -74,6 +74,8 @@ namespace LittleCompany.Config
 
             public float itemSizeChangeSpeed { get; set; }
 
+            public bool itemGlassify { get; set; }
+
             public float shipObjectSizeChangeStep { get; set; }
 
             public float vehicleSizeChangeStep { get; set; }
@@ -137,6 +139,7 @@ namespace LittleCompany.Config
             values.itemSizeChangeStep            = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.4f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.itemSizeChangeSpeed           = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeSpeed", 1f, new ConfigDescription("Defines how fast an item shrinks/enlarges.", new AcceptableValueRange<float>(0.1f, 1000f))).Value;
             values.itemScalingVisualOnly         = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingVisualOnly", false, "If true, scaling items has no special effects.").Value;
+            values.itemGlassify = Plugin.BepInExConfig().Bind("Sizing", "ItemGlassify", true, "If true, items you are holding will be translucent when they are big and covering too much of your screen.").Value;
             values.shipObjectSizeChangeStep      = Plugin.BepInExConfig().Bind("Sizing", "ShipObjectSizeChangeStep", 0.2f, new ConfigDescription("Defines how much a ship object shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.vehicleSizeChangeStep         = Plugin.BepInExConfig().Bind("Sizing", "VehicleSizeChangeStep", 0.2f, new ConfigDescription("Defines how much a vehicle shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.enemySizeChangeStep           = Plugin.BepInExConfig().Bind("Sizing", "EnemySizeChangeStep", 0.5f, new ConfigDescription("Defines how much an enemy shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
