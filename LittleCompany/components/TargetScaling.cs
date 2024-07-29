@@ -198,6 +198,10 @@ namespace LittleCompany.components
     {
         internal override Vector3 OriginalScale => Vector3.one * 1.18f;
         float OriginalMass = 0f;
+        float OriginalCarAcceleration = 5f;
+        float OriginalCarMaxSpeed = 7f;
+        float OriginalBrakeSpeed = 5f;
+        float OriginalIdleSpeed = 2f;
 
         float OriginalFrontRightWheelRadius = 0f;
         float OriginalFrontRightWheelSprungMass = 0f;
@@ -218,12 +222,22 @@ namespace LittleCompany.components
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
         {
             base.ScaleTo(scale, scaledBy);
-            UpdateWheelScaling(scale);
-            Target.mainRigidbody.mass = OriginalMass * Mathf.Clamp(scale, 0.5f, 1f);
+            UpdateVehicleStrengthScaling(Mathf.Clamp(scale, 0.2f, 1f));
+            UpdateWheelCollisionScaling(scale);
+            
             Target.mainRigidbody.ResetCenterOfMass();
         }
 
-        private void UpdateWheelScaling(float scale)
+        private void UpdateVehicleStrengthScaling(float scale)
+        {
+            Target.mainRigidbody.mass = OriginalMass * scale;
+            Target.carAcceleration = OriginalCarAcceleration * scale;
+            Target.carMaxSpeed = OriginalCarMaxSpeed * scale;
+            Target.brakeSpeed = OriginalBrakeSpeed * scale;
+            Target.idleSpeed = OriginalIdleSpeed * scale;
+        }
+
+        private void UpdateWheelCollisionScaling(float scale)
         {
             Target.FrontRightWheel.radius = OriginalFrontRightWheelRadius * scale;
             Target.FrontRightWheel.sprungMass = OriginalFrontRightWheelSprungMass / scale;
