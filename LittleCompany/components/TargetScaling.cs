@@ -8,6 +8,8 @@ using LittleCompany.modifications;
 using LittleCompany.patches;
 using System.Collections.Generic;
 using LittleCompany.Config;
+using ModelReplacement;
+using LittleCompany.compatibility;
 
 namespace LittleCompany.components
 {
@@ -591,8 +593,7 @@ namespace LittleCompany.components
 
         internal void ResetItemProperties()
         {
-            if (Target.itemProperties == originalItemProperties) return;
-
+            if (Target?.itemProperties == null || Target.itemProperties == originalItemProperties) return;
             Destroy(Target.itemProperties);
             Target.itemProperties = originalItemProperties;
         }
@@ -643,6 +644,9 @@ namespace LittleCompany.components
                 var particles = Target.gameObject.transform.Find("BugSwarmParticle");
                 if (particles != null)
                     particles.transform.localScale = OriginalScale * scale;
+            } else if(Target is MaskedPlayerEnemy && ModelReplacementApiMaskedCompatibilityComponent.compatEnabled)
+            {
+                Target.gameObject.AddComponent<ModelReplacementApiMaskedCompatibilityComponent>();
             }
         }
     }

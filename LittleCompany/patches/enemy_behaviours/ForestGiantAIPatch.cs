@@ -115,6 +115,7 @@ namespace LittleCompany.patches.enemy_behaviours
         #region Flee
         private static bool FleeBehaviour(ForestGiantAI forestGiant)
         {
+            if (forestGiant == null || forestGiant.agentLocalVelocity == null || forestGiant.agent == null) return false;
             Plugin.Log("magnitude: " + forestGiant.agentLocalVelocity.sqrMagnitude);
             if (forestGiant.agent.speed > 0f && forestGiant.agentLocalVelocity.sqrMagnitude < 0.5f) // Not moving or barely. Plain 0 is spawning speed
                 forestGiant.stopAndLookTimer += Time.deltaTime;
@@ -132,6 +133,9 @@ namespace LittleCompany.patches.enemy_behaviours
                 InitiateFleeCoop(forestGiant, nearestGiant);
                 return false;
             }
+
+            if(forestGiant.targetPlayer == null)
+                return false;
 
             // Flee behaviour
             var hasLOSToTarget = forestGiant.CheckLineOfSightForPosition(forestGiant.targetPlayer.transform.position, 80f);
@@ -185,6 +189,7 @@ namespace LittleCompany.patches.enemy_behaviours
 
                 forestGiant.SetDestinationToPosition(forestGiant.transform.position);
             }
+            if (forestGiant.lookTarget == null) return false;
             forestGiant.lookTarget.position = forestGiant.destination;
 
             return true;

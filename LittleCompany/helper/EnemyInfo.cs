@@ -81,7 +81,7 @@ namespace LittleCompany.helper
             if (enemyName == null) return null;
             foreach (EnemyType enemyType in EnemyTypes)
             {
-                if (enemyName == enemyType.enemyName)
+                if (enemyName == enemyType.enemyName && enemyType.enemyPrefab != null)
                     return enemyType;
             }
             return null;

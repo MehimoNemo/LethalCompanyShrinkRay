@@ -28,24 +28,30 @@ namespace LittleCompany.patches
         }
 
         [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.ExitDriverSideSeat))]
-        [HarmonyPostfix]
-        public static void ExitDriverSideSeatPostfix(VehicleController __instance)
+        [HarmonyPrefix]
+        public static void ExitDriverSideSeatPrefix(VehicleController __instance)
         {
-            ResetScaleOnExitVehicle();
+            if (__instance.localPlayerInControl)
+            {
+                ResetScaleOnExitVehicle(GameNetworkManager.Instance.localPlayerController);
+            }
         }
 
-        [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.SpringDriverSeatLocalClient))]
-        [HarmonyPostfix]
-        public static void SpringDriverSeatLocalClientPostfix(VehicleController __instance)
+        [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.SpringDriverSeatClientRpc))]
+        [HarmonyPrefix]
+        public static void SpringDriverSeatClientRpcPrefix(VehicleController __instance)
         {
-            ResetScaleOnExitVehicle();
+            ResetScaleOnExitVehicle(__instance.currentDriver);
         }
 
         [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.ExitPassengerSideSeat))]
-        [HarmonyPostfix]
-        public static void ExitPassengerSideSeatPostfix(VehicleController __instance)
+        [HarmonyPrefix]
+        public static void ExitPassengerSideSeatPrefix(VehicleController __instance)
         {
-            ResetScaleOnExitVehicle();
+            if (__instance.localPlayerInPassengerSeat)
+            {
+                ResetScaleOnExitVehicle(GameNetworkManager.Instance.localPlayerController);
+            }
         }
 
         private static void SetScaleOnEnterVehicle(PlayerControllerB player, VehicleController vehicleController)
@@ -60,13 +66,12 @@ namespace LittleCompany.patches
             _isInVehicle = true;
         }
 
-        private static void ResetScaleOnExitVehicle()
+        private static void ResetScaleOnExitVehicle(PlayerControllerB player)
         {
             Plugin.Log("ResetScaleOnExitVehicle");
-            if (!_isInVehicle) return;
+            if (!_isInVehicle || player != PlayerInfo.CurrentPlayer) return;
             Plugin.Log("ResetScaleOnExitVehicle2");
 
-            PlayerControllerB player = PlayerInfo.CurrentPlayer;
             var playerScaling = PlayerModification.ScalingOf(player);
             if (playerScaling == null)
                 Plugin.Log("Unable to reset player size after using vehicle.", Plugin.LogType.Error);

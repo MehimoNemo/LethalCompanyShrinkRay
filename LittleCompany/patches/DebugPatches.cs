@@ -4,7 +4,6 @@ using GameNetcodeStuff;
 using LittleCompany.helper;
 using LittleCompany.components;
 using UnityEngine;
-using static LittleCompany.helper.Moons;
 using Unity.Netcode;
 using System.Collections;
 using LittleCompany.modifications;
@@ -12,7 +11,6 @@ using static LittleCompany.modifications.Modification;
 using static LittleCompany.helper.EnemyInfo;
 using UnityEngine.SceneManagement;
 using System.Linq;
-using LethalLib.Modules;
 
 namespace LittleCompany.patches
 {
