@@ -1,8 +1,26 @@
+### 1.3.9 ###
+**Fixes**
+- Fix compatibility issues with mod SCP956
+- Exiting the cruiser scales you back to the correct size more reliably now.
+
+### 1.3.8 ###
+**Tweaks**
+- New config for disabling the glassification of items that are too big and doesnt allow you to see.
+- Tweaks to the small cruiser so it drives a bit better. (Still very hard to drive)
+
+**Fixes**
+- Fixed models from ModelReplacementApi not being resized when shrinking/growing masked people wearing them due to Mirage
+- Exiting the cruiser scales you back to the correct size more reliably now.
+- Fix error with scaled reserved items (ReservedSlot) on masked people using Mirage.
+- Attempt to fix rare error caused by Forest Giants AI when seeing small players.
+
 ### 1.3.7 ###
 **What's new**
 - Scaling the company cruiser is now possible!
+
 **Tweaks**
 - New config for adjusting the speed at which the items grow when shot with the shrink ray gun (ItemSizeChangeSpeed)
+
 **Fixes**
 - Fixed models from ModelReplacementApi being off when appearing on masked enemies of Mirage mod if you're resized.
 - Attempt fixing weird weight issues when resizing items

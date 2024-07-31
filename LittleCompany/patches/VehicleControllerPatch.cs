@@ -62,7 +62,8 @@ namespace LittleCompany.patches
             var vehicleScale = VehicleModification.ScalingOf(vehicleController).RelativeScale;
             var playerScaling = PlayerModification.ScalingOf(PlayerInfo.CurrentPlayer);
             _realPlayerScale = PlayerInfo.CurrentPlayerScale;
-            playerScaling.TransformToScale.localScale = Vector3.one * vehicleScale;
+            if(vehicleScale != playerScaling.RelativeScale)
+                playerScaling.TransformToScale.localScale = Vector3.one * vehicleScale;
             _isInVehicle = true;
         }
 
@@ -79,7 +80,8 @@ namespace LittleCompany.patches
             {
                 //playerScaling.NextFrameScale(_realPlayerScale, player, 0);
                 //playerScaling.NextFrameScale(_realPlayerScale, player, 5);
-                playerScaling.ScaleOverTimeTo(_realPlayerScale, player);
+                if (_realPlayerScale != playerScaling.RelativeScale)
+                    playerScaling.ScaleOverTimeTo(_realPlayerScale, player);
             }
             _isInVehicle = false;
         }

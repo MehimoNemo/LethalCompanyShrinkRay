@@ -19,6 +19,7 @@ using LittleCompany.patches.enemy_behaviours;
 namespace LittleCompany
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency(SCP956CompatibilityPatch.SCP956ApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(MoreCompanyAudioCompatibilityPatch.MoreCompanyReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalEmotesApiCompatibility.LethalEmotesApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ScrapManagementFacade.LethalLevelLoaderReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
@@ -129,6 +130,11 @@ namespace LittleCompany
                 Log("enabling MoreCompanyAudioCompatibility");
                 harmony.Unpatch(typeof(AudioMixer).GetMethod("SetFloat"), HarmonyPatchType.Prefix, MoreCompanyAudioCompatibilityPatch.MoreCompanyReferenceChain);
                 harmony.PatchAll(typeof(MoreCompanyAudioCompatibilityPatch));
+            }
+            if (SCP956CompatibilityPatch.compatEnabled)
+            {
+                Log("enabling SCP956Compatibility");
+                harmony.PatchAll(typeof(SCP956CompatibilityPatch));
             }
 
 #if DEBUG
