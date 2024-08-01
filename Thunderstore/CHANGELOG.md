@@ -1,3 +1,7 @@
+### 1.3.10 ###
+**Fixes**
+- Fix size regulation when exiting the cruiser.
+
 ### 1.3.9 ###
 **Fixes**
 - Fix compatibility issues with mod SCP956
