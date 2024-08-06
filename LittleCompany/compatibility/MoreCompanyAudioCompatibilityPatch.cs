@@ -62,5 +62,39 @@ namespace LittleCompany.compatibility
                 }
             }
         }
+
+        [HarmonyPatch(typeof(AudioMixer), "SetFloat")]
+        [HarmonyPrefix]
+        public static bool SetFloatPrefix(string name, float value)
+        {
+            if (name.StartsWith("PlayerVolume") || name.StartsWith("PlayerPitch"))
+            {
+                string cutName = name.Replace("PlayerVolume", "").Replace("PlayerPitch", "");
+                int playerObjectNumber = int.Parse(cutName);
+                if (playerObjectNumber < 4) return true;
+
+                PlayerControllerB playerControllerB = StartOfRound.Instance.allPlayerScripts[playerObjectNumber];
+                if (playerControllerB != null)
+                {
+                    AudioSource voiceSource = playerControllerB.currentVoiceChatAudioSource;
+                    if (voiceSource)
+                    {
+                        if (name.StartsWith("PlayerVolume"))
+                        {
+                            voiceSource.volume = value;
+                        }
+                        else if (name.StartsWith("PlayerPitch"))
+                        {
+                            voiceSource.pitch = value;
+                        }
+                    }
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        
     }
 }

@@ -1,3 +1,8 @@
+### 1.3.11 ###
+**Fixes**
+- Fix log spam when playing with more than 4 players with MoreCompany
+- Fix size desynch when exiting the cruiser. (for real this time)
+
 ### 1.3.10 ###
 **Fixes**
 - Fix size regulation when exiting the cruiser.

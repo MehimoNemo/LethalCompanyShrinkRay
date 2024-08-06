@@ -56,13 +56,13 @@ namespace LittleCompany.patches
             if (playerScaling == null)
                 Plugin.Log("Unable to reset player size after using vehicle.", Plugin.LogType.Error);
             else
-                playerScaling.ScaleOverTimeTo(_realPlayerScale, player);
+                playerScaling.TransformToScale.localScale = Vector3.one * _realPlayerScale;
             _realPlayerScale = -1;
         }
 
         private static bool IsPlayerInASeat(VehicleController vehicleController)
         {
-            return vehicleController.localPlayerInControl || vehicleController.localPlayerInPassengerSeat;
+            return vehicleController.localPlayerInControl || vehicleController.localPlayerInPassengerSeat || PlayerInfo.CurrentPlayer.inVehicleAnimation;
         }
 
         private static float GetMaximumCarStress(VehicleController vehicule)
