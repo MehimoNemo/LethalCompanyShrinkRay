@@ -3,6 +3,7 @@ using LittleCompany.components;
 using LittleCompany.helper;
 using ModelReplacement.Monobehaviors.Enemies;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace LittleCompany.compatibility
@@ -63,18 +64,6 @@ namespace LittleCompany.compatibility
                 replacementModel = null;
             }
         }
-        
-        public void ReloadNextFrame()
-        {
-            StartCoroutine(NextFrameCall());
-        }
-
-        IEnumerator NextFrameCall()
-        {
-            //returning 0 will make it wait 1 frame
-            yield return 0;
-            AttachAndRescaleReplacementModel();
-        }
 
         public void AdjustToSize(float size)
         {
@@ -84,6 +73,7 @@ namespace LittleCompany.compatibility
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         private GameObject FindCurrentReplacementModel()
         {
             return masked?.GetComponent<MaskedReplacementBase>()?.replacementModel;

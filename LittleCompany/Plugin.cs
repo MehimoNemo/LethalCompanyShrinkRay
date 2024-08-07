@@ -136,6 +136,11 @@ namespace LittleCompany
                 Log("enabling SCP956Compatibility");
                 harmony.PatchAll(typeof(SCP956CompatibilityPatch));
             }
+            if (ModelXCosmeticsComponent.compatEnabled)
+            {
+                Log("enabling Compatibility for MoreCompany cosmetics on ModelReplacementApi model");
+                harmony.PatchAll(typeof(ModelXCosmeticsPatch));
+            }
 
 #if DEBUG
             harmony.PatchAll(typeof(DebugPatches));

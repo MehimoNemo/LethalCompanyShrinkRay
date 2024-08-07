@@ -56,7 +56,12 @@ namespace LittleCompany.patches
             if (playerScaling == null)
                 Plugin.Log("Unable to reset player size after using vehicle.", Plugin.LogType.Error);
             else
+            {
                 playerScaling.TransformToScale.localScale = Vector3.one * _realPlayerScale;
+                playerScaling.SetLocalScaleAfterYield(_realPlayerScale, new WaitForSeconds(0.5f));
+                playerScaling.SetLocalScaleAfterYield(_realPlayerScale, new WaitForSeconds(1f));
+
+            }
             _realPlayerScale = -1;
         }
 

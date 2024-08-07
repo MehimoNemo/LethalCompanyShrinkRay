@@ -1,3 +1,10 @@
+### 1.3.12 ###
+**Tweaks**
+- Added compatibility for MoreCompany cosmetics on ModelReplacementApi models
+
+**Fixes**
+- Fix size desynch when exiting the cruiser. (fr fr this time)
+
 ### 1.3.11 ###
 **Fixes**
 - Fix log spam when playing with more than 4 players with MoreCompany

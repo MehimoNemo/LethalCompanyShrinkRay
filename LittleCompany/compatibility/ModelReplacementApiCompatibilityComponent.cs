@@ -3,6 +3,7 @@ using LittleCompany.components;
 using LittleCompany.helper;
 using ModelReplacement;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace LittleCompany.compatibility
@@ -27,7 +28,7 @@ namespace LittleCompany.compatibility
         }
 
         internal PlayerControllerB player;
-        internal GameObject replacementModel;
+        public GameObject replacementModel;
         public Vector3 replacementModelOriginalScale;
 
         public void Awake()
@@ -84,6 +85,7 @@ namespace LittleCompany.compatibility
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         private GameObject FindCurrentReplacementModel()
         {
             return player.GetComponent<BodyReplacementBase>()?.replacementModel;

@@ -382,16 +382,15 @@ namespace LittleCompany.components
             }
         }
 
-        public void NextFrameScale(float scale, PlayerControllerB player, int numberOfFrame)
+        public void SetLocalScaleAfterYield(float scale, YieldInstruction yieldInstruction)
         {
-            StartCoroutine(NextFrameScaleCall(scale, player, numberOfFrame));
+            StartCoroutine(SetLocalScaleAfterYieldCall(scale, Target, yieldInstruction));
         }
 
-        IEnumerator NextFrameScaleCall(float scale, PlayerControllerB player, int numberOfFrame)
+        IEnumerator SetLocalScaleAfterYieldCall(float scale, PlayerControllerB player, YieldInstruction yieldInstruction)
         {
-            //returning 0 will make it wait 1 frame
-            yield return numberOfFrame;
-            ScaleTo(scale, player);
+            yield return yieldInstruction;
+            TransformToScale.localScale = OriginalScale * scale;
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
