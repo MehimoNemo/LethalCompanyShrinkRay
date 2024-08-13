@@ -1,6 +1,7 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
 using LittleCompany.components;
+using LittleCompany.Config;
 using LittleCompany.helper;
 using LittleCompany.modifications;
 using UnityEngine;
@@ -15,21 +16,27 @@ namespace LittleCompany.patches
         [HarmonyPostfix]
         public static void SetPlayerInControlOfVehicleClientRpcPostfix(VehicleController __instance)
         {
-            SetScaleOnEnterVehicle(__instance.currentDriver, __instance);
+            if (ModConfig.Instance.values.resizeWhenInVehicle)
+            {
+                SetScaleOnEnterVehicle(__instance.currentDriver, __instance);
+            }
         }
 
         [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.SetPassengerInCar))]
         [HarmonyPostfix]
         public static void SetPassengerInCarPostfix(PlayerControllerB player, VehicleController __instance)
         {
-            SetScaleOnEnterVehicle(player, __instance);
+            if (ModConfig.Instance.values.resizeWhenInVehicle)
+            {
+                SetScaleOnEnterVehicle(player, __instance);
+            }
         }
 
         [HarmonyPatch(typeof(VehicleController), nameof(VehicleController.Update))]
         [HarmonyPostfix]
         public static void Update_Postfix(VehicleController __instance)
         {
-            if (_realPlayerScale != -1f && !IsPlayerInASeat(__instance))
+            if (ModConfig.Instance.values.resizeWhenInVehicle && _realPlayerScale != -1f && !IsPlayerInASeat(__instance))
             {
                 ResetScaleOnExitVehicle(PlayerInfo.CurrentPlayer);
             }
