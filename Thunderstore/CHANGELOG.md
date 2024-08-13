@@ -1,3 +1,7 @@
+### 1.3.13 ###
+**Tweaks**
+- Added a setting to disable the automatic size adjustment when in the cruiser. If disabled, players won't be able to enter cruisers smaller than them.
+
 ### 1.3.12 ###
 **Tweaks**
 - Added compatibility for MoreCompany cosmetics on ModelReplacementApi models

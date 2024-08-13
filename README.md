@@ -21,6 +21,7 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | ItemScalingVisualOnly                   | If true, scaling items has no special effects.                                               | true / false                           | false   |
 |              | ShipItemSizeChangeStep                  | Defines how much a ship object shrinks/enlarges. Set to 0 for disabling ship object scaling. | 0 - 0.8                                | 0.2     |
 |              | EnemySizeChangeStep                     | Defines how much an enemy shrinks/enlarges. Set to 0 for disabling item scaling.             | 0 - 0.8                                | 0.5     |
+|              | vehicleSizeChangeStep                   | Defines how much a vehicle shrinks/enlarges in one step. Set to 0 to disable this feature.   | 0 - 0.8                                | 0.2     |
 | Shrunken     | MovementSpeedMultiplier                 | Speed multiplier for shrunken players                                                        | 0.5 (slow) - 1.5 (fast)                | 1.3     |
 |              | JumpHeightMultiplier                    | Jump-height multiplier for shrunken players                                                  | 0.5 (lower) - 2 (higher)               | 1.3     |
 |              | WeightMultiplier                        | Weight multiplier applied on held items of shrunken players                                  | 0.5 (lighter) - 2 (heavier)            | 1.5     |
@@ -39,6 +40,7 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | ShrinkPotionScrapRarity                 | Sets the scrap rarity. 0 makes it unable to spawn inside.	                                | 0 - 100                                | 10      |
 |              | EnlargePotionStorePrice                 | Sets the store price. 0 to removed potion from store.	                                    | 0 - 500                                | 50      |
 |              | EnlargePotionScrapRarity                | Sets the scrap rarity. 0 makes it unable to spawn inside.	                                | 0 - 100                                | 5       |
+| Vehicles     | ResizeWhenInVehicle                     | If set to false, you will not get resized when entering a vehicle.                           | true / false                           | false   |
 | Experimental | UseLethalLevelLoaderForItemRegistration | If true, LLL is the prefered way for loading items. If false, LethalLib is used.             | true / false                           | false   |
 > client-sided options are marked with a \*, others will by synced with the host.
 
