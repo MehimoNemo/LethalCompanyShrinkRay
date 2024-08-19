@@ -34,9 +34,11 @@
         */
         public enum Dungeon
         {
-            Level1Flow = 0,             // Factory
-            Level2Flow = 1,             // Haunted Mansion
-            Level1FlowExtraLarge = 2    // Large Factory
+            Level1Flow = 0,           // Factory
+            Level1Flow3Exit = 1,      // Factory 3 exit
+            Level1FlowExtraLarge = 2, // Large Factory
+            Level2Flow = 3,           // Haunted Mansion
+            Level3Flow = 4,           // Mineshaft
         }
 #endif
     }
