@@ -1,3 +1,7 @@
+### 1.3.14 ###
+**Fixes**
+- Fix compatibility issue with v60/v61
+
 ### 1.3.13 ###
 **Tweaks**
 - Added a setting to disable the automatic size adjustment when in the cruiser. If disabled, players won't be able to enter cruisers smaller than them.
