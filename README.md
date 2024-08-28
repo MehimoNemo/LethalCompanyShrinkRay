@@ -1,4 +1,4 @@
-[![Thunderstore Version](https://img.shields.io/thunderstore/v/Toybox/LittleCompany?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/necrowing/DramaMask/)
+[![Thunderstore Version](https://img.shields.io/thunderstore/v/Toybox/LittleCompany?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/Toybox/LittleCompany/)
 [![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/Toybox/LittleCompany?style=for-the-badge&color=yellow&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/Toybox/LittleCompany/)
 [![Discord invite](https://img.shields.io/discord/1192981794451107993?style=for-the-badge&logo=discord&logoColor=white&label=Discord&link=https%3A%2F%2Fdiscord.gg%2F63KdxhQ2Dn)](https://discord.gg/63KdxhQ2Dn)
 [![Wiki](https://img.shields.io/badge/Wiki-b?logo=github&style=for-the-badge&logoColor=white&label=GitHub&color=white&link=https%3A%2F%2Fgithub.com%2FMehimoNemo%2FLethalCompanyShrinkRay%2Fwiki)](https://github.com/MehimoNemo/LethalCompanyShrinkRay/wiki)
