@@ -42,6 +42,7 @@ In this more than cosmetic Lethal Company mod, players can experience the game f
 |              | EnlargePotionScrapRarity                | Sets the scrap rarity. 0 makes it unable to spawn inside.	                                | 0 - 100                                | 5       |
 | Vehicles     | ResizeWhenInVehicle                     | If set to false, you will not get resized when entering a vehicle.                           | true / false                           | false   |
 | Experimental | UseLethalLevelLoaderForItemRegistration | If true, LLL is the prefered way for loading items. If false, LethalLib is used.             | true / false                           | false   |
+|              | RemoveMinimumSizeLimit                  | If true, the minimum size limit changes from 0.2 to 0.05. This may cause bugs!               | true / false                           | false   |
 > client-sided options are marked with a \*, others will by synced with the host.
 
 ## Known bugs ##

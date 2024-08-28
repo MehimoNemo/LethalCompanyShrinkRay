@@ -106,8 +106,9 @@ namespace LittleCompany.Config
             public int enlargePotionScrapRarity { get; set; }
 
             // Experimental
-
             public bool useLethalLevelLoaderForItemRegistration { get; set; }
+
+            public bool removeMinimumSizeLimit { get; set; }
         }
 
         public ConfigValues values = new ConfigValues();
@@ -171,8 +172,9 @@ namespace LittleCompany.Config
             values.resizeWhenInVehicle           = Plugin.BepInExConfig().Bind("Vehicles", "ResizeWhenInVehicle", true, new ConfigDescription("If set to false, you will not get resized when entering a vehicle, you also won't be able to enter a vehicle smaller than you.")).Value;
 
             values.useLethalLevelLoaderForItemRegistration = Plugin.BepInExConfig().Bind("Experimental", "UseLethalLevelLoaderForItemRegistration", false, new ConfigDescription("Allow LittleCompany to use LethalLevelLoader for item registration instead of LethalLib.")).Value;
+            values.removeMinimumSizeLimit = Plugin.BepInExConfig().Bind("Experimental", "RemoveMinimumSizeLimit", false, new ConfigDescription("Allow to scale anything below 0.2, which could potentially cause bugs.")).Value;
 
-            DebugLog                             = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", false, "Additional logging to help identifying issues of this mod.").Value;
+            DebugLog = Plugin.BepInExConfig().Bind("Beta-only", "DebugLog", false, "Additional logging to help identifying issues of this mod.").Value;
 
 #if DEBUG
             Plugin.Log("Initial config: " + JsonConvert.SerializeObject(Instance.values));

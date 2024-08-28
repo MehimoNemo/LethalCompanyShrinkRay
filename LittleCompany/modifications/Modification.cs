@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using LittleCompany.Config;
+using UnityEngine;
 
 namespace LittleCompany.modifications
 {
     public abstract class Modification
     {
         #region Properties
-        internal static readonly float DeathShrinkMargin = 0.2f;
+        internal static float DeathShrinkMargin => ModConfig.Instance.values.removeMinimumSizeLimit ? ModConfig.SmallestSizeChange : 0.2f;
         public enum ModificationType
         {
             Normalizing,
