@@ -1,3 +1,7 @@
+### 1.3.16 ###
+**Fixes**
+- Removed obsolete LCOffice compatibility patch
+
 ### 1.3.15 ###
 **New**
 - Experimental config option "RemoveMinimumSizeLimit" to change the minimum size of enemies and players before dieing from 0.2 to 0.05
