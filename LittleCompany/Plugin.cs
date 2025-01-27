@@ -26,7 +26,6 @@ namespace LittleCompany
     [BepInDependency(ScrapManagementFacade.LethalLibReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalVRMCompatibilityComponent.LethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LethalVRMCompatibilityComponent.BetterLethalVRMApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(LCOfficeCompatibility.LCOfficeReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(ModelReplacementApiCompatibilityComponent.ModelReplacementApiReferenceChain, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
@@ -121,11 +120,6 @@ namespace LittleCompany
             {
                 Log("enabling LethalVRMCompatibility");
                 harmony.PatchAll(typeof(LethalVRMCompatibilityPatch));
-            }
-            if (LCOfficeCompatibility.compatEnabled)
-            {
-                Log("enabling LCOfficeCompatibility");
-                harmony.PatchAll(typeof(LCOfficeCompatibility));
             }
             if (MoreCompanyAudioCompatibilityPatch.compatEnabled) {
                 Log("enabling MoreCompanyAudioCompatibility");

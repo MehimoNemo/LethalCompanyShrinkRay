@@ -1,3 +1,7 @@
+### 1.3.17 ###
+**Fixes**
+- Fixed beltbag not scaling correctly. It's still not perfect when huge, but it's way better.
+
 ### 1.3.16 ###
 **Fixes**
 - Removed obsolete LCOffice compatibility patch

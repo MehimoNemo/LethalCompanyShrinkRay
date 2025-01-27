@@ -8,8 +8,6 @@ using static LittleCompany.helper.EnemyInfo;
 using static LittleCompany.modifications.Modification;
 using static LittleCompany.events.enemy.EnemyEventManager;
 using static LittleCompany.components.TargetScaling<EnemyAI>;
-using System.Linq;
-using static LittleCompany.events.enemy.RobotEventHandler;
 
 namespace LittleCompany.events.enemy
 {

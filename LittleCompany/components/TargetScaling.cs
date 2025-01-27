@@ -324,12 +324,15 @@ namespace LittleCompany.components
     {
         #region Methods
         internal Vector3 armOffset = Vector3.zero;
+        internal Vector3 OriginalBeltBagOffset;
+        internal static Vector3 BeltToFloorOffset = new Vector3(0, -1.2f, 0);
 
-		internal override Vector3 OriginalScale => Vector3.one;
+        internal override Vector3 OriginalScale => Vector3.one;
 
         internal override void OnAwake()
         {
             RelativeScale = PlayerInfo.SizeOf(Target);
+            OriginalBeltBagOffset = Target.lowerTorsoCostumeContainerBeltBagOffset.localPosition;
         }
 
         public override void ScaleTo(float scale, PlayerControllerB scaledBy)
@@ -340,6 +343,9 @@ namespace LittleCompany.components
             var wasShrunkenBefore = PlayerInfo.IsShrunk(Target);
 
             base.ScaleTo(scale, scaledBy);
+
+            // Scale the BeltBag offset
+            ScaleBeltOffset(scale);
 
             if (PlayerInfo.IsCurrentPlayer(Target))
             {
@@ -380,6 +386,11 @@ namespace LittleCompany.components
                 if(PlayerInfo.IsCurrentPlayer(Target))
                     AudioPatches.UpdateEnemyPitches();
             }
+        }
+
+        private void ScaleBeltOffset(float scale)
+        {
+            Target.lowerTorsoCostumeContainerBeltBagOffset.localPosition = OriginalBeltBagOffset / scale + (-BeltToFloorOffset * Math.Min(scale, 1.5f)) + BeltToFloorOffset;
         }
 
         public void SetLocalScaleAfterYield(float scale, YieldInstruction yieldInstruction)
