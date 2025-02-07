@@ -547,23 +547,31 @@ namespace LittleCompany.components
             Target.itemProperties.twoHandedAnimation = usingTwoHandAnimation;*/
 
             // Weight
-            var lastWeight = Target.itemProperties.weight;
-            Target.itemProperties.weight = 1f + ((originalItemProperties.weight - 1f) * RelativeScale);
-            var diff = Target.itemProperties.weight - lastWeight;
-
-            if (Target.itemProperties.weight < 0f)
+            if (ModConfig.Instance.values.itemScalingAffectWeight)
             {
-                Target.itemProperties.weight = 0;
-                diff = -lastWeight;
-            }
-                
+                var lastWeight = Target.itemProperties.weight;
+                Target.itemProperties.weight = 1f + ((originalItemProperties.weight - 1f) * RelativeScale);
+                var diff = Target.itemProperties.weight - lastWeight;
 
-            if (Target.playerHeldBy != null)
-                Target.playerHeldBy.carryWeight = Mathf.Clamp(Target.playerHeldBy.carryWeight + diff, 1f, 10f);
+                if (Target.itemProperties.weight < 0f)
+                {
+                    Target.itemProperties.weight = 0;
+                    diff = -lastWeight;
+                }
+
+                if (Target.playerHeldBy != null)
+                    Target.playerHeldBy.carryWeight = Mathf.Clamp(Target.playerHeldBy.carryWeight + diff, 1f, 10f);
+            }
 
             // Scrap value
-            if (originalScrapValue > 0)
-                Target.SetScrapValue((int)(originalScrapValue * Mathf.Max(1f + (RelativeScale - 1f) * 0.1f, 2f))); // Maximum twice the value at 10x size
+            if (ModConfig.Instance.values.itemScalingAffectValue)
+            {
+                if (originalScrapValue > 0 && ModConfig.Instance.values.itemScalingMaxValue > 1)
+                {
+                    float multiplier = 1f + (Mathf.Min(RelativeScale, ModConfig.Instance.values.itemScalingValueGrowthModifier) * (ModConfig.Instance.values.itemScalingMaxValue - 1f) / ModConfig.Instance.values.itemScalingValueGrowthModifier);
+                    Target.SetScrapValue((int)(originalScrapValue * multiplier));
+                }
+            }
         }
 
         public override void ScaleOverTimeTo(float scale, PlayerControllerB scaledBy, Action onComplete = null, float? duration = null, Mode? mode = null, float? startingFromScale = null)
@@ -584,7 +592,7 @@ namespace LittleCompany.components
                 //Plugin.Log("Going from scale " + RelativeScale + " to desired scale " + DesiredScale);
                 float previousScale = RelativeScale;
 
-#if DEBUG
+#if false
                 RelativeScale += Time.deltaTime / 2.5f * ModConfig.Instance.values.itemSizeChangeSpeed;
 #else
                 RelativeScale += Time.deltaTime / (20 * RelativeScale * ModConfig.Instance.values.itemSizeChangeSpeed);

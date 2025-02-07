@@ -1,3 +1,11 @@
+### 1.3.18 ###
+**New**
+- Balanced the item scaling value change to make it less strong and also fixed bugs with it.
+- Added many new configs to tweak the item scaling values in order to allow more balancing within a modpack.
+
+**Fixes**
+- Fixed item value scaling not working properly.
+
 ### 1.3.17 ###
 **Fixes**
 - Fixed beltbag not scaling correctly. It's still not perfect when huge, but it's way better.

@@ -1,6 +1,6 @@
 {
     "name": "LittleCompany",
-    "version_number": "1.3.17",
+    "version_number": "1.3.18",
     "website_url": "https://github.com/MehimoNemo/LethalCompanyShrinkRay",
     "description": "A Lethal Company mod for anything size-related! Includes a shrink ray, potions, enemy behaviours, events and more.",
     "dependencies": [

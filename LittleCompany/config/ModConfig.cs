@@ -82,6 +82,14 @@ namespace LittleCompany.Config
 
             public bool itemScalingVisualOnly { get; set; }
 
+            public bool itemScalingAffectWeight { get; set; }
+
+            public bool itemScalingAffectValue { get; set; }
+
+            public float itemScalingMaxValue { get; set; }
+
+            public float itemScalingValueGrowthModifier { get; set; }
+
             public float enemySizeChangeStep { get; set; }
 
             public float maximumPlayerSize { get; set; }
@@ -139,14 +147,20 @@ namespace LittleCompany.Config
             values.maximumPlayerSize             = Plugin.BepInExConfig().Bind("Sizing", "MaximumPlayerSize", 1.7f, "Defines, how tall a player can become (1.7 is the last fitting height for the ship inside and doors!)").Value;
             values.playerSizeChangeStep          = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeChangeStep", 0.4f, new ConfigDescription("Defines how much a player shrinks/enlarges in one step (>0.8 will instantly shrink to death if DeathShrinking is on, otherwise fail!).", new AcceptableValueRange<float>(SmallestSizeChange, 10f))).Value;
             values.playerSizeStopAtDefault       = Plugin.BepInExConfig().Bind("Sizing", "PlayerSizeStopAtDefault", false, "If true, when scaling would go through the DefaultPlayerSize it will stop there instead.").Value;
-            values.itemSizeChangeStep            = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.4f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
-            values.itemSizeChangeSpeed           = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeSpeed", 1f, new ConfigDescription("Defines how fast an item shrinks/enlarges.", new AcceptableValueRange<float>(0.1f, 1000f))).Value;
-            values.itemScalingVisualOnly         = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingVisualOnly", false, "If true, scaling items has no special effects.").Value;
-            values.itemGlassify = Plugin.BepInExConfig().Bind("Sizing", "ItemGlassify", true, "If true, items you are holding will be translucent when they are big and covering too much of your screen.").Value;
             values.shipObjectSizeChangeStep      = Plugin.BepInExConfig().Bind("Sizing", "ShipObjectSizeChangeStep", 0.2f, new ConfigDescription("Defines how much a ship object shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.vehicleSizeChangeStep         = Plugin.BepInExConfig().Bind("Sizing", "VehicleSizeChangeStep", 0.2f, new ConfigDescription("Defines how much a vehicle shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
             values.enemySizeChangeStep           = Plugin.BepInExConfig().Bind("Sizing", "EnemySizeChangeStep", 0.5f, new ConfigDescription("Defines how much an enemy shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
-            
+
+            // Item scaling settings
+            values.itemSizeChangeStep            = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeStep", 0.4f, new ConfigDescription("Defines how much an item shrinks/enlarges in one step. Set to 0 to disable this feature.", new AcceptableValueRange<float>(0, 10f))).Value;
+            values.itemSizeChangeSpeed           = Plugin.BepInExConfig().Bind("Sizing", "ItemSizeChangeSpeed", 1f, new ConfigDescription("Defines how fast an item shrinks/enlarges.", new AcceptableValueRange<float>(0.1f, 1000f))).Value;
+            values.itemScalingVisualOnly         = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingVisualOnly", false, "If true, scaling items has no special effects.").Value;
+            values.itemScalingAffectWeight       = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingAffectWeight", true, "If true, scaling items affect their weight.").Value;
+            values.itemScalingAffectValue        = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingAffectValue", true, "If true, scaling items affect their value.").Value;
+            values.itemScalingMaxValue           = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingMaxValue", 2f, new ConfigDescription("The maximum multiplier value of a scaled item.", new AcceptableValueRange<float>(1f, 100f))).Value;
+            values.itemScalingValueGrowthModifier = Plugin.BepInExConfig().Bind("Sizing", "ItemScalingValueGrowthModifier", 10f, new ConfigDescription("Changes the growth of the items value. Refers to the size multiplier at which the item will reach it's maximum value. Lower is faster. For example, if the value is 10, the item will reach it's maximum value once it's 10x bigger than normal.", new AcceptableValueRange<float>(1f, 100f))).Value;
+            values.itemGlassify                  = Plugin.BepInExConfig().Bind("Sizing", "ItemGlassify", true, "If true, items you are holding will be translucent when they are big and covering too much of your screen.").Value;
+
             values.movementSpeedMultiplier       = Plugin.BepInExConfig().Bind("Shrunken", "MovementSpeedMultiplier", 1.3f, new ConfigDescription("Speed multiplier for shrunken players, ranging from 0.5 (very slow) to 1.5 (very fast).", new AcceptableValueRange<float>(0.5f, 1.5f))).Value;
             values.jumpHeightMultiplier          = Plugin.BepInExConfig().Bind("Shrunken", "JumpHeightMultiplier", 1.3f, new ConfigDescription("Jump-height multiplier for shrunken players, ranging from 0.5 (very low) to 2 (very high).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
             values.weightMultiplier              = Plugin.BepInExConfig().Bind("Shrunken", "WeightMultiplier", 1.5f, new ConfigDescription("Weight multiplier on held items for shrunken players, ranging from 0.5 (lighter) to 2 (heavier).", new AcceptableValueRange<float>(0.5f, 2f))).Value;
