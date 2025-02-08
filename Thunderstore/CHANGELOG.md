@@ -1,3 +1,7 @@
+### 1.3.19 ###
+**Fix**
+- Hotfix slightly wrong calculation for value.
+
 ### 1.3.18 ###
 **New**
 - Balanced the item scaling value change to make it less strong and also fixed bugs with it.

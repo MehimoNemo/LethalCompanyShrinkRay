@@ -568,7 +568,8 @@ namespace LittleCompany.components
             {
                 if (originalScrapValue > 0 && ModConfig.Instance.values.itemScalingMaxValue > 1)
                 {
-                    float multiplier = 1f + (Mathf.Min(RelativeScale, ModConfig.Instance.values.itemScalingValueGrowthModifier) * (ModConfig.Instance.values.itemScalingMaxValue - 1f) / ModConfig.Instance.values.itemScalingValueGrowthModifier);
+                    float multiplier = 1f + (Mathf.Min(RelativeScale-1f, ModConfig.Instance.values.itemScalingValueGrowthModifier-1f)
+                        * (ModConfig.Instance.values.itemScalingMaxValue - 1f) / (ModConfig.Instance.values.itemScalingValueGrowthModifier-1f));
                     Target.SetScrapValue((int)(originalScrapValue * multiplier));
                 }
             }
