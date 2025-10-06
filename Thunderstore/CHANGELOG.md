@@ -1,3 +1,7 @@
+### 1.3.20 ###
+**Fix**
+- Update for v73 of LetalCompany
+
 ### 1.3.19 ###
 **Fix**
 - Hotfix slightly wrong calculation for value.
