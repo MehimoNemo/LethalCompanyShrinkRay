@@ -143,11 +143,6 @@ namespace LittleCompany.patches
                 TeleportOutsideDungeon();
             }
 
-            else if (Keyboard.current.f12Key.wasPressedThisFrame)
-            {
-                TeleportInsideDungeon();
-            }
-
             else
                 return false;
 
@@ -300,16 +295,6 @@ namespace LittleCompany.patches
             if (entrance == null) return;
 
             PlayerInfo.CurrentPlayer.TeleportPlayer(entrance.entrancePoint.position);
-        }
-
-        public static void TeleportInsideDungeon()
-        {
-            if (StartOfRound.Instance.inShipPhase) return;
-
-            var entrance = GameObject.Find("EntranceTeleportA")?.GetComponent<EntranceTeleport>();
-            if (entrance == null) return;
-
-            PlayerInfo.CurrentPlayer.TeleportPlayer(entrance.exitPoint.position);
         }
 
         public static void ReloadAllSounds()

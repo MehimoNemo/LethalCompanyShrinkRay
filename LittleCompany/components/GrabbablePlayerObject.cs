@@ -315,7 +315,7 @@ namespace LittleCompany.components
 
             if (IsCurrentPlayer)
             {
-                grabbedPlayer.DropAllHeldItemsAndSync();
+                grabbedPlayer.DropAllHeldItemsAndSyncNonexact();
                 PlayerInfo.EnableCameraVisor(false);
             }
 
